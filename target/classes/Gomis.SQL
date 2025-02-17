@@ -1,6 +1,7 @@
 CREATE DATABASE IF NOT EXISTS gomisDB;
 USE gomisDB;
 -- Drop existing tables to avoid conflicts
+DROP TABLE IF EXISTS sessions_participants;
 DROP TABLE IF EXISTS SESSIONS;
 DROP TABLE IF EXISTS INCIDENTS;
 DROP TABLE IF EXISTS STUDENT_RECORD;
@@ -14,7 +15,7 @@ DROP TABLE IF EXISTS GUIDANCE_COUNSELORS;
 
 -- Create tables in correct order (tables with no dependencies first)
 CREATE TABLE IF NOT EXISTS GUIDANCE_COUNSELORS (
-  guidance_counselor_id INT PRIMARY KEY AUTO_INCREMENT,
+  guidance_COUNSELORS_ID INT PRIMARY KEY AUTO_INCREMENT,
   LAST_NAME VARCHAR(60) NOT NULL,
   FIRST_NAME VARCHAR(60) NOT NULL,
   middle_initial VARCHAR(1) NOT NULL, 
@@ -32,8 +33,8 @@ CREATE TABLE IF NOT EXISTS USERS (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     u_name VARCHAR(100) NOT NULL UNIQUE,
     u_pass VARCHAR(255) NOT NULL,
-    guidance_counselor_id INT,
-    FOREIGN KEY (guidance_counselor_id) REFERENCES GUIDANCE_COUNSELORS(guidance_counselor_id)
+    guidance_COUNSELORS_ID INT,
+    FOREIGN KEY (guidance_COUNSELORS_ID) REFERENCES GUIDANCE_COUNSELORS(guidance_COUNSELORS_ID)
 ) ENGINE=InnoDB;
 
 -- STUDENTS_DATA Table
@@ -88,6 +89,7 @@ CREATE TABLE IF NOT EXISTS STUDENT_RECORD (
   academic_year VARCHAR(100) NOT NULL,
   semester VARCHAR(100) NOT NULL,
   strand VARCHAR(100) NOT NULL,
+  track VARCHAR(100),
   year_level INT,
   adviser VARCHAR(100) NOT NULL,
   section VARCHAR(100) NOT NULL,
@@ -124,11 +126,12 @@ CREATE TABLE IF NOT EXISTS APPOINTMENTS (
   appointment_status VARCHAR(50),
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (participant_id) REFERENCES PARTICIPANTS(participant_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (counselors_id) REFERENCES GUIDANCE_COUNSELORS(guidance_counselor_id) ON DELETE SET NULL ON UPDATE CASCADE
+  FOREIGN KEY (counselors_id) REFERENCES GUIDANCE_COUNSELORS(guidance_COUNSELORS_ID) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
+
 CREATE TABLE SESSIONS (
-    SESSION_ID INT PRIMARY KEY,
+    SESSION_ID INT PRIMARY KEY AUTO_INCREMENT,
     APPOINTMENT_ID INT,
     COUNSELORS_ID INT,
     PARTICIPANT_ID INT,
@@ -139,94 +142,87 @@ CREATE TABLE SESSIONS (
     SESSION_STATUS VARCHAR(20),
     UPDATED_AT DATETIME,
     FOREIGN KEY (APPOINTMENT_ID) REFERENCES APPOINTMENTS(APPOINTMENT_ID),
-    FOREIGN KEY (COUNSELORS_ID) REFERENCES GUIDANCE_COUNSELORS(GUIDANCE_COUNSELOR_ID),
+    FOREIGN KEY (COUNSELORS_ID) REFERENCES GUIDANCE_COUNSELORS(GUIDANCE_COUNSELORS_ID),
     FOREIGN KEY (PARTICIPANT_ID) REFERENCES PARTICIPANTS(PARTICIPANT_ID),
     FOREIGN KEY (VIOLATION_ID) REFERENCES VIOLATION_RECORD(VIOLATION_ID)
 );
 
--- Reorganize data insertion order
--- 1. First insert GUIDANCE_COUNSELORS
-INSERT INTO GUIDANCE_COUNSELORS (LAST_NAME, FIRST_NAME, middle_initial, gender, specialization, contact_num, email, position)
-VALUES
-('Reyes', 'Ana', 'D', 'Female', 'Child Psychology', '09178901234', 'ana.reyes@example.com', 'Guidance Counselor'),
-('Cruz', 'Jose', 'E', 'Male', 'Adolescent Counseling', '09187654321', 'jose.cruz@example.com', 'Guidance Counselor'),
-('Lopez', 'Maria', 'F', 'Female', 'Career Counseling', '09151234567', 'maria.lopez@example.com', 'Senior Guidance Counselor');
-
--- Insert students
-INSERT INTO STUDENTS_DATA (LRN, LAST_NAME, FIRST_NAME, middle_initial, gender, DOB, email, contact_number, guardian_name, guardian_email, guardian_contact_number, ADDRESS)
-VALUES
-('123456789012', 'Dela Cruz', 'Juan', 'B', 'Male', '2005-03-15', 'juan.delacruz@example.com', '09123456789', 'Maria Dela Cruz', 'maria.delacruz@example.com', '09987654321', '123 Main St, Anytown'),
-('987654321098', 'Santos', 'Maria', 'C', 'Female', '2006-07-22', 'maria.santos@example.com', '09112233445', 'Jose Santos', 'jose.santos@example.com', '09223344556', '456 Elm St, Anytown'),
-('112233445566', 'Gonzales', 'Pedro', 'A', 'Male', '2004-11-10', 'pedro.gonzales@example.com', '09234567890', 'Juan Gonzales', 'juan.gonzales@example.com', '09334455667', '789 Oak St, Anytown'),
-('223344556677', 'Ramos', 'Julia', 'D', 'Female', '2007-05-30', 'julia.ramos@example.com', '09456789123', 'Carmen Ramos', 'carmen.ramos@example.com', '09112233445', '101 Pine St, Anytown'),
-('334455667788', 'Torres', 'Miguel', 'E', 'Male', '2005-08-25', 'miguel.torres@example.com', '09199887766', 'Fernando Torres', 'fernando.torres@example.com', '09229988776', '202 Maple St, Anytown');
-
--- Insert additional guidance counselors
-INSERT INTO GUIDANCE_COUNSELORS (LAST_NAME, FIRST_NAME, middle_initial, gender, specialization, contact_num, email, position)
-VALUES
-('Perez', 'Liza', 'M', 'Female', 'Family Counseling', '09125678901', 'liza.perez@example.com', 'Guidance Counselor'),
-('Mendoza', 'Carlos', 'G', 'Male', 'Behavioral Therapy', '09134567890', 'carlos.mendoza@example.com', 'Guidance Counselor');
+CREATE TABLE sessions_participants (
+    SESSION_ID INT,
+    PARTICIPANT_ID INT,
+    PRIMARY KEY (SESSION_ID, PARTICIPANT_ID),
+    FOREIGN KEY (SESSION_ID) REFERENCES SESSIONS(SESSION_ID) 
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE,
+    FOREIGN KEY (PARTICIPANT_ID) REFERENCES PARTICIPANTS(participant_id)
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
 
--- Insert additional students
-INSERT INTO STUDENTS_DATA (LRN, LAST_NAME, FIRST_NAME, middle_initial, gender, DOB, email, contact_number, guardian_name, guardian_email, guardian_contact_number, ADDRESS)
-VALUES
-('556677889900', 'Diaz', 'Nina', 'G', 'Female', '2006-01-15', 'nina.diaz@example.com', '09123456788', 'Cecilia Diaz', 'cecilia.diaz@example.com', '09112233444', '304 Birch St, Anytown'),
-('998877665544', 'Castro', 'Albert', 'J', 'Male', '2005-09-11', 'albert.castro@example.com', '09198765432', 'Luisa Castro', 'luisa.castro@example.com', '09123334455', '567 Cedar St, Anytown');
+-- Insert Guidance Counselors
+INSERT INTO GUIDANCE_COUNSELORS (LAST_NAME, FIRST_NAME, middle_initial, suffix, gender, specialization, contact_num, email, position) VALUES
+('Santos', 'Maria', 'A', '', 'Female', 'Behavioral Counseling', '09123456789', 'maria.santos@school.edu', 'Head Counselor'),
+('Cruz', 'Juan', 'B', 'Jr', 'Male', 'Academic Counseling', '09234567890', 'juan.cruz@school.edu', 'Senior Counselor'),
+('Reyes', 'Ana', 'C', '', 'Female', 'Career Counseling', '09345678901', 'ana.reyes@school.edu', 'Counselor');
 
--- Insert participants
-INSERT INTO PARTICIPANTS (student_uid, participant_type, LAST_NAME, FIRST_NAME, email, contact_number) 
-VALUES
-(1, 'Student', 'Dela Cruz', 'Juan', 'juan.delacruz@example.com', '09123456789'),
-(2, 'Guardian', 'Dela Cruz', 'Maria', 'maria.delacruz@example.com', '09987654321'),
-(3, 'Student', 'Santos', 'Maria', 'maria.santos@example.com', '09112233445'),
-(4, 'Guardian', 'Santos', 'Jose', 'jose.santos@example.com', '09223344556'),
-(5, 'Student', 'Gonzales', 'Pedro', 'pedro.gonzales@example.com', '09234567890');
-
--- Insert violation records
-INSERT INTO VIOLATION_RECORD (participant_id, violation_type, violation_description, anecdotal_record, reinforcement, V_status) 
-VALUES
-(1, 'Dress Code', 'Wearing an inappropriate shirt for school', 'Repeated warning about dress code violations', 'Verbal warning', 'Resolved'),
-(3, 'Bullying', 'Repeatedly teasing a fellow student', 'Parent meeting scheduled to discuss behavior', 'Behavioral counseling', 'Ongoing'),
-(5, 'Late Submission', 'Submitted assignment past the due date', 'One-week extension granted', 'Extra assignments', 'Resolved');
-
--- Insert student records
-INSERT INTO STUDENT_RECORD (student_uid, violation_id, type_of_student, academic_year, semester, strand, year_level, adviser, section, stud_status) 
-VALUES
-(1, 1, 'Regular', '2024-2025', '1st Semester', 'STEM', 11, 'Ms. Lopez', '11-A', 'Active'),
-(2, NULL, 'Regular', '2024-2025', '1st Semester', 'ABM', 12, 'Mr. Cruz', '12-B', 'Active'),
-(3, 2, 'Special', '2024-2025', '2nd Semester', 'HUMSS', 12, 'Ms. Reyes', '12-C', 'Active');
--- Insert incidents
-INSERT INTO INCIDENTS (student_uid, participant_id, violation_id, incident_description, action_taken, recommendation, status) 
-VALUES
-(1, 1, 1, 'Juan was caught wearing an improper shirt in class.', 'Verbal warning given to student', 'Ensure proper dress code is followed.', 'Resolved'),
-(2, 3, 2, 'Maria Santos was seen bullying a classmate during break.', 'Meeting with parents scheduled', 'Continuous monitoring of behavior is advised.', 'Ongoing'),
-(3, 5, 3, 'Pedro Gonzales missed the deadline for his project submission.', 'Extension granted for submission', 'Encourage better time management practices.', 'Resolved');
-
--- Insert appointments
-INSERT INTO APPOINTMENTS (participant_id, counselors_id, appointment_type, appointment_date_time, appointment_status)
-VALUES
-(1, 1, 'Career Counseling', '2025-02-12 10:00:00', 'Scheduled'),
-(3, 2, 'Adolescent Counseling', '2025-02-13 11:00:00', 'Scheduled'),
-(5, 3, 'Behavioral Counseling', '2025-02-14 09:30:00', 'Scheduled');
-
-
--- 2. Then insert USERS
-INSERT INTO USERS (u_name, u_pass, guidance_counselor_id) VALUES
+-- Insert Users
+INSERT INTO USERS (u_name, u_pass, guidance_COUNSELORS_ID) VALUES
 ('admin', 'admin', 1),
-('jose.cruz', 'password123', 2),
-('maria.lopez', 'password123', 3);
+('jcruz', 'passy234', 2),
+('areyes', 'pass123', 3);
 
--- Insert additional users
-INSERT INTO USERS (u_name, u_pass, guidance_counselor_id) VALUES
-('liza.perez', 'password456', 4),
-('carlos.mendoza', 'password789', 5);
+-- Insert Students Data
+INSERT INTO STUDENTS_DATA (LRN, LAST_NAME, FIRST_NAME, middle_initial, suffix, gender, DOB, email, contact_number, guardian_name, guardian_email, guardian_contact_number, ADDRESS) VALUES
+('123456789012', 'Garcia', 'Juan', 'P', '', 'Male', '2006-05-15', 'juan.garcia@student.edu', '09123456789', 'Maria Garcia', 'maria.garcia@email.com', '09987654321', '123 Main St, Manila'),
+('123456789013', 'Santos', 'Maria', 'L', '', 'Female', '2006-07-20', 'maria.santos@student.edu', '09234567890', 'Pedro Santos', 'pedro.santos@email.com', '09876543210', '456 Oak St, Quezon City'),
+('123456789014', 'Reyes', 'Carlos', 'M', 'Jr', 'Male', '2006-03-10', 'carlos.reyes@student.edu', '09345678901', 'Carlos Reyes Sr', 'carlos.reyes@email.com', '09765432109', '789 Pine St, Makati'),
+('123456789015', 'Luna', 'Sofia', 'R', '', 'Female', '2006-09-25', 'sofia.luna@student.edu', '09456789012', 'Ana Luna', 'ana.luna@email.com', '09654321098', '321 Elm St, Pasig'),
+('123456789016', 'Cruz', 'Miguel', 'T', '', 'Male', '2006-11-30', 'miguel.cruz@student.edu', '09567890123', 'Jose Cruz', 'jose.cruz@email.com', '09543210987', '654 Cedar St, Mandaluyong');
 
--- Insert data for SESSIONS
+-- Insert Participants (Students as participants)
+INSERT INTO PARTICIPANTS (student_uid, participant_type, LAST_NAME, FIRST_NAME, email, contact_number) VALUES
+(1, 'Student', 'Garcia', 'Juan', 'juan.garcia@student.edu', '09123456789'),
+(2, 'Student', 'Santos', 'Maria', 'maria.santos@student.edu', '09234567890'),
+(3, 'Student', 'Reyes', 'Carlos', 'carlos.reyes@student.edu', '09345678901'),
+(4, 'Student', 'Luna', 'Sofia', 'sofia.luna@student.edu', '09456789012'),
+(5, 'Student', 'Cruz', 'Miguel', 'miguel.cruz@student.edu', '09567890123');
+
+-- Insert Violation Records
+INSERT INTO VIOLATION_RECORD (participant_id, violation_type, violation_description, anecdotal_record, reinforcement, V_status) VALUES
+(1, 'Academic', 'Cheating during midterm exam', 'Student was caught using unauthorized materials', 'Academic counseling and written warning', 'Active'),
+(2, 'Behavioral', 'Excessive tardiness', 'Student has been late to class 5 times this month', 'Parent conference and attendance monitoring', 'Active'),
+(3, 'Disciplinary', 'Dress code violation', 'Not wearing proper school uniform', 'Verbal warning', 'Resolved');
+
+-- Insert Student Records
+INSERT INTO STUDENT_RECORD (student_uid, violation_id, type_of_student, academic_year, semester, strand, track, year_level, adviser, section) VALUES
+(1, 1, 'Regular', '2023-2024', 'First', 'STEM', 'Academic', 11, 'Ms. Rodriguez', 'STEM-11A'),
+(2, 2, 'Regular', '2023-2024', 'First', 'ABM', 'Academic', 11, 'Mr. Torres', 'ABM-11B'),
+(3, 3, 'Regular', '2023-2024', 'First', 'HUMSS', 'Academic', 11, 'Mrs. Fernandez', 'HUMSS-11A'),
+(4, NULL, 'Regular', '2023-2024', 'First', 'GAS', 'Academic', 11, 'Ms. Lim', 'GAS-11A'),
+(5, NULL, 'Regular', '2023-2024', 'First', 'STEM', 'Academic', 11, 'Ms. Rodriguez', 'STEM-11A');
+
+-- Insert Incidents
+INSERT INTO INCIDENTS (student_uid, participant_id, violation_id, incident_description, action_taken, recommendation, status) VALUES
+(1, 1, 1, 'Student was caught using a cheat sheet during Mathematics exam', 'Confiscation of materials and immediate parent notification', 'Regular counseling sessions and academic monitoring', 'Under Investigation'),
+(2, 2, 2, 'Multiple instances of arriving late to morning classes', 'Parent conference conducted', 'Time management workshop attendance', 'Active'),
+(3, 3, 3, 'Wearing incorrect school uniform components', 'Verbal warning issued', 'Review of school dress code policies', 'Resolved');
+
+-- Insert Appointments
+INSERT INTO APPOINTMENTS (participant_id, counselors_id, appointment_type, appointment_date_time, appointment_status) VALUES
+(1, 1, 'Academic Counseling', '2024-02-20 10:00:00', 'Scheduled'),
+(2, 2, 'Behavioral Counseling', '2024-02-21 14:30:00', 'Scheduled'),
+(3, 3, 'Follow-up Session', '2024-02-22 11:00:00', 'Scheduled');
+
+-- Insert Sessions
 INSERT INTO SESSIONS (SESSION_ID, APPOINTMENT_ID, COUNSELORS_ID, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES
-(1, 1, 1, 1, NULL, 'Career Counseling', '2025-02-12 10:00:00', 'Discussed career options and interests.', 'Completed', '2025-02-12 11:00:00'), -- Example: No violation related to this session
-(2, 2, 2, 3, 2, 'Adolescent Counseling', '2025-02-13 11:00:00', 'Addressed bullying incident and developed coping strategies.', 'Completed', '2025-02-13 12:00:00'), -- Example: Session related to a violation
-(3, 3, 3, 5, 3, 'Academic Support', '2025-02-14 09:30:00', 'Discussed time management and study skills.', 'Completed', '2025-02-14 10:30:00'), -- Example: Session related to a violation
-(4, NULL, 1, 1, NULL, 'Initial Consultation', '2025-02-15 14:00:00', 'Initial meeting with student to assess needs.', 'Scheduled', '2025-02-15 14:00:00'), -- Example: No associated appointment yet
-(5, NULL, 2, 3, NULL, 'Follow-up', '2025-02-16 10:00:00', 'Follow-up session to monitor progress.', 'Scheduled', '2025-02-16 10:00:00'); -- Example: No associated appointment yet
+(1, 1, 1, 1, 1, 'Individual Counseling', '2024-02-20 10:00:00', 'Initial assessment of academic performance and study habits', 'Scheduled', CURRENT_TIMESTAMP),
+(2, 2, 2, 2, 2, 'Behavioral Counseling', '2024-02-21 14:30:00', 'Discussion of tardiness issues and time management strategies', 'Scheduled', CURRENT_TIMESTAMP),
+(3, 3, 3, 3, 3, 'Follow-up', '2024-02-22 11:00:00', 'Review of students compliance with dress code', 'Scheduled', CURRENT_TIMESTAMP);
+
+INSERT INTO sessions_participants (SESSION_ID, PARTICIPANT_ID) VALUES
+(1, 1),  -- Session 1 with Participant 1
+(1, 2),  -- Session 1 with Participant 2 (group session)
+(2, 2),  -- Session 2 with Participant 2
+(3, 3);  -- Session 3 with Participant 3
 

@@ -1,232 +1,147 @@
 package lyfjshs.gomis.view.sessions;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.*;
+import java.awt.print.*;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-
+import javax.swing.*;
 import lyfjshs.gomis.components.FormManager.Form;
-import lyfjshs.gomis.utils.PrintingReport;
+import lyfjshs.gomis.Database.DAO.SessionsDAO;
+import lyfjshs.gomis.Database.model.Session;
 import net.miginfocom.swing.MigLayout;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperReport;
 
-public class SessionsForm extends Form {
-	private JTextField sessionIdField, dateField, participantsField, violationField, recordedByField;
-	private JFormattedTextField startSessionTimeField, endSessionTimeField;
-	private JTextArea sessionSummaryArea, notesArea;
-	private JButton saveButton;
-	private Connection connnect;
+public class SessionsForm extends Form implements Printable {
+    private JTextField dateField, participantsField, violationField, recordedByField;
+    private JFormattedTextField startSessionTimeField, endSessionTimeField;
+    private JTextArea sessionSummaryArea, notesArea;
+    private JButton saveButton, printButton;
+    private Connection connect;
 
-	public SessionsForm(Connection conn) {
-		this.connnect = conn;
-		initializeComponents();
-		layoutComponents();
-	}
+    public SessionsForm(Connection conn) {
+        this.connect = conn;
+        initializeComponents();
+        layoutComponents();
+    }
 
-	public JasperReport loadIncidentFormTemplate() {
-		String templatePath = "templates/Incident Report Template.jrxml";
+    private void initializeComponents() {
 
-		try (InputStream templateStream = getClass().getClassLoader().getResourceAsStream(templatePath)) {
-			if (templateStream == null) {
-				JOptionPane.showMessageDialog(null, "Incident Report template not found in resources/" + templatePath,
-						"Template Error", JOptionPane.ERROR_MESSAGE);
-				throw new IllegalArgumentException("Incident Report template not found in resources/" + templatePath);
-			}
+        dateField = new JTextField(20);
+        participantsField = new JTextField(20);
+        notesArea = new JTextArea(5, 20);
+        sessionSummaryArea = new JTextArea(8, 50);
 
-			return JasperCompileManager.compileReport(templateStream);
-		} catch (JRException e) {
-			JOptionPane.showMessageDialog(null, "Error compiling JasperReport template:\n" + e.getMessage(),
-					"Compilation Error", JOptionPane.ERROR_MESSAGE);
-			throw new RuntimeException("Failed to compile JasperReport template", e);
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Unexpected error loading the report template:\n" + e.getMessage(),
-					"Unexpected Error", JOptionPane.ERROR_MESSAGE);
-			throw new RuntimeException("Unexpected error while loading the template", e);
-		}
-	}
+        saveButton = new JButton("SAVE");
+        saveButton.setBackground(new Color(70, 130, 180));
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFocusPainted(false);
+        saveButton.addActionListener(e -> saveSession());
+        
+        printButton = new JButton("PRINT");
+        printButton.setBackground(new Color(70, 130, 180));
+        printButton.setForeground(Color.WHITE);
+        printButton.setFocusPainted(false);
+        printButton.addActionListener(e -> printSessionDetails());
+    }
 
-	private void initializeComponents() {
-		sessionIdField = new JTextField("SESSION-1", 20);
-		sessionIdField.setEditable(false);
-		sessionIdField.setBackground(Color.LIGHT_GRAY);
+    private void saveSession() {
+        try {
+            String date = dateField.getText();
+            int participants = Integer.parseInt(participantsField.getText());
+            String violation = violationField.getText();
+            String recordedBy = recordedByField.getText();
+            String notes = notesArea.getText();
+            String summary = sessionSummaryArea.getText();
 
-		dateField = new JTextField(20);
-		participantsField = new JTextField(20);
-		notesArea = new JTextArea(5, 20);
-		sessionSummaryArea = new JTextArea(8, 50);
+            // Create a new Session object using the constructor
+            Session session = new Session(
+            	0,
+                0, // appointmentId (not retrieved in the query)
+                0, // counselorsId (not retrieved in the query)
+                0, // participantId (not retrieved in the query)
+                0, // violationId (not retrieved in the query)
+                violation, // sessionType
+                null, // sessionDateTime (not retrieved in the query)
+                notes, // sessionNotes
+                "Active", // sessionStatus
+                new java.sql.Timestamp(System.currentTimeMillis()) // updatedAt
+            );
 
-		saveButton = new JButton("SAVE");
-		saveButton.setBackground(new Color(70, 130, 180));
-		saveButton.setForeground(Color.WHITE);
-		saveButton.setFocusPainted(false);
-		saveButton.addActionListener(e -> showSessionDetails());
-	}
+            // Use SessionsDAO to save the session
+            SessionsDAO sessionsDAO = new SessionsDAO(connect);
+            sessionsDAO.addSession(session); // Assuming you have an addSession method in SessionsDAO
 
-	private void layoutComponents() {
-		this.setLayout(new MigLayout("wrap 4", "[][right]10[grow]20[right]10[grow]", "[][][][][][][][][fill][]"));
-		this.setBorder(BorderFactory.createTitledBorder("Session Details"));
+            JOptionPane.showMessageDialog(this, "Session saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
 
-		this.add(new JLabel("SESSION ID:"), "cell 1 0");
-		this.add(sessionIdField, "cell 2 0");
-		this.add(new JLabel("DATE:"), "cell 3 0");
-		this.add(dateField, "cell 4 0");
+    private void layoutComponents() {
+        this.setLayout(new MigLayout("wrap 4", "[][right]10[grow]20[right]10[grow]", "[][][][][][][][][fill][]"));
+        this.setBorder(BorderFactory.createTitledBorder("Session Form"));
+        this.add(new JLabel("DATE:"), "cell 3 0");
+        this.add(dateField, "cell 4 0");
 
-		this.add(new JLabel("PARTICIPANTS:"), "cell 1 1");
-		this.add(participantsField, "cell 2 1");
-		this.add(new JLabel("NOTES:"), "cell 3 1,aligny top");
-		this.add(new JScrollPane(notesArea), "cell 4 1 1 2,grow");
-		JLabel label_3 = new JLabel("START SESSION TIME:");
-		this.add(label_3, "cell 1 3");
-		startSessionTimeField = new JFormattedTextField();
+        this.add(new JLabel("PARTICIPANTS:"), "cell 1 1");
+        this.add(participantsField, "cell 2 1");
+        this.add(new JLabel("NOTES:"), "cell 3 1,aligny top");
+        this.add(new JScrollPane(notesArea), "cell 4 1 1 2,grow");
 
-		startSessionTimeField.setColumns(20);
-		this.add(startSessionTimeField, "cell 2 3,alignx left");
+        JLabel label_3 = new JLabel("START SESSION TIME:");
+        this.add(label_3, "cell 1 3");
+        startSessionTimeField = new JFormattedTextField();
+        startSessionTimeField.setColumns(20);
+        this.add(startSessionTimeField, "cell 2 3,alignx left");
 
-		JLabel label_4 = new JLabel("VIOLATION:");
-		this.add(label_4, "cell 3 3");
-		violationField = new JTextField(20);
-		this.add(violationField, "cell 4 3");
+        JLabel label_4 = new JLabel("VIOLATION:");
+        this.add(label_4, "cell 3 3");
+        violationField = new JTextField(20);
+        this.add(violationField, "cell 4 3");
 
-		JLabel label = new JLabel("END SESSION TIME:");
-		this.add(label, "flowx,cell 1 4");
-		endSessionTimeField = new JFormattedTextField();
-		endSessionTimeField.setColumns(20);
-		this.add(endSessionTimeField, "cell 2 4,alignx left");
+        JLabel label = new JLabel("END SESSION TIME:");
+        this.add(label, "flowx,cell 1 4");
+        endSessionTimeField = new JFormattedTextField();
+        endSessionTimeField.setColumns(20);
+        this.add(endSessionTimeField, "cell 2 4,alignx left");
 
-		JLabel label_2 = new JLabel("RECORDED BY:");
-		this.add(label_2, "cell 3 4");
-		recordedByField = new JTextField(20);
-		this.add(recordedByField, "cell 4 4");
+        JLabel label_2 = new JLabel("RECORDED BY:");
+        this.add(label_2, "cell 3 4");
+        recordedByField = new JTextField(20);
+        this.add(recordedByField, "cell 4 4");
 
-		JLabel label_1 = new JLabel("SESSION SUMMARY:");
-		this.add(label_1, "cell 0 6 2 1,alignx center");
-		this.add(new JScrollPane(sessionSummaryArea), "cell 0 7 5 1,grow");
+        JLabel label_1 = new JLabel("SESSION SUMMARY:");
+        this.add(label_1, "cell 0 6 2 1,alignx center");
+        this.add(new JScrollPane(sessionSummaryArea), "cell 0 7 5 1,grow");
 
-		this.add(saveButton, "cell 1 8 4 1,alignx center,growy");
-	}
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(saveButton);
+        buttonPanel.add(printButton);
+        this.add(buttonPanel, "cell 1 8 4 1,alignx center,growy");
+    }
 
-	private void showSessionDetails() {
-		JFrame detailsFrame = new JFrame("Session Details");
-		detailsFrame.setSize(600, 500);
-		detailsFrame.setLocationRelativeTo(null);
-		detailsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    private void printSessionDetails() {
+        PrinterJob printerJob = PrinterJob.getPrinterJob();
+        printerJob.setPrintable(this);
+        if (printerJob.printDialog()) {
+            try {
+                printerJob.print();
+            } catch (PrinterException e) {
+                JOptionPane.showMessageDialog(this, "Printing Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
 
-		JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-		mainPanel.setBackground(new Color(240, 240, 240));
-		mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    @Override
+    public int print(Graphics g, PageFormat pf, int pageIndex) throws PrinterException {
+        if (pageIndex > 0) {
+            return NO_SUCH_PAGE;
+        }
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.translate(pf.getImageableX(), pf.getImageableY());
+        this.printAll(g);
+        return PAGE_EXISTS;
+    }
 
-		// Adding components
-		mainPanel.add(createStyledLabel("SESSION ID:", sessionIdField.getText()));
-		mainPanel.add(createStyledLabel("DATE:", dateField.getText()));
-		mainPanel.add(createStyledLabel("PARTICIPANTS:", participantsField.getText()));
-		mainPanel.add(createStyledLabel("VIOLATION:", violationField.getText()));
-		mainPanel.add(createStyledLabel("END TIME:", endSessionTimeField.getText()));
-		mainPanel.add(createStyledLabel("RECORDED BY:", recordedByField.getText()));
-
-		mainPanel.add(createStyledTextArea("NOTES", notesArea.getText()));
-		mainPanel.add(createStyledTextArea("SESSION SUMMARY", sessionSummaryArea.getText()));
-
-		// Add Export to PDF button
-		JButton exportButton = new JButton("Export to PDF");
-		exportButton.setBackground(new Color(70, 130, 180));
-		exportButton.setForeground(Color.WHITE);
-		exportButton.setFocusPainted(false);
-		exportButton.addActionListener(e -> exportToPDF(detailsFrame));
-		mainPanel.add(exportButton);
-
-		JScrollPane scrollPane = new JScrollPane(mainPanel);
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane.setBorder(BorderFactory.createEmptyBorder());
-
-		detailsFrame.getContentPane().add(scrollPane);
-		detailsFrame.setVisible(true);
-	}
-
-	private void exportToPDF(JFrame parent) {
-		Map<String, Object> parameters = new HashMap<>();
-
-		// Map the session form fields to the report parameters
-		parameters.put("IncidentType", violationField.getText());
-		parameters.put("IncidentDateTime", dateField.getText() + " " + startSessionTimeField.getText());
-		parameters.put("InvolvedPersons", participantsField.getText());
-		parameters.put("NarrativeDetails", sessionSummaryArea.getText());
-		parameters.put("ActionsTaken", notesArea.getText());
-		parameters.put("Recommendations", ""); // Add if you have recommendations field
-		parameters.put("ReviewedBy", ""); // Add if you have a reviewer field
-		parameters.put("DateReceived", dateField.getText());
-		parameters.put("ReportedBy", recordedByField.getText());
-		parameters.put("ReceivedBy", recordedByField.getText());
-
-		// Call the PrintingReport utility to generate the PDF
-		PrintingReport.generateReport(parent, loadIncidentFormTemplate(), parameters,
-				"Session_" + sessionIdField.getText() + "_Report", "Save Session Report");
-	}
-
-	// Method for styled labels
-	private JPanel createStyledLabel(String title, String value) {
-		JPanel panel = new JPanel(new BorderLayout());
-		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		panel.setBackground(Color.WHITE);
-		panel.setOpaque(true);
-
-		JLabel titleLabel = new JLabel(title);
-		titleLabel.setFont(new Font("Consolas", Font.BOLD, 14));
-		titleLabel.setForeground(new Color(70, 70, 70));
-
-		JLabel valueLabel = new JLabel(value);
-		valueLabel.setFont(new Font("Consolas", Font.PLAIN, 14));
-		valueLabel.setForeground(new Color(30, 30, 30));
-
-		panel.add(titleLabel, BorderLayout.WEST);
-		panel.add(valueLabel, BorderLayout.EAST);
-		panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-				BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-
-		return panel;
-	}
-
-	// Method for styled text areas
-	private JPanel createStyledTextArea(String title, String content) {
-		JPanel panel = new JPanel(new BorderLayout());
-		panel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-		panel.setBackground(new Color(230, 230, 230));
-
-		JLabel titleLabel = new JLabel(title);
-		titleLabel.setFont(new Font("Consolas", Font.BOLD, 14));
-		titleLabel.setForeground(new Color(50, 50, 50));
-
-		JTextArea textArea = new JTextArea(content, 5, 40);
-		textArea.setEditable(false);
-		textArea.setFont(new Font("Consolas", Font.PLAIN, 14));
-		textArea.setBackground(Color.WHITE);
-		textArea.setLineWrap(true);
-		textArea.setWrapStyleWord(true);
-		textArea.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
-		JScrollPane scrollPane = new JScrollPane(textArea);
-		scrollPane.setBorder(BorderFactory.createLineBorder(new Color(180, 180, 180), 1));
-
-		panel.add(titleLabel, BorderLayout.NORTH);
-		panel.add(scrollPane, BorderLayout.CENTER);
-
-		return panel;
-	}
+ 
 }

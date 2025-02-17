@@ -15,6 +15,7 @@ import lyfjshs.gomis.view.MainDashboard;
 import lyfjshs.gomis.view.appointment.AppointmentMangement;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import lyfjshs.gomis.view.incident.IncidentList;
+import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
@@ -130,7 +131,10 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 			new Item("Home", "home.svg", MainDashboard.class),
 			new Item.Label("Management"), 
 			new Item("Appointments", "calendar.svg", AppointmentMangement.class),
-			new Item("Sessions", "gavel.svg", SessionsForm.class),
+			new Item("Sessions", "gavel.svg")
+			.subMenu("Session Fill-Up Form", SessionsForm.class)
+			.subMenu("Session Records", SessionRecords.class),
+			
 			new Item("Students Data", "article_person.svg", StudentMangementGUI.class),
 			new Item("Incident Management", "assignment.svg")
 				.subMenu("Incident Fill-Up Form", IncidentFillUpForm.class)

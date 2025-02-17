@@ -13,11 +13,13 @@ public class Session {
     private String sessionNotes;
     private String sessionStatus;
     private Timestamp updatedAt;
+    private int participantCount;
+    private Timestamp appointmentDateTime;
 
-    // Constructor, getters, and setters
+    // Constructor
     public Session(int sessionId, int appointmentId, int counselorsId, int participantId, int violationId,
-            String sessionType, Timestamp sessionDateTime, String sessionNotes,
-            String sessionStatus, Timestamp updatedAt) {
+                   String sessionType, Timestamp sessionDateTime, String sessionNotes, String sessionStatus,
+                   Timestamp updatedAt) {
         this.sessionId = sessionId;
         this.appointmentId = appointmentId;
         this.counselorsId = counselorsId;
@@ -30,83 +32,43 @@ public class Session {
         this.updatedAt = updatedAt;
     }
 
-    public int getSessionId() {
-        return sessionId;
+    // Getters and Setters
+    public int getSessionId() { return sessionId; }
+    public int getAppointmentId() { return appointmentId; }
+    public int getCounselorsId() { return counselorsId; }
+    public int getParticipantId() { return participantId; }
+    public int getViolationId() { return violationId; }
+    public String getSessionType() { return sessionType; }
+    public Timestamp getSessionDateTime() { return sessionDateTime; }
+    public String getSessionNotes() { return sessionNotes; }
+    public String getSessionStatus() { return sessionStatus; }
+    public Timestamp getUpdatedAt() { return updatedAt; }
+
+    // Setters
+    public void setSessionId(int sessionId) { this.sessionId = sessionId; }
+    public void setAppointmentId(int appointmentId) { this.appointmentId = appointmentId; }
+    public void setCounselorsId(int counselorsId) { this.counselorsId = counselorsId; }
+    public void setParticipantId(int participantId) { this.participantId = participantId; }
+    public void setViolationId(int violationId) { this.violationId = violationId; }
+    public void setSessionType(String sessionType) { this.sessionType = sessionType; }
+    public void setSessionDateTime(Timestamp sessionDateTime) { this.sessionDateTime = sessionDateTime; }
+    public void setSessionNotes(String sessionNotes) { this.sessionNotes = sessionNotes; }
+    public void setSessionStatus(String sessionStatus) { this.sessionStatus = sessionStatus; }
+    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    public int getParticipantCount() {
+        return participantCount;
     }
 
-    public void setSessionId(int sessionId) {
-        this.sessionId = sessionId;
+    public void setParticipantCount(int participantCount) {
+        this.participantCount = participantCount;
     }
 
-    public int getAppointmentId() {
-        return appointmentId;
+    public Timestamp getAppointmentDateTime() {
+        return appointmentDateTime;
     }
 
-    public void setAppointmentId(int appointmentId) {
-        this.appointmentId = appointmentId;
-    }
-
-    public int getCounselorsId() {
-        return counselorsId;
-    }
-
-    public void setCounselorsId(int counselorsId) {
-        this.counselorsId = counselorsId;
-    }
-
-    public int getParticipantId() {
-        return participantId;
-    }
-
-    public void setParticipantId(int participantId) {
-        this.participantId = participantId;
-    }
-
-    public int getViolationId() {
-        return violationId;
-    }
-
-    public void setViolationId(int violationId) {
-        this.violationId = violationId;
-    }
-
-    public String getSessionType() {
-        return sessionType;
-    }
-
-    public void setSessionType(String sessionType) {
-        this.sessionType = sessionType;
-    }
-
-    public Timestamp getSessionDateTime() {
-        return sessionDateTime;
-    }
-
-    public void setSessionDateTime(Timestamp sessionDateTime) {
-        this.sessionDateTime = sessionDateTime;
-    }
-
-    public String getSessionNotes() {
-        return sessionNotes;
-    }
-
-    public void setSessionNotes(String sessionNotes) {
-        this.sessionNotes = sessionNotes;
-    }
-
-    public String getSessionStatus() {
-        return sessionStatus;
-    }
-
-    public void setSessionStatus(String sessionStatus) {
-        this.sessionStatus = sessionStatus;
-    }
-
-    public Timestamp getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Timestamp updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setAppointmentDateTime(Timestamp appointmentDateTime) {
+        this.appointmentDateTime = appointmentDateTime;
     }
 }

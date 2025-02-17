@@ -19,8 +19,8 @@ public class ViolationCRUD {
 
 	public void addViolation(Connection connection, int participantId, String violationType, String description,
 			String anecdotalRecord,
-			String reinforcement, String status, int studentUid) throws SQLException {
-		String sql = "INSERT INTO VIOLATION_RECORD (participant_id, violation_type, violation_description, anecdotal_record, reinforcement, V_status, student_uid) VALUES (?, ?, ?, ?, ?, ?, ?)";
+			String reinforcement, String status) throws SQLException {
+		String sql = "INSERT INTO VIOLATION_RECORD (participant_id, violation_type, violation_description, anecdotal_record, reinforcement, V_status) VALUES (?, ?, ?, ?, ?, ?)";
 
 		try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 			stmt.setInt(1, participantId);
@@ -29,7 +29,6 @@ public class ViolationCRUD {
 			stmt.setString(4, anecdotalRecord);
 			stmt.setString(5, reinforcement);
 			stmt.setString(6, status);
-			stmt.setInt(7, studentUid);
 			stmt.executeUpdate();
 		}
 	}
@@ -38,8 +37,8 @@ public class ViolationCRUD {
 		List<Violation> violations = new ArrayList<>();
 		String sql = "SELECT v.*, s.LRN, s.LAST_NAME, s.FIRST_NAME, p.PARTICIPANT_TYPE, p.EMAIL, p.CONTACT_NUMBER " +
 					"FROM VIOLATION_RECORD v " +
-					"JOIN STUDENTS_DATA s ON v.STUDENT_UID = s.STUDENT_UID " +
-					"JOIN PARTICIPANTS p ON s.STUDENT_UID = p.STUDENT_UID";
+					"JOIN PARTICIPANTS p ON v.participant_id = p.participant_id " +
+					"LEFT JOIN STUDENTS_DATA s ON p.student_uid = s.student_uid";
 
 		try (PreparedStatement stmt = connection.prepareStatement(sql);
 			 ResultSet rs = stmt.executeQuery()) {
@@ -51,7 +50,7 @@ public class ViolationCRUD {
 				violation.setViolationDescription(rs.getString("VIOLATION_DESCRIPTION"));
 				violation.setAnecdotalRecord(rs.getString("ANECDOTAL_RECORD"));
 				violation.setReinforcement(rs.getString("REINFORCEMENT"));
-				violation.setStatus(rs.getString("STATUS"));
+				violation.setStatus(rs.getString("V_status"));
 				violation.setUpdatedAt(rs.getTimestamp("UPDATED_AT"));
 				violation.setEmail(rs.getString("EMAIL"));
 				violation.setContact(rs.getString("CONTACT_NUMBER"));

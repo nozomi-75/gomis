@@ -43,7 +43,7 @@ public class StudentsDataDAO {
 
 	// READ Student Record
 	public StudentsRecord getStudentRecord(Connection conn, int studentUid) {
-		String sql = "SELECT * FROM STUDENTS_RECORD WHERE student_uid = ?";
+		String sql = "SELECT * FROM STUDENT_RECORD WHERE student_uid = ?";
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setInt(1, studentUid);
 			try (ResultSet rs = pstmt.executeQuery()) {
@@ -60,7 +60,7 @@ public class StudentsDataDAO {
 					studentRecord.setYearLevel(rs.getString("year_level"));
 					studentRecord.setAdviser(rs.getString("adviser"));
 					studentRecord.setSection(rs.getString("section"));
-					studentRecord.setStatus(rs.getString("STATUS"));
+					studentRecord.setStatus(rs.getString("stud_status"));
 					studentRecord.setUpdatedAt(rs.getTimestamp("updated_at"));
 
 					return studentRecord;
@@ -86,12 +86,12 @@ public class StudentsDataDAO {
                     student.setMiddleInitial(rs.getString("MIDDLE_INITIAL"));
                     student.setSuffix(rs.getString("SUFFIX"));
                     student.setGender(rs.getString("GENDER"));
-                    student.setDob(rs.getDate("DATE_OF_BIRTH"));
+                    student.setDob(rs.getDate("dob"));
                     student.setEmail(rs.getString("email"));
                     student.setContactNumber(rs.getString("contact_number"));
                     student.setGuardianName(rs.getString("guardian_name"));
                     student.setGuardianEmail(rs.getString("guardian_email"));
-                    student.setGuardianContactNumber(rs.getString("GUARDIAN_CELLPHONE_NUM"));
+                    student.setGuardianContactNumber(rs.getString("guardian_contact_number"));
                     student.setAddress(rs.getString("ADDRESS"));
                     students.add(student);
                 }
@@ -172,12 +172,12 @@ public class StudentsDataDAO {
 					rs.getString("middle_initial"),
 					rs.getString("SUFFIX"),
 					rs.getString("GENDER"),
-					rs.getDate("DATE_OF_BIRTH"),
+					rs.getDate("dob"),
 					rs.getString("email"),
 					rs.getString("contact_number"),
 					rs.getString("guardian_name"),
 					rs.getString("guardian_email"),
-					rs.getString("GUARDIAN_CELLPHONE_NUM"),
+					rs.getString("guardian_contact_number"),
 					rs.getString("ADDRESS")
 				);
 			}
@@ -186,7 +186,7 @@ public class StudentsDataDAO {
 	}
 
 	public StudentsRecord getStudentRecordByUid(Connection connection, int studentUid) throws SQLException {
-		String query = "SELECT * FROM STUDENTS_RECORD WHERE STUDENT_UID = ?";
+		String query = "SELECT * FROM STUDENT_RECORD WHERE STUDENT_UID = ?";
 		try (PreparedStatement stmt = connection.prepareStatement(query)) {
 			stmt.setInt(1, studentUid);
 			ResultSet rs = stmt.executeQuery();
@@ -203,7 +203,7 @@ public class StudentsDataDAO {
 					rs.getString("YEAR_LEVEL"),
 					rs.getString("ADVISER"),
 					rs.getString("SECTION"),
-					rs.getString("STATUS"),
+					rs.getString("stud_status"),
 					rs.getTimestamp("UPDATED_AT")
 				);
 			}
@@ -233,13 +233,13 @@ public class StudentsDataDAO {
 		student.setLAST_NAME(rs.getString("LAST_NAME"));
 		student.setMiddleInitial(rs.getString("middle_initial"));
 		student.setSuffix(rs.getString("SUFFIX"));
-		student.setDob(rs.getDate("DATE_OF_BIRTH"));
+		student.setDob(rs.getDate("dob"));
 		student.setGender(rs.getString("GENDER"));
 		student.setEmail(rs.getString("email"));
 		student.setContactNumber(rs.getString("contact_number"));
 		student.setGuardianName(rs.getString("guardian_name"));
 		student.setGuardianEmail(rs.getString("guardian_email"));
-		student.setGuardianContactNumber(rs.getString("GUARDIAN_CELLPHONE_NUM"));
+		student.setGuardianContactNumber(rs.getString("guardian_contact_number"));
 		student.setAddress(rs.getString("ADDRESS"));
 		
 		return student;

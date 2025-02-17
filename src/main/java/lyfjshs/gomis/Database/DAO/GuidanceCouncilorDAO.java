@@ -15,7 +15,7 @@ public class GuidanceCouncilorDAO {
             String middleInitial, String suffix, String gender,
             String specialization, String contactNum, String email, String position,
             byte[] profilePicture) {
-        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELOR_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, "
+        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELORS_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, "
                 + "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -40,14 +40,14 @@ public class GuidanceCouncilorDAO {
 
     // READ Method
     public static void readGuidanceCounselor(Connection conn, int id) {
-        String sql = "SELECT * FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELOR_ID = ?";
+        String sql = "SELECT * FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELORS_ID = ?";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    System.out.println("ID: " + rs.getInt("guidance_counselor_id"));
+                    System.out.println("ID: " + rs.getInt("guidance_COUNSELORS_ID"));
                     System.out.println("Name: " + rs.getString("FIRST_NAME") + " " + rs.getString("LAST_NAME"));
                     System.out.println("Specialization: " + rs.getString("specialization"));
                     System.out.println("Email: " + rs.getString("email"));
@@ -60,7 +60,7 @@ public class GuidanceCouncilorDAO {
 
     // Batch Processing Example
     public static void createGuidanceCounselorsBatch(Connection connection, List<GuidanceCounselor> counselors) {
-        String sql = "INSERT INTO GUIDANCE_COUNSELORS (guidance_counselor_id, LAST_NAME, FIRST_NAME, middle_initial, suffix, gender, specialization, contact_num, email, position, profile_picture) "
+        String sql = "INSERT INTO GUIDANCE_COUNSELORS (guidance_COUNSELORS_ID, LAST_NAME, FIRST_NAME, middle_initial, suffix, gender, specialization, contact_num, email, position, profile_picture) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             for (GuidanceCounselor counselor : counselors) {

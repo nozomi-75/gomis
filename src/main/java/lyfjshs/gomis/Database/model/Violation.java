@@ -97,7 +97,6 @@ public class Violation {
     }
 
     public String getLRN() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getLRN'");
+       return studentLRN;
     }
 }
