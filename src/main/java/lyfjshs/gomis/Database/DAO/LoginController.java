@@ -232,7 +232,7 @@ public class LoginController {
 				rs = ps.executeQuery();
 
 				if (rs.next()) {
-					int userId = rs.getInt("user_id");
+					// int userId = rs.getInt("user_id");
 					int guidanceCounselorId = rs.getInt("guidance_counselor_id");
 
 					if (guidanceCounselorId != 0) {

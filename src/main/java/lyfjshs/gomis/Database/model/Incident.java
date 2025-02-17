@@ -115,3 +115,5 @@ public class Incident {
         this.updatedAt = updatedAt;
     }
 }
+
+// palagay 

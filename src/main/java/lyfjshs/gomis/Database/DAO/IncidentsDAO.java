@@ -12,7 +12,6 @@ import java.util.List;
 import lyfjshs.gomis.Database.model.Incident;
 import lyfjshs.gomis.Database.model.StudentsData;
 import lyfjshs.gomis.Database.model.Violation;
-    
 
 public class IncidentsDAO {
     private Connection connection;
@@ -24,9 +23,9 @@ public class IncidentsDAO {
     // Create new incident
     public int createIncident(Incident incident) throws SQLException {
         String sql = "INSERT INTO INCIDENTS (student_uid, participant_id, violation_id, incident_date, " +
-                    "incident_description, action_taken, recommendation, status, updated_at) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
+                "incident_description, action_taken, recommendation, status, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             // Set nullable student_uid
             if (incident.getStudentUid() != null) {
@@ -34,7 +33,7 @@ public class IncidentsDAO {
             } else {
                 stmt.setNull(1, Types.INTEGER);
             }
-            
+
             stmt.setInt(2, incident.getParticipantId());
             stmt.setInt(3, incident.getViolationId());
             stmt.setTimestamp(4, incident.getIncidentDate());
@@ -43,9 +42,9 @@ public class IncidentsDAO {
             stmt.setString(7, incident.getRecommendation());
             stmt.setString(8, incident.getStatus());
             stmt.setTimestamp(9, incident.getUpdatedAt());
-            
+
             stmt.executeUpdate();
-            
+
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -58,7 +57,7 @@ public class IncidentsDAO {
     // Read incident by ID
     public Incident getIncidentById(int incidentId) throws SQLException {
         String sql = "SELECT * FROM INCIDENTS WHERE incident_id = ?";
-        
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, incidentId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -73,9 +72,9 @@ public class IncidentsDAO {
     // Update incident
     public boolean updateIncident(Incident incident) throws SQLException {
         String sql = "UPDATE INCIDENTS SET student_uid = ?, participant_id = ?, violation_id = ?, " +
-                    "incident_description = ?, action_taken = ?, recommendation = ?, status = ?, updated_at = ? " +
-                    "WHERE incident_id = ?";
-        
+                "incident_description = ?, action_taken = ?, recommendation = ?, status = ?, updated_at = ? " +
+                "WHERE incident_id = ?";
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             if (incident.getStudentUid() != null) {
                 stmt.setInt(1, incident.getStudentUid());
@@ -90,7 +89,7 @@ public class IncidentsDAO {
             stmt.setString(7, incident.getStatus());
             stmt.setTimestamp(8, incident.getUpdatedAt());
             stmt.setInt(9, incident.getIncidentId());
-            
+
             return stmt.executeUpdate() > 0;
         }
     }
@@ -98,7 +97,7 @@ public class IncidentsDAO {
     // Delete incident
     public boolean deleteIncident(int incidentId) throws SQLException {
         String sql = "DELETE FROM INCIDENTS WHERE incident_id = ?";
-        
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, incidentId);
             return stmt.executeUpdate() > 0;
@@ -109,9 +108,9 @@ public class IncidentsDAO {
     public List<Incident> getAllIncidents() throws SQLException {
         List<Incident> incidents = new ArrayList<>();
         String sql = "SELECT * FROM INCIDENTS ORDER BY incident_date DESC";
-        
+
         try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+                ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 incidents.add(mapResultSetToIncident(rs));
             }
@@ -123,7 +122,7 @@ public class IncidentsDAO {
     public List<Incident> getIncidentsByStudent(int studentUid) throws SQLException {
         List<Incident> incidents = new ArrayList<>();
         String sql = "SELECT * FROM INCIDENTS WHERE student_uid = ? ORDER BY incident_date DESC";
-        
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, studentUid);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -152,37 +151,26 @@ public class IncidentsDAO {
     }
 
     // Get complete incident details including related data
-    public IncidentDetails getCompleteIncidentDetails(int incidentId) throws SQLException {
+    public Incident getCompleteIncidentDetails(int incidentId) throws SQLException {
         Incident incident = getIncidentById(incidentId);
-        if (incident == null) return null;
+        if (incident == null)
+            return null;
 
         StudentsDataDAO studentsCRUD = new StudentsDataDAO(connection);
         ViolationCRUD violationCRUD = new ViolationCRUD(connection);
 
-        StudentsData student = null;
-        if (incident.getStudentUid() != null) {
-            student = studentsCRUD.getStudentById(incident.getStudentUid());
-        }
-        
+        // Fetch related data
+        StudentsData student = (incident.getStudentUid() != null)
+                ? studentsCRUD.getStudentById(incident.getStudentUid())
+                : null;
         Violation violation = violationCRUD.getViolationById(incident.getViolationId());
-        
 
+        // Debugging/logging
+        System.out.println("Incident Details:");
+        System.out.println("Student: " + (student != null ? student.getFIRST_NAME() + student.getLAST_NAME() : "N/A"));
+        System.out.println("Violation: " + (violation != null ? violation.getViolationType() : "N/A"));
 
-        return new IncidentDetails(incident, student, violation);
+        return incident;
     }
 
-    // Inner class to hold complete incident details
-    public static class IncidentDetails {
-        public final Incident incident;
-        public final StudentsData student;
-        public final Violation violation;
-
-
-        public IncidentDetails(Incident incident, StudentsData student, Violation violation) {
-            this.incident = incident;
-            this.student = student;
-            this.violation = violation;
-        }
-
-    }
-} 
+}

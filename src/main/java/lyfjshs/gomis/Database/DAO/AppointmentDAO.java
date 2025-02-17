@@ -13,40 +13,43 @@ import java.util.List;
 import lyfjshs.gomis.Database.model.Appointment;
 
 public class AppointmentDAO {
-	// Create session for Appointment
-	public void addAppointment(Connection conn, 
-							Integer participantId, Integer counselorId, 
-							  String appointmentType, Timestamp appointmentDateTime,
-							  String appointmentStatus) {
-		String query = "INSERT INTO appointments (participant_id, counselors_id, " +
-					  "appointment_type, appointment_date_time, appointment_status) " +
-					  "VALUES (?, ?, ?, ?, ?)";
 
-		try (PreparedStatement preparedStatement = conn.prepareStatement(query)) {
-			// Handle nullable participantId
-			if (participantId != null) {
-				preparedStatement.setInt(1, participantId);
-			} else {
-				preparedStatement.setNull(1, Types.INTEGER);
-			}
-			
-			// Handle nullable counselorId
-			if (counselorId != null) {
-				preparedStatement.setInt(2, counselorId);
-			} else {
-				preparedStatement.setNull(2, Types.INTEGER);
-			}
-			
-			preparedStatement.setString(3, appointmentType);
-			preparedStatement.setTimestamp(4, appointmentDateTime);
-			preparedStatement.setString(5, appointmentStatus);
+	
+  // Add a new appointment
+    public void addAppointment(Connection conn, 
+                               Integer participantId, Integer counselorId, 
+                               String appointmentType, Timestamp appointmentDateTime,
+                               String appointmentStatus) {
+        String query = "INSERT INTO appointments (participant_id, counselors_id, " +
+                       "appointment_type, appointment_date_time, appointment_status) " +
+                       "VALUES (?, ?, ?, ?, ?)";
 
-			preparedStatement.executeUpdate();
-			System.out.println("Appointment added successfully.");
-		} catch (SQLException e) {
-			throw new RuntimeException("Error adding appointment: " + e.getMessage(), e);
-		}
-	}
+        try (PreparedStatement preparedStatement = conn.prepareStatement(query)) {
+            // Handle nullable participantId
+            if (participantId != null) {
+                preparedStatement.setInt(1, participantId);
+            } else {
+                preparedStatement.setNull(1, Types.INTEGER);
+            }
+
+            // Handle nullable counselorId
+            if (counselorId != null) {
+                preparedStatement.setInt(2, counselorId);
+            } else {
+                preparedStatement.setNull(2, Types.INTEGER);
+            }
+
+            preparedStatement.setString(3, appointmentType);
+            preparedStatement.setTimestamp(4, appointmentDateTime);
+            preparedStatement.setString(5, appointmentStatus);
+
+            preparedStatement.executeUpdate();
+            System.out.println("Appointment added successfully.");
+        } catch (SQLException e) {
+            System.err.println("Error adding appointment: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 	
 	public List<Appointment> getAppointmentsForDate(Connection conn, LocalDate date) {
 		List<Appointment> appointments = new ArrayList<>();

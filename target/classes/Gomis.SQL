@@ -124,8 +124,25 @@ CREATE TABLE IF NOT EXISTS APPOINTMENTS (
   appointment_status VARCHAR(50),
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (participant_id) REFERENCES PARTICIPANTS(participant_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (counselors_id) REFERENCES GUIDANCE_COUNSELORS(counselors_id) ON DELETE SET NULL ON UPDATE CASCADE
+  FOREIGN KEY (counselors_id) REFERENCES GUIDANCE_COUNSELORS(guidance_counselor_id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+CREATE TABLE SESSIONS (
+    SESSION_ID INT PRIMARY KEY,
+    APPOINTMENT_ID INT,
+    COUNSELORS_ID INT,
+    PARTICIPANT_ID INT,
+    VIOLATION_ID INT,
+    SESSION_TYPE VARCHAR(50),
+    SESSION_DATE_TIME DATETIME,
+    SESSION_NOTES TEXT,
+    SESSION_STATUS VARCHAR(20),
+    UPDATED_AT DATETIME,
+    FOREIGN KEY (APPOINTMENT_ID) REFERENCES APPOINTMENTS(APPOINTMENT_ID),
+    FOREIGN KEY (COUNSELORS_ID) REFERENCES GUIDANCE_COUNSELORS(GUIDANCE_COUNSELOR_ID),
+    FOREIGN KEY (PARTICIPANT_ID) REFERENCES PARTICIPANTS(PARTICIPANT_ID),
+    FOREIGN KEY (VIOLATION_ID) REFERENCES VIOLATION_RECORD(VIOLATION_ID)
+);
 
 -- Reorganize data insertion order
 -- 1. First insert GUIDANCE_COUNSELORS
@@ -187,7 +204,7 @@ VALUES
 (3, 5, 3, 'Pedro Gonzales missed the deadline for his project submission.', 'Extension granted for submission', 'Encourage better time management practices.', 'Resolved');
 
 -- Insert appointments
-INSERT INTO APPOINTMENTS (student_uid, counselors_id, appointment_type, appointment_date_time, appointment_status)
+INSERT INTO APPOINTMENTS (participant_id, counselors_id, appointment_type, appointment_date_time, appointment_status)
 VALUES
 (1, 1, 'Career Counseling', '2025-02-12 10:00:00', 'Scheduled'),
 (3, 2, 'Adolescent Counseling', '2025-02-13 11:00:00', 'Scheduled'),
@@ -204,3 +221,12 @@ INSERT INTO USERS (u_name, u_pass, guidance_counselor_id) VALUES
 INSERT INTO USERS (u_name, u_pass, guidance_counselor_id) VALUES
 ('liza.perez', 'password456', 4),
 ('carlos.mendoza', 'password789', 5);
+
+-- Insert data for SESSIONS
+INSERT INTO SESSIONS (SESSION_ID, APPOINTMENT_ID, COUNSELORS_ID, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES
+(1, 1, 1, 1, NULL, 'Career Counseling', '2025-02-12 10:00:00', 'Discussed career options and interests.', 'Completed', '2025-02-12 11:00:00'), -- Example: No violation related to this session
+(2, 2, 2, 3, 2, 'Adolescent Counseling', '2025-02-13 11:00:00', 'Addressed bullying incident and developed coping strategies.', 'Completed', '2025-02-13 12:00:00'), -- Example: Session related to a violation
+(3, 3, 3, 5, 3, 'Academic Support', '2025-02-14 09:30:00', 'Discussed time management and study skills.', 'Completed', '2025-02-14 10:30:00'), -- Example: Session related to a violation
+(4, NULL, 1, 1, NULL, 'Initial Consultation', '2025-02-15 14:00:00', 'Initial meeting with student to assess needs.', 'Scheduled', '2025-02-15 14:00:00'), -- Example: No associated appointment yet
+(5, NULL, 2, 3, NULL, 'Follow-up', '2025-02-16 10:00:00', 'Follow-up session to monitor progress.', 'Scheduled', '2025-02-16 10:00:00'); -- Example: No associated appointment yet
+

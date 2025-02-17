@@ -20,18 +20,19 @@ public class SessionsDAO {
 
     // Method to add a session
     public void addSession(Session session) throws SQLException {
-        String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, COUNSELORS_ID, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO SESSIONS (SESSION_ID,APPOINTMENT_ID, COUNSELORS_ID, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             // Set parameters
-            stmt.setInt(1, session.getAppointmentId());
-            stmt.setInt(2, session.getCounselorsId());
-            stmt.setInt(3, session.getParticipantId());
-            stmt.setInt(4, session.getViolationId());
-            stmt.setString(5, session.getSessionType());
-            stmt.setTimestamp(6, session.getSessionDateTime());
-            stmt.setString(7, session.getSessionNotes());
-            stmt.setString(8, session.getSessionStatus());
-            stmt.setTimestamp(9, session.getUpdatedAt());
+            stmt.setInt(1, session.getSessionId());
+            stmt.setInt(2, session.getAppointmentId());
+            stmt.setInt(3, session.getCounselorsId());
+            stmt.setInt(4, session.getParticipantId());
+            stmt.setInt(5, session.getViolationId());
+            stmt.setString(6, session.getSessionType());
+            stmt.setTimestamp(7, session.getSessionDateTime());
+            stmt.setString(8, session.getSessionNotes());
+            stmt.setString(9, session.getSessionStatus());
+            stmt.setTimestamp(10, session.getUpdatedAt());
             stmt.executeUpdate();
         }
     }
@@ -59,6 +60,8 @@ public class SessionsDAO {
             stmt.executeUpdate();
         }
     }
+
+
 
     // Helper method to map ResultSet to Session object
     private Session mapRowToSession(ResultSet rs) throws SQLException {
