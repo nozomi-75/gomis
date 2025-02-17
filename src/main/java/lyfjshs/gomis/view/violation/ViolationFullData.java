@@ -1,0 +1,124 @@
+package lyfjshs.gomis.view.violation;
+
+import java.awt.BorderLayout;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
+
+import lyfjshs.gomis.Database.model.Violation;
+import lyfjshs.gomis.components.FormManager.Form;
+import net.miginfocom.swing.MigLayout;
+
+public class ViolationFullData extends Form {
+    private JTextField violationIdField;
+    private JTextField participantIdField;
+    private JTextField studentNameField;
+    private JTextField violationTypeField;
+    private JTextField statusField;
+    private JTextArea descriptionArea;
+    private JTextField dateField;
+    private JTextField reportedByField;
+    private JTextField emailField;
+    private JTextField contactField;
+
+    public ViolationFullData(Violation violation) {
+        setLayout(new BorderLayout(0, 0));
+        initComponents();
+        populateData(violation);
+        
+        // Create main panel with scroll
+        JPanel mainPanel = new JPanel(new MigLayout("", "[grow]", "[grow][]"));
+        JScrollPane scroll = new JScrollPane(mainPanel);
+        
+        mainPanel.add(createViolationDetailsPanel(), "cell 0 0, grow");
+        mainPanel.add(createDescriptionPanel(), "cell 0 1, grow");
+        
+        add(scroll);
+    }
+
+    private void initComponents() {
+        violationIdField = new JTextField();
+        participantIdField = new JTextField();
+        studentNameField = new JTextField();
+        violationTypeField = new JTextField();
+        statusField = new JTextField();
+        descriptionArea = new JTextArea(5, 20);
+        dateField = new JTextField();
+        reportedByField = new JTextField();
+        emailField = new JTextField();
+        contactField = new JTextField();
+        
+        // Make fields read-only
+        violationIdField.setEditable(false);
+        participantIdField.setEditable(false);
+        studentNameField.setEditable(false);
+        violationTypeField.setEditable(false);
+        statusField.setEditable(false);
+        descriptionArea.setEditable(false);
+        dateField.setEditable(false);
+        reportedByField.setEditable(false);
+        emailField.setEditable(false);
+        contactField.setEditable(false);
+    }
+
+    private void populateData(Violation violation) {
+        violationIdField.setText(String.valueOf(violation.getViolationId()));
+        participantIdField.setText(String.valueOf(violation.getParticipantId()));
+        studentNameField.setText(violation.getFormattedParticipantInfo());
+        violationTypeField.setText(violation.getViolationType());
+        statusField.setText(violation.getStatus());
+        descriptionArea.setText(violation.getViolationDescription());
+        dateField.setText(violation.getUpdatedAt() != null ? 
+            violation.getUpdatedAt().toString() : "");
+        emailField.setText(violation.getEmail());
+        contactField.setText(violation.getContact());
+    }
+
+    private JPanel createViolationDetailsPanel() {
+        JPanel panel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[][][][][][][][]"));
+        panel.setBorder(new TitledBorder(null, "Violation Information", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+        panel.add(new JLabel("Violation ID:"));
+        panel.add(violationIdField, "growx");
+
+        panel.add(new JLabel("Participant ID:"));
+        panel.add(participantIdField, "growx");
+
+        panel.add(new JLabel("Name:"));
+        panel.add(studentNameField, "growx");
+
+        panel.add(new JLabel("Email:"));
+        panel.add(emailField, "growx");
+
+        panel.add(new JLabel("Contact:"));
+        panel.add(contactField, "growx");
+
+        panel.add(new JLabel("Violation Type:"));
+        panel.add(violationTypeField, "growx");
+
+        panel.add(new JLabel("Status:"));
+        panel.add(statusField, "growx");
+
+        panel.add(new JLabel("Date:"));
+        panel.add(dateField, "growx");
+
+        return panel;
+    }
+
+    private JPanel createDescriptionPanel() {
+        JPanel panel = new JPanel(new MigLayout("wrap 1", "[grow,fill]", "[][]"));
+        panel.setBorder(new TitledBorder(null, "Description", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+        descriptionArea.setLineWrap(true);
+        descriptionArea.setWrapStyleWord(true);
+        JScrollPane scrollPane = new JScrollPane(descriptionArea);
+        
+        panel.add(scrollPane, "grow");
+
+        return panel;
+    }
+} 
