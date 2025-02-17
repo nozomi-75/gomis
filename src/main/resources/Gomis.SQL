@@ -117,14 +117,14 @@ CREATE TABLE IF NOT EXISTS INCIDENTS (
 -- APPOINTMENTS Table
 CREATE TABLE IF NOT EXISTS APPOINTMENTS (
   appointment_id INT PRIMARY KEY AUTO_INCREMENT,
-  student_uid INT NOT NULL,
+  participant_id INT NOT NULL,
   counselors_id INT, 
   appointment_type VARCHAR(255),
   appointment_date_time DATETIME NOT NULL,
   appointment_status VARCHAR(50),
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (student_uid) REFERENCES STUDENTS_DATA(student_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (counselors_id) REFERENCES GUIDANCE_COUNSELORS(guidance_counselor_id) ON DELETE SET NULL ON UPDATE CASCADE
+  FOREIGN KEY (participant_id) REFERENCES PARTICIPANTS(participant_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (counselors_id) REFERENCES GUIDANCE_COUNSELORS(counselors_id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 -- Reorganize data insertion order
@@ -199,6 +199,7 @@ INSERT INTO USERS (u_name, u_pass, guidance_counselor_id) VALUES
 ('admin', 'admin', 1),
 ('jose.cruz', 'password123', 2),
 ('maria.lopez', 'password123', 3);
+
 -- Insert additional users
 INSERT INTO USERS (u_name, u_pass, guidance_counselor_id) VALUES
 ('liza.perez', 'password456', 4),
