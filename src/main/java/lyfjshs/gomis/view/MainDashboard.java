@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.JButton;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
@@ -62,6 +63,43 @@ public class MainDashboard extends Form {
 		AppointmentOverview appointmentOverview = new AppointmentOverview(conn);
 		sideRPanel.add(appointmentOverview, "cell 0 1,grow");
 
+		JPanel actionPanel = new JPanel(new MigLayout("wrap 4", "[grow]", "[]"));
+		contentPanel.add(actionPanel, "cell 0 2,grow");
+
+		// Create labels for each section
+		JLabel lblViolation = new JLabel("VIOLATION");
+		JLabel lblAppointment = new JLabel("APPOINTMENT");
+		JLabel lblSessions = new JLabel("SESSIONS");
+		JLabel lblIncidentReport = new JLabel("INCIDENT REPORT");
+
+		// Create buttons for actions
+		JButton btnViewViolation = new JButton("VIEW");
+		JButton btnSetSchedule = new JButton("SET SCHEDULE");
+		JButton btnViewSessions = new JButton("VIEW");
+		JButton btnPrintIncidentReport = new JButton("PRINT");
+
+		// Add labels and buttons to the action panel
+		actionPanel.add(lblViolation);
+		actionPanel.add(btnViewViolation);
+		actionPanel.add(lblAppointment);
+		actionPanel.add(btnSetSchedule);
+		actionPanel.add(lblSessions);
+		actionPanel.add(btnViewSessions);
+		actionPanel.add(lblIncidentReport);
+		actionPanel.add(btnPrintIncidentReport);
+
+		// Optional: Style the buttons and labels
+		btnViewViolation.setBackground(Color.LIGHT_GRAY);
+		btnSetSchedule.setBackground(Color.LIGHT_GRAY);
+		btnViewSessions.setBackground(Color.LIGHT_GRAY);
+		btnPrintIncidentReport.setBackground(Color.LIGHT_GRAY);
+
+		// Set font styles for labels
+		lblViolation.setFont(lblViolation.getFont().deriveFont(16f));
+		lblAppointment.setFont(lblAppointment.getFont().deriveFont(16f));
+		lblSessions.setFont(lblSessions.getFont().deriveFont(16f));
+		lblIncidentReport.setFont(lblIncidentReport.getFont().deriveFont(16f));
+
 		// Add this debug code temporarily in MainDashboard constructor
 		try {
 			Connection testConn = DBConnection.getConnection();
@@ -88,7 +126,12 @@ public class MainDashboard extends Form {
 		};
 		
 		JTable table = new JTable(model);
-		table.setRowHeight(40);
+		table.setRowHeight(30); // Set a fixed height for rows to shorten the panel
+		table.getColumnModel().getColumn(0).setPreferredWidth(50); // LRN
+		table.getColumnModel().getColumn(1).setPreferredWidth(150); // Full Name
+		table.getColumnModel().getColumn(2).setPreferredWidth(100); // Grade & Strand
+		table.getColumnModel().getColumn(3).setPreferredWidth(80); // Status
+		table.getColumnModel().getColumn(4).setPreferredWidth(100); // Actions
 		
 		// Load violation data
 		try {
