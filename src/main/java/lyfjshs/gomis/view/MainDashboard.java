@@ -39,7 +39,7 @@ public class MainDashboard extends Form {
 		this.connection = conn;
 		this.setLayout(new BorderLayout());
 
-		contentPanel = new JPanel(new MigLayout("fill, gap 10", "[grow 80][]", "[grow]"));
+		contentPanel = new JPanel(new MigLayout("fill, gap 10", "[grow 65][]", "[grow]"));
 		this.add(contentPanel, BorderLayout.CENTER); // Center the content panel
 
 		centralTablePanel = new JPanel(new MigLayout("", "[386.00,grow]", "[30px][grow]"));
@@ -63,42 +63,20 @@ public class MainDashboard extends Form {
 		AppointmentOverview appointmentOverview = new AppointmentOverview(conn);
 		sideRPanel.add(appointmentOverview, "cell 0 1,grow");
 
-		JPanel actionPanel = new JPanel(new MigLayout("wrap 4", "[grow]", "[]"));
+		JPanel actionPanel = new JPanel(new MigLayout("wrap 4, insets 20, gap 20", "[grow][grow][grow][grow]", "[][]"));
 		contentPanel.add(actionPanel, "cell 0 2,grow");
 
-		// Create labels for each section
-		JLabel lblViolation = new JLabel("VIOLATION");
-		JLabel lblAppointment = new JLabel("APPOINTMENT");
-		JLabel lblSessions = new JLabel("SESSIONS");
-		JLabel lblIncidentReport = new JLabel("INCIDENT REPORT");
+		// Create panels for each section
+		JPanel violationPanel = createActionPanel("VIOLATION", "VIEW");
+		JPanel appointmentPanel = createActionPanel("APPOINTMENT", "SET SCHEDULE");
+		JPanel sessionsPanel = createActionPanel("SESSIONS", "VIEW");
+		JPanel incidentPanel = createActionPanel("INCIDENT REPORT", "PRINT");
 
-		// Create buttons for actions
-		JButton btnViewViolation = new JButton("VIEW");
-		JButton btnSetSchedule = new JButton("SET SCHEDULE");
-		JButton btnViewSessions = new JButton("VIEW");
-		JButton btnPrintIncidentReport = new JButton("PRINT");
-
-		// Add labels and buttons to the action panel
-		actionPanel.add(lblViolation);
-		actionPanel.add(btnViewViolation);
-		actionPanel.add(lblAppointment);
-		actionPanel.add(btnSetSchedule);
-		actionPanel.add(lblSessions);
-		actionPanel.add(btnViewSessions);
-		actionPanel.add(lblIncidentReport);
-		actionPanel.add(btnPrintIncidentReport);
-
-		// Optional: Style the buttons and labels
-		btnViewViolation.setBackground(Color.LIGHT_GRAY);
-		btnSetSchedule.setBackground(Color.LIGHT_GRAY);
-		btnViewSessions.setBackground(Color.LIGHT_GRAY);
-		btnPrintIncidentReport.setBackground(Color.LIGHT_GRAY);
-
-		// Set font styles for labels
-		lblViolation.setFont(lblViolation.getFont().deriveFont(16f));
-		lblAppointment.setFont(lblAppointment.getFont().deriveFont(16f));
-		lblSessions.setFont(lblSessions.getFont().deriveFont(16f));
-		lblIncidentReport.setFont(lblIncidentReport.getFont().deriveFont(16f));
+		// Add panels to the action panel
+		actionPanel.add(violationPanel, "grow");
+		actionPanel.add(appointmentPanel, "grow");
+		actionPanel.add(sessionsPanel, "grow");
+		actionPanel.add(incidentPanel, "grow");
 
 		// Add this debug code temporarily in MainDashboard constructor
 		try {
@@ -267,4 +245,24 @@ public class MainDashboard extends Form {
 		contentPanel.repaint();
 	}
 
-}
+	private JPanel createActionPanel(String title, String buttonText) {
+		JPanel panel = new JPanel(new MigLayout("wrap 1, insets 10, gap 5", "[center]", "[][]"));
+		panel.setBackground(new Color(240, 240, 240));
+		
+		JLabel titleLabel = new JLabel(title);
+		titleLabel.setFont(titleLabel.getFont().deriveFont(12f));
+		
+		JButton actionButton = new JButton(buttonText);
+		actionButton.setBackground(new Color(220, 220, 220));
+		actionButton.setForeground(new Color(60, 60, 60));
+		actionButton.setFocusPainted(false);
+		actionButton.setBorderPainted(false);
+		actionButton.setOpaque(true);
+		
+		panel.add(titleLabel);
+		panel.add(actionButton, "w 120!, h 30!");
+		
+		return panel;
+	}
+
+} 
