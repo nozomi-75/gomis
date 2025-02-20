@@ -21,6 +21,7 @@ import javax.swing.JButton;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DBConnection;
+import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
 import lyfjshs.gomis.Database.model.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
@@ -59,8 +60,8 @@ public class MainDashboard extends Form {
 		
 		JLabel lblNewLabel_1 = new JLabel("Appointments overview");
 		sideRPanel.add(lblNewLabel_1, "cell 0 0");
-
-		AppointmentOverview appointmentOverview = new AppointmentOverview(conn);
+		AppointmentDAO appointmentDAO = new AppointmentDAO();
+		AppointmentOverview appointmentOverview = new AppointmentOverview(appointmentDAO, conn);
 		sideRPanel.add(appointmentOverview, "cell 0 1,grow");
 
 		JPanel actionPanel = new JPanel(new MigLayout("wrap 4, insets 20, gap 20", "[grow][grow][grow][grow]", "[][]"));

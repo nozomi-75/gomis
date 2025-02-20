@@ -121,8 +121,10 @@ CREATE TABLE IF NOT EXISTS APPOINTMENTS (
   appointment_id INT PRIMARY KEY AUTO_INCREMENT,
   participant_id INT NOT NULL,
   counselors_id INT, 
+  appointment_title VARCHAR(50),
   appointment_type VARCHAR(255),
   appointment_date_time DATETIME NOT NULL,
+  appointment_notes VARCHAR(100),
   appointment_status VARCHAR(50),
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (participant_id) REFERENCES PARTICIPANTS(participant_id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -207,22 +209,4 @@ INSERT INTO INCIDENTS (student_uid, participant_id, violation_id, incident_descr
 (1, 1, 1, 'Student was caught using a cheat sheet during Mathematics exam', 'Confiscation of materials and immediate parent notification', 'Regular counseling sessions and academic monitoring', 'Under Investigation'),
 (2, 2, 2, 'Multiple instances of arriving late to morning classes', 'Parent conference conducted', 'Time management workshop attendance', 'Active'),
 (3, 3, 3, 'Wearing incorrect school uniform components', 'Verbal warning issued', 'Review of school dress code policies', 'Resolved');
-
--- Insert Appointments
-INSERT INTO APPOINTMENTS (participant_id, counselors_id, appointment_type, appointment_date_time, appointment_status) VALUES
-(1, 1, 'Academic Counseling', '2024-02-20 10:00:00', 'Scheduled'),
-(2, 2, 'Behavioral Counseling', '2024-02-21 14:30:00', 'Scheduled'),
-(3, 3, 'Follow-up Session', '2024-02-22 11:00:00', 'Scheduled');
-
--- Insert Sessions
-INSERT INTO SESSIONS (SESSION_ID, APPOINTMENT_ID, COUNSELORS_ID, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES
-(1, 1, 1, 1, 1, 'Individual Counseling', '2024-02-20 10:00:00', 'Initial assessment of academic performance and study habits', 'Scheduled', CURRENT_TIMESTAMP),
-(2, 2, 2, 2, 2, 'Behavioral Counseling', '2024-02-21 14:30:00', 'Discussion of tardiness issues and time management strategies', 'Scheduled', CURRENT_TIMESTAMP),
-(3, 3, 3, 3, 3, 'Follow-up', '2024-02-22 11:00:00', 'Review of students compliance with dress code', 'Scheduled', CURRENT_TIMESTAMP);
-
-INSERT INTO sessions_participants (SESSION_ID, PARTICIPANT_ID) VALUES
-(1, 1),  -- Session 1 with Participant 1
-(1, 2),  -- Session 1 with Participant 2 (group session)
-(2, 2),  -- Session 2 with Participant 2
-(3, 3);  -- Session 3 with Participant 3
 

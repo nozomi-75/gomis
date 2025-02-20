@@ -18,7 +18,7 @@ import lyfjshs.gomis.components.DrawerBuilder;
 import lyfjshs.gomis.components.GFrame;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.view.LoginView;
-import lyfjshs.gomis.view.appointment.AppointmentMangement;
+import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import lyfjshs.gomis.view.incident.IncidentList;
 import lyfjshs.gomis.view.sessions.SessionRecords;
@@ -109,7 +109,7 @@ public class Main {
 	private static Violation_Record vrList;
 	private static ViolationFillUpForm violationFillUp;
 	private static IncidentList incidentList;
-	private static AppointmentMangement appointmentCalendar;
+	private static AppointmentManagement appointmentCalendar;
 	private static SessionsForm sessionFillUp;
 	private static SessionRecords sessionRecords;
 	
@@ -120,7 +120,7 @@ public class Main {
 		vrList = new Violation_Record(conn);
 		violationFillUp = new ViolationFillUpForm(conn);
         incidentList = new IncidentList(conn);
-    	appointmentCalendar = new AppointmentMangement(conn);
+    	appointmentCalendar = new AppointmentManagement(conn);
     	sessionFillUp = new SessionsForm(conn);
 		sessionRecords = new SessionRecords(conn);
 	}

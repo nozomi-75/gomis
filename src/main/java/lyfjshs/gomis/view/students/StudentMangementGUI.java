@@ -110,7 +110,8 @@ public class StudentMangementGUI extends Form {
 
 			try {
 				StudentsData studentData = studentsDataCRUD.getStudentDataByLrn(connection, lrn);
-				StudentsRecord studentRecord = studentsDataCRUD.getStudentRecordByUid(connection, studentData.getStudentUid());
+				StudentsRecord studentRecord = studentsDataCRUD.getStudentRecordByUid(connection,
+						studentData.getStudentUid());
 
 				// Create and show the detail panel with retrieved data
 				currentDetailPanel = new StudentFullData(studentData, studentRecord);
@@ -118,7 +119,8 @@ public class StudentMangementGUI extends Form {
 				slidePane.addSlide(currentDetailPanel, SlidePaneTransition.Type.FORWARD);
 				backBtn.setVisible(true);
 			} catch (SQLException e) {
-				JOptionPane.showMessageDialog(this, "Error retrieving student data: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this, "Error retrieving student data: " + e.getMessage(),
+						"Database Error", JOptionPane.ERROR_MESSAGE);
 				e.printStackTrace();
 			}
 
@@ -175,20 +177,4 @@ public class StudentMangementGUI extends Form {
 		}
 	}
 
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-			try {
-				JFrame frame = new JFrame("Student Management");
-				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				frame.getContentPane().add(new StudentMangementGUI(DBConnection.getConnection()));
-				frame.setSize(800, 600);
-				frame.setLocationRelativeTo(null);
-				frame.setVisible(true);
-			} catch (SQLException e) {
-				e.printStackTrace();
-				JOptionPane.showMessageDialog(null, "Error connecting to database: " + e.getMessage(), "Database Error",
-						JOptionPane.ERROR_MESSAGE);
-			}
-		});
-	}
 }

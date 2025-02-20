@@ -12,7 +12,7 @@ import lyfjshs.gomis.components.FormManager.AllForms;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.view.MainDashboard;
-import lyfjshs.gomis.view.appointment.AppointmentMangement;
+import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import lyfjshs.gomis.view.incident.IncidentList;
 import lyfjshs.gomis.view.sessions.SessionRecords;
@@ -130,7 +130,7 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 		MenuItem items[] = new MenuItem[] { 
 			new Item("Home", "home.svg", MainDashboard.class),
 			new Item.Label("Management"), 
-			new Item("Appointments", "calendar.svg", AppointmentMangement.class),
+			new Item("Appointments", "calendar.svg", AppointmentManagement.class),
 			new Item("Sessions", "gavel.svg")
 			.subMenu("Session Fill-Up Form", SessionsForm.class)
 			.subMenu("Session Records", SessionRecords.class),
