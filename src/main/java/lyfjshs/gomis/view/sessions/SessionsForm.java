@@ -57,7 +57,7 @@ public class SessionsForm extends Form implements Printable {
             	0,
                 0, // appointmentId (not retrieved in the query)
                 0, // counselorsId (not retrieved in the query)
-                0, // participantId (not retrieved in the query)
+                participants, // Use the int directly
                 0, // violationId (not retrieved in the query)
                 violation, // sessionType
                 null, // sessionDateTime (not retrieved in the query)

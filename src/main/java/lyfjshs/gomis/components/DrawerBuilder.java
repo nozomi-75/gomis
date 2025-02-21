@@ -18,6 +18,7 @@ import lyfjshs.gomis.view.incident.IncidentList;
 import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
+import lyfjshs.gomis.view.students.StudentSearchPanel;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
 import raven.extras.AvatarIcon;
@@ -44,15 +45,17 @@ import raven.modal.drawer.simple.header.SimpleHeaderData;
 public class DrawerBuilder extends SimpleDrawerBuilder {
 
 	private static Connection conn;
+	private Connection connection;
 
 	/**
 	 * Constructs a {@code DrawerBuilder} with a given database connection.
 	 * 
 	 * @param cn The database connection to be used for accessing user-related data.
 	 */
-	public DrawerBuilder(Connection cn) {
+	public DrawerBuilder(Connection conn) {
 		super(createSimpleMenuOption());
-		this.conn = cn;
+		this.conn = conn;
+		this.connection = conn;
 		LightDarkButtonFooter lightDarkButtonFooter = new LightDarkButtonFooter(getSimpleFooterData());
 		lightDarkButtonFooter.addModeChangeListener(isDarkMode -> {
 			// Event listener for light/dark mode changes
@@ -136,6 +139,7 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 			.subMenu("Session Records", SessionRecords.class),
 			
 			new Item("Students Data", "article_person.svg", StudentMangementGUI.class),
+			new Item("Student Search", "article_person.svg", StudentSearchPanel.class),
 			new Item("Incident Management", "assignment.svg")
 				.subMenu("Incident Fill-Up Form", IncidentFillUpForm.class)
 				.subMenu("Incident Records", IncidentList.class),
@@ -248,5 +252,10 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 	 */
 	private static String getDrawerBackgroundStyle() {
 		return "[light]background:tint($Panel.background,100%);" + "[dark]background:tint($Panel.background,5%);";
+	}
+
+	// Method to create the StudentSearchPanel
+	public StudentSearchPanel createStudentSearchPanel() {
+		return new StudentSearchPanel(connection);
 	}
 }

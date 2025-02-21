@@ -17,9 +17,9 @@ public class Session {
     private Timestamp appointmentDateTime;
 
     // Constructor
-    public Session(int sessionId, int appointmentId, int counselorsId, int participantId, int violationId,
-                   String sessionType, Timestamp sessionDateTime, String sessionNotes, String sessionStatus,
-                   Timestamp updatedAt) {
+    public Session(int sessionId, int appointmentId, int counselorsId, int participantId, int violationId, 
+                  String sessionType, Timestamp sessionDateTime, String sessionNotes, 
+                  String sessionStatus, Timestamp updatedAt) {
         this.sessionId = sessionId;
         this.appointmentId = appointmentId;
         this.counselorsId = counselorsId;
@@ -30,6 +30,10 @@ public class Session {
         this.sessionNotes = sessionNotes;
         this.sessionStatus = sessionStatus;
         this.updatedAt = updatedAt;
+    }
+
+    public Session() {
+        // Empty constructor
     }
 
     // Getters and Setters

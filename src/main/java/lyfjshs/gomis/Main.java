@@ -26,6 +26,7 @@ import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
+import lyfjshs.gomis.view.students.StudentSearchPanel;
 import raven.modal.Drawer;
 
 /**
@@ -123,6 +124,7 @@ public class Main {
     	appointmentCalendar = new AppointmentManagement(conn);
     	sessionFillUp = new SessionsForm(conn);
 		sessionRecords = new SessionRecords(conn);
+		StudentSearchPanel studentSearchPanel = new StudentSearchPanel(conn);
 	}
 
 	/**

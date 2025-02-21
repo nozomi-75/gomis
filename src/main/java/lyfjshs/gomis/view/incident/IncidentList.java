@@ -30,6 +30,17 @@ public class IncidentList extends Form {
 	private static final String TABLE_VIEW = "table";
 	private static final String DETAILS_VIEW = "details";
 	private Connection connect;
+	private JTextField nameField;
+	private JTextField ageField;
+	private JTextField contactField;
+	private JTextField sexField;
+	private JTextField guardianField;
+	private JTextField guardianContactField;
+	private JTextField incidentTypeField;
+	private JTextArea narrativeField;
+	private JTextArea actionTakenField;
+	private JTextArea recommendationField;
+	private JButton saveButton; // Declare Save button as a class variable
 
 	public IncidentList(Connection conn) {
 		this.connect = conn;
@@ -109,23 +120,36 @@ public class IncidentList extends Form {
 		detailsPanel.add(formFields, "span 2, grow");
 
 		// Narrative Panel
-		JTextArea narrativeField = new JTextArea(details.narrative);
+		narrativeField = new JTextArea(details.narrative);
 		detailsPanel.add(createTextAreaPanel("Narrative Report:", narrativeField), "span 2, grow");
 
 		// Action & Recommendation Panel
 		JPanel actionPanel = new JPanel(new MigLayout("fillx, insets 0", "[grow,fill]10[grow,fill]", "[]"));
-		JTextArea actionTakenField = new JTextArea(details.actionTaken);
-		JTextArea recommendationField = new JTextArea(details.recommendation);
+		actionTakenField = new JTextArea(details.actionTaken);
+		recommendationField = new JTextArea(details.recommendation);
 		actionPanel.add(createTextAreaPanel("Action Taken:", actionTakenField), "grow");
 		actionPanel.add(createTextAreaPanel("Recommendation:", recommendationField), "grow");
 		detailsPanel.add(actionPanel, "span 2, grow");
 
-		// Back button
+		// Back and Edit buttons
 		JPanel buttonPanel = new JPanel(new MigLayout("insets 10", "[center, grow]", "[]"));
 		JButton backButton = new JButton("Back to List");
 		backButton.setPreferredSize(new Dimension(120, 30));
 		backButton.addActionListener(e -> cardLayout.show(cardPanel, TABLE_VIEW));
 		buttonPanel.add(backButton, "center");
+
+		// Add Edit button
+		JButton editButton = new JButton("Edit");
+		editButton.setPreferredSize(new Dimension(120, 30));
+		editButton.addActionListener(e -> editIncidentDetails());
+		buttonPanel.add(editButton, "center");
+
+		// Initialize Save button
+		saveButton = new JButton("Save");
+		saveButton.setPreferredSize(new Dimension(120, 30));
+		saveButton.addActionListener(e -> saveIncidentDetails(studentName, incidentName));
+		saveButton.setVisible(false); // Initially hidden
+		buttonPanel.add(saveButton, "center");
 		detailsPanel.add(buttonPanel, "span 2, grow");
 
 		// Add the details panel to the card panel and show it
@@ -142,13 +166,13 @@ public class IncidentList extends Form {
 						new Font("Arial", Font.BOLD, 12), new Color(100, 149, 177)));
 
 		// Create text fields
-		JTextField nameField = new JTextField(studentName);
-		JTextField ageField = new JTextField("30");
-		JTextField contactField = new JTextField("123-456-7890");
-		JTextField sexField = new JTextField("Male");
-		JTextField guardianField = new JTextField("John Doe");
-		JTextField guardianContactField = new JTextField("987-654-3210");
-		JTextField incidentTypeField = new JTextField(getIncidentTypeForStudent(studentName));
+		nameField = new JTextField(studentName);
+		ageField = new JTextField("30");
+		contactField = new JTextField("123-456-7890");
+		sexField = new JTextField("Male");
+		guardianField = new JTextField("John Doe");
+		guardianContactField = new JTextField("987-654-3210");
+		incidentTypeField = new JTextField(getIncidentTypeForStudent(studentName));
 
 		// Add components with MigLayout constraints
 		detailsPanel.add(new JLabel("Name:"), "right");
@@ -273,6 +297,52 @@ public class IncidentList extends Form {
 			}
 		}
 		return "Unknown Incident";
+	}
+
+	// New method to handle editing incident details
+	private void editIncidentDetails() {
+		// Make all fields editable
+		nameField.setEditable(true);
+		ageField.setEditable(true);
+		contactField.setEditable(true);
+		sexField.setEditable(true);
+		guardianField.setEditable(true);
+		guardianContactField.setEditable(true);
+		incidentTypeField.setEditable(true);
+		narrativeField.setEditable(true);
+		actionTakenField.setEditable(true);
+		recommendationField.setEditable(true);
+
+		// Show the Save button
+		saveButton.setVisible(true);
+	}
+
+	// New method to save incident details
+	private void saveIncidentDetails(String studentName, String incidentName) {
+		// Logic to save the edited details
+		// You can implement the saving logic here, e.g., updating the database
+
+		// Update the table model with the new values
+		for (int i = 0; i < table.getRowCount(); i++) {
+			if (studentName.equals(table.getValueAt(i, 2))) { // Column 2 is Student Name
+				table.setValueAt(nameField.getText(), i, 2); // Update Student Name
+				table.setValueAt(incidentTypeField.getText(), i, 3); // Update Incident Name
+				// Add more fields as necessary
+				break;
+			}
+		}
+
+		// After saving, make all fields non-editable again
+		makeFieldsReadOnly(nameField, ageField, contactField, sexField, guardianField, guardianContactField,
+				incidentTypeField);
+		narrativeField.setEditable(false);
+		actionTakenField.setEditable(false);
+		recommendationField.setEditable(false);
+
+		// Hide the Save button after saving
+		saveButton.setVisible(false);
+
+		System.out.println("Saved incident details for " + studentName + " regarding " + incidentName);
 	}
 
 }
