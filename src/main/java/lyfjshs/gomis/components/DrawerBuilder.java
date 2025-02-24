@@ -167,14 +167,14 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 				int i = index[0];
 
 				// Handle logout (last item in the menu)
-				if (i == 7) {
+				if (i == 8) {
 					action.consume();
 					FormManager.logout();
 					return;
 				}
 
 				// Handle settings (second to last item)
-				if (i == 6) {
+				if (i == 7) {
 					action.consume();
 					return;
 				}

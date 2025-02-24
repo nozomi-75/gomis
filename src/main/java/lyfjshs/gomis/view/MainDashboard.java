@@ -40,11 +40,11 @@ public class MainDashboard extends Form {
 		this.connection = conn;
 		this.setLayout(new BorderLayout());
 
-		contentPanel = new JPanel(new MigLayout("fill, gap 10", "[grow 65][]", "[grow]"));
+		contentPanel = new JPanel(new MigLayout("fill, gap 10", "[grow][300]", "[grow 60][]"));
 		this.add(contentPanel, BorderLayout.CENTER); // Center the content panel
 
 		centralTablePanel = new JPanel(new MigLayout("", "[386.00,grow]", "[30px][grow]"));
-		contentPanel.add(centralTablePanel, "grow");
+		contentPanel.add(centralTablePanel, "cell 0 0,grow");
 
 		JPanel headerTablePanel = new JPanel(new MigLayout("", "[40px:70px][40px:70px][grow]", "[grow][]"));
 		centralTablePanel.add(headerTablePanel, "cell 0 0,grow");
@@ -56,7 +56,7 @@ public class MainDashboard extends Form {
 		centralTablePanel.add(tableScrollPane, "cell 0 1,grow");
 
 		JPanel sideRPanel = new JPanel(new MigLayout("", "[center]", "[][grow][]"));
-		contentPanel.add(sideRPanel, "grow");
+		contentPanel.add(sideRPanel, "cell 1 0 1 2,grow");
 		
 		JLabel lblNewLabel_1 = new JLabel("Appointments overview");
 		sideRPanel.add(lblNewLabel_1, "cell 0 0");
@@ -65,7 +65,7 @@ public class MainDashboard extends Form {
 		sideRPanel.add(appointmentOverview, "cell 0 1,grow");
 
 		JPanel actionPanel = new JPanel(new MigLayout("wrap 4, insets 20, gap 20", "[grow][grow][grow][grow]", "[][]"));
-		contentPanel.add(actionPanel, "cell 0 2,grow");
+		contentPanel.add(actionPanel, "cell 0 1,grow");
 
 		// Create panels for each section
 		JPanel violationPanel = createActionPanel("VIOLATION", "VIEW");
@@ -172,7 +172,7 @@ public class MainDashboard extends Form {
 				dialog.setModal(true);
 				dialog.setSize(800, 600);
 				dialog.setLocationRelativeTo(null);
-				dialog.add(violationDetailPanel);
+				dialog.getContentPane().add(violationDetailPanel);
 				dialog.setVisible(true);
 			}
 		} catch (SQLException e) {

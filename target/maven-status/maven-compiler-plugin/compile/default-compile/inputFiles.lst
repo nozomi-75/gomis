@@ -20,6 +20,7 @@ C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\SessionsDAO.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\StudentsDataDAO.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\ViolationCRUD.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DatabaseSplashScreen.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DBConnection.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Appointment.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\GuidanceCounselor.java
@@ -37,9 +38,7 @@ C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentDailyOverview.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentDialog.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentManagement.java
-C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentMangement.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentOverview.java
-C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentWeekly.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentFillUpForm.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentList.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentRecords.java
@@ -50,6 +49,7 @@ C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionsForm.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\students\StudentFullData.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\students\StudentMangementGUI.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\students\StudentSearchPanel.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\ViewViolationDetails.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\Violation_Record.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationDetails.java

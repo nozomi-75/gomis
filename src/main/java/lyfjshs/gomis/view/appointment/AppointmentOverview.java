@@ -32,7 +32,6 @@ public class AppointmentOverview extends JPanel {
     private final List<Appointment> appointments;
     private Connection connection;
     private final AppointmentDAO appointmentDAO;
-    private final JTable appointmentTable;
 
     public AppointmentOverview(AppointmentDAO appointmentDAO, Connection conn) {
         this.appointmentDAO = appointmentDAO;
@@ -44,12 +43,9 @@ public class AppointmentOverview extends JPanel {
         
         // Setup UI components
         datePicker = createDatePicker();
-        appointmentTable = new JTable(new DefaultTableModel(
-            new Object[] {"ID", "Title", "Type", "Date", "Status", "Notes"}, 0));
         
         this.add(datePicker, "cell 0 0, grow");
         this.add(createAppointmentsView(), "cell 0 1, grow");
-        this.add(new JScrollPane(appointmentTable), "cell 0 2, grow");
 
         // Load today's appointments
         loadAppointments(LocalDate.now());
@@ -81,7 +77,7 @@ public class AppointmentOverview extends JPanel {
         JPanel card = new JPanel(new MigLayout("", "[grow][grow]"));
         card.setBorder(new LineBorder(Color.GRAY, 1, true));
 
-        JLabel nameLabel = new JLabel("Participant ID: " + appt.getParticipantId());
+        JLabel nameLabel = new JLabel(appt.getAppointmentTitle());
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD, 14f));
 
         String timeStr = appt.getAppointmentDateTime().format(DateTimeFormatter.ofPattern("h:mm a"));
@@ -172,24 +168,12 @@ public class AppointmentOverview extends JPanel {
             appointments.clear();
             appointments.addAll(loadedAppointments);
 
-            // Update table
-            DefaultTableModel model = (DefaultTableModel) appointmentTable.getModel();
-            model.setRowCount(0);
-            
             if (appointments.isEmpty()) {
                 JLabel noAppointmentsLabel = new JLabel("No appointments for this date", SwingConstants.CENTER);
                 appointmentsPanel.add(noAppointmentsLabel, "grow");
             } else {
                 for (Appointment appt : appointments) {
                     appointmentsPanel.add(createAppointmentCard(appt), "grow");
-                    model.addRow(new Object[] {
-                        appt.getAppointmentId(),
-                        appt.getAppointmentTitle(),
-                        appt.getAppointmentType(),
-                        appt.getAppointmentDateTime(),
-                        appt.getAppointmentStatus(),
-                        appt.getAppointmentNotes()
-                    });
                 }
             }
 

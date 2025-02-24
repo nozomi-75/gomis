@@ -5,12 +5,15 @@ import java.awt.EventQueue;
 import java.awt.LayoutManager;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.ImageIcon;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+
+import lyfjshs.gomis.Database.DBConnection;
 
 /**
  * The {@code GFrame} class extends {@code JFrame} and provides a customized
@@ -47,6 +50,7 @@ public class GFrame extends JFrame {
 					"Are you sure you want to exit?", "Exit Confirmation", 
 					JOptionPane.YES_NO_OPTION);
 				if (confirm == JOptionPane.YES_OPTION) {
+		            DBConnection.closeAllConnections(); // Close the database connection
 					System.exit(0);
 				}
 			}

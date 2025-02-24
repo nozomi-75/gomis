@@ -26,7 +26,6 @@ public class StudentSearchPanel extends Form {
         // Main Panel with a softer background and padding
         setLayout(null);
         setBackground(new Color(245, 245, 245)); // Soft gray background
-        setPreferredSize(new Dimension(602, 701)); // Smaller panel size
 
         // Title Panel for Top Heading
         JPanel titlePanel = new JPanel();
