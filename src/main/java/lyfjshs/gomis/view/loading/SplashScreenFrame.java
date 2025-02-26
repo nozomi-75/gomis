@@ -1,14 +1,29 @@
 package lyfjshs.gomis.view.loading;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.*;
-import java.util.ArrayList;
-import java.util.Random;
-import com.formdev.flatlaf.FlatDarkLaf;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.OverlayLayout;
+import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
+import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
+
+import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+
+import lyfjshs.gomis.Main;
+import lyfjshs.gomis.components.ModelColor;
+import lyfjshs.gomis.components.PanelGradient;
 
 public class SplashScreenFrame extends JFrame {
     private static final int WIDTH = 500;
@@ -17,7 +32,7 @@ public class SplashScreenFrame extends JFrame {
     private static final Color ACCENT_COLOR_1 = new Color(79, 172, 254);
     private static final Color ACCENT_COLOR_2 = new Color(0, 242, 254);
     
-    private JPanel mainPanel;
+    private PanelGradient mainPanel;
     private LogoPanel logoPanel;
     private ProgressPanel progressPanel;
     private JLabel loadingLabel;
@@ -37,8 +52,10 @@ public class SplashScreenFrame extends JFrame {
     }
     
     private void initComponents() {
-        mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(BACKGROUND_COLOR);
+        mainPanel = new PanelGradient();
+        mainPanel.addColor(new ModelColor(new Color(0x004aad), 0f), new ModelColor(new Color(0xcb6ce6), 1f));
+
+        mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(40, 40, 40, 40));
         
         // Logo panel
@@ -109,4 +126,26 @@ public class SplashScreenFrame extends JFrame {
         dotAnimationTimer.start();
     }
     
+    public void runInitialization() {
+        // Create a SwingWorker to run the initialization in the background
+        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                // Simulate database connection test and initialization
+                Thread.sleep(2000); // Simulate time taken for DB connection
+                Main.initFrame(); // Call the method to initialize the main frame
+                return null;
+            }
+
+            @Override
+            protected void done() {
+    			FlatAnimatedLafChange.showSnapshot();
+                dispose(); // Close the splash screen
+                Main.jFrame.setVisible(true);
+    			FlatAnimatedLafChange.hideSnapshotWithAnimation();
+
+            }
+        };
+        worker.execute(); // Start the SwingWorker
+    }
 }

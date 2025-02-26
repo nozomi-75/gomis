@@ -15,7 +15,6 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
 import lyfjshs.gomis.Database.DBConnection;
-import lyfjshs.gomis.Database.DatabaseSplashScreen;
 import lyfjshs.gomis.components.DrawerBuilder;
 import lyfjshs.gomis.components.GFrame;
 import lyfjshs.gomis.components.FormManager.FormManager;
@@ -30,6 +29,7 @@ import lyfjshs.gomis.view.students.StudentSearchPanel;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
 import raven.modal.Drawer;
+import lyfjshs.gomis.view.loading.SplashScreenFrame;
 
 /**
  * The Main class is responsible for initializing the application, setting up
@@ -54,21 +54,9 @@ public class Main {
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				ImageIcon splashImage = new ImageIcon(
-						DatabaseSplashScreen.class.getResource("/LYFJSHS_Logo_200x200.png"));
-
-				DatabaseSplashScreen splash = new DatabaseSplashScreen(splashImage);
-				splash.startDatabaseTest();
-
-				try {
-					initDB();
-					initializeLookAndFeel();
-					initiPanels();
-					initFrame();
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				SplashScreenFrame splash = new SplashScreenFrame();
+				splash.setVisible(true); // Show the splash screen
+				splash.runInitialization(); // Run initialization
 			}
 		});
 	}
@@ -78,7 +66,7 @@ public class Main {
 	 * the DBConnection class. If the connection fails, an error message is
 	 * displayed, and the program exits.
 	 */
-	private static void initDB() {
+	public static void initDB() {
 		try {
 			conn = DBConnection.getConnection();
 			if (conn == null) {
@@ -142,8 +130,11 @@ public class Main {
 	 * navigation system and form manager.
 	 */
 	public static void initFrame() {
-		jFrame = new GFrame(1000, 700, true, "GOMIS", null);
+		initializeLookAndFeel();
+		initDB();
+		jFrame = new GFrame(1000, 700, false, "GOMIS", null);
 		jFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
+		initiPanels();
 
 		Drawer.installDrawer(jFrame, new DrawerBuilder(conn));
 		FormManager.install(jFrame);
