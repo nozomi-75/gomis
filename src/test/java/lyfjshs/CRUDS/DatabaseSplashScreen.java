@@ -28,7 +28,7 @@ public class DatabaseSplashScreen extends JFrame {
 	private JLabel loadingLabel;
 	private JLabel imageLabel; 
 
-	private static final String JDBC_URL = "jdbc:mysql://localhost:3306/gomisDB";
+	private static final String JDBC_URL = "jdbc:mariadb://localhost:3306/gomisDB";
 	private static final String JDBC_USER = "root";
 	private static final String JDBC_PASSWORD = "";
 	private static final String[] TEST_TABLES = { "GUIDANCE_COUNSELORS", "USERS", "STUDENTS_DATA", "PARTICIPANTS",

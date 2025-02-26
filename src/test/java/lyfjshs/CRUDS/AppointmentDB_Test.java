@@ -15,7 +15,7 @@ public class AppointmentDB_Test {
 
     public static void main(String[] args) {
         // Database connection parameters
-        String url = "jdbc:mysql://localhost:3306/gomisDB";
+        String url = "jdbc:mariadb://localhost:3306/gomisDB";
         String user = "root";
         String password = ""; // Update with your actual password
 
