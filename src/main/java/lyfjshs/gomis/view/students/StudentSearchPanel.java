@@ -29,13 +29,11 @@ public class StudentSearchPanel extends Form {
 
         // Title Panel for Top Heading
         JPanel titlePanel = new JPanel();
+        titlePanel.setToolTipText("Student search");
+        titlePanel.setForeground(new Color(255, 255, 255));
         titlePanel.setLayout(new BorderLayout());
         titlePanel.setBackground(new Color(70, 130, 180)); // Deep blue background
-        titlePanel.setBounds(0, 0, 600, 80); // Title panel size
-        JLabel titleLabel = new JLabel("Student Search Panel", JLabel.CENTER);
-        titleLabel.setFont(new Font("Verdana", Font.BOLD, 22));
-        titleLabel.setForeground(Color.WHITE); // White text for contrast
-        titlePanel.add(titleLabel, BorderLayout.CENTER);
+        titlePanel.setBounds(0, 0, 1141, 80); // Title panel size
         add(titlePanel);
 
         // LRN Section
@@ -43,7 +41,7 @@ public class StudentSearchPanel extends Form {
         lrnLabel.setBounds(50, 100, 80, 30);
         lrnLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         JTextField lrnField = new JTextField();
-        lrnField.setBounds(150, 100, 300, 30);
+        lrnField.setBounds(150, 100, 438, 30);
         lrnField.setFont(new Font("Arial", Font.PLAIN, 16));
         lrnField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2));
         add(lrnLabel);
@@ -51,10 +49,10 @@ public class StudentSearchPanel extends Form {
 
         // Search Button (Next to LRN field)
         JButton searchButton1 = new JButton("Search");
-        searchButton1.setBounds(480, 100, 100, 30);
+        searchButton1.setBounds(619, 100, 100, 30);
         searchButton1.setFont(new Font("Arial", Font.BOLD, 16));
         searchButton1.setBackground(new Color(70, 130, 180));
-        searchButton1.setForeground(Color.WHITE);
+        searchButton1.setForeground(new Color(255, 255, 255));
         searchButton1.setFocusPainted(false);
         searchButton1.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Padding
         add(searchButton1);
@@ -74,7 +72,7 @@ public class StudentSearchPanel extends Form {
         firstNameLabel.setBounds(50, 190, 100, 30);
         firstNameLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         JTextField firstNameField = new JTextField();
-        firstNameField.setBounds(150, 190, 300, 30);
+        firstNameField.setBounds(150, 190, 438, 30);
         firstNameField.setFont(new Font("Arial", Font.PLAIN, 16));
         firstNameField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2));
         add(firstNameLabel);
@@ -82,12 +80,12 @@ public class StudentSearchPanel extends Form {
 
         // Gender ComboBox (Placed beside the First Name field)
         JLabel genderLabel = new JLabel("Gender:");
-        genderLabel.setBounds(480, 190, 80, 30);
+        genderLabel.setBounds(619, 190, 80, 30);
         genderLabel.setFont(new Font("Arial", Font.PLAIN, 16));
 
         String[] genderOptions = {"Male", "Female"};
         JComboBox<String> genderComboBox = new JComboBox<>(genderOptions);
-        genderComboBox.setBounds(480, 220, 100, 30);
+        genderComboBox.setBounds(619, 219, 100, 30);
         genderComboBox.setFont(new Font("Arial", Font.PLAIN, 16));
         add(genderLabel);
         add(genderComboBox);
@@ -97,7 +95,7 @@ public class StudentSearchPanel extends Form {
         middleNameLabel.setBounds(50, 240, 120, 30);
         middleNameLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         JTextField middleNameField = new JTextField();
-        middleNameField.setBounds(150, 240, 300, 30);
+        middleNameField.setBounds(150, 240, 438, 30);
         middleNameField.setFont(new Font("Arial", Font.PLAIN, 16));
         middleNameField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2));
         add(middleNameLabel);
@@ -108,7 +106,7 @@ public class StudentSearchPanel extends Form {
         lastNameLabel.setBounds(50, 290, 100, 30);
         lastNameLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         JTextField lastNameField = new JTextField();
-        lastNameField.setBounds(150, 290, 300, 30);
+        lastNameField.setBounds(150, 290, 438, 30);
         lastNameField.setFont(new Font("Arial", Font.PLAIN, 16));
         lastNameField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2));
         add(lastNameLabel);
@@ -119,7 +117,7 @@ public class StudentSearchPanel extends Form {
         emailLabel.setBounds(50, 340, 100, 30);
         emailLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         JTextField emailField = new JTextField();
-        emailField.setBounds(150, 340, 300, 30);
+        emailField.setBounds(150, 340, 438, 30);
         emailField.setFont(new Font("Arial", Font.PLAIN, 16));
         emailField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2));
         add(emailLabel);
@@ -130,7 +128,7 @@ public class StudentSearchPanel extends Form {
         dobLabel.setBounds(50, 390, 100, 30);
         dobLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         JTextField dobField = new JTextField();
-        dobField.setBounds(150, 390, 300, 30);
+        dobField.setBounds(150, 390, 438, 30);
         dobField.setFont(new Font("Arial", Font.PLAIN, 16));
         dobField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2));
         add(dobLabel);
@@ -141,7 +139,7 @@ public class StudentSearchPanel extends Form {
         addressLabel.setBounds(50, 440, 100, 30);
         addressLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         JTextField addressField = new JTextField();
-        addressField.setBounds(150, 440, 300, 30);
+        addressField.setBounds(150, 440, 438, 30);
         addressField.setFont(new Font("Arial", Font.PLAIN, 16));
         addressField.setBorder(BorderFactory.createLineBorder(new Color(70, 130, 180), 2));
         add(addressLabel);
@@ -149,10 +147,10 @@ public class StudentSearchPanel extends Form {
 
         // Advanced Search Button
         JButton searchButton2 = new JButton("Search");
-        searchButton2.setBounds(250, 520, 100, 30);
+        searchButton2.setBounds(305, 515, 100, 30);
         searchButton2.setFont(new Font("Arial", Font.BOLD, 16));
         searchButton2.setBackground(new Color(70, 130, 180));
-        searchButton2.setForeground(Color.WHITE);
+        searchButton2.setForeground(new Color(255, 255, 255));
         searchButton2.setFocusPainted(false);
         searchButton2.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         add(searchButton2);
@@ -160,17 +158,22 @@ public class StudentSearchPanel extends Form {
         // Advanced Search Options (Checkboxes)
         // Date of Birth Checkbox
         JCheckBox dobCheck = new JCheckBox("Date of Birth");
-        dobCheck.setBounds(150, 480, 150, 30); // Positioned below address, slightly adjusted
+        dobCheck.setBounds(150, 477, 150, 30); // Positioned below address, slightly adjusted
         dobCheck.setFont(new Font("Arial", Font.PLAIN, 16));
         dobCheck.setBackground(new Color(245, 245, 245));
         add(dobCheck);
 
         // Guardian Name Checkbox
         JCheckBox guardianCheck = new JCheckBox("Guardian Name");
-        guardianCheck.setBounds(310, 480, 150, 30); // Positioned beside Date of Birth checkbox
+        guardianCheck.setBounds(438, 477, 150, 30); // Positioned beside Date of Birth checkbox
         guardianCheck.setFont(new Font("Arial", Font.PLAIN, 16));
         guardianCheck.setBackground(new Color(245, 245, 245));
         add(guardianCheck);
+        JLabel titleLabel = new JLabel("Student Search Panel", JLabel.CENTER);
+        titleLabel.setBounds(152, 0, 600, 80);
+        add(titleLabel);
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 22));
+        titleLabel.setForeground(Color.WHITE);
     }
 
     private void searchStudent(String lrn) {

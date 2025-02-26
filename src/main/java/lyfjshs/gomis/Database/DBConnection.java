@@ -11,9 +11,9 @@ import java.util.Properties;
  */
 public class DBConnection {
 	// Database configuration constants
-	private static final String URL = "jdbc:mysql://localhost:3306/gomisDB";
+	private static final String URL = "jdbc:mariadb://localhost:3306/gomisDB";
 	private static final String USER = "root";
-	private static final String PASSWORD = "";
+	private static final String PASSWORD = "YourRootPassword123!";
 	
 	// Connection pool settings
 	private static final int MAX_POOL_SIZE = 10;

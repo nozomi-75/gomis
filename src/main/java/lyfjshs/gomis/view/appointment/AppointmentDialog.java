@@ -60,9 +60,9 @@ public class AppointmentDialog extends JDialog {
         appointmentTypeCombo = new JComboBox<>(new String[]{
             "Academic Consultation",
             "Career Guidance",
-            "Personal Counseling",
-            "Behavioral Counseling",
-            "Group Counseling"
+            "Personal Consultation",
+            "Behavioral Consultation",
+            "Group Consultation"
         });
 
         // Date Picker
