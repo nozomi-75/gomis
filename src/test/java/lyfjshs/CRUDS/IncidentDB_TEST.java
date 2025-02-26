@@ -12,8 +12,8 @@ import lyfjshs.gomis.Database.model.Incident;
 
 public class IncidentDB_TEST {
     public static void main(String[] args) {
-        String url = "jdbc:mysql://localhost:3306/gomisDB";
-        String user = "root";
+        String url = "jdbc:mariadb://localhost:3306/gomisDB";
+        String user = "root"; 	
         String password = "";
 
         try (Connection conn = DriverManager.getConnection(url, user, password)) {

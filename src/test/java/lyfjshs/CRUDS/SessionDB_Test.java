@@ -13,7 +13,7 @@ import lyfjshs.gomis.Database.model.Session;
 import lyfjshs.gomis.Database.model.SessionParticipant;
 
 public class SessionDB_Test {
-    private static final String URL = "jdbc:mysql://localhost:3306/gomisDB";
+    private static final String URL = "jdbc:mariadb://localhost:3306/gomisDB";
     private static final String USER = "root";
     private static final String PASSWORD = "";
 
