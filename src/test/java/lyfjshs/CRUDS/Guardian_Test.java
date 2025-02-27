@@ -1,0 +1,57 @@
+package lyfjshs.CRUDS;
+
+import lyfjshs.gomis.Database.DAO.GuardianDAO
+import lyfjshs.gomis.Database.model.Guardian;
+
+import java.util.List;
+
+public class Guardian_Test {
+    public static void main(String[] args) {
+        GuardianDAO guardianDAO = new GuardianDAO();
+
+        // Insert a new guardian
+        System.out.println("Inserting a new guardian...");
+        boolean insertSuccess = guardianDAO.insertGuardian("S12345", "Doe", "John", "M", "Father");
+        System.out.println("Insert successful: " + insertSuccess);
+
+        if (!insertSuccess) {
+            System.out.println("Insertion failed. Exiting test.");
+            return;
+        }
+
+        // Retrieve all guardians to get the latest inserted ID
+        List<Guardian> guardians = guardianDAO.getAllGuardians();
+        if (guardians.isEmpty()) {
+            System.out.println("No guardians found. Exiting test.");
+            return;
+        }
+        Guardian lastInsertedGuardian = guardians.get(guardians.size() - 1);
+        int lastGuardianId = lastInsertedGuardian.getGuardianId();
+
+        // Retrieve a guardian by ID
+        System.out.println("Retrieving guardian with ID: " + lastGuardianId);
+        Guardian guardian = guardianDAO.getGuardianById(lastGuardianId);
+        if (guardian != null) {
+            System.out.println("Guardian found: " + guardian);
+        } else {
+            System.out.println("Guardian not found.");
+        }
+
+        // Update a guardian
+        System.out.println("Updating guardian with ID: " + lastGuardianId);
+        boolean updateSuccess = guardianDAO.updateGuardian(lastGuardianId, "Doe", "Jonathan", "M", "Father");
+        System.out.println("Update successful: " + updateSuccess);
+
+        // Retrieve all guardians
+        System.out.println("Retrieving all guardians...");
+        guardians = guardianDAO.getAllGuardians();
+        for (Guardian g : guardians) {
+            System.out.println(g);
+        }
+
+        // Delete a guardian
+        System.out.println("Deleting guardian with ID: " + lastGuardianId);
+        boolean deleteSuccess = guardianDAO.deleteGuardian(lastGuardianId);
+        System.out.println("Delete successful: " + deleteSuccess);
+    }
+}

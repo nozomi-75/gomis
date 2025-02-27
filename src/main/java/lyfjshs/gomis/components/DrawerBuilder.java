@@ -138,7 +138,7 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 			.subMenu("Session Fill-Up Form", SessionsForm.class)
 			.subMenu("Session Records", SessionRecords.class),
 			
-			new Item("Students Management", "article_person.svg"),
+			new Item("Students Management", "article_person.svg")
 			   .subMenu("Students Data",  StudentMangementGUI.class)
 			   .subMenu("Student Search", StudentSearchPanel.class),
 			new Item("Incident Management", "assignment.svg")

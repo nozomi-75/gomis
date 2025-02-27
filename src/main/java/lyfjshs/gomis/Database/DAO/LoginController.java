@@ -141,7 +141,7 @@ public class LoginController {
 
                     if (counselorId != 0) {
                         // Now, use GuidanceCounselorCRUD to get details
-                        GuidanceCouncilorDAO.readGuidanceCounselor(connection, counselorId);
+                        GuidanceCounselorDAO.readGuidanceCounselor(connection, counselorId);
                     } else {
                         System.out.println("No guidance counselor associated with this user.");
                     }

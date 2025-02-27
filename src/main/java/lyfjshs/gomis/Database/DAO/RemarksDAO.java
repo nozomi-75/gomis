@@ -1,0 +1,105 @@
+package lyfjshs.gomis.Database.DAO;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
+import lyfjshs.gomis.Database.model.Remarks;
+
+public class RemarksDAO {
+
+    private static final String URL = "jdbc:mariadb://localhost:3306/your_database";
+    private static final String USER = "root";
+    private static final String PASSWORD = "YourRootPassword123!";
+
+    // CREATE (Insert a new remark)
+    public boolean insertRemark(String studentId, String remarkText, Timestamp remarkDate) {
+        String query = "INSERT INTO REMARK (STUDENT_ID, REMARK_TEXT, REMARK_DATE) VALUES (?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, studentId);
+            stmt.setString(2, remarkText);
+            stmt.setTimestamp(3, remarkDate);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); // Print full error details
+        }
+        return false;
+    }
+
+    // READ (Retrieve a remark by ID)
+    public Remarks getRemarkById(int remarkId) {
+        String query = "SELECT * FROM REMARK WHERE REMARK_ID = ?";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, remarkId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Remarks(
+                        rs.getInt("REMARK_ID"),
+                        rs.getString("STUDENT_ID"),
+                        rs.getString("REMARK_TEXT"),
+                        rs.getTimestamp("REMARK_DATE")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // READ ALL (Retrieve all remarks)
+    public List<Remarks> getAllRemarks() {
+        List<Remarks> remarks = new ArrayList<>();
+        String query = "SELECT * FROM REMARK";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                remarks.add(new Remarks(
+                    rs.getInt("REMARK_ID"),
+                    rs.getString("STUDENT_ID"),
+                    rs.getString("REMARK_TEXT"),
+                    rs.getTimestamp("REMARK_DATE")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return remarks;
+    }
+
+    // UPDATE (Modify an existing remark)
+    public boolean updateRemark(int remarkId, String newText, Timestamp newDate) {
+        String query = "UPDATE REMARK SET REMARK_TEXT = ?, REMARK_DATE = ? WHERE REMARK_ID = ?";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, newText);
+            stmt.setTimestamp(2, newDate);
+            stmt.setInt(3, remarkId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // DELETE (Remove a remark)
+    public boolean deleteRemark(int remarkId) {
+        String query = "DELETE FROM REMARK WHERE REMARK_ID = ?";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, remarkId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+}

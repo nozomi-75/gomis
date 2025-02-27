@@ -30,7 +30,7 @@ public class DatabaseSplashScreen extends JFrame {
 
 	private static final String JDBC_URL = "jdbc:mariadb://localhost:3306/gomisDB";
 	private static final String JDBC_USER = "root";
-	private static final String JDBC_PASSWORD = "";
+	private static final String JDBC_PASSWORD = "YourRootPassword123!";
 	private static final String[] TEST_TABLES = { "GUIDANCE_COUNSELORS", "USERS", "STUDENTS_DATA", "PARTICIPANTS",
 			"VIOLATION_RECORD", "STUDENT_RECORD", "INCIDENTS", "APPOINTMENTS", "SESSIONS", "sessions_participants" };
 

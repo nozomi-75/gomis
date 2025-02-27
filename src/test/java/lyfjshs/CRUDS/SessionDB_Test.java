@@ -15,7 +15,7 @@ import lyfjshs.gomis.Database.model.SessionParticipant;
 public class SessionDB_Test {
     private static final String URL = "jdbc:mariadb://localhost:3306/gomisDB";
     private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "YourRootPassword123!";
 
     public static void main(String[] args) {
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
