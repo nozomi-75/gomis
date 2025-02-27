@@ -1,24 +1,26 @@
 package lyfjshs.gomis.Database.DAO;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import lyfjshs.gomis.Database.model.Guardian;  
+
+import lyfjshs.gomis.Database.model.Guardian;
 
 public class GuardianDAO {
-    private static final String URL = "jdbc:mariadb://localhost:3306/your_database";
-    private static final String USER = "root";
-    private static final String PASSWORD = "YourRootPassword123!";
 
     // CREATE (Insert a new guardian)
-    public boolean insertGuardian(String studentId, String lastName, String firstName, String middleName, String relationship) {
+    public boolean insertGuardian(Connection conn, String studentId, String lastName, String firstName,
+                                  String middleName, String relationship) {
         String query = "INSERT INTO GUARDIAN (STUDENT_ID, GUARDIAN_LASTNAME, GUARDIAN_FIRSTNAME, GUARDIAN_MIDDLENAME, GUARDIAN_RELATIONSHIP) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, studentId);
             stmt.setString(2, lastName);
             stmt.setString(3, firstName);
-            
+
             // Handle NULL values for middleName
             if (middleName != null && !middleName.isEmpty()) {
                 stmt.setString(4, middleName);
@@ -35,10 +37,9 @@ public class GuardianDAO {
     }
 
     // READ (Retrieve a guardian by ID)
-    public Guardian getGuardianById(int guardianId) {
+    public Guardian getGuardianById(Connection conn, int guardianId) {
         String query = "SELECT * FROM GUARDIAN WHERE GUARDIAN_ID = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, guardianId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -59,11 +60,10 @@ public class GuardianDAO {
     }
 
     // READ ALL (Retrieve all guardians)
-    public List<Guardian> getAllGuardians() {
+    public List<Guardian> getAllGuardians(Connection conn) {
         List<Guardian> guardians = new ArrayList<>();
         String query = "SELECT * FROM GUARDIAN";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query);
+        try (PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 guardians.add(new Guardian(
@@ -82,13 +82,13 @@ public class GuardianDAO {
     }
 
     // UPDATE (Modify an existing guardian)
-    public boolean updateGuardian(int guardianId, String lastName, String firstName, String middleName, String relationship) {
+    public boolean updateGuardian(Connection conn, int guardianId, String lastName, String firstName, 
+                                  String middleName, String relationship) {
         String query = "UPDATE GUARDIAN SET GUARDIAN_LASTNAME = ?, GUARDIAN_FIRSTNAME = ?, GUARDIAN_MIDDLENAME = ?, GUARDIAN_RELATIONSHIP = ? WHERE GUARDIAN_ID = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, lastName);
             stmt.setString(2, firstName);
-            
+
             // Handle NULL values for middleName
             if (middleName != null && !middleName.isEmpty()) {
                 stmt.setString(3, middleName);
@@ -106,10 +106,9 @@ public class GuardianDAO {
     }
 
     // DELETE (Remove a guardian)
-    public boolean deleteGuardian(int guardianId) {
+    public boolean deleteGuardian(Connection conn, int guardianId) {
         String query = "DELETE FROM GUARDIAN WHERE GUARDIAN_ID = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, guardianId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {

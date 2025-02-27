@@ -1,86 +1,68 @@
 package lyfjshs.gomis.Database.model;
 
 public class Guardian {
-    private int guardianId;
-    private String studentId;
-    private String lastName;
-    private String firstName;
-    private String middleName;
-    private String relationship;
 
-    // Constructor
-    public Guardian(int guardianId, String studentId, String lastName, String firstName, String middleName, String relationship) {
-        this.guardianId = guardianId;
-        this.studentId = studentId;
-        this.lastName = lastName;
-        this.firstName = firstName;
-        this.middleName = middleName;
-        this.relationship = relationship;
+    int GUARDIAN_ID;
+    String STUDENT_ID;
+    String GUARIAN_FIRSTNAME;
+    String GUARDIAN_MIDDLENAME;
+    String GUARDIAN_LASTNAME;
+    String GUARDIAN_RELATIONSHIP;
+
+    public Guardian(int GUARDIAN_ID,
+            String STUDENT_ID,
+            String GUARIAN_FIRSTNAME,
+            String GUARDIAN_MIDDLENAME,
+            String GUARDIAN_LASTNAME,
+            String GUARDIAN_RELATIONSHIP) {
     }
 
-    // Default Constructor
-    public Guardian() {
+    public String getGUARDIAN_RELATIONSHIP() {
+        return GUARDIAN_RELATIONSHIP;
     }
 
-    // Getters and Setters
-    public int getGuardianId() {
-        return guardianId;
+    public void setGUARDIAN_RELATIONSHIP(String GUARDIAN_RELATIONSHIP) {
+        this.GUARDIAN_RELATIONSHIP = GUARDIAN_RELATIONSHIP;
     }
 
-    public void setGuardianId(int guardianId) {
-        this.guardianId = guardianId;
+    public String getGUARDIAN_LASTNAME() {
+        return GUARDIAN_LASTNAME;
     }
 
-    public String getStudentId() {
-        return studentId;
+    public void setGUARDIAN_LASTNAME(String GUARDIAN_LASTNAME) {
+        this.GUARDIAN_LASTNAME = GUARDIAN_LASTNAME;
     }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
+    public String getGUARDIAN_MIDDLENAME() {
+        return GUARDIAN_MIDDLENAME;
     }
 
-    public String getLastName() {
-        return lastName;
+    public void setGUARDIAN_MIDDLENAME(String GUARDIAN_MIDDLENAME) {
+        this.GUARDIAN_MIDDLENAME = GUARDIAN_MIDDLENAME;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public String getGUARIAN_FIRSTNAME() {
+        return GUARIAN_FIRSTNAME;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public void setGUARIAN_FIRSTNAME(String GUARIAN_FIRSTNAME) {
+        this.GUARIAN_FIRSTNAME = GUARIAN_FIRSTNAME;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public int getGUARDIAN_ID() {
+        return GUARDIAN_ID;
     }
 
-    public String getMiddleName() {
-        return middleName;
+    public void setGUARDIAN_ID(int GUARDIAN_ID) {
+        this.GUARDIAN_ID = GUARDIAN_ID;
     }
 
-    public void setMiddleName(String middleName) {
-        this.middleName = middleName;
+    public String getSTUDENT_ID() {
+        return STUDENT_ID;
     }
 
-    public String getRelationship() {
-        return relationship;
+    public void setSTUDENT_ID(String STUDENT_ID) {
+        this.STUDENT_ID = STUDENT_ID;
     }
 
-    public void setRelationship(String relationship) {
-        this.relationship = relationship;
-    }
-
-    // Overriding toString() for easier debugging
-    @Override
-    public String toString() {
-        return "Guardian{" +
-                "guardianId=" + guardianId +
-                ", studentId='" + studentId + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", middleName='" + middleName + '\'' +
-                ", relationship='" + relationship + '\'' +
-                '}';
-    }
 }

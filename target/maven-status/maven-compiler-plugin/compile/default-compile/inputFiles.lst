@@ -1,68 +1,69 @@
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\DrawerBuilder.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\FooterPanel.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\FormManager\AllForms.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\FormManager\Form.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\FormManager\FormManager.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\FormManager\MainForm.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\GFrame.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\LogoPanel.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\ModelColor.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\PanelGradient.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\table\ActionColumnEditor.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\table\ActionColumnPanel.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\table\ActionColumnRenderer.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\table\TableActionManager.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\components\table\TableRowAction.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\AppointmentsDAO.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\ContactDAO.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\GuidanceCounselorDAO.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\IncidentsDAO.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\LoginController.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\ParentDAO.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\RemarksDAO.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\SessionsDAO.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\StudentsDataDAO.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DAO\ViolationCRUD.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\DBConnection.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\Appointments.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\Contact.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\Guardian.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\GuidanceCounselor.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\Incident.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\Participants.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\Remarks.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\Session.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\SessionParticipant.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\StudentsData.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\StudentsRecord.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\Violation.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Database\model\ViolationRecord.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\Main.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\utils\PrintingReport.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentCalendar.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentDailyOverview.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentDialog.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentManagement.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentOverview.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentFillUpForm.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentList.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentRecords.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\loading\BackgroundCirclesPanel.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\loading\LogoPanel.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\loading\ProgressPanel.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\loading\SplashScreenFrame.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\LoginView.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\MainDashboard.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionFullData.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionRecords.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionsForm.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\students\StudentFullData.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\students\StudentMangementGUI.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\students\StudentSearchPanel.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\violation\ViewViolationDetails.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\violation\Violation_Record.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationDetails.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationFillUpForm.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationFullData.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationTableModel.java
-C:\Users\DIMPLE\Documents\GitHub\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationTablePanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\DrawerBuilder.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\FooterPanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\FormManager\AllForms.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\FormManager\Form.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\FormManager\FormManager.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\FormManager\MainForm.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\GFrame.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\LogoPanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\ModelColor.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\PanelGradient.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\table\ActionColumnEditor.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\table\ActionColumnPanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\table\ActionColumnRenderer.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\table\TableActionManager.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\table\TableRowAction.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\AppointmentDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\ContactDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\GuardianDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\GuidanceCounselorDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\IncidentsDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\LoginController.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\ParentDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\RemarksDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\SessionsDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\StudentsDataDAO.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DAO\ViolationCRUD.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\DBConnection.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Appointment.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Contact.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Guardian.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\GuidanceCounselor.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Incident.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Participants.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Remarks.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Session.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\SessionParticipant.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\StudentsData.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\StudentsRecord.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\Violation.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\model\ViolationRecord.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Main.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\utils\PrintingReport.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentCalendar.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentDailyOverview.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentDialog.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentManagement.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentOverview.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentFillUpForm.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentList.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\incident\IncidentRecords.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\loading\BackgroundCirclesPanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\loading\LogoPanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\loading\ProgressPanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\loading\SplashScreenFrame.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\LoginView.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\MainDashboard.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionFullData.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionRecords.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionsForm.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\students\StudentFullData.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\students\StudentMangementGUI.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\students\StudentSearchPanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\ViewViolationDetails.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\Violation_Record.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationDetails.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationFillUpForm.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationFullData.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationTableModel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\violation\ViolationTablePanel.java

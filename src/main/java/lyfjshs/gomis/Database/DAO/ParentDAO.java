@@ -16,7 +16,7 @@ public class ParentDAO {
     private static final String PASSWORD = "YourRootPassword123!";
 
     // Insert a new parent record
-    public boolean insertParent(String lastName, String firstName, String middleName) {
+    public boolean insertParent(Connection conn, String lastName, String firstName, String middleName) {
         String sql = "INSERT INTO PARENT (PARENT_LASTNAME, PARENT_FIRSTNAME, PARENT_MIDDLENAME) VALUES (?, ?, ?)";
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement statement = connection.prepareStatement(sql)) {

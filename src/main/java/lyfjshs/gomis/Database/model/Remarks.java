@@ -16,10 +16,6 @@ public class Remarks {
         this.remarkDate = remarkDate;
     }
 
-    // Default Constructor
-    public Remarks() {
-    }
-
     // Getters and Setters
     public int getRemarkId() {
         return remarkId;
@@ -53,10 +49,10 @@ public class Remarks {
         this.remarkDate = remarkDate;
     }
 
-    // Overriding toString() for easier debugging
+    // toString method for debugging
     @Override
     public String toString() {
-        return "Remark{" +
+        return "Remarks{" +
                 "remarkId=" + remarkId +
                 ", studentId='" + studentId + '\'' +
                 ", remarkText='" + remarkText + '\'' +
