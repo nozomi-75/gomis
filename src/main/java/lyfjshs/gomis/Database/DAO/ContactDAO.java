@@ -1,7 +1,6 @@
 package lyfjshs.gomis.Database.DAO;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,16 +8,12 @@ import java.sql.SQLException;
 import lyfjshs.gomis.Database.model.Contact;
 
 public class ContactDAO {
-    private static final String URL = "jdbc:mariadb://localhost:3306/your_database";
-    private static final String USER = "root";
-    private static final String PASSWORD = "YourRootPassword123!";
 
-    // Create (Insert a new contact)
-    public boolean insertContact(String contact) {
-        String query = "INSERT INTO CONTACT (CONTACT) VALUES (?)";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, contact);
+    public boolean insertContact(Connection conn, Contact contact) {
+        String query = "INSERT INTO CONTACT (CONTACT_NUMBER) VALUES (?)";
+        try (
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, contact.getCONTACT_NUMBER());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -26,15 +21,15 @@ public class ContactDAO {
         return false;
     }
 
-    // Read (Retrieve a contact by C_ID)
-    public Contact getContactById(int c_id) {
-        String query = "SELECT * FROM CONTACT WHERE C_ID = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, c_id);
+    // Read (Retrieve a contact by CONTACT_ID)
+    public Contact getContactById(Connection conn, int CONTACT_ID) {
+        String query = "SELECT * FROM CONTACT WHERE CONTACT_ID = ?";
+        try (
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, CONTACT_ID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new Contact(rs.getInt("C_ID"), rs.getString("CONTACT"));
+                    return new Contact(rs.getInt("CONTACT_ID"), rs.getString("CONTACT"));
                 }
             }
         } catch (SQLException e) {
@@ -44,12 +39,11 @@ public class ContactDAO {
     }
 
     // Update (Modify an existing contact)
-    public boolean updateContact(int c_id, String newContact) {
-        String query = "UPDATE CONTACT SET CONTACT = ? WHERE C_ID = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, newContact);
-            stmt.setInt(2, c_id);
+    public boolean updateContact(Connection conn,int CONTACT_ID, Contact newContact) {
+        String query = "UPDATE CONTACT SET CONTACT_NUMBER = ? WHERE CONTACT_ID = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, newContact.getCONTACT_NUMBER());
+            stmt.setInt(2, CONTACT_ID);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -58,15 +52,14 @@ public class ContactDAO {
     }
 
     // Delete (Remove a contact)
-    public boolean deleteContact(int c_id) {
-        String query = "DELETE FROM CONTACT WHERE C_ID = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, c_id);
+    public boolean deleteContact(Connection conn, int CONTACT_ID) {
+        String query = "DELETE FROM CONTACT WHERE CONTACT_ID = ?";
+        try ( PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, CONTACT_ID);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
-    } 
+    }
 }

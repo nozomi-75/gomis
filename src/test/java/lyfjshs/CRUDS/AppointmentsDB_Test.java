@@ -34,9 +34,9 @@ public class AppointmentsDB_Test {
 
     static void setUp() throws SQLException {
         // Set up the database connection
-        String url = "jdbc:mariadb://localhost:3306/your_database_name";
-        String user = "your_username";
-        String password = "your_password";
+        String url = "jdbc:mariadb://localhost:3306/gomis";
+        String user = "root";
+        String password = "YourRootPassword123!";
 
         connection = DriverManager.getConnection(url, user, password);
         appointmentDAO = new AppointmentDAO(connection);

@@ -1,11 +1,9 @@
 package lyfjshs.gomis.Database.model;
 
-import java.util.Arrays;
-
 public class GuidanceCounselor {
-    private int id;
-    private String LAST_NAME;
-    private String FIRST_NAME;
+    private int GUIDANCE_COUNSELORS_ID;
+    private String lastName;
+    private String firstName;
     private String middleInitial;
     private String suffix;
     private String gender;
@@ -16,12 +14,12 @@ public class GuidanceCounselor {
     private byte[] profilePicture;
 
     // Constructor
-    public GuidanceCounselor(int id, String LAST_NAME, String FIRST_NAME, String middleInitial, String suffix,
+    public GuidanceCounselor(int GUIDANCE_COUNSELORS_ID, String lastName, String firstName, String middleInitial, String suffix,
                              String gender, String specialization, String contactNumber, String email,
                              String position, byte[] profilePicture) {
-        this.id = id;
-        this.LAST_NAME = LAST_NAME;
-        this.FIRST_NAME = FIRST_NAME;
+        this.GUIDANCE_COUNSELORS_ID = GUIDANCE_COUNSELORS_ID;
+        this.lastName = lastName;
+        this.firstName = firstName;
         this.middleInitial = middleInitial;
         this.suffix = suffix;
         this.gender = gender;
@@ -32,33 +30,29 @@ public class GuidanceCounselor {
         this.profilePicture = profilePicture;
     }
 
-    // Default Constructor
-    public GuidanceCounselor() {
-    }
-
     // Getters and Setters
-    public int getId() {
-        return id;
+    public int getGUIDANCE_COUNSELORS_ID() {
+        return GUIDANCE_COUNSELORS_ID;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setGUIDANCE_COUNSELORS_ID(int GUIDANCE_COUNSELORS_ID) {
+        this.GUIDANCE_COUNSELORS_ID = GUIDANCE_COUNSELORS_ID;
     }
 
-    public String getLAST_NAME() {
-        return LAST_NAME;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setLAST_NAME(String LAST_NAME) {
-        this.LAST_NAME = LAST_NAME;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public String getFIRST_NAME() {
-        return FIRST_NAME;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFIRST_NAME(String FIRST_NAME) {
-        this.FIRST_NAME = FIRST_NAME;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
     public String getMiddleInitial() {
@@ -123,23 +117,5 @@ public class GuidanceCounselor {
 
     public void setProfilePicture(byte[] profilePicture) {
         this.profilePicture = profilePicture;
-    }
-
-    // Overriding toString() for easier debugging and logging
-    @Override
-    public String toString() {
-        return "GuidanceCounselor{" +
-                "id=" + id +
-                ", LAST_NAME='" + LAST_NAME + '\'' +
-                ", FIRST_NAME='" + FIRST_NAME + '\'' +
-                ", middleInitial='" + middleInitial + '\'' +
-                ", suffix='" + suffix + '\'' +
-                ", gender='" + gender + '\'' +
-                ", specialization='" + specialization + '\'' +
-                ", contactNumber='" + contactNumber + '\'' +
-                ", email='" + email + '\'' +
-                ", position='" + position + '\'' +
-                ", profilePicture=" + Arrays.toString(profilePicture) +
-                '}';
     }
 }

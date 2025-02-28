@@ -19,7 +19,6 @@ import javax.swing.border.TitledBorder;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.model.StudentsData;
-import lyfjshs.gomis.Database.model.StudentsRecord;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.utils.PrintingReport;
@@ -60,7 +59,7 @@ public class StudentFullData extends Form {
 	private boolean violationResolve;
     private FlatSVGIcon sagisagIcon, logoIcon;
 
-	public StudentFullData(StudentsData studentData, StudentsRecord studentRecord) {
+	public StudentFullData(StudentsData studentData) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
 		initComponents();
 

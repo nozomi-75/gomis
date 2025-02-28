@@ -13,6 +13,7 @@ import lyfjshs.gomis.Database.model.Session;
 import lyfjshs.gomis.Database.model.SessionParticipant;
 
 public class SessionDB_Test {
+
     private static final String URL = "jdbc:mariadb://localhost:3306/gomisDB";
     private static final String USER = "root";
     private static final String PASSWORD = "YourRootPassword123!";
@@ -28,7 +29,14 @@ public class SessionDB_Test {
             String reinforcement = "Warning";
             String status = "Active";
 
-            violationCRUD.addViolation(conn, participantId, violationType, description, anecdotalRecord, reinforcement, status);
+            violationCRUD.addViolation(
+                    participantId,
+                    violationType,
+                    description,
+                    anecdotalRecord,
+                    reinforcement,
+                    status,
+                    Timestamp.valueOf(LocalDateTime.now()));
 
             // Step 2: Test SessionsDAO methods
             testAddSession(conn);
@@ -45,11 +53,11 @@ public class SessionDB_Test {
     private static void testAddSession(Connection conn) {
         try {
             SessionsDAO sessionsDAO = new SessionsDAO(conn);
-            Session session = new Session(0, 1, 1, 1, 1, "Individual Counseling", 
-                                           Timestamp.valueOf(LocalDateTime.now()), 
-                                           "Initial assessment of academic performance.", 
-                                           "Scheduled", 
-                                           Timestamp.valueOf(LocalDateTime.now()));
+            Session session = new Session(0, 1, 1, 1, 1, "Individual Counseling",
+                    Timestamp.valueOf(LocalDateTime.now()),
+                    "Initial assessment of academic performance.",
+                    "Scheduled",
+                    Timestamp.valueOf(LocalDateTime.now()));
             sessionsDAO.addSession(session);
             System.out.println("Session added successfully!");
         } catch (SQLException e) {
@@ -120,4 +128,3 @@ public class SessionDB_Test {
         }
     }
 }
-

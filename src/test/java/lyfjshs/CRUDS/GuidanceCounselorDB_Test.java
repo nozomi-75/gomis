@@ -3,41 +3,57 @@ package lyfjshs.CRUDS;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
 import lyfjshs.gomis.Database.model.GuidanceCounselor;
 
 public class GuidanceCounselorDB_Test {
-    private static final String URL = "jdbc:mariadb://localhost:3306/your_database";
-    private static final String USER = "root";
-    private static final String PASSWORD = "YourRootPassword123!";
+
+    private static final String DB_URL = "jdbc:mariadb://localhost:3306/gomisDB";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "YourRootPassword123!";
 
     public static void main(String[] args) {
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            System.out.println("Connected to the database.");
-            
-            // Test Insert
-            GuidanceCounselor counselor = new GuidanceCounselor(1, "Doe", "John", "A", "Jr.", "Male", "Psychology", "1234567890", "john.doe@example.com", "Senior Counselor", null);
-            GuidanceCounselorDAO.createGuidanceCounselor(conn, counselor.getId(), counselor.getLAST_NAME(), 
-                    counselor.getFIRST_NAME(), counselor.getMiddleInitial(), counselor.getSuffix(), 
-                    counselor.getGender(), counselor.getSpecialization(), counselor.getContactNumber(), 
-                    counselor.getEmail(), counselor.getPosition(), counselor.getProfilePicture());
-            
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            GuidanceCounselorDAO dao = new GuidanceCounselorDAO();
+
+            // Test Create
+            testCreateGuidanceCounselor(conn, dao);
+
             // Test Read
-            System.out.println("Reading inserted counselor:");
-            GuidanceCounselorDAO.readGuidanceCounselor(conn, 1);
-            
-            // Test Batch Insert
-            List<GuidanceCounselor> counselorList = new ArrayList<>();
-            counselorList.add(new GuidanceCounselor(2, "Smith", "Alice", "B", "", "Female", "Counseling", "9876543210", "alice.smith@example.com", "Assistant Counselor", null));
-            counselorList.add(new GuidanceCounselor(3, "Brown", "Charlie", "C", "", "Non-Binary", "Career Coaching", "5556667777", "charlie.brown@example.com", "Career Advisor", null));
-            
-            GuidanceCounselorDAO.createGuidanceCounselorsBatch(conn, counselorList);
-            
+            testReadGuidanceCounselor(conn, dao);
+
+            // Test Delete
+            testDeleteGuidanceCounselor(conn, dao);
+
         } catch (SQLException e) {
-            System.err.println("Database connection error: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    private static void testCreateGuidanceCounselor(Connection conn, GuidanceCounselorDAO dao) {
+        GuidanceCounselor counselor = new GuidanceCounselor(4, "Doe", "John", "A", "Jr.", "Male", 
+                "Psychology", "1234567890", "johndoe@example.com", "Senior Counselor", null);
+        
+        boolean result = dao.createGuidanceCounselor(conn, counselor);
+        System.out.println(result ? "✔ testCreateGuidanceCounselor Passed" : "❌ testCreateGuidanceCounselor Failed");
+    }
+
+    private static void testReadGuidanceCounselor(Connection conn, GuidanceCounselorDAO dao) {
+        int id = 1; // ID to read
+        GuidanceCounselor counselor = dao.readGuidanceCounselor(conn, id);
+        
+        if (counselor != null) {
+            System.out.println("✔ testReadGuidanceCounselor Passed: " + counselor.getFirstName() + " " + counselor.getLastName());
+        } else {
+            System.out.println("❌ testReadGuidanceCounselor Failed");
+        }
+    }
+
+    private static void testDeleteGuidanceCounselor(Connection conn, GuidanceCounselorDAO dao) {
+        int id = 4; // ID to delete
+        boolean result = dao.deleteGuidanceCounselor(conn, id);
+        
+        System.out.println(result ? "✔ testDeleteGuidanceCounselor Passed" : "❌ testDeleteGuidanceCounselor Failed");
     }
 }

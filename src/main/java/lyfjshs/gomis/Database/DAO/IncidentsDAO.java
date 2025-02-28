@@ -167,7 +167,7 @@ public class IncidentsDAO {
 
         // Debugging/logging
         System.out.println("Incident Details:");
-        System.out.println("Student: " + (student != null ? student.getFIRST_NAME() + student.getLAST_NAME() : "N/A"));
+        System.out.println("Student: " + (student != null ? student.getFirstName() + student.getLastName() : "N/A"));
         System.out.println("Violation: " + (violation != null ? violation.getViolationType() : "N/A"));
 
         return incident;

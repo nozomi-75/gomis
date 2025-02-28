@@ -4,41 +4,43 @@ import java.sql.Date;
 
 public class StudentsData {
     private int studentUid;
+    private int parentId;
+    private int guardianId;
+    private int appointmentsId;
+    private int contactId;
     private String lrn;
-    private String LAST_NAME;
-    private String FIRST_NAME;
-    private String middleInitial;
-    private String suffix;
-    private String gender;
-    private Date dob; // Use java.sql.Date
-    private String email;
-    private String contactNumber;
-    private String guardianName;
-    private String guardianEmail;
-    private String guardianContactNumber;
-    private String address;
+    private String lastName;
+    private String firstName;
+    private String middleName;
+    private String SEX;
+    private Date birthDate;
+    private String motherTongue;
+    private int age;
+    private String ipType;
+    private String religion;
 
     // Constructors (both with and without arguments)
     public StudentsData() {
     }
 
-    public StudentsData(int studentUid, String lrn, String LAST_NAME, String FIRST_NAME, String middleInitial,
-            String suffix, String gender, Date dob, String email, String contactNumber, String guardianName,
-            String guardianEmail, String guardianContactNumber, String address) {
+    public StudentsData(int studentUid, int parentId, int guardianId, int appointmentsId, int contactId, String lrn,
+                        String lastName, String firstName, String middleName, String SEX, Date birthDate, String motherTongue,
+                        int age, String ipType, String religion) {
         this.studentUid = studentUid;
+        this.parentId = parentId;
+        this.guardianId = guardianId;
+        this.appointmentsId = appointmentsId;
+        this.contactId = contactId;
         this.lrn = lrn;
-        this.LAST_NAME = LAST_NAME;
-        this.FIRST_NAME = FIRST_NAME;
-        this.middleInitial = middleInitial;
-        this.suffix = suffix;
-        this.gender = gender;
-        this.dob = dob;
-        this.email = email;
-        this.contactNumber = contactNumber;
-        this.guardianName = guardianName;
-        this.guardianEmail = guardianEmail;
-        this.guardianContactNumber = guardianContactNumber;
-        this.address = address;
+        this.lastName = lastName;
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.SEX = SEX;
+        this.birthDate = birthDate;
+        this.motherTongue = motherTongue;
+        this.age = age;
+        this.ipType = ipType;
+        this.religion = religion;
     }
 
     // Getters and setters for all fields
@@ -50,6 +52,38 @@ public class StudentsData {
         this.studentUid = studentUid;
     }
 
+    public int getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(int parentId) {
+        this.parentId = parentId;
+    }
+
+    public int getGuardianId() {
+        return guardianId;
+    }
+
+    public void setGuardianId(int guardianId) {
+        this.guardianId = guardianId;
+    }
+
+    public int getAppointmentsId() {
+        return appointmentsId;
+    }
+
+    public void setAppointmentsId(int appointmentsId) {
+        this.appointmentsId = appointmentsId;
+    }
+
+    public int getContactId() {
+        return contactId;
+    }
+
+    public void setContactId(int contactId) {
+        this.contactId = contactId;
+    }
+
     public String getLrn() {
         return lrn;
     }
@@ -58,119 +92,95 @@ public class StudentsData {
         this.lrn = lrn;
     }
 
-    public String getLAST_NAME() {
-        return LAST_NAME;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setLAST_NAME(String LAST_NAME) {
-        this.LAST_NAME = LAST_NAME;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public String getFIRST_NAME() {
-        return FIRST_NAME;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFIRST_NAME(String FIRST_NAME) {
-        this.FIRST_NAME = FIRST_NAME;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getMiddleInitial() {
-        return middleInitial;
+    public String getMiddleName() {
+        return middleName;
     }
 
-    public void setMiddleInitial(String middleInitial) {
-        this.middleInitial = middleInitial;
+    public void setMiddleName(String middleName) {
+        this.middleName = middleName;
     }
 
-    public String getSuffix() {
-        return suffix;
+    public Date getBirthDate() {
+        return birthDate;
     }
 
-    public void setSuffix(String suffix) {
-        this.suffix = suffix;
+    public void setBirthDate(Date birthDate) {
+        this.birthDate = birthDate;
     }
 
-    public String getGender() {
-        return gender;
+    public String getMotherTongue() {
+        return motherTongue;
     }
 
-    public void setGender(String gender) {
-        this.gender = gender;
+    public void setMotherTongue(String motherTongue) {
+        this.motherTongue = motherTongue;
     }
 
-    public Date getDob() {
-        return dob;
+    public int getAge() {
+        return age;
     }
 
-    public void setDob(Date dob) {
-        this.dob = dob;
+    public void setAge(int age) {
+        this.age = age;
     }
 
-    public String getEmail() {
-        return email;
+    public String getIpType() {
+        return ipType;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setIpType(String ipType) {
+        this.ipType = ipType;
     }
 
-    public String getContactNumber() {
-        return contactNumber;
+    public String getReligion() {
+        return religion;
     }
 
-    public void setContactNumber(String contactNumber) {
-        this.contactNumber = contactNumber;
-    }
-
-    public String getGuardianName() {
-        return guardianName;
-    }
-
-    public void setGuardianName(String guardianName) {
-        this.guardianName = guardianName;
-    }
-
-    public String getGuardianEmail() {
-        return guardianEmail;
-    }
-
-    public void setGuardianEmail(String guardianEmail) {
-        this.guardianEmail = guardianEmail;
-    }
-
-    public String getGuardianContactNumber() {
-        return guardianContactNumber;
-    }
-
-    public void setGuardianContactNumber(String guardianContactNumber) {
-        this.guardianContactNumber = guardianContactNumber;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
+    public void setReligion(String religion) {
+        this.religion = religion;
     }
 
     @Override
     public String toString() {
         return "StudentsData{" +
                 "studentUid=" + studentUid +
+                ", parentId=" + parentId +
+                ", guardianId=" + guardianId +
+                ", appointmentsId=" + appointmentsId +
+                ", contactId=" + contactId +
                 ", lrn='" + lrn + '\'' +
-                ", LAST_NAME='" + LAST_NAME + '\'' +
-                ", FIRST_NAME='" + FIRST_NAME + '\'' +
-                ", middleInitial='" + middleInitial + '\'' +
-                ", suffix='" + suffix + '\'' +
-                ", gender='" + gender + '\'' +
-                ", dob=" + dob +
-                ", email='" + email + '\'' +
-                ", contactNumber='" + contactNumber + '\'' +
-                ", guardianName='" + guardianName + '\'' +
-                ", guardianEmail='" + guardianEmail + '\'' +
-                ", guardianContactNumber='" + guardianContactNumber + '\'' +
-                ", address='" + address + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", middleName='" + middleName + '\'' +
+                ", birthDate=" + birthDate +
+                ", motherTongue='" + motherTongue + '\'' +
+                ", age=" + age +
+                ", ipType='" + ipType + '\'' +
+                ", religion='" + religion + '\'' +
                 '}';
+    }
+
+    public String getSEX() {
+        return SEX;
+    }
+
+    public void setSEX(String SEX) {
+        this.SEX = SEX;
     }
 }

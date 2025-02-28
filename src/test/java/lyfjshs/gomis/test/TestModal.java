@@ -3,8 +3,6 @@ package lyfjshs.gomis.test;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.sql.Date;
-import java.sql.Timestamp;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -14,14 +12,12 @@ import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
 import lyfjshs.gomis.Database.model.StudentsData;
-import lyfjshs.gomis.Database.model.StudentsRecord;
 import lyfjshs.gomis.view.students.StudentFullData;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.LightDarkButton;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
 import raven.modal.option.BorderOption;
-import java.awt.event.ActionEvent;
 
 public class TestModal extends JFrame {
 
@@ -31,39 +27,25 @@ public class TestModal extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new MigLayout("wrap,al center center"));
         JButton button = new JButton("show");
-        // Sample objects of StudentsRecord and StudentsData
-        StudentsRecord studentRecord = new StudentsRecord(
-            1, // studentRecordId
-            101, // studentUid
-            5, // violationId
-            "Regular", // typeOfStudent
-            "2023-2024", // academicYear
-            "1st Semester", // semester
-            "STEM", // strand
-            "Science", // track
-            "Grade 12", // yearLevel
-            "Mr. Smith", // adviser
-            "Section A", // section
-            "Active", // status
-            new Timestamp(System.currentTimeMillis()) // updatedAt
-        );
 
         StudentsData studentData = new StudentsData(
-            101, // studentUid
-            "123456789", // lrn
-            "Doe", // LAST_NAME
-            "John", // FIRST_NAME
-            "A", // middleInitial
-            "", // suffix
-            "Male", // gender
-            Date.valueOf("2005-05-15"), // dob
+            1, // studentUid
+            1, // parentID
+            1, // guardianID
+            1, // appointmentID
+            1, // contactID
+            "LRN123456790", // lrn
+            "Doe", // lastName
+            "John", // firstName
+            "Smith", // middleName
             "john.doe@example.com", // email
-            "123-456-7890", // contactNumber
-            "Jane Doe", // guardianName
-            "jane.doe@example.com", // guardianEmail
-            "098-765-4321", // guardianContactNumber
-            "123 Main St" // address
+            new java.sql.Date(new java.util.Date().getTime()), // birthDate
+            "123 Main St", // address
+            1234567890, // phoneNumber
+            "Male", // gender
+            "Single" // civilStatus
         );
+
         ModalDialog.getDefaultOption()
                 .setOpacity(0f)
                 .setAnimationOnClose(false)
@@ -76,7 +58,7 @@ public class TestModal extends JFrame {
             SimpleModalBorder.Option customOption = new SimpleModalBorder.Option("Custom Action", 3); // Custom action type
             SimpleModalBorder.Option[] customOptions = new SimpleModalBorder.Option[] { customOption };
 
-            SimpleModalBorder modal = new SimpleModalBorder(new StudentFullData(studentData, studentRecord), "Input", customOptions, (controller, action) -> {
+            SimpleModalBorder modal = new SimpleModalBorder(new StudentFullData(studentData), "Input", customOptions, (controller, action) -> {
                 System.out.println("Action: " + action);
                 if (action == 3) { // Check for custom action
                     // Handle custom action here

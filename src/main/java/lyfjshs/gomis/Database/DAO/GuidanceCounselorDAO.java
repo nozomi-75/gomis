@@ -11,62 +11,70 @@ import lyfjshs.gomis.Database.model.GuidanceCounselor;
 public class GuidanceCounselorDAO {
 
     // CREATE Method
-    public static void createGuidanceCounselor(Connection conn, int id, String LAST_NAME, String FIRST_NAME,
-            String middleInitial, String suffix, String gender,
-            String specialization, String contactNum, String email, String position,
-            byte[] profilePicture) {
-        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELORS_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, "
-                + "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    public boolean createGuidanceCounselor(Connection conn, GuidanceCounselor counselor) {
+        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELORS_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, " +
+                     "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            pstmt.setString(2, LAST_NAME);
-            pstmt.setString(3, FIRST_NAME);
-            pstmt.setString(4, middleInitial);
-            pstmt.setString(5, suffix);
-            pstmt.setString(6, gender);
-            pstmt.setString(7, specialization);
-            pstmt.setString(8, contactNum);
-            pstmt.setString(9, email);
-            pstmt.setString(10, position);
-            pstmt.setBytes(11, profilePicture);
+            pstmt.setInt(1, counselor.getGUIDANCE_COUNSELORS_ID());
+            pstmt.setString(2, counselor.getLastName());
+            pstmt.setString(3, counselor.getFirstName());
+            pstmt.setString(4, counselor.getMiddleInitial());
+            pstmt.setString(5, counselor.getSuffix());
+            pstmt.setString(6, counselor.getGender());
+            pstmt.setString(7, counselor.getSpecialization());
+            pstmt.setString(8, counselor.getContactNumber());
+            pstmt.setString(9, counselor.getEmail());
+            pstmt.setString(10, counselor.getPosition());
+            pstmt.setBytes(11, counselor.getProfilePicture());
 
             pstmt.executeUpdate();
             System.out.println("Guidance counselor added successfully.");
+            return true;
         } catch (SQLException e) {
             handleSQLException(e, "createGuidanceCounselor");
         }
+        return false;
     }
 
     // READ Method
-    public static void readGuidanceCounselor(Connection conn, int id) {
+    public GuidanceCounselor readGuidanceCounselor(Connection conn, int id) {
         String sql = "SELECT * FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELORS_ID = ?";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
-
             try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    System.out.println("ID: " + rs.getInt("guidance_COUNSELORS_ID"));
-                    System.out.println("Name: " + rs.getString("FIRST_NAME") + " " + rs.getString("LAST_NAME"));
-                    System.out.println("Specialization: " + rs.getString("specialization"));
-                    System.out.println("Email: " + rs.getString("email"));
+                if (rs.next()) {
+                    return new GuidanceCounselor(
+                        rs.getInt("GUIDANCE_COUNSELORS_ID"),
+                        rs.getString("LAST_NAME"),
+                        rs.getString("FIRST_NAME"),
+                        rs.getString("MIDDLE_INITIAL"),
+                        rs.getString("SUFFIX"),
+                        rs.getString("GENDER"),
+                        rs.getString("SPECIALIZATION"),
+                        rs.getString("CONTACT_NUM"),
+                        rs.getString("EMAIL"),
+                        rs.getString("POSITION"),
+                        rs.getBytes("PROFILE_PICTURE")
+                    );
                 }
             }
         } catch (SQLException e) {
             handleSQLException(e, "readGuidanceCounselor");
         }
+        return null;
     }
 
     // Batch Processing Example
-    public static void createGuidanceCounselorsBatch(Connection connection, List<GuidanceCounselor> counselors) {
-        String sql = "INSERT INTO GUIDANCE_COUNSELORS (guidance_COUNSELORS_ID, LAST_NAME, FIRST_NAME, middle_initial, suffix, gender, specialization, contact_num, email, position, profile_picture) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+    public void createGuidanceCounselorsBatch(Connection conn, List<GuidanceCounselor> counselors) {
+        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELORS_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, " +
+                     "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             for (GuidanceCounselor counselor : counselors) {
-                pstmt.setInt(1, counselor.getId());
-                pstmt.setString(2, counselor.getLAST_NAME());
-                pstmt.setString(3, counselor.getFIRST_NAME());
+                pstmt.setInt(1, counselor.getGUIDANCE_COUNSELORS_ID());
+                pstmt.setString(2, counselor.getLastName());
+                pstmt.setString(3, counselor.getFirstName());
                 pstmt.setString(4, counselor.getMiddleInitial());
                 pstmt.setString(5, counselor.getSuffix());
                 pstmt.setString(6, counselor.getGender());
@@ -84,8 +92,25 @@ public class GuidanceCounselorDAO {
         }
     }
 
+    // DELETE Method
+    public boolean deleteGuidanceCounselor(Connection conn, int id) {
+        String sql = "DELETE FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELORS_ID = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("Guidance counselor deleted successfully.");
+                return true;
+            }
+        } catch (SQLException e) {
+            handleSQLException(e, "deleteGuidanceCounselor");
+        }
+        return false;
+    }
+
     // Error Handling Method
-    public static void handleSQLException(SQLException e, String operation) {
+    private void handleSQLException(SQLException e, String operation) {
         System.err.println("Error during " + operation + ": " + e.getMessage());
         System.err.println("SQL State: " + e.getSQLState());
         System.err.println("Error Code: " + e.getErrorCode());
