@@ -1,4 +1,4 @@
-package lyfjshs.gomis;
+package lyfjshs.gomis.test;
 
 import java.awt.Color;
 import java.awt.Component;
