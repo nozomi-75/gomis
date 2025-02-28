@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,10 +58,10 @@ public class AppointmentDAO {
                         rs.getObject("counselors_id", Integer.class),
                         rs.getString("appointment_title"),
                         rs.getString("appointment_type"),
-                        rs.getTimestamp("appointment_date_time"),
+                        rs.getTimestamp("appointment_date_time").toLocalDateTime(),
                         rs.getString("appointment_notes"),
                         rs.getString("appointment_status"),
-                        rs.getTimestamp("updated_at")
+                        rs.getTimestamp("updated_at").toLocalDateTime()
                     );
                 }
             }
@@ -83,10 +84,10 @@ public class AppointmentDAO {
                     rs.getObject("counselors_id", Integer.class),
                     rs.getString("appointment_title"),
                     rs.getString("appointment_type"),
-                    rs.getTimestamp("appointment_date_time"),
+                    rs.getTimestamp("appointment_date_time").toLocalDateTime(),
                     rs.getString("appointment_notes"),
                     rs.getString("appointment_status"),
-                    rs.getTimestamp("updated_at")
+                    rs.getTimestamp("updated_at").toLocalDateTime()
                 ));
             }
         } catch (SQLException e) {
@@ -130,6 +131,83 @@ public class AppointmentDAO {
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error deleting appointment: " + e.getMessage());
+        }
+        return false;
+    }
+
+    // Retrieve appointments for a specific date
+    public List<Appointment> getAppointmentsForDate(Connection connection, LocalDate date) {
+        List<Appointment> appointments = new ArrayList<>();
+        String query = "SELECT * FROM APPOINTMENTS WHERE DATE(appointment_date_time) = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setDate(1, java.sql.Date.valueOf(date));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    appointments.add(new Appointment(
+                        rs.getInt("appointment_id"),
+                        rs.getInt("participant_id"),
+                        rs.getObject("counselors_id", Integer.class),
+                        rs.getString("appointment_title"),
+                        rs.getString("appointment_type"),
+                        rs.getTimestamp("appointment_date_time").toLocalDateTime(),
+                        rs.getString("appointment_notes"),
+                        rs.getString("appointment_status"),
+                        rs.getTimestamp("updated_at").toLocalDateTime()
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving appointments for date: " + e.getMessage());
+        }
+        return appointments;
+    }
+
+    // Add a new appointment
+    public boolean addAppointment(Connection connection, int participantId, Integer counselorsId, String appointmentTitle,
+                                  String appointmentType, Timestamp appointmentDateTime, String appointmentNotes,
+                                  String appointmentStatus) {
+        String query = "INSERT INTO APPOINTMENTS (participant_id, counselors_id, appointment_title, appointment_type, " +
+                       "appointment_date_time, appointment_notes, appointment_status) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, participantId);
+            if (counselorsId != null) {
+                stmt.setInt(2, counselorsId);
+            } else {
+                stmt.setNull(2, Types.INTEGER);
+            }
+            stmt.setString(3, appointmentTitle);
+            stmt.setString(4, appointmentType);
+            stmt.setTimestamp(5, appointmentDateTime);
+            stmt.setString(6, appointmentNotes);
+            stmt.setString(7, appointmentStatus);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error adding appointment: " + e.getMessage());
+        }
+        return false;
+    }
+
+    // Update an existing appointment
+    public boolean updateAppointment(Connection connection, Appointment appointment) {
+        String query = "UPDATE APPOINTMENTS SET participant_id = ?, counselors_id = ?, appointment_title = ?, " +
+                       "appointment_type = ?, appointment_date_time = ?, appointment_notes = ?, appointment_status = ? " +
+                       "WHERE appointment_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, appointment.getParticipantId());
+            if (appointment.getCounselorsId() != null) {
+                stmt.setInt(2, appointment.getCounselorsId());
+            } else {
+                stmt.setNull(2, Types.INTEGER);
+            }
+            stmt.setString(3, appointment.getAppointmentTitle());
+            stmt.setString(4, appointment.getAppointmentType());
+            stmt.setTimestamp(5, Timestamp.valueOf(appointment.getAppointmentDateTime()));
+            stmt.setString(6, appointment.getAppointmentNotes());
+            stmt.setString(7, appointment.getAppointmentStatus());
+            stmt.setInt(8, appointment.getAppointmentId());
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating appointment: " + e.getMessage());
         }
         return false;
     }

@@ -115,7 +115,7 @@ public class AppointmentDailyOverview extends JPanel {
         deleteButton.addActionListener(e -> {
             if (JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this appointment?",
                 "Confirm Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-                if (appointmentDAO.deleteAppointment(connection, app.getAppointmentId())) {
+                if (appointmentDAO.deleteAppointment(app.getAppointmentId())) {
                     updateAppointmentsDisplay();
                 } else {
                     JOptionPane.showMessageDialog(this, "Failed to delete appointment",

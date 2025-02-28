@@ -28,7 +28,7 @@ public class AppointmentManagement extends Form {
 
     public AppointmentManagement(Connection connection) {
         this.connection = connection;
-        this.appointmentDAO = new AppointmentDAO();
+        this.appointmentDAO = new AppointmentDAO(connection);
         setLayout(new MigLayout("wrap 1, fill, insets 0", "[grow]", "[pref!][grow]"));
 
         // Header panel

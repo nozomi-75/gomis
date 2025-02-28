@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.Main",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "RemarksDB_Test",
             "request": "launch",
             "mainClass": "lyfjshs.CRUDS.RemarksDB_Test",

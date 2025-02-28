@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -16,13 +17,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.JButton;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
+import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.model.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.TableActionManager;
@@ -60,7 +60,7 @@ public class MainDashboard extends Form {
 		
 		JLabel lblNewLabel_1 = new JLabel("Appointments overview");
 		sideRPanel.add(lblNewLabel_1, "cell 0 0");
-		AppointmentDAO appointmentDAO = new AppointmentDAO();
+		AppointmentDAO appointmentDAO = new AppointmentDAO(conn);
 		AppointmentOverview appointmentOverview = new AppointmentOverview(appointmentDAO, conn);
 		sideRPanel.add(appointmentOverview, "cell 0 1,grow");
 

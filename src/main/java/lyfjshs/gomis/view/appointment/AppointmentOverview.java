@@ -1,6 +1,7 @@
 package lyfjshs.gomis.view.appointment;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.sql.Connection;
 import java.time.LocalDate;
@@ -15,11 +16,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
-import javax.swing.table.DefaultTableModel;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.model.Appointment;
@@ -43,6 +42,7 @@ public class AppointmentOverview extends JPanel {
         
         // Setup UI components
         datePicker = createDatePicker();
+        datePicker.setPreferredSize(new Dimension(datePicker.getPreferredSize().width, 200)); // Adjust height as needed
         
         this.add(datePicker, "cell 0 0, grow");
         this.add(createAppointmentsView(), "cell 0 1, grow");
@@ -70,6 +70,8 @@ public class AppointmentOverview extends JPanel {
         appointmentsPanel.setBorder(BorderFactory.createTitledBorder("Appointments:"));
         JScrollPane scrollPane = new JScrollPane(appointmentsPanel);
         scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // Disable horizontal scrolling
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); // Enable vertical scrolling
         return scrollPane;
     }
 
@@ -138,7 +140,7 @@ public class AppointmentOverview extends JPanel {
             
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    if (appointmentDAO.deleteAppointment(connection, appt.getAppointmentId())) {
+                    if (appointmentDAO.deleteAppointment(appt.getAppointmentId())) {
                         loadAppointments(appt.getAppointmentDateTime().toLocalDate());
                         JOptionPane.showMessageDialog(this, "Appointment deleted successfully",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
