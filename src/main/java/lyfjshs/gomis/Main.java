@@ -25,6 +25,7 @@ import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
+import lyfjshs.gomis.view.students.create.StudentInfoFullForm;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
 
@@ -108,6 +109,7 @@ public class Main {
 	private static AppointmentManagement appointmentCalendar;
 	private static SessionsForm sessionFillUp;
 	private static SessionRecords sessionRecords;
+	private static StudentInfoFullForm createStudent;
 
 	public static void initiPanels() {
 		loginPanel = new LoginView(conn);
@@ -120,6 +122,7 @@ public class Main {
 		sessionFillUp = new SessionsForm(conn);
 		sessionRecords = new SessionRecords(conn);
 		StudentSearchPanel studentSearchPanel = new StudentSearchPanel(conn);
+		createStudent = new StudentInfoFullForm(conn);
 	}
 
 	/**

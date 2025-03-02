@@ -1,19 +1,33 @@
 package lyfjshs.gomis.view.appointment;
 
-import com.formdev.flatlaf.FlatLightLaf;
-import net.miginfocom.swing.MigLayout;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
 import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+
 import com.toedter.calendar.JDateChooser;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
-import lyfjshs.gomis.Database.model.Appointment;
+import lyfjshs.gomis.Database.entity.Appointment;
+import net.miginfocom.swing.MigLayout;
 
 public class AppointmentDailyOverview extends JPanel {
     private LocalDate selectedDate;
@@ -130,13 +144,14 @@ public class AppointmentDailyOverview extends JPanel {
         card.add(buttonPanel, "right");
         
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a");
-        String timeSlot = app.getAppointmentDateTime().format(timeFormatter);
+        LocalDateTime appointmentDateTime = app.getAppointmentDateTime().toLocalDateTime();
+        String timeSlot = appointmentDateTime.format(timeFormatter);
         card.add(new JLabel(timeSlot + " • " + app.getAppointmentStatus()) {
             { setFont(new Font("Segoe UI", Font.PLAIN, 12)); }
         }, "span 2");
 
-        if (app.getCounselorsId() != null) {
-            card.add(new JLabel("Counselor ID: " + app.getCounselorsId()) {
+        if (app.getGuidanceCounselorId() != null) {
+            card.add(new JLabel("Counselor ID: " + app.getGuidanceCounselorId()) {
                 { setFont(new Font("Segoe UI", Font.PLAIN, 12)); }
             }, "span 2");
         }
@@ -173,10 +188,10 @@ public class AppointmentDailyOverview extends JPanel {
                 boolean success = appointmentDAO.addAppointment(
                     connection,
                     app.getParticipantId(),
-                    app.getCounselorsId(),
+                    app.getGuidanceCounselorId(),
                     app.getAppointmentTitle(),
                     app.getAppointmentType(),
-                    java.sql.Timestamp.valueOf(app.getAppointmentDateTime()),
+                    app.getAppointmentDateTime(),
                     app.getAppointmentNotes(),
                     app.getAppointmentStatus()
                 );

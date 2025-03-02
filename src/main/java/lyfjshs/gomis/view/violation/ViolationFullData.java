@@ -12,15 +12,17 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.model.StudentsData;
-import lyfjshs.gomis.Database.model.Violation;
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
+import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.FormManager.Form;
 import net.miginfocom.swing.MigLayout;
 
 public class ViolationFullData extends Form {
     private JTextField violationIdField;
-    private JTextField studentUidField;
-    private JTextField studentNameField;
+    private JTextField participantIdField;
+    private JTextField participantNameField;
     private JTextField violationTypeField;
     private JTextField statusField;
     private JTextArea descriptionArea;
@@ -29,7 +31,7 @@ public class ViolationFullData extends Form {
     private JTextField reinforcementField;
     private Connection connection;
 
-    public ViolationFullData(Violation violation, Connection connection) {
+    public ViolationFullData(ViolationRecord violation, Connection connection) {
         this.connection = connection;
         setLayout(new BorderLayout(0, 0));
         initComponents();
@@ -47,8 +49,8 @@ public class ViolationFullData extends Form {
 
     private void initComponents() {
         violationIdField = new JTextField();
-        studentUidField = new JTextField();
-        studentNameField = new JTextField();
+        participantIdField = new JTextField();
+        participantNameField = new JTextField();
         violationTypeField = new JTextField();
         statusField = new JTextField();
         descriptionArea = new JTextArea(5, 20);
@@ -58,8 +60,8 @@ public class ViolationFullData extends Form {
         
         // Make fields read-only
         violationIdField.setEditable(false);
-        studentUidField.setEditable(false);
-        studentNameField.setEditable(false);
+        participantIdField.setEditable(false);
+        participantNameField.setEditable(false);
         violationTypeField.setEditable(false);
         statusField.setEditable(false);
         descriptionArea.setEditable(false);
@@ -68,21 +70,21 @@ public class ViolationFullData extends Form {
         reinforcementField.setEditable(false);
     }
 
-    private void populateData(Violation violation) {
+    private void populateData(ViolationRecord violation) {
         violationIdField.setText(String.valueOf(violation.getViolationId()));
-        studentUidField.setText(String.valueOf(violation.getStudentUid()));
+        participantIdField.setText(String.valueOf(violation.getParticipantId()));
         
         try {
-            StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-            StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
-            if (student != null) {
-                studentNameField.setText(String.format("%s %s", student.getFirstName(), student.getLastName()));
+            ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
+            Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
+            if (participant != null) {
+                participantNameField.setText(String.format("%s %s", participant.getParticipantFirstName(), participant.getParticipantLastName()));
             } else {
-                studentNameField.setText("N/A");
+                participantNameField.setText("N/A");
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            studentNameField.setText("Error fetching student data");
+            participantNameField.setText("Error fetching participant data");
         }
 
         violationTypeField.setText(violation.getViolationType());
@@ -101,11 +103,11 @@ public class ViolationFullData extends Form {
         panel.add(new JLabel("Violation ID:"));
         panel.add(violationIdField, "growx");
 
-        panel.add(new JLabel("Student UID:"));
-        panel.add(studentUidField, "growx");
+        panel.add(new JLabel("Participant ID:"));
+        panel.add(participantIdField, "growx");
 
         panel.add(new JLabel("Name:"));
-        panel.add(studentNameField, "growx");
+        panel.add(participantNameField, "growx");
 
         panel.add(new JLabel("Violation Type:"));
         panel.add(violationTypeField, "growx");

@@ -13,7 +13,8 @@ import javax.swing.SwingUtilities;
 import com.formdev.flatlaf.FlatClientProperties;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
-import lyfjshs.gomis.Database.model.Appointment;
+import lyfjshs.gomis.Database.entity.Appointment;
+
 import lyfjshs.gomis.components.FormManager.Form;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
@@ -100,10 +101,10 @@ public class AppointmentManagement extends Form {
             boolean success = appointmentDAO.addAppointment(
                 connection,
                 newAppointment.getParticipantId(),
-                newAppointment.getCounselorsId(),
+                newAppointment.getGuidanceCounselorId(),
                 newAppointment.getAppointmentTitle(),
                 newAppointment.getAppointmentType(),
-                java.sql.Timestamp.valueOf(newAppointment.getAppointmentDateTime()),
+                newAppointment.getAppointmentDateTime(),
                 newAppointment.getAppointmentNotes(),
                 newAppointment.getAppointmentStatus()
             );

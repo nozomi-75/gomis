@@ -12,7 +12,23 @@ public class ViolationRecord {
     private String status;
     private Date updatedAt;
 
-    // Getters and Setters...
+    // Full Constructor
+    public ViolationRecord(int violationId, int participantId, String violationType, String violationDescription,
+                            String anecdotalRecord, String reinforcement, String status, Date updatedAt) {
+        this.violationId = violationId;
+        this.participantId = participantId;
+        this.violationType = violationType;
+        this.violationDescription = violationDescription;
+        this.anecdotalRecord = anecdotalRecord;
+        this.reinforcement = reinforcement;
+        this.status = status;
+        this.updatedAt = updatedAt;
+    }
+
+    // Default Constructor
+    public ViolationRecord() {}
+
+    // Getters and Setters
     public int getViolationId() { return violationId; }
     public void setViolationId(int violationId) { this.violationId = violationId; }
     public int getParticipantId() { return participantId; }

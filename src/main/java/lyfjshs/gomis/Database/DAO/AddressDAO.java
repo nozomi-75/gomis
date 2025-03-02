@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lyfjshs.gomis.Database.SQLExceptionPane;
-import lyfjshs.gomis.Database.model.Address;
+import lyfjshs.gomis.Database.entity.Address;
 
 public class AddressDAO {
 

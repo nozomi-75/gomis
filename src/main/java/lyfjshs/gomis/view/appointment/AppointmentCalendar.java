@@ -23,7 +23,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
-import lyfjshs.gomis.Database.model.Appointment;
+import lyfjshs.gomis.Database.entity.Appointment;
 import net.miginfocom.swing.MigLayout;
 
 public class AppointmentCalendar extends JPanel {
@@ -139,7 +139,7 @@ public class AppointmentCalendar extends JPanel {
                 appointmentPanel.setBackground(bgColor);
 
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-                String timeDisplay = appt.getAppointmentDateTime().format(timeFormatter);
+                String timeDisplay = appt.getAppointmentDateTime().toLocalDateTime().format(timeFormatter);
 
                 JLabel appLabel = new JLabel(timeDisplay + " - " + appt.getAppointmentTitle());
                 appLabel.setForeground(Color.BLACK);
@@ -167,7 +167,7 @@ public class AppointmentCalendar extends JPanel {
     private void showAppointmentDialog(LocalDate selectedDate, Appointment existingAppointment) {
         Appointment appointmentToEdit = existingAppointment != null ? existingAppointment : new Appointment();
         if (existingAppointment == null) {
-            appointmentToEdit.setAppointmentDateTime(selectedDate.atTime(9, 0));
+            appointmentToEdit.setAppointmentDateTime(java.sql.Timestamp.valueOf(selectedDate.atTime(9, 0)));
         }
 
         AppointmentDialog dialog = new AppointmentDialog(
@@ -193,10 +193,10 @@ public class AppointmentCalendar extends JPanel {
                 success = appointmentDao.addAppointment(
                     connection,
                     updatedAppointment.getParticipantId(),
-                    updatedAppointment.getCounselorsId(),
+                    updatedAppointment.getGuidanceCounselorId(),
                     updatedAppointment.getAppointmentTitle(),
                     updatedAppointment.getAppointmentType(),
-                    java.sql.Timestamp.valueOf(updatedAppointment.getAppointmentDateTime()),
+                    updatedAppointment.getAppointmentDateTime(),
                     updatedAppointment.getAppointmentNotes(),
                     updatedAppointment.getAppointmentStatus()
                 );

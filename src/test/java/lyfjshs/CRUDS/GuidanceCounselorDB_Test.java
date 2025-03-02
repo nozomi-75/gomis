@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
-import lyfjshs.gomis.Database.model.GuidanceCounselor;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 
 public class GuidanceCounselorDB_Test {
 

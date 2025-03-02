@@ -21,7 +21,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
-import lyfjshs.gomis.Database.model.Appointment;
+import lyfjshs.gomis.Database.entity.Appointment;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 
@@ -82,7 +82,7 @@ public class AppointmentOverview extends JPanel {
         JLabel nameLabel = new JLabel(appt.getAppointmentTitle());
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD, 14f));
 
-        String timeStr = appt.getAppointmentDateTime().format(DateTimeFormatter.ofPattern("h:mm a"));
+        String timeStr = appt.getAppointmentDateTime().toLocalDateTime().format(DateTimeFormatter.ofPattern("h:mm a"));
         JLabel timeLabel = new JLabel(timeStr);
         timeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
@@ -101,10 +101,10 @@ public class AppointmentOverview extends JPanel {
             details.append("Appointment Details:\n")
                    .append("ID: ").append(appt.getAppointmentId()).append("\n")
                    .append("Participant ID: ").append(appt.getParticipantId()).append("\n")
-                   .append("Counselor ID: ").append(appt.getCounselorsId() != null ? appt.getCounselorsId() : "Not assigned").append("\n")
+                   .append("Counselor ID: ").append(appt.getGuidanceCounselorId() != null ? appt.getGuidanceCounselorId() : "Not assigned").append("\n")
                    .append("Title: ").append(appt.getAppointmentTitle()).append("\n")
                    .append("Type: ").append(appt.getAppointmentType()).append("\n")
-                   .append("Date/Time: ").append(appt.getAppointmentDateTime().format(
+                   .append("Date/Time: ").append(appt.getAppointmentDateTime().toLocalDateTime().format(
                            DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a"))).append("\n")
                    .append("Notes: ").append(appt.getAppointmentNotes()).append("\n")
                    .append("Status: ").append(appt.getAppointmentStatus());
@@ -122,7 +122,7 @@ public class AppointmentOverview extends JPanel {
                 try {
                     Appointment updatedAppt = dialog.getAppointment();
                     if (appointmentDAO.updateAppointment(connection, updatedAppt)) {
-                        loadAppointments(appt.getAppointmentDateTime().toLocalDate());
+                        loadAppointments(appt.getAppointmentDateTime().toLocalDateTime().toLocalDate());
                         JOptionPane.showMessageDialog(this, "Appointment updated successfully",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
                     }
@@ -141,7 +141,7 @@ public class AppointmentOverview extends JPanel {
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
                     if (appointmentDAO.deleteAppointment(appt.getAppointmentId())) {
-                        loadAppointments(appt.getAppointmentDateTime().toLocalDate());
+                        loadAppointments(appt.getAppointmentDateTime().toLocalDateTime().toLocalDate());
                         JOptionPane.showMessageDialog(this, "Appointment deleted successfully",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
                     }

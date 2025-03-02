@@ -1,14 +1,30 @@
 package lyfjshs.gomis.view.sessions;
 
-import java.awt.*;
-import java.awt.print.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
 import java.sql.Connection;
-import javax.swing.*;
-import lyfjshs.gomis.components.FormManager.Form;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
-import lyfjshs.gomis.Database.model.Session;
-import net.miginfocom.swing.MigLayout;
+import lyfjshs.gomis.Database.entity.Sessions;
+import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.view.appointment.StudentSearchUI;
+import net.miginfocom.swing.MigLayout;
 
 public class SessionsForm extends Form implements Printable {
     private JTextField dateField, violationField, recordedByField;
@@ -68,8 +84,8 @@ public class SessionsForm extends Form implements Printable {
             String summary = sessionSummaryArea.getText();
 
             // Create a new Session object using the constructor
-            Session session = new Session(
-                0,
+            Sessions session = new Sessions(
+            	0,
                 0, // appointmentId (not retrieved in the query)
                 0, // counselorsId (not retrieved in the query)
                 participants.equals("Student") ? 1 : 0, // Use 1 for Student, 0 for Non-Student

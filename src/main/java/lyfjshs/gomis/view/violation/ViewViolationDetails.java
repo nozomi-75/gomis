@@ -15,9 +15,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.model.StudentsData;
-import lyfjshs.gomis.Database.model.Violation;
+import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.Database.entity.ViolationRecord;
 import net.miginfocom.swing.MigLayout; // Import MigLayout
 
 public class ViewViolationDetails extends JDialog {
@@ -33,14 +35,16 @@ public class ViewViolationDetails extends JDialog {
 	private JTextArea txtDescription;
 	private JButton btnEdit;
 	private JButton btnClose;	
-	private Violation violation;
+	private ViolationRecord violation;
 	private boolean isEditing = false;
 	private StudentsDataDAO studentsDataDAO; // Add this line
+	private ParticipantsDAO participantsDAO; // Add this line
 
-	public ViewViolationDetails(JFrame parent, Violation violation, StudentsDataDAO studentsDataDAO) {
+	public ViewViolationDetails(JFrame parent, ViolationRecord violation, StudentsDataDAO studentsDataDAO, ParticipantsDAO participantsDAO) {
 		super(parent, "Violation Details", true);
 		this.violation = violation;
 		this.studentsDataDAO = studentsDataDAO; // Add this line
+		this.participantsDAO = participantsDAO; // Add this line
 		initComponents();
 		loadViolationData();
 		setLocationRelativeTo(parent);
@@ -169,13 +173,20 @@ public class ViewViolationDetails extends JDialog {
 	private void loadViolationData() {
 		if (violation != null) {
 			try {
-				StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
-				if (student != null) {
-					txtLRN.setText(student.getLrn());
-					txtFIRST_NAME.setText(student.getFirstName());
-					txtLAST_NAME.setText(student.getLastName());
-					txtContact.setText(student.getContact().getCONTACT_NUMBER());
-								}
+				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
+				if (participant != null) {
+					txtFIRST_NAME.setText(participant.getParticipantFirstName());
+					txtLAST_NAME.setText(participant.getParticipantLastName());
+					txtContact.setText(participant.getContactNumber());
+					cmbParticipantType.setSelectedItem(participant.getParticipantType());
+
+					if ("Student".equals(participant.getParticipantType())) {
+						Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
+						if (student != null) {
+							txtLRN.setText(student.getStudentLrn());
+						}
+					}
+				}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -188,7 +199,7 @@ public class ViewViolationDetails extends JDialog {
 
 	private void saveViolationData() {
 		if (violation != null) {
-			violation.setStudentUid(getStudentUidFromLrn(txtLRN.getText()));
+			violation.setParticipantId(getStudentUidFromLrn(txtLRN.getText()));
 			violation.setViolationType((String) cmbViolationType.getSelectedItem());
 			violation.setStatus((String) cmbStatus.getSelectedItem());
 			violation.setReinforcement((String) cmbReinforcement.getSelectedItem());
@@ -199,7 +210,7 @@ public class ViewViolationDetails extends JDialog {
 	// Method to get studentUid from LRN
 	private int getStudentUidFromLrn(String lrn) {
 		try {
-			StudentsData student = studentsDataDAO.getStudentDataByLrn(lrn);
+			Student student = studentsDataDAO.getStudentDataByLrn(lrn);
 			if (student != null) {
 				return student.getStudentUid();
 			}

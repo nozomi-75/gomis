@@ -75,7 +75,7 @@ public class LoginController {
     public PreparedStatement createUser(Connection connection, String username, String password,
                                         Integer guidanceCounselorId) throws SQLException {
         // SQL query to insert a new user
-        String sql = "INSERT INTO users (u_name, u_pass, guidance_COUNSELORS_ID) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO users (u_name, u_pass, guidance_counselor_id) VALUES (?, ?, ?)";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setString(1, username);
         ps.setString(2, hashPassword(password));  // Store hashed password
@@ -131,13 +131,13 @@ public class LoginController {
      */
     public void getGuidanceCounselorDetails(Connection connection, int userId) {
         // Retrieve the guidance counselor ID for the user
-        String sql = "SELECT guidance_COUNSELORS_ID FROM users WHERE user_id = ?";
+        String sql = "SELECT guidance_counselor_id FROM users WHERE user_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    int counselorId = rs.getInt("guidance_COUNSELORS_ID");
+                    int counselorId = rs.getInt("guidance_counselor_id");
 
                     if (counselorId != 0) {
                         // Now, use GuidanceCounselorCRUD to get details
@@ -228,16 +228,16 @@ public class LoginController {
             boolean validUser = isValidUser(username, password);
     
             if (validUser) {
-                ps = conn.prepareStatement("SELECT user_id, guidance_COUNSELORS_ID FROM USERS WHERE U_NAME = ?");
+                ps = conn.prepareStatement("SELECT user_id, guidance_counselor_id FROM USERS WHERE U_NAME = ?");
                 ps.setString(1, username);
                 rs = ps.executeQuery();
     
                 if (rs.next()) {
-                    int guidanceCounselorId = rs.getInt("guidance_COUNSELORS_ID");
+                    int guidanceCounselorId = rs.getInt("guidance_counselor_id");
     
                     if (guidanceCounselorId != 0) {
                         PreparedStatement counselorPs = conn.prepareStatement(
-                            "SELECT FIRST_NAME, LAST_NAME, position FROM GUIDANCE_COUNSELORS WHERE guidance_COUNSELORS_ID = ?"
+                            "SELECT FIRST_NAME, LAST_NAME, position FROM GUIDANCE_COUNSELORS WHERE guidance_counselor_id = ?"
                         );
                         counselorPs.setInt(1, guidanceCounselorId);
                         ResultSet counselorRs = counselorPs.executeQuery();

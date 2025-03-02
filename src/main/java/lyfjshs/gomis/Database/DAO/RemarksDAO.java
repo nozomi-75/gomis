@@ -8,8 +8,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-import lyfjshs.gomis.Database.model.Remarks;
-
+import lyfjshs.gomis.Database.entity.Remarks;
 public class RemarksDAO {
     private Connection connection;
 
@@ -41,7 +40,7 @@ public class RemarksDAO {
                 if (rs.next()) {
                     return new Remarks(
                         rs.getInt("REMARK_ID"),
-                        rs.getString("STUDENT_ID"),
+                        rs.getInt("STUDENT_ID"),
                         rs.getString("REMARK_TEXT"),
                         rs.getTimestamp("REMARK_DATE")
                     );
@@ -62,7 +61,7 @@ public class RemarksDAO {
             while (rs.next()) {
                 remarks.add(new Remarks(
                     rs.getInt("REMARK_ID"),
-                    rs.getString("STUDENT_ID"),
+                    rs.getInt("STUDENT_ID"),
                     rs.getString("REMARK_TEXT"),
                     rs.getTimestamp("REMARK_DATE")
                 ));

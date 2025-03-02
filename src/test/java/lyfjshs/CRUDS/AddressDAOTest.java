@@ -5,8 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import lyfjshs.gomis.Database.DAO.AddressDAO;
-import lyfjshs.gomis.Database.model.Address;
-
+import lyfjshs.gomis.Database.entity.Address;
 public class AddressDAOTest {
 
     private static final String URL = "jdbc:mariadb://localhost:3306/gomisDB";

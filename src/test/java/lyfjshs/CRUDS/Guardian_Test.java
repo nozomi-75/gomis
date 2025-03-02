@@ -4,9 +4,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-import lyfjshs.gomis.Database.DAO.GuardianDAO;
 import lyfjshs.gomis.Database.DBConnection;
-import lyfjshs.gomis.Database.model.Guardian;
+import lyfjshs.gomis.Database.entity.Guardian;
+import lyfjshs.gomis.Database.DAO.GuardianDAO;
 
 public class Guardian_Test {
 	public static void main(String[] args) {
@@ -31,7 +31,7 @@ public class Guardian_Test {
 				return;
 			}
 			Guardian lastInsertedGuardian = guardians.get(guardians.size() - 1);
-			int lastGuardianId = lastInsertedGuardian.getGUARDIAN_ID();
+			int lastGuardianId = lastInsertedGuardian.getGuardianId();
 
 			// Retrieve a guardian by ID
 			System.out.println("Retrieving guardian with ID: " + lastGuardianId);

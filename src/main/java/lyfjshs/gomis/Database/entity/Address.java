@@ -10,6 +10,18 @@ public class Address {
     private String addressBarangay;
     private String addressZipCode;
 
+      // Constructor
+      public Address(int addressId, String addressHouseNumber, String addressStreetSubdivision, String addressRegion, String addressProvince, String addressMunicipality, String addressBarangay, String addressZipCode) {
+        this.addressId = addressId;
+        this.addressHouseNumber = addressHouseNumber;
+        this.addressStreetSubdivision = addressStreetSubdivision;
+        this.addressRegion = addressRegion;
+        this.addressProvince = addressProvince;
+        this.addressMunicipality = addressMunicipality;
+        this.addressBarangay = addressBarangay;
+        this.addressZipCode = addressZipCode;
+    }
+
     // Getters and Setters
     public int getAddressId() {
         return addressId;

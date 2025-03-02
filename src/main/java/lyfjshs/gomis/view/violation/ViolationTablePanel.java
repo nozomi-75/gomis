@@ -15,7 +15,8 @@ import javax.swing.border.EmptyBorder;
 
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
-import lyfjshs.gomis.Database.model.Violation;
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
+import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.table.TableActionManager;
 
 public class ViolationTablePanel extends JPanel {
@@ -26,11 +27,11 @@ public class ViolationTablePanel extends JPanel {
     private ViolationActionListener actionListener;
 
     public interface ViolationActionListener {
-        void onViewViolation(Violation violation);
+        void onViewViolation(ViolationRecord violation);
 
-        void onResolveViolation(Violation violation);
+        void onResolveViolation(ViolationRecord violation);
 
-        void onDeleteViolation(Violation violation);
+        void onDeleteViolation(ViolationRecord violation);
     }
 
     public ViolationTablePanel(Connection conn, ViolationCRUD violationCRUD) {
@@ -79,12 +80,13 @@ public class ViolationTablePanel extends JPanel {
 
         // Add view action
         actionManager.addAction("View", (table, row) -> {
-            Violation violation = tableModel.getViolationAt(row);
+            ViolationRecord violation = tableModel.getViolationAt(row);
             if (violation != null) {
                 ViewViolationDetails viewDialog = new ViewViolationDetails(
                     (JFrame) SwingUtilities.getWindowAncestor(this),
                     violation,
-                    new StudentsDataDAO(connect) // Assuming you have a StudentsDataDAO class that takes a Connection
+                    new StudentsDataDAO(connect), // Assuming you have a StudentsDataDAO class that takes a Connection
+                    new ParticipantsDAO(connect) // Add ParticipantsDAO instance
                 );
                 viewDialog.setVisible(true);
             }
@@ -100,21 +102,21 @@ public class ViolationTablePanel extends JPanel {
     }
 
     private void handleViewAction(int row) {
-        Violation violation = tableModel.getViolationAt(row);
+        ViolationRecord violation = tableModel.getViolationAt(row);
         if (violation != null && actionListener != null) {
             actionListener.onViewViolation(violation);
         }
     }
 
     private void handleResolveAction(int row) {
-        Violation violation = tableModel.getViolationAt(row);
+        ViolationRecord violation = tableModel.getViolationAt(row);
         if (violation != null && actionListener != null) {
             actionListener.onResolveViolation(violation);
         }
     }
 
     private void handleDeleteAction(int row) {
-        Violation violation = tableModel.getViolationAt(row);
+        ViolationRecord violation = tableModel.getViolationAt(row);
         if (violation != null && actionListener != null) {
             actionListener.onDeleteViolation(violation);
         }

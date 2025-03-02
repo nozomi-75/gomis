@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import lyfjshs.gomis.Database.model.Contact;
+import lyfjshs.gomis.Database.entity.Contact;
 
 public class ContactDAO {
 
@@ -13,7 +13,7 @@ public class ContactDAO {
         String query = "INSERT INTO CONTACT (CONTACT_NUMBER) VALUES (?)";
         try (
                 PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, contact.getCONTACT_NUMBER());
+            stmt.setString(1, contact.getContactNumber());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -42,7 +42,7 @@ public class ContactDAO {
     public boolean updateContact(Connection conn,int CONTACT_ID, Contact newContact) {
         String query = "UPDATE CONTACT SET CONTACT_NUMBER = ? WHERE CONTACT_ID = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, newContact.getCONTACT_NUMBER());
+            stmt.setString(1, newContact.getContactNumber());
             stmt.setInt(2, CONTACT_ID);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {

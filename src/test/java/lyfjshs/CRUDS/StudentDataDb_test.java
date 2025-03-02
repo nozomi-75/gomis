@@ -7,11 +7,12 @@ import java.sql.SQLException;
 
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.model.Address;
-import lyfjshs.gomis.Database.model.Contact;
-import lyfjshs.gomis.Database.model.Guardian;
-import lyfjshs.gomis.Database.model.PARENTS;
-import lyfjshs.gomis.Database.model.StudentsData;
+import lyfjshs.gomis.Database.entity.Address;
+import lyfjshs.gomis.Database.entity.Contact;
+import lyfjshs.gomis.Database.entity.Guardian;
+import lyfjshs.gomis.Database.entity.Parents;
+import lyfjshs.gomis.Database.entity.Student;
+
 
 public class StudentDataDb_test {
 
@@ -30,7 +31,7 @@ public class StudentDataDb_test {
 
             // Check if test student already exists and delete if found
             try {
-                StudentsData existingStudent = dao.getStudentDataByLrn(testLrn);
+                Student existingStudent = dao.getStudentDataByLrn(testLrn);
                 if (existingStudent != null) {
                     System.out.println("Test student already exists, deleting first...");
                     dao.deleteStudentData(existingStudent.getStudentUid());
@@ -52,10 +53,10 @@ public class StudentDataDb_test {
             // Create a new student
             System.out.println("Creating new student record...");
             // Assuming PARENTS and Guardian objects are created or fetched from the database
-            PARENTS PARENTS = new PARENTS(1, "John", "Doe", "123 Main St", "john.doe@example.com", "1234567890", "Some additional info");
+            Parents PARENTS = new Parents(1, "John", "Doe", "123 Main St", "john.doe@example.com", "1234567890", "Some additional info");
             Guardian guardian = new Guardian(0, "GuardianFirstName", "", "GuardianMiddleName", "GuardianRelationship");
 
-            StudentsData newStudent = new StudentsData(
+            Student newStudent = new Student(
                     1, // studentUid
                     1, // parentID
                     1, // guardianID
@@ -88,7 +89,7 @@ public class StudentDataDb_test {
             // Read the student data to verify creation
             System.out.println("Reading student data...");
             try {
-                StudentsData student = dao.getStudentDataByLrn(testLrn);
+                Student student = dao.getStudentDataByLrn(testLrn);
                 if (student != null) {
                     System.out.println("Retrieved Student Data: " + student);
 
@@ -97,7 +98,7 @@ public class StudentDataDb_test {
 
                     // Update student with a guardian ID
                     System.out.println("Updating student data...");
-                    student.setLastName("Smith-Updated");
+                    student.setStudentLastname("Smith-Updated");
                     student.setGuardianId(getGuardianId(connection, student.getStudentUid()));
                     boolean updated = dao.updateStudentData(student);
                     if (updated) {
@@ -107,7 +108,7 @@ public class StudentDataDb_test {
                     }
 
                     // Verify update
-                    StudentsData updatedStudent = dao.getStudentDataByLrn(testLrn);
+                    Student updatedStudent = dao.getStudentDataByLrn(testLrn);
                     if (updatedStudent != null) {
                         System.out.println("Updated Student Data: " + updatedStudent);
 
@@ -121,7 +122,7 @@ public class StudentDataDb_test {
                         }
 
                         // Verify deletion
-                        StudentsData deletedStudent = dao.getStudentDataByLrn(testLrn);
+                        Student deletedStudent = dao.getStudentDataByLrn(testLrn);
                         if (deletedStudent == null) {
                             System.out.println("Student record deleted successfully.");
                         } else {

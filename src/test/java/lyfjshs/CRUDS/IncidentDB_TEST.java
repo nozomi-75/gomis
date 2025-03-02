@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import lyfjshs.gomis.Database.DAO.IncidentsDAO;
-import lyfjshs.gomis.Database.model.Incident;
+import lyfjshs.gomis.Database.entity.Incident;
 
 public class IncidentDB_TEST {
     public static void main(String[] args) {
@@ -22,7 +22,6 @@ public class IncidentDB_TEST {
                         // Test createIncident using default constructor and setters
             Incident newIncident = new Incident(); // Using the default constructor
             newIncident.setIncidentId(0); // Set a valid incidentId (0 or any valid int)
-            newIncident.setStudentUid(1);
             newIncident.setParticipantId(1);
             newIncident.setViolationId(1);
             newIncident.setIncidentDate(Timestamp.valueOf(LocalDateTime.now()));

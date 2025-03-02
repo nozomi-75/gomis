@@ -1,14 +1,24 @@
 package lyfjshs.gomis.view.appointment;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Frame;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+import lyfjshs.gomis.Database.entity.Appointment;
+import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 import raven.datetime.TimePicker;
-import net.miginfocom.swing.MigLayout;
-import lyfjshs.gomis.Database.model.Appointment;
+
 
 public class AppointmentDialog extends JDialog {
     private JComboBox<String> participantTypeCombo;
@@ -144,12 +154,12 @@ public class AppointmentDialog extends JDialog {
         participantTypeCombo.setSelectedItem(
             appointment.getParticipantId() > 0 ? "Student" : "Non-Student");
         participantIdField.setText(String.valueOf(appointment.getParticipantId()));
-        counselorIdField.setText(appointment.getCounselorsId() != null ? 
-            String.valueOf(appointment.getCounselorsId()) : "");
+        counselorIdField.setText(appointment.getGuidanceCounselorId() != null ? 
+            String.valueOf(appointment.getGuidanceCounselorId()) : "");
         titleField.setText(appointment.getAppointmentTitle());
         appointmentTypeCombo.setSelectedItem(appointment.getAppointmentType());
-        datePicker.setSelectedDate(appointment.getAppointmentDateTime().toLocalDate());
-        timePicker.setSelectedTime(appointment.getAppointmentDateTime().toLocalTime());
+        datePicker.setSelectedDate(appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
+        timePicker.setSelectedTime(appointment.getAppointmentDateTime().toLocalDateTime().toLocalTime());
         notesField.setText(appointment.getAppointmentNotes());
         statusCombo.setSelectedItem(appointment.getAppointmentStatus());
     }
@@ -198,14 +208,14 @@ public class AppointmentDialog extends JDialog {
         appointment.setParticipantId(Integer.parseInt(participantIdField.getText().trim()));
         
         String counselorIdText = counselorIdField.getText().trim();
-        appointment.setCounselorsId(counselorIdText.isEmpty() ? null : Integer.parseInt(counselorIdText));
+        appointment.setGuidanceCounselorId(counselorIdText.isEmpty() ? null : Integer.parseInt(counselorIdText));
         
         appointment.setAppointmentTitle(titleField.getText().trim());
         appointment.setAppointmentType((String)appointmentTypeCombo.getSelectedItem());
         
         LocalDate date = datePicker.getSelectedDate();
         LocalTime time = timePicker.getSelectedTime();
-        appointment.setAppointmentDateTime(LocalDateTime.of(date, time));
+        appointment.setAppointmentDateTime(java.sql.Timestamp.valueOf(LocalDateTime.of(date, time)));
         
         appointment.setAppointmentNotes(notesField.getText().trim());
         appointment.setAppointmentStatus((String)statusCombo.getSelectedItem());

@@ -7,6 +7,18 @@ public class Guardian {
     private String guardianMiddlename;
     private String guardianRelationship;
 
+    // Constructor
+    public Guardian(
+            int guardianId,
+            String guardianLastname,
+            String guardianFirstname, String guardianMiddlename, String guardianRelationship) {
+        this.guardianId = guardianId;
+        this.guardianLastname = guardianLastname;
+        this.guardianFirstname = guardianFirstname;
+        this.guardianMiddlename = guardianMiddlename;
+        this.guardianRelationship = guardianRelationship;
+    }
+
     // Getters and Setters
     public int getGuardianId() {
         return guardianId;

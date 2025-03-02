@@ -11,8 +11,8 @@ import javax.swing.table.DefaultTableModel;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.model.StudentsData;
-import lyfjshs.gomis.Database.model.Violation;
+import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.table.TableActionManager;
 
 public class ViolationTableModel extends DefaultTableModel {
@@ -20,7 +20,7 @@ public class ViolationTableModel extends DefaultTableModel {
         "Student LRN", "Name", "Violation Type", "Reinforcement", "Status", "Actions"
     };
     
-    private List<Violation> violations; // Store violations for action handling
+    private List<ViolationRecord> violations; // Store violations for action handling
     private TableActionManager actionManager;
     private Connection connection;
 
@@ -53,20 +53,20 @@ public class ViolationTableModel extends DefaultTableModel {
         return column == 5; // Only "Actions" column is editable
     }
 
-    public void loadViolations(List<Violation> violations) {
+    public void loadViolations(List<ViolationRecord> violations) {
         this.violations = violations; // Store violations
         setRowCount(0);
-        for (Violation violation : violations) {
+        for (ViolationRecord violation : violations) {
             addViolationRow(violation);
         }
     }
 
-    private void addViolationRow(Violation violation) {
+    private void addViolationRow(ViolationRecord violation) {
         try {
             StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-            StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
-            String studentLRN = student != null ? student.getLrn() : "N/A";
-            String fullName = student != null ? String.format("%s %s", student.getFirstName(), student.getLastName()) : "N/A";
+            Student student = studentsDataDAO.getStudentById(violation.getParticipantId());
+            String studentLRN = student != null ? student.getStudentLrn() : "N/A";
+            String fullName = student != null ? String.format("%s %s", student.getStudentFirstname(), student.getStudentLastname()) : "N/A";
             
             Object[] rowData = {
                 studentLRN,
@@ -89,7 +89,7 @@ public class ViolationTableModel extends DefaultTableModel {
     // Action handlers
     private void handleViewAction(int row) {
         if (row >= 0 && row < violations.size()) {
-            Violation violation = violations.get(row);
+            ViolationRecord violation = violations.get(row);
             // Implement view logic or notify listeners
             if (actionListener != null) {
                 actionListener.onViewViolation(violation);
@@ -99,7 +99,7 @@ public class ViolationTableModel extends DefaultTableModel {
 
     private void handleResolveAction(int row) {
         if (row >= 0 && row < violations.size()) {
-            Violation violation = violations.get(row);
+            ViolationRecord violation = violations.get(row);
             // Implement resolve logic or notify listeners
             if (actionListener != null) {
                 actionListener.onResolveViolation(violation);
@@ -109,8 +109,8 @@ public class ViolationTableModel extends DefaultTableModel {
 
     // Action listener interface
     public interface ViolationActionListener {
-        void onViewViolation(Violation violation);
-        void onResolveViolation(Violation violation);
+        void onViewViolation(ViolationRecord violation);
+        void onResolveViolation(ViolationRecord violation);
     }
 
     private ViolationActionListener actionListener;
@@ -120,7 +120,7 @@ public class ViolationTableModel extends DefaultTableModel {
     }
 
     // Helper method to get violation at specific row
-    public Violation getViolationAt(int row) {
+    public ViolationRecord getViolationAt(int row) {
         return violations != null && row >= 0 && row < violations.size() ? 
             violations.get(row) : null;
     }

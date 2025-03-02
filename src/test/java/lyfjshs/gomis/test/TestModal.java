@@ -11,7 +11,7 @@ import javax.swing.UIManager;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
-import lyfjshs.gomis.Database.model.StudentsData;
+import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.view.students.StudentFullData;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.LightDarkButton;
@@ -28,7 +28,7 @@ public class TestModal extends JFrame {
         setLayout(new MigLayout("wrap,al center center"));
         JButton button = new JButton("show");
 
-        StudentsData studentData = new StudentsData(
+        Student studentData = new Student(
             1, // studentUid
             1, // parentID
             1, // guardianID

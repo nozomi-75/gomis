@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import lyfjshs.gomis.Database.model.Appointment;
+import lyfjshs.gomis.Database.entity.Appointment;
 
 public class AppointmentDAO {
     private Connection connection;
@@ -58,10 +58,9 @@ public class AppointmentDAO {
                         rs.getObject("counselors_id", Integer.class),
                         rs.getString("appointment_title"),
                         rs.getString("appointment_type"),
-                        rs.getTimestamp("appointment_date_time").toLocalDateTime(),
-                        rs.getString("appointment_notes"),
+                        rs.getTimestamp("appointment_date_time"),
                         rs.getString("appointment_status"),
-                        rs.getTimestamp("updated_at").toLocalDateTime()
+                        rs.getTimestamp("updated_at")
                     );
                 }
             }
@@ -84,10 +83,9 @@ public class AppointmentDAO {
                     rs.getObject("counselors_id", Integer.class),
                     rs.getString("appointment_title"),
                     rs.getString("appointment_type"),
-                    rs.getTimestamp("appointment_date_time").toLocalDateTime(),
-                    rs.getString("appointment_notes"),
+                    rs.getTimestamp("appointment_date_time"),
                     rs.getString("appointment_status"),
-                    rs.getTimestamp("updated_at").toLocalDateTime()
+                    rs.getTimestamp("updated_at")
                 ));
             }
         } catch (SQLException e) {
@@ -149,10 +147,9 @@ public class AppointmentDAO {
                         rs.getObject("counselors_id", Integer.class),
                         rs.getString("appointment_title"),
                         rs.getString("appointment_type"),
-                        rs.getTimestamp("appointment_date_time").toLocalDateTime(),
-                        rs.getString("appointment_notes"),
+                        rs.getTimestamp("appointment_date_time"),
                         rs.getString("appointment_status"),
-                        rs.getTimestamp("updated_at").toLocalDateTime()
+                        rs.getTimestamp("updated_at")
                     ));
                 }
             }
@@ -194,14 +191,14 @@ public class AppointmentDAO {
                        "WHERE appointment_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, appointment.getParticipantId());
-            if (appointment.getCounselorsId() != null) {
-                stmt.setInt(2, appointment.getCounselorsId());
+            if (appointment.getGuidanceCounselorId() != null) {
+                stmt.setInt(2, appointment.getGuidanceCounselorId());
             } else {
                 stmt.setNull(2, Types.INTEGER);
             }
             stmt.setString(3, appointment.getAppointmentTitle());
             stmt.setString(4, appointment.getAppointmentType());
-            stmt.setTimestamp(5, Timestamp.valueOf(appointment.getAppointmentDateTime()));
+            stmt.setTimestamp(5, appointment.getAppointmentDateTime());
             stmt.setString(6, appointment.getAppointmentNotes());
             stmt.setString(7, appointment.getAppointmentStatus());
             stmt.setInt(8, appointment.getAppointmentId());

@@ -9,8 +9,8 @@ import java.util.List;
 
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
-import lyfjshs.gomis.Database.model.Session;
-import lyfjshs.gomis.Database.model.SessionParticipant;
+import lyfjshs.gomis.Database.entity.SessionParticipant;
+import lyfjshs.gomis.Database.entity.Sessions;
 
 public class SessionDB_Test {
 
@@ -53,7 +53,7 @@ public class SessionDB_Test {
     private static void testAddSession(Connection conn) {
         try {
             SessionsDAO sessionsDAO = new SessionsDAO(conn);
-            Session session = new Session(0, 1, 1, 1, 1, "Individual Counseling",
+            Sessions session = new Sessions(0, 1, 1, 1, 1, "Individual Counseling",
                     Timestamp.valueOf(LocalDateTime.now()),
                     "Initial assessment of academic performance.",
                     "Scheduled",
@@ -68,9 +68,9 @@ public class SessionDB_Test {
     private static void testGetAllSessions(Connection conn) {
         try {
             SessionsDAO sessionsDAO = new SessionsDAO(conn);
-            List<Session> sessions = sessionsDAO.getAllSessions();
+            List<Sessions> sessions = sessionsDAO.getAllSessions();
             System.out.println("Sessions List:");
-            for (Session session : sessions) {
+            for (Sessions session : sessions) {
                 System.out.println(session);
             }
         } catch (SQLException e) {
@@ -81,9 +81,9 @@ public class SessionDB_Test {
     private static void testUpdateSession(Connection conn) {
         try {
             SessionsDAO sessionsDAO = new SessionsDAO(conn);
-            List<Session> sessions = sessionsDAO.getAllSessions();
+            List<Sessions> sessions = sessionsDAO.getAllSessions();
             if (!sessions.isEmpty()) {
-                Session sessionToUpdate = sessions.get(0); // Just take the first session
+                Sessions sessionToUpdate = sessions.get(0); // Just take the first session
                 sessionToUpdate.setSessionNotes("Updated session notes");
                 sessionToUpdate.setSessionStatus("Completed");
                 sessionsDAO.updateSession(sessionToUpdate);
@@ -99,7 +99,7 @@ public class SessionDB_Test {
     private static void testDeleteSession(Connection conn) {
         try {
             SessionsDAO sessionsDAO = new SessionsDAO(conn);
-            List<Session> sessions = sessionsDAO.getAllSessions();
+            List<Sessions> sessions = sessionsDAO.getAllSessions();
             if (!sessions.isEmpty()) {
                 int sessionIdToDelete = sessions.get(0).getSessionId(); // Delete the first session
                 sessionsDAO.deleteSession(sessionIdToDelete);
@@ -115,9 +115,9 @@ public class SessionDB_Test {
     private static void testAddParticipantToSession(Connection conn) {
         try {
             SessionsDAO sessionsDAO = new SessionsDAO(conn);
-            List<Session> sessions = sessionsDAO.getAllSessions();
+            List<Sessions> sessions = sessionsDAO.getAllSessions();
             if (!sessions.isEmpty()) {
-                SessionParticipant participant = new SessionParticipant(sessions.get(0).getSessionId(), 1); // Example participant
+                SessionParticipant participant = new SessionParticipant(sessions.get(0).getSessionId(), 1); 
                 sessionsDAO.addParticipantToSession(participant);
                 System.out.println("Participant added to session successfully!");
             } else {

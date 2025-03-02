@@ -5,10 +5,32 @@ public class SessionParticipant {
     private int participantId;
     private int sessionId;
 
-    public int getSessionParticipantsId() { return sessionParticipantsId; }
-    public void setSessionParticipantsId(int sessionParticipantsId) { this.sessionParticipantsId = sessionParticipantsId; }
-    public int getParticipantId() { return participantId; }
-    public void setParticipantId(int participantId) { this.participantId = participantId; }
-    public int getSessionId() { return sessionId; }
-    public void setSessionId(int sessionId) { this.sessionId = sessionId; }
+    public SessionParticipant(int sessionId, int participantId) {
+        this.sessionId = sessionId;
+        this.participantId = participantId;
+    }
+
+    public int getSessionParticipantsId() {
+        return sessionParticipantsId;
+    }
+
+    public void setSessionParticipantsId(int sessionParticipantsId) {
+        this.sessionParticipantsId = sessionParticipantsId;
+    }
+
+    public int getParticipantId() {
+        return participantId;
+    }
+
+    public void setParticipantId(int participantId) {
+        this.participantId = participantId;
+    }
+
+    public int getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(int sessionId) {
+        this.sessionId = sessionId;
+    }
 }

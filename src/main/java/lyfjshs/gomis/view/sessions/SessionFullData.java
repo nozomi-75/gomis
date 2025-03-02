@@ -12,7 +12,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import lyfjshs.gomis.Database.model.Session;
+import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.components.FormManager.Form;
 import net.miginfocom.swing.MigLayout;
 
@@ -32,14 +32,14 @@ public class SessionFullData extends Form {
 	private JTextField violationIdField;
 	private JButton printSessionReportBtn;
 
-	public SessionFullData(Session sessionData) {
+	public SessionFullData(Sessions sessionData) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
 		initComponents();
 
 		// Populate fields with session data
 		sessionIdField.setText(String.valueOf(sessionData.getSessionId()));
 		appointmentIdField.setText(String.valueOf(sessionData.getAppointmentId()));
-		counselorIdField.setText(String.valueOf(sessionData.getCounselorsId()));
+		counselorIdField.setText(String.valueOf(sessionData.getGuidanceCounselorId()));
 		sessionTypeField.setText(sessionData.getSessionType());
 		
 		// Handle potential null for sessionDateTime

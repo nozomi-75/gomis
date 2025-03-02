@@ -8,7 +8,7 @@ import java.util.List;
 
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
-import lyfjshs.gomis.Database.model.Violation;
+import lyfjshs.gomis.Database.entity.ViolationRecord;
 
 public class ViolationDB_Test {
 
@@ -39,7 +39,7 @@ public class ViolationDB_Test {
     static void testGetViolationById(ViolationCRUD violationCRUD) {
         try {
             int testViolationId = 1; // Ensure this ID exists in your test database
-            Violation violation = violationCRUD.getViolationById(testViolationId);
+            ViolationRecord violation = violationCRUD.getViolationById(testViolationId);
 
             if (violation != null && violation.getViolationId() == testViolationId) {
                 System.out.println("✔ testGetViolationById Passed");
@@ -53,7 +53,7 @@ public class ViolationDB_Test {
 
     static void testGetAllViolations(ViolationCRUD violationCRUD) {
         try {
-            List<Violation> violations = violationCRUD.getAllViolations();
+            List<ViolationRecord> violations = violationCRUD.getAllViolations();
             if (violations != null && !violations.isEmpty()) {
                 System.out.println("✔ testGetAllViolations Passed");
             } else {
@@ -67,7 +67,7 @@ public class ViolationDB_Test {
     static void testUpdateViolation(ViolationCRUD violationCRUD) {
         try {
             int testViolationId = 1; // Ensure this violation exists
-            Violation violation = violationCRUD.getViolationById(testViolationId);
+            ViolationRecord violation = violationCRUD.getViolationById(testViolationId);
 
             if (violation == null) {
                 System.out.println("❌ testUpdateViolation Failed: Violation not found");

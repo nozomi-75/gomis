@@ -1,14 +1,28 @@
 package lyfjshs.gomis.view.violation;
 
-import javax.swing.*;
-
-import lyfjshs.gomis.Database.model.Violation;
-import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.model.StudentsData;
-
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.sql.SQLException;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.Database.entity.ViolationRecord;
 
 public class ViolationDetails extends JDialog {
     private JTextField txtLRN;
@@ -24,14 +38,16 @@ public class ViolationDetails extends JDialog {
     private JButton btnEdit;
     private JButton btnClose;
     
-    private Violation violation;
+    private ViolationRecord violation;
     private boolean isEditing = false;
     private StudentsDataDAO studentsDataDAO;
+    private ParticipantsDAO participantsDAO;
 
-    public ViolationDetails(JFrame parent, Violation violation, StudentsDataDAO studentsDataDAO) {
+    public ViolationDetails(JFrame parent, ViolationRecord violation, StudentsDataDAO studentsDataDAO, ParticipantsDAO participantsDAO) {
         super(parent, "Violation Details", true);
         this.violation = violation;
         this.studentsDataDAO = studentsDataDAO;
+        this.participantsDAO = participantsDAO;
         initComponents();
         loadViolationData();
         setLocationRelativeTo(parent);
@@ -185,11 +201,19 @@ public class ViolationDetails extends JDialog {
     private void loadViolationData() {
         if (violation != null) {
             try {
-                StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
-                if (student != null) {
-                    txtLRN.setText(student.getLrn());
-                    txtFIRST_NAME.setText(student.getFirstName());
-                    txtLAST_NAME.setText(student.getLastName());
+                Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
+                if (participant != null) {
+                    txtFIRST_NAME.setText(participant.getParticipantFirstName());
+                    txtLAST_NAME.setText(participant.getParticipantLastName());
+                    txtContact.setText(participant.getContactNumber());
+                    cmbParticipantType.setSelectedItem(participant.getParticipantType());
+
+                    if ("Student".equals(participant.getParticipantType())) {
+                        Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
+                        if (student != null) {
+                            txtLRN.setText(student.getStudentLrn());
+                        }
+                    }
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -203,7 +227,7 @@ public class ViolationDetails extends JDialog {
     
     private void saveViolationData() {
         if (violation != null) {
-            violation.setStudentUid(getStudentUidFromLrn(txtLRN.getText()));
+            violation.setParticipantId(getParticipantIdFromLrn(txtLRN.getText()));
             violation.setViolationType((String) cmbViolationType.getSelectedItem());
             violation.setStatus((String) cmbStatus.getSelectedItem());
             violation.setReinforcement((String) cmbReinforcement.getSelectedItem());
@@ -211,16 +235,19 @@ public class ViolationDetails extends JDialog {
         }
     }
 
-    // Method to get studentUid from LRN
-    private int getStudentUidFromLrn(String lrn) {
+    // Method to get participantId from LRN
+    private int getParticipantIdFromLrn(String lrn) {
         try {
-            StudentsData student = studentsDataDAO.getStudentDataByLrn(lrn);
+            Student student = studentsDataDAO.getStudentDataByLrn(lrn);
             if (student != null) {
-                return student.getStudentUid();
+                Participants participant = participantsDAO.getParticipantById(student.getStudentUid());
+                if (participant != null) {
+                    return participant.getParticipantId();
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1; // Return -1 if student not found
+        return -1; // Return -1 if participant not found
     }
 }

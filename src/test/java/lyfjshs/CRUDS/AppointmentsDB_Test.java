@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
-import lyfjshs.gomis.Database.model.Appointment;
+import lyfjshs.gomis.Database.entity.Appointment;
 
 public class AppointmentsDB_Test {
     
@@ -105,10 +105,10 @@ public class AppointmentsDB_Test {
             boolean updated = appointmentDAO.updateAppointment(
                 testAppointmentId,
                 appointment.getParticipantId(),
-                appointment.getCounselorsId(),
+                appointment.getGuidanceCounselorId(),
                 "Updated Title",
                 appointment.getAppointmentType(),
-                Timestamp.valueOf(appointment.getAppointmentDateTime()),
+                Timestamp.valueOf(appointment.getAppointmentDateTime().toLocalDateTime()),
                 appointment.getAppointmentNotes(),
                 "Completed"
             );

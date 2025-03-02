@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import lyfjshs.gomis.Database.DAO.ContactDAO;
-import lyfjshs.gomis.Database.model.Contact;
+import lyfjshs.gomis.Database.entity.Contact;
 
 public class ContactDB_Test {
     public static void main(String[] args) {
@@ -37,7 +37,7 @@ public class ContactDB_Test {
             // Test UPDATE operation
             if (contact != null) {
                 System.out.println("Testing UPDATE operation:");
-                contact.setCONTACT_NUMBER("updated@example.com"); // Update email
+                contact.setContactNumber("updated@example.com"); // Update email
                 boolean updateSuccess = contactDAO.updateContact(connection, 1,contact);
                 System.out.println("Update operation successful: " + updateSuccess);
                 Contact updatedContact = contactDAO.getContactById(connection, 1);

@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import lyfjshs.gomis.Database.model.GuidanceCounselor;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 
 public class GuidanceCounselorDAO {
 
@@ -16,14 +16,14 @@ public class GuidanceCounselorDAO {
                      "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, counselor.getGUIDANCE_COUNSELORS_ID());
+            pstmt.setInt(1, counselor.getGuidanceCounselorId());
             pstmt.setString(2, counselor.getLastName());
             pstmt.setString(3, counselor.getFirstName());
             pstmt.setString(4, counselor.getMiddleInitial());
             pstmt.setString(5, counselor.getSuffix());
             pstmt.setString(6, counselor.getGender());
             pstmt.setString(7, counselor.getSpecialization());
-            pstmt.setString(8, counselor.getContactNumber());
+            pstmt.setString(8, counselor.getContactNum());
             pstmt.setString(9, counselor.getEmail());
             pstmt.setString(10, counselor.getPosition());
             pstmt.setBytes(11, counselor.getProfilePicture());
@@ -72,14 +72,14 @@ public class GuidanceCounselorDAO {
                      "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             for (GuidanceCounselor counselor : counselors) {
-                pstmt.setInt(1, counselor.getGUIDANCE_COUNSELORS_ID());
+                pstmt.setInt(1, counselor.getGuidanceCounselorId());
                 pstmt.setString(2, counselor.getLastName());
                 pstmt.setString(3, counselor.getFirstName());
                 pstmt.setString(4, counselor.getMiddleInitial());
                 pstmt.setString(5, counselor.getSuffix());
                 pstmt.setString(6, counselor.getGender());
                 pstmt.setString(7, counselor.getSpecialization());
-                pstmt.setString(8, counselor.getContactNumber());
+                pstmt.setString(8, counselor.getContactNum());
                 pstmt.setString(9, counselor.getEmail());
                 pstmt.setString(10, counselor.getPosition());
                 pstmt.setBytes(11, counselor.getProfilePicture());

@@ -21,7 +21,7 @@ import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.model.StudentsData;
+import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
@@ -108,7 +108,7 @@ public class StudentMangementGUI extends Form {
 			FlatAnimatedLafChange.showSnapshot();
 
 			try {
-				StudentsData studentData = studentsDataCRUD.getStudentDataByLrn(lrn);
+				Student studentData = studentsDataCRUD.getStudentDataByLrn(lrn);
 				if (studentData != null) {
 					// Create and show the detail panel with retrieved data
 					currentDetailPanel = new StudentFullData(studentData);
@@ -156,14 +156,14 @@ public class StudentMangementGUI extends Form {
 
 	private void loadStudentData() {
 		try {
-			List<StudentsData> studentsDataList = studentsDataCRUD.getAllStudentsData();
+			List<Student> studentsDataList = studentsDataCRUD.getAllStudentsData();
 			DefaultTableModel model = (DefaultTableModel) studentDataTable.getModel();
 			model.setRowCount(0);
 
 			int rowNum = 1;
-			for (StudentsData studentData : studentsDataList) {
-				String fullName = studentData.getFirstName() + " " + studentData.getLastName();
-				model.addRow(new Object[] { rowNum++, studentData.getLrn(), fullName,  studentData.getSex(), "View" });
+			for (Student studentData : studentsDataList) {
+				String fullName = studentData.getStudentFirstname() + " " + studentData.getStudentLastname();
+				model.addRow(new Object[] { rowNum++, studentData.getStudentLrn(), fullName,  studentData.getStudentSex(), "View" });
 			}
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(this, "Error loading student data: " + e.getMessage(), "Database Error",

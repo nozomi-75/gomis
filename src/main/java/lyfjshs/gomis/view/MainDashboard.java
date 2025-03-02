@@ -18,24 +18,26 @@ import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
+import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
-import lyfjshs.gomis.Database.DBConnection;
-import lyfjshs.gomis.Database.model.StudentsData;
-import lyfjshs.gomis.Database.model.Violation;
+import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.TableActionManager;
 import lyfjshs.gomis.view.appointment.AppointmentOverview;
 import lyfjshs.gomis.view.violation.ViolationFullData;
-import net.miginfocom.swing.MigLayout;	
+import net.miginfocom.swing.MigLayout;
 
 public class MainDashboard extends Form {
 
 	private Connection connection;
 	private JPanel contentPanel;
 	private JPanel centralTablePanel;
-	
+
 	public MainDashboard(Connection conn) {
 		this.connection = conn;
 		this.setLayout(new BorderLayout());
@@ -57,7 +59,7 @@ public class MainDashboard extends Form {
 
 		JPanel sideRPanel = new JPanel(new MigLayout("", "[center]", "[][grow][]"));
 		contentPanel.add(sideRPanel, "cell 1 0 1 2,grow");
-		
+
 		JLabel lblNewLabel_1 = new JLabel("Appointments overview");
 		sideRPanel.add(lblNewLabel_1, "cell 0 0");
 		AppointmentDAO appointmentDAO = new AppointmentDAO(conn);
@@ -91,7 +93,7 @@ public class MainDashboard extends Form {
 	}
 
 	FlatSVGIcon viewIcon = new FlatSVGIcon("icons/view.svg", 0.5f);
-	FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.5f); 
+	FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.5f);
 
 	private JScrollPane createTablePanel() {
 		String[] columnNames = { "LRN", "Full Name", "Violation Type", "Violation Status", "Actions" };
@@ -115,27 +117,35 @@ public class MainDashboard extends Form {
 		// Load violation data
 		try {
 			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
+			ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
 			StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-			List<Violation> violations = violationCRUD.getAllViolations();
-			for (Violation violation : violations) {
-				StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
-				String fullName = String.format("%s %s", student.getFirstName(), student.getLastName());
 
-				Object[] rowData = {
-					student.getLrn(),
-					fullName,
-					violation.getViolationType(),
-					violation.getStatus(),
-					""  // Actions column
-				};
-				model.addRow(rowData);
+			List<ViolationRecord> violations = violationCRUD.getAllViolations();
+			for (ViolationRecord violation : violations) {
+				// Fetch participant details
+				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
+
+				// If participant is a student, fetch student details
+				if (participant.getStudentUid() != null) {
+					Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
+					String fullName = String.format("%s %s", student.getStudentFirstname(), student.getStudentLastname());
+
+					Object[] rowData = {
+							student.getStudentLrn(),
+							fullName,
+							violation.getViolationType(),
+							violation.getStatus(),
+							"" // Actions column
+					};
+					model.addRow(rowData);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, 
-				"Error loading violations: " + e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,
+					"Error loading violations: " + e.getMessage(),
+					"Error",
+					JOptionPane.ERROR_MESSAGE);
 		}
 
 		// Configure action column
@@ -162,12 +172,12 @@ public class MainDashboard extends Form {
 		try {
 			// Get violation data
 			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
-			Violation violation = violationCRUD.getViolationByLRN(connection, lrn);
-			
+			ViolationRecord violation = violationCRUD.getViolationByLRN(connection, lrn);
+
 			if (violation != null) {
 				// Create and show violation details panel
 				JPanel violationDetailPanel = new ViolationFullData(violation, connection);
-				
+
 				// Show in dialog
 				JDialog dialog = new JDialog();
 				dialog.setTitle("Violation Details");
@@ -180,23 +190,23 @@ public class MainDashboard extends Form {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this,
-				"Error retrieving violation details: " + e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
+					"Error retrieving violation details: " + e.getMessage(),
+					"Error",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
 	private void resolveViolation(String lrn) {
 		try {
 			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
-			Violation violation = violationCRUD.getViolationByLRN(connection, lrn);
-			
+			ViolationRecord violation = violationCRUD.getViolationByLRN(connection, lrn);
+
 			if (violation != null) {
 				int confirm = JOptionPane.showConfirmDialog(this,
-					"Are you sure you want to mark this violation as resolved?",
-					"Confirm Resolution",
-					JOptionPane.YES_NO_OPTION);
-					
+						"Are you sure you want to mark this violation as resolved?",
+						"Confirm Resolution",
+						JOptionPane.YES_NO_OPTION);
+
 				if (confirm == JOptionPane.YES_OPTION) {
 					violationCRUD.updateViolationStatus(connection, violation.getViolationId(), "Resolved");
 					refreshTable();
@@ -205,9 +215,9 @@ public class MainDashboard extends Form {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this,
-				"Error resolving violation: " + e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
+					"Error resolving violation: " + e.getMessage(),
+					"Error",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -220,11 +230,11 @@ public class MainDashboard extends Form {
 				break;
 			}
 		}
-		
+
 		// Create and add the new table
 		JScrollPane newTableScrollPane = createTablePanel();
 		centralTablePanel.add(newTableScrollPane, "cell 0 1,grow");
-		
+
 		// Revalidate and repaint the panel
 		contentPanel.revalidate();
 		contentPanel.repaint();
@@ -233,20 +243,20 @@ public class MainDashboard extends Form {
 	private JPanel createActionPanel(String title, String buttonText) {
 		JPanel panel = new JPanel(new MigLayout("wrap 1, insets 10, gap 5", "[center]", "[][]"));
 		panel.setBackground(new Color(240, 240, 240));
-		
+
 		JLabel titleLabel = new JLabel(title);
 		titleLabel.setFont(titleLabel.getFont().deriveFont(12f));
-		
+
 		JButton actionButton = new JButton(buttonText);
 		actionButton.setBackground(new Color(220, 220, 220));
 		actionButton.setForeground(new Color(60, 60, 60));
 		actionButton.setFocusPainted(false);
 		actionButton.setBorderPainted(false);
 		actionButton.setOpaque(true);
-		
+
 		panel.add(titleLabel);
 		panel.add(actionButton, "w 120!, h 30!");
-		
+
 		return panel;
 	}
 

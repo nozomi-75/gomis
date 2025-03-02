@@ -20,19 +20,17 @@ import javax.swing.border.TitledBorder;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import lyfjshs.gomis.Database.model.Address;
-import lyfjshs.gomis.Database.model.Contact;
-import lyfjshs.gomis.Database.model.Guardian;
-import lyfjshs.gomis.Database.model.PARENTS;
-import lyfjshs.gomis.Database.model.StudentsData;
+import lyfjshs.gomis.Database.entity.Address;
+import lyfjshs.gomis.Database.entity.Contact;
+import lyfjshs.gomis.Database.entity.Guardian;
+import lyfjshs.gomis.Database.entity.Parents;
+import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.utils.PrintingReport;
 import net.miginfocom.swing.MigLayout;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
-
-@SuppressWarnings(value = "serial")
 
 public class StudentFullData extends Form {
 	// Text fields for easy access and validation
@@ -79,52 +77,52 @@ public class StudentFullData extends Form {
 	private JTextField incidentDescriptionField;
 	private JTextField sessionNotesField;
 
-	public StudentFullData(StudentsData studentData) {
+	public StudentFullData(Student studentData) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
 		initComponents();
 
 		// Set fields with student data
-		lrnField.setText(studentData.getLrn());
-		lastNameField.setText(studentData.getLastName());
-		firstNameField.setText(studentData.getFirstName());
-		middleNameField.setText(studentData.getMiddleName());
-		sexComboBox.setSelectedItem(studentData.getSex());
-		dobField.setText(studentData.getBirthDate().toString());
-		ageField.setText(String.valueOf(studentData.getAge()));
-		motherTongueField.setText(studentData.getMotherTongue());
-		ipField.setText(studentData.getIpType());
-		textField.setText(studentData.getReligion());
+		lrnField.setText(studentData.getStudentLrn());
+		lastNameField.setText(studentData.getStudentLastname());
+		firstNameField.setText(studentData.getStudentFirstname());
+		middleNameField.setText(studentData.getStudentMiddlename());
+		sexComboBox.setSelectedItem(studentData.getStudentSex());
+		dobField.setText(studentData.getStudentBirthdate().toString());
+		ageField.setText(String.valueOf(studentData.getStudentAge()));
+		motherTongueField.setText(studentData.getStudentMothertongue());
+		ipField.setText(studentData.getStudentIpType());
+		textField.setText(studentData.getStudentReligion());
 
 		// Set address fields
 		Address address = studentData.getAddress();
-		houseNoField.setText(address.getHouseNumber());
-		streetField.setText(address.getStreetSubdivision());
-		regionField.setText(address.getRegion());
-		provinceField.setText(address.getProvince());
-		municipalityField.setText(address.getMunicipality());
-		barangayField.setText(address.getBarangay());
-		zipCodeField.setText(address.getZipCode());
+		houseNoField.setText(address.getAddressHouseNumber());
+		streetField.setText(address.getAddressStreetSubdivision());
+		regionField.setText(address.getAddressRegion());
+		provinceField.setText(address.getAddressProvince());
+		municipalityField.setText(address.getAddressMunicipality());
+		barangayField.setText(address.getAddressBarangay());
+		zipCodeField.setText(address.getAddressZipCode());
 
 		// Set contact fields
 		Contact contact = studentData.getContact();
-		guardianContactField.setText(contact.getCONTACT_NUMBER());
+		guardianContactField.setText(contact.getContactNumber());
 
 		// Set PARENTS fields
-		PARENTS parent = studentData.getParent();
+		Parents parent = studentData.getParents();
 		if (parent != null) {
-			fatherLastNameField.setText(parent.getFatherLastName());
-			fatherFirstNameField.setText(parent.getFatherFirstName());
-			fatherMiddleNameField.setText(parent.getFatherMiddleName());
-			motherLastNameField.setText(parent.getMotherLastName());
-			motherFirstNameField.setText(parent.getMotherFirstName());
-			motherMiddleNameField.setText(parent.getMotherMiddleName());
+			fatherLastNameField.setText(parent.getFatherLastname());
+			fatherFirstNameField.setText(parent.getFatherFirstname());
+			fatherMiddleNameField.setText(parent.getFatherMiddlename());
+			motherLastNameField.setText(parent.getMotherLastname());
+			motherFirstNameField.setText(parent.getMotherFirstname());
+			motherMiddleNameField.setText(parent.getMotherMiddlename());
 		}
 
 		// Set guardian fields
 		Guardian guardian = studentData.getGuardian();
 		if (guardian != null) {
-			guardianNameField.setText(guardian.getGUARIAN_FIRSTNAME() + " " + guardian.getGUARDIAN_MIDDLENAME() + " " + guardian.getGUARDIAN_LASTNAME());
-			guardianEmailField.setText(guardian.getGUARDIAN_RELATIONSHIP());
+			guardianNameField.setText(guardian.getGuardianFirstname() + " " + guardian.getGuardianMiddlename() + " " + guardian.getGuardianLastname());
+			guardianEmailField.setText(guardian.getGuardianRelationship());
 		}
 
 		// Add components to the panel

@@ -5,7 +5,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import lyfjshs.gomis.Database.DAO.ParentDAO;
+import lyfjshs.gomis.Database.DAO.ParentsDAO;
+
 
 public class ParentDAOTester {
     private static final String URL = "jdbc:mariadb://localhost:3306/gomisDB";
@@ -13,7 +14,7 @@ public class ParentDAOTester {
     private static final String PASSWORD = "YourRootPassword123!";
 
     public static void main(String[] args) {
-        ParentDAO parentDAO = new ParentDAO();
+        ParentsDAO parentDAO = new ParentsDAO();
         
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
             // Test Insert Parent

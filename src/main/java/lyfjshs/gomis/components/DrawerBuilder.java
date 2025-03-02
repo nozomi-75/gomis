@@ -19,6 +19,7 @@ import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
+import lyfjshs.gomis.view.students.create.StudentInfoFullForm;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
 import raven.extras.AvatarIcon;
@@ -46,150 +47,151 @@ import raven.modal.drawer.simple.header.SimpleHeaderData;
 public class DrawerBuilder extends SimpleDrawerBuilder {
 
 	private static Connection conn;
-			private Connection connection;
-		
-			/**
-			 * Constructs a {@code DrawerBuilder} with a given database connection.
-			 * 
-			 * @param cn The database connection to be used for accessing user-related data.
-			 */
-			public DrawerBuilder(Connection conn) {
-				super(createSimpleMenuOption());
-				DrawerBuilder.conn = conn;
-			this.connection = conn;
-			LightDarkButtonFooter lightDarkButtonFooter = new LightDarkButtonFooter(getSimpleFooterData());
-			lightDarkButtonFooter.addModeChangeListener(isDarkMode -> {
-				// Event listener for light/dark mode changes
-			});
-	
-			this.footer = (AbstractMenuElement) new FooterPanel();
+	private Connection connection;
+
+	/**
+	 * Constructs a {@code DrawerBuilder} with a given database connection.
+	 * 
+	 * @param cn The database connection to be used for accessing user-related data.
+	 */
+	public DrawerBuilder(Connection conn) {
+		super(createSimpleMenuOption());
+		DrawerBuilder.conn = conn;
+		this.connection = conn;
+		LightDarkButtonFooter lightDarkButtonFooter = new LightDarkButtonFooter(getSimpleFooterData());
+		lightDarkButtonFooter.addModeChangeListener(isDarkMode -> {
+			// Event listener for light/dark mode changes
+		});
+
+		this.footer = (AbstractMenuElement) new FooterPanel();
+	}
+
+	/**
+	 * Retrieves the header data for the drawer, including an avatar, title, and
+	 * description.
+	 * 
+	 * @return The {@code SimpleHeaderData} containing header details.
+	 */
+	@Override
+	public SimpleHeaderData getSimpleHeaderData() {
+		AvatarIcon icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x200.png"), 50, 50, 3.5f);
+		icon.setType(AvatarIcon.Type.MASK_SQUIRCLE);
+		icon.setBorder(2, 2);
+		changeAvatarIconBorderColor(icon);
+
+		UIManager.addPropertyChangeListener(evt -> {
+			if (evt.getPropertyName().equals("lookAndFeel")) {
+				changeAvatarIconBorderColor(icon);
+			}
+		});
+
+		String fullName = FormManager.getCounselorFullName();
+		String position = FormManager.getCounselorPosition();
+
+		// Debug: Print the details being set in the header
+		System.out.println("Drawer Header: " + fullName + ", " + position);
+
+		// Add null checks
+		if (fullName == null || fullName.trim().equals("null null")) {
+			fullName = "Test User";
 		}
-	
-		/**
-		 * Retrieves the header data for the drawer, including an avatar, title, and
-		 * description.
-		 * 
-		 * @return The {@code SimpleHeaderData} containing header details.
-		 */
-		@Override
-		public SimpleHeaderData getSimpleHeaderData() {
-			AvatarIcon icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x200.png"), 50, 50, 3.5f);
-			icon.setType(AvatarIcon.Type.MASK_SQUIRCLE);
-			icon.setBorder(2, 2);
-			changeAvatarIconBorderColor(icon);
-	
-			UIManager.addPropertyChangeListener(evt -> {
-				if (evt.getPropertyName().equals("lookAndFeel")) {
-					changeAvatarIconBorderColor(icon);
-				}
-			});
-	
-			String fullName = FormManager.getCounselorFullName();
-			String position = FormManager.getCounselorPosition();
-	
-			// Debug: Print the details being set in the header
-			System.out.println("Drawer Header: " + fullName + ", " + position);
-	
-			// Add null checks
-			if (fullName == null || fullName.trim().equals("null null")) {
-				fullName = "Test User";
-			}
-			if (position == null || position.trim().isEmpty()) {
-				position = "Test Position";
-			}
-	
-			return new SimpleHeaderData()
+		if (position == null || position.trim().isEmpty()) {
+			position = "Test Position";
+		}
+
+		return new SimpleHeaderData()
 				.setIcon(icon)
 				.setTitle(fullName)
 				.setDescription(position);
-		}
-	
-		/**
-		 * Updates the border color of the avatar icon based on UI theme settings.
-		 * 
-		 * @param icon The avatar icon to update.
-		 */
-		private void changeAvatarIconBorderColor(AvatarIcon icon) {
-			icon.setBorderColor(new AvatarIcon.BorderColor(UIManager.getColor("Component.accentColor"), 0.7f));
-		}
-	
-		/**
-		 * Retrieves the footer data for the drawer, including the title and version.
-		 * 
-		 * @return The {@code SimpleFooterData} containing footer details.
-		 */
-		@Override
-		public SimpleFooterData getSimpleFooterData() {
-			return new SimpleFooterData().setTitle("GOMIS").setDescription("Version");
-		}
-	
-		/**
-		 * Creates and configures the menu options for the navigation drawer.
-		 * 
-		 * @return A {@code MenuOption} instance with customized menu items and styles.
-		 */
-		public static MenuOption createSimpleMenuOption() {
-			MenuOption simpleMenuOption = new MenuOption();
-	
-			MenuItem items[] = new MenuItem[] { 
+	}
+
+	/**
+	 * Updates the border color of the avatar icon based on UI theme settings.
+	 * 
+	 * @param icon The avatar icon to update.
+	 */
+	private void changeAvatarIconBorderColor(AvatarIcon icon) {
+		icon.setBorderColor(new AvatarIcon.BorderColor(UIManager.getColor("Component.accentColor"), 0.7f));
+	}
+
+	/**
+	 * Retrieves the footer data for the drawer, including the title and version.
+	 * 
+	 * @return The {@code SimpleFooterData} containing footer details.
+	 */
+	@Override
+	public SimpleFooterData getSimpleFooterData() {
+		return new SimpleFooterData().setTitle("GOMIS").setDescription("Version");
+	}
+
+	/**
+	 * Creates and configures the menu options for the navigation drawer.
+	 * 
+	 * @return A {@code MenuOption} instance with customized menu items and styles.
+	 */
+	public static MenuOption createSimpleMenuOption() {
+		MenuOption simpleMenuOption = new MenuOption();
+
+		MenuItem items[] = new MenuItem[] {
 				new Item("Home", "home.svg", MainDashboard.class),
-				new Item.Label("Management"), 
+				new Item.Label("Management"),
 				new Item("Appointments", "calendar.svg", AppointmentManagement.class),
 				new Item("Sessions", "gavel.svg")
-				.subMenu("Session Fill-Up Form", SessionsForm.class)
-				.subMenu("Session Records", SessionRecords.class),
-				
+						.subMenu("Session Fill-Up Form", SessionsForm.class)
+						.subMenu("Session Records", SessionRecords.class),
+
 				new Item("Students Management", "article_person.svg")
-				   .subMenu("Students Data",  StudentMangementGUI.class)
-				   .subMenu("Student Search", StudentSearchPanel.class),
+						.subMenu("Create Student", StudentInfoFullForm.class)
+						.subMenu("Students Data", StudentMangementGUI.class)
+						.subMenu("Student Search", StudentSearchPanel.class),
 				new Item("Incident Management", "assignment.svg")
-					.subMenu("Incident Fill-Up Form", IncidentFillUpForm.class)
-					.subMenu("Incident Records", IncidentList.class),
+						.subMenu("Incident Fill-Up Form", IncidentFillUpForm.class)
+						.subMenu("Incident Records", IncidentList.class),
 				new Item("Violation Management", "forms.svg")
-					.subMenu("Violation Fill-Up Form", ViolationFillUpForm.class)
-					.subMenu("Violation Records", Violation_Record.class),
-				new Item("Setting", "setting.svg", MainDashboard.class), 
-				new Item("Logout", "logout.svg") 
-			};
-	
-			simpleMenuOption.setMenuStyle(new MenuStyle() {
-				@Override
-				public void styleMenu(JComponent component) {
-					component.putClientProperty(FlatClientProperties.STYLE, getDrawerBackgroundStyle());
+						.subMenu("Violation Fill-Up Form", ViolationFillUpForm.class)
+						.subMenu("Violation Records", Violation_Record.class),
+				new Item("Setting", "setting.svg", MainDashboard.class),
+				new Item("Logout", "logout.svg")
+		};
+
+		simpleMenuOption.setMenuStyle(new MenuStyle() {
+			@Override
+			public void styleMenu(JComponent component) {
+				component.putClientProperty(FlatClientProperties.STYLE, getDrawerBackgroundStyle());
+			}
+		});
+
+		simpleMenuOption.getMenuStyle().setDrawerLineStyleRenderer(new DrawerStraightDotLineStyle());
+		simpleMenuOption.setMenuItemAutoSelectionMode(MenuOption.MenuItemAutoSelectionMode.SELECT_SUB_MENU_LEVEL);
+		simpleMenuOption.addMenuEvent(new MenuEvent() {
+			@Override
+			public void selected(MenuAction action, int[] index) {
+				System.out.println("Drawer menu selected " + Arrays.toString(index));
+				Class<?> itemClass = action.getItem().getItemClass();
+				int i = index[0];
+
+				// Handle logout (last item in the menu)
+				if (i == 7) {
+					action.consume();
+					Drawer.setVisible(false);
+					FormManager.logout();
+					return;
 				}
-			});
-	
-			simpleMenuOption.getMenuStyle().setDrawerLineStyleRenderer(new DrawerStraightDotLineStyle());
-			simpleMenuOption.setMenuItemAutoSelectionMode(MenuOption.MenuItemAutoSelectionMode.SELECT_SUB_MENU_LEVEL);
-			simpleMenuOption.addMenuEvent(new MenuEvent() {
-				@Override
-				public void selected(MenuAction action, int[] index) {
-					System.out.println("Drawer menu selected " + Arrays.toString(index));
-					Class<?> itemClass = action.getItem().getItemClass();
-					int i = index[0];
-	
-					// Handle logout (last item in the menu)
-					if (i == 7) {
-						action.consume();
-						Drawer.setVisible(false);
-						FormManager.logout();
-						return;
-					}
-	
-					// Handle settings (second to last item)
-					if (i == 7) {
-						action.consume();
-						return;
-					}
-	
-					if (itemClass == null || !Form.class.isAssignableFrom(itemClass)) {
-						action.consume();
-						return;
-					}
-	
-					@SuppressWarnings("unchecked")
-					Class<? extends Form> formClass = (Class<? extends Form>) itemClass;
-					FormManager.showForm(AllForms.getForm(formClass, conn));
+
+				// Handle settings (second to last item)
+				if (i == 7) {
+					action.consume();
+					return;
+				}
+
+				if (itemClass == null || !Form.class.isAssignableFrom(itemClass)) {
+					action.consume();
+					return;
+				}
+
+				@SuppressWarnings("unchecked")
+				Class<? extends Form> formClass = (Class<? extends Form>) itemClass;
+				FormManager.showForm(AllForms.getForm(formClass, conn));
 			}
 		});
 

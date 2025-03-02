@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import lyfjshs.gomis.Database.DAO.RemarksDAO;
-import lyfjshs.gomis.Database.model.Remarks;
+import lyfjshs.gomis.Database.entity.Remarks;
 
 public class RemarksDB_Test {
     private static final String URL = "jdbc:mariadb://localhost:3306/gomisdb";

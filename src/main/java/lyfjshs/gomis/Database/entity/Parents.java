@@ -9,6 +9,18 @@ public class Parents {
     private String motherLastname;
     private String motherMiddlename;
 
+    // Constructor
+    public Parents(int parentId, String fatherFirstname, String fatherLastname, String fatherMiddlename, 
+                   String motherFirstname, String motherLastname, String motherMiddlename) {
+        this.parentId = parentId;
+        this.fatherFirstname = fatherFirstname;
+        this.fatherLastname = fatherLastname;
+        this.fatherMiddlename = fatherMiddlename;
+        this.motherFirstname = motherFirstname;
+        this.motherLastname = motherLastname;
+        this.motherMiddlename = motherMiddlename;
+    }
+
     // Getters and Setters...
     public int getParentId() { return parentId; }
     public void setParentId(int parentId) { this.parentId = parentId; }

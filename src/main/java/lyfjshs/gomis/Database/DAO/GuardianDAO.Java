@@ -8,10 +8,9 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-import lyfjshs.gomis.Database.model.Guardian;
+import lyfjshs.gomis.Database.entity.Guardian;
 
 public class GuardianDAO {
-
     // CREATE (Insert a new guardian)
     public boolean insertGuardian(Connection conn, String lastName, String firstName,
                                   String middleName, String relationship) {

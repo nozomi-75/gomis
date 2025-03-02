@@ -2,29 +2,25 @@ package lyfjshs.gomis.view.sessions;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
-import lyfjshs.gomis.Database.model.Session;
+import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
@@ -106,7 +102,7 @@ public class SessionRecords extends Form {
             FlatAnimatedLafChange.showSnapshot();
 
             try {
-                Session session = sessionsDAO.getSessionById(sessionId);
+                Sessions session = sessionsDAO.getSessionById(sessionId);
                 showSessionFullData(session);
                 backBtn.setVisible(true);
             } catch (SQLException e) {
@@ -121,7 +117,7 @@ public class SessionRecords extends Form {
         actionManager.applyTo(sessionTable, 6);
     }
 
-    private void showSessionFullData(Session session) {
+    private void showSessionFullData(Sessions session) {
         // Create the SessionFullData panel
         sessionFullDataPanel = new SessionFullData(session);
         
@@ -154,12 +150,12 @@ public class SessionRecords extends Form {
 
     private void loadSessionData() {
         try {
-            List<Session> sessions = sessionsDAO.getSessionDataWithParticipantCount();
+            List<Sessions> sessions = sessionsDAO.getSessionDataWithParticipantCount();
             DefaultTableModel model = (DefaultTableModel) sessionTable.getModel();
             model.setRowCount(0);
 
             int rowNum = 1;
-            for (Session session : sessions) {
+            for (Sessions session : sessions) {
                 model.addRow(new Object[] { 
                     rowNum++, 
                     session.getSessionId(),

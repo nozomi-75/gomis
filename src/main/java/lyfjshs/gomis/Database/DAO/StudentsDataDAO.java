@@ -7,11 +7,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import lyfjshs.gomis.Database.model.Address;
-import lyfjshs.gomis.Database.model.Contact;
-import lyfjshs.gomis.Database.model.Guardian;
-import lyfjshs.gomis.Database.model.PARENTS;
-import lyfjshs.gomis.Database.model.StudentsData;
+import lyfjshs.gomis.Database.entity.Address;
+import lyfjshs.gomis.Database.entity.Contact;
+import lyfjshs.gomis.Database.entity.Guardian;
+import lyfjshs.gomis.Database.entity.Parents;
+import lyfjshs.gomis.Database.entity.Student;
 
 public class StudentsDataDAO {
     private final Connection connection;
@@ -21,7 +21,7 @@ public class StudentsDataDAO {
     }
 
     // CREATE Student Data
-    public boolean createStudentData(StudentsData student) {
+    public boolean createStudentData(Student student) {
         String sql = "INSERT INTO STUDENT (STUDENT_UID, Parent_ID, GUARDIAN_ID, ADDRESS_ID, CONTACT_ID, "
                 + "STUDENT_LRN, STUDENT_LASTNAME, STUDENT_FIRSTNAME, STUDENT_MIDDLENAME, STUDENT_SEX, "
                 + "STUDENT_BIRTHDATE, STUDENT_MOTHERTONGUE, STUDENT_AGE, STUDENT_IP_TYPE, STUDENT_RELIGION) "
@@ -33,16 +33,16 @@ public class StudentsDataDAO {
             pstmt.setInt(3, student.getGuardianId() == 0 ? java.sql.Types.INTEGER : student.getGuardianId());
             pstmt.setInt(4, student.getAddressId());
             pstmt.setInt(5, student.getContactId());
-            pstmt.setString(6, student.getLrn());
-            pstmt.setString(7, student.getLastName());
-            pstmt.setString(8, student.getFirstName());
-            pstmt.setString(9, student.getMiddleName());
-            pstmt.setString(10, student.getSex());
-            pstmt.setDate(11, student.getBirthDate());
-            pstmt.setString(12, student.getMotherTongue());
-            pstmt.setInt(13, student.getAge());
-            pstmt.setString(14, student.getIpType());
-            pstmt.setString(15, student.getReligion());
+            pstmt.setString(6, student.getStudentLrn());
+            pstmt.setString(7, student.getStudentLastname());
+            pstmt.setString(8, student.getStudentFirstname());
+            pstmt.setString(9, student.getStudentMiddlename());
+            pstmt.setString(10, student.getStudentSex());
+            pstmt.setDate(11, student.getStudentBirthdate());
+            pstmt.setString(12, student.getStudentMothertongue());
+            pstmt.setInt(13, student.getStudentAge());
+            pstmt.setString(14, student.getStudentIpType());
+            pstmt.setString(15, student.getStudentReligion());
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -52,7 +52,7 @@ public class StudentsDataDAO {
     }
 
     // READ Student Data by LRN
-    public StudentsData getStudentDataByLrn(String lrn) throws SQLException {
+    public Student getStudentDataByLrn(String lrn) throws SQLException {
         String query = "SELECT s.*, a.*, c.*, p.*, g.* FROM STUDENT s "
                 + "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID "
                 + "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID "
@@ -72,7 +72,7 @@ public class StudentsDataDAO {
     }
 
     // READ Student by ID
-    public StudentsData getStudentById(int studentUid) throws SQLException {
+    public Student getStudentById(int studentUid) throws SQLException {
         String sql = "SELECT s.*, a.*, c.*, p.*, g.* FROM STUDENT s "
                 + "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID "
                 + "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID "
@@ -92,8 +92,8 @@ public class StudentsDataDAO {
     }
 
     // READ All Students Data with Relations
-    public List<StudentsData> getAllStudentsData() throws SQLException {
-        List<StudentsData> students = new ArrayList<>();
+    public List<Student> getAllStudentsData() throws SQLException {
+        List<Student> students = new ArrayList<>();
         String sql = "SELECT s.*, a.*, c.*, p.*, g.* FROM STUDENT s "
                 + "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID "
                 + "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID "
@@ -110,7 +110,7 @@ public class StudentsDataDAO {
     }
 
     // New Method: Retrieve All Related Data for a Student
-    public StudentsData getStudentWithAllRelatedData(int studentUid) throws SQLException {
+    public Student getStudentWithAllRelatedData(int studentUid) throws SQLException {
         String sql = "SELECT s.*, a.*, c.*, p.*, g.* FROM STUDENT s "
                 + "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID "
                 + "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID "
@@ -130,7 +130,7 @@ public class StudentsDataDAO {
     }
 
     // Helper method to map ResultSet to StudentsData with Address and Contact
-    private StudentsData mapResultSetToStudentWithRelations(ResultSet rs) throws SQLException {
+    private Student mapResultSetToStudentWithRelations(ResultSet rs) throws SQLException {
         Address address = new Address(
             rs.getInt("ADDRESS_ID"),
             rs.getString("ADDRESS_HOUSE_NUMBER"),
@@ -145,24 +145,24 @@ public class StudentsDataDAO {
             rs.getInt("CONTACT_ID"),
             rs.getString("CONTACT_NUMBER")
         );
-        PARENTS PARENTS = new PARENTS(
+        Parents parents = new Parents(
             rs.getInt("PARENT_ID"),
             rs.getString("FATHER_LASTNAME"),
             rs.getString("FATHER_FIRSTNAME"),
             rs.getString("FATHER_MIDDLENAME"),
             rs.getString("MOTHER_LASTNAME"),
             rs.getString("MOTHER_FIRSTNAME"),
-            rs.getString("MOTHER_MIDDLENAME")
+            rs.getString("MOTHER_MIDDLE_NAME")
         );
         Guardian guardian = new Guardian(
             rs.getInt("GUARDIAN_ID"),
             rs.getString("GUARDIAN_FIRSTNAME"),
             rs.getString("GUARDIAN_MIDDLENAME"),
-            rs.getString("GUARDIAN_LASTNAME"),
+            rs.getString("GUARDIAN_FIRSTNAME"),
             rs.getString("GUARDIAN_RELATIONSHIP")
         );
 
-        return new StudentsData(
+        return new Student(
             rs.getInt("STUDENT_UID"),
             rs.getInt("Parent_ID"),
             rs.getInt("Guardian_ID"),
@@ -180,13 +180,13 @@ public class StudentsDataDAO {
             rs.getString("STUDENT_RELIGION"),
             address,
             contact,
-            PARENTS,
+            parents,
             guardian
         );
     }
 
     // Helper method to map ResultSet to StudentsData with all related data
-    private StudentsData mapResultSetToStudentWithAllRelations(ResultSet rs) throws SQLException {
+    private Student mapResultSetToStudentWithAllRelations(ResultSet rs) throws SQLException {
         Address address = new Address(
             rs.getInt("ADDRESS_ID"),
             rs.getString("ADDRESS_HOUSE_NUMBER"),
@@ -201,24 +201,24 @@ public class StudentsDataDAO {
             rs.getInt("CONTACT_ID"),
             rs.getString("CONTACT_NUMBER")
         );
-        PARENTS PARENTS = new PARENTS(
+        Parents PARENTS = new Parents(
             rs.getInt("PARENT_ID"),
             rs.getString("FATHER_LASTNAME"),
             rs.getString("FATHER_FIRSTNAME"),
             rs.getString("FATHER_MIDDLENAME"),
             rs.getString("MOTHER_LASTNAME"),
             rs.getString("MOTHER_FIRSTNAME"),
-            rs.getString("MOTHER_MIDDLENAME")
+            rs.getString("MOTHER_MIDDLE_NAME")
         );
         Guardian guardian = new Guardian(
             rs.getInt("GUARDIAN_ID"),
             rs.getString("GUARDIAN_FIRSTNAME"),
             rs.getString("GUARDIAN_MIDDLENAME"),
-            rs.getString("GUARDIAN_LASTNAME"),
+            rs.getString("GUARDIAN_FIRSTNAME"),
             rs.getString("GUARDIAN_RELATIONSHIP")
         );
 
-        return new StudentsData(
+        return new Student(
             rs.getInt("STUDENT_UID"),
             rs.getInt("Parent_ID"),
             rs.getInt("Guardian_ID"),
@@ -242,7 +242,7 @@ public class StudentsDataDAO {
     }
 
     // UPDATE Student Data
-    public boolean updateStudentData(StudentsData student) {
+    public boolean updateStudentData(Student student) {
         String sql = "UPDATE STUDENT SET Parent_ID = ?, Guardian_ID = ?, ADDRESS_ID = ?, CONTACT_ID = ?, "
                 + "STUDENT_LRN = ?, STUDENT_LASTNAME = ?, STUDENT_FIRSTNAME = ?, STUDENT_MIDDLENAME = ?, STUDENT_SEX = ?, "
                 + "STUDENT_BIRTHDATE = ?, STUDENT_MOTHERTONGUE = ?, STUDENT_AGE = ?, STUDENT_IP_TYPE = ?, STUDENT_RELIGION = ? "
@@ -253,16 +253,16 @@ public class StudentsDataDAO {
             pstmt.setInt(2, student.getGuardianId() == 0 ? java.sql.Types.INTEGER : student.getGuardianId());
             pstmt.setInt(3, student.getAddressId());
             pstmt.setInt(4, student.getContactId());
-            pstmt.setString(5, student.getLrn());
-            pstmt.setString(6, student.getLastName());
-            pstmt.setString(7, student.getFirstName());
-            pstmt.setString(8, student.getMiddleName());
-            pstmt.setString(9, student.getSex());
-            pstmt.setDate(10, student.getBirthDate());
-            pstmt.setString(11, student.getMotherTongue());
-            pstmt.setInt(12, student.getAge());
-            pstmt.setString(13, student.getIpType());
-            pstmt.setString(14, student.getReligion());
+            pstmt.setString(5, student.getStudentLrn());
+            pstmt.setString(6, student.getStudentLastname());
+            pstmt.setString(7, student.getStudentFirstname());
+            pstmt.setString(8, student.getStudentMiddlename());
+            pstmt.setString(9, student.getStudentSex());
+            pstmt.setDate(10, student.getStudentBirthdate());
+            pstmt.setString(11, student.getStudentMothertongue());
+            pstmt.setInt(12, student.getStudentAge());
+            pstmt.setString(13, student.getStudentIpType());
+            pstmt.setString(14, student.getStudentReligion());
             pstmt.setInt(15, student.getStudentUid());
 
             return pstmt.executeUpdate() > 0;

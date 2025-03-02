@@ -5,11 +5,13 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -26,12 +28,11 @@ import lyfjshs.gomis.components.PanelGradient;
 public class SplashScreenFrame extends JFrame {
     private static final int WIDTH = 500;
     private static final int HEIGHT = 400;
-    private static final Color BACKGROUND_COLOR = new Color(26, 26, 46);
     private static final Color ACCENT_COLOR_1 = new Color(79, 172, 254);
     private static final Color ACCENT_COLOR_2 = new Color(0, 242, 254);
     
     private PanelGradient mainPanel;
-    private LogoPanel logoPanel;
+    private JPanel logoPanel;
     private ProgressPanel progressPanel;
     private JLabel loadingLabel;
     private BackgroundCirclesPanel circlesPanel;
@@ -56,10 +57,17 @@ public class SplashScreenFrame extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(40, 40, 40, 40));
         
-        // Logo panel
-        logoPanel = new LogoPanel(ACCENT_COLOR_1, ACCENT_COLOR_2, BACKGROUND_COLOR);
-        logoPanel.setPreferredSize(new Dimension(120, 120));
-        
+    	// Load and resize the image to 150x150
+		ImageIcon originalIcon = new ImageIcon(getClass().getResource("/GOMIS Logo.png"));
+		Image scaledImage = originalIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+		ImageIcon logoIcon = new ImageIcon(scaledImage);
+		JLabel logoLabel = new JLabel(logoIcon);
+
+		// Logo panel
+		logoPanel = new JPanel();
+		logoPanel.setOpaque(false);
+		logoPanel.add(logoLabel);
+		
         // Progress panel
         progressPanel = new ProgressPanel(ACCENT_COLOR_1, ACCENT_COLOR_2);
         progressPanel.setPreferredSize(new Dimension(300, 6));
