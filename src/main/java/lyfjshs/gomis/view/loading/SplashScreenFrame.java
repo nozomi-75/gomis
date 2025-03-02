@@ -136,6 +136,7 @@ public class SplashScreenFrame extends JFrame {
 
             @Override
             protected void done() {
+            	
                 dispose(); // Close the splash screen
                 Main.jFrame.setVisible(true);
                

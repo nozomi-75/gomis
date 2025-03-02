@@ -45,7 +45,7 @@ public class StudentMangementGUI extends Form {
 		studentsDataCRUD = new StudentsDataDAO(conn);
 		initializeComponents();
 		setupLayout();
-		loadStudentData();
+		// loadStudentData();
 	}
 
 	private void initializeComponents() {

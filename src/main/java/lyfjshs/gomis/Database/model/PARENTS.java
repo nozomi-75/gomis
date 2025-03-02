@@ -92,4 +92,24 @@ public class PARENTS {
                 ", motherMiddleName='" + motherMiddleName + '\'' +
                 '}';
     }
+
+    public String getFatherFirstname() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getFatherFirstname'");
+    }
+
+    public String getFatherLastname() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getFatherLastname'");
+    }
+
+    public String getMotherFirstname() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getMotherFirstname'");
+    }
+
+    public String getMotherLastname() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getMotherLastname'");
+    }
 }
