@@ -9,23 +9,19 @@ import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.model.StudentsData;
-import lyfjshs.gomis.Database.model.StudentsRecord;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
@@ -38,7 +34,7 @@ public class StudentMangementGUI extends Form {
 	private JTable studentDataTable;
 	private StudentsDataDAO studentsDataCRUD;
 	private final Connection connection;
-	private final String[] columnNames = { "#", "LRN", "NAME", "GRADE & SECTION", "Actions" };
+	private final String[] columnNames = { "#", "LRN", "NAME", "SEX", "Actions" };
 	private SlidePane slidePane;
 	private JButton backBtn;
 	private JPanel mainPanel;
@@ -94,7 +90,7 @@ public class StudentMangementGUI extends Form {
 		studentDataTable.getColumnModel().getColumn(0).setPreferredWidth(50); // #
 		studentDataTable.getColumnModel().getColumn(1).setPreferredWidth(100); // LRN
 		studentDataTable.getColumnModel().getColumn(2).setPreferredWidth(150); // NAME
-		studentDataTable.getColumnModel().getColumn(3).setPreferredWidth(100); // GRADE & SECTION
+		studentDataTable.getColumnModel().getColumn(3).setPreferredWidth(100); // SEX
 		studentDataTable.getColumnModel().getColumn(4).setPreferredWidth(150); // Actions
 		studentDataTable.getColumnModel().getColumn(4).setResizable(false);
 
@@ -109,15 +105,16 @@ public class StudentMangementGUI extends Form {
 			FlatAnimatedLafChange.showSnapshot();
 
 			try {
-				StudentsData studentData = studentsDataCRUD.getStudentDataByLrn(connection, lrn);
-				StudentsRecord studentRecord = studentsDataCRUD.getStudentRecordByUid(connection,
-						studentData.getStudentUid());
-
-				// Create and show the detail panel with retrieved data
-				currentDetailPanel = new StudentFullData(studentData, studentRecord);
-
-				slidePane.addSlide(currentDetailPanel, SlidePaneTransition.Type.FORWARD);
-				backBtn.setVisible(true);
+				StudentsData studentData = studentsDataCRUD.getStudentDataByLrn(lrn);
+				if (studentData != null) {
+					// Create and show the detail panel with retrieved data
+					currentDetailPanel = new StudentFullData(studentData);
+					slidePane.addSlide(currentDetailPanel, SlidePaneTransition.Type.FORWARD);
+					backBtn.setVisible(true);
+				} else {
+					JOptionPane.showMessageDialog(this, "Student data not found for LRN: " + lrn,
+							"Data Not Found", JOptionPane.WARNING_MESSAGE);
+				}
 			} catch (SQLException e) {
 				JOptionPane.showMessageDialog(this, "Error retrieving student data: " + e.getMessage(),
 						"Database Error", JOptionPane.ERROR_MESSAGE);
@@ -155,20 +152,14 @@ public class StudentMangementGUI extends Form {
 
 	private void loadStudentData() {
 		try {
-			List<StudentsData> studentsDataList = studentsDataCRUD.getAllStudentsData(connection);
+			List<StudentsData> studentsDataList = studentsDataCRUD.getAllStudentsData();
 			DefaultTableModel model = (DefaultTableModel) studentDataTable.getModel();
 			model.setRowCount(0);
 
 			int rowNum = 1;
 			for (StudentsData studentData : studentsDataList) {
-				StudentsRecord studentRecord = studentsDataCRUD.getStudentRecord(connection,
-						studentData.getStudentUid());
-				String gradeAndSection = studentRecord != null
-						? studentRecord.getYearLevel() + "-" + studentRecord.getSection()
-						: "N/A";
-
-				model.addRow(new Object[] { rowNum++, studentData.getLrn(),
-						studentData.getFIRST_NAME() + " " + studentData.getLAST_NAME(), gradeAndSection });
+				String fullName = studentData.getFirstName() + " " + studentData.getLastName();
+				model.addRow(new Object[] { rowNum++, studentData.getLrn(), fullName,  studentData.getSex(), "View" });
 			}
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(this, "Error loading student data: " + e.getMessage(), "Database Error",

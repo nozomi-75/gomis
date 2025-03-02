@@ -3,9 +3,12 @@ package lyfjshs.gomis.view.violation;
 import javax.swing.*;
 
 import lyfjshs.gomis.Database.model.Violation;
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.model.StudentsData;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.SQLException;
 
 public class ViolationDetails extends JDialog {
     private JTextField txtLRN;
@@ -23,10 +26,12 @@ public class ViolationDetails extends JDialog {
     
     private Violation violation;
     private boolean isEditing = false;
+    private StudentsDataDAO studentsDataDAO;
 
-    public ViolationDetails(JFrame parent, Violation violation) {
+    public ViolationDetails(JFrame parent, Violation violation, StudentsDataDAO studentsDataDAO) {
         super(parent, "Violation Details", true);
         this.violation = violation;
+        this.studentsDataDAO = studentsDataDAO;
         initComponents();
         loadViolationData();
         setLocationRelativeTo(parent);
@@ -179,31 +184,43 @@ public class ViolationDetails extends JDialog {
     
     private void loadViolationData() {
         if (violation != null) {
-            txtLRN.setText(violation.getStudentLRN());
-            txtFIRST_NAME.setText(violation.getFIRST_NAME());
-            txtLAST_NAME.setText(violation.getLAST_NAME());
-            txtEmail.setText(violation.getEmail());
-            txtContact.setText(violation.getContact());
-            cmbParticipantType.setSelectedItem(violation.getParticipantType());
+            try {
+                StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
+                if (student != null) {
+                    txtLRN.setText(student.getLrn());
+                    txtFIRST_NAME.setText(student.getFirstName());
+                    txtLAST_NAME.setText(student.getLastName());
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             cmbViolationType.setSelectedItem(violation.getViolationType());
             cmbStatus.setSelectedItem(violation.getStatus());
             cmbReinforcement.setSelectedItem(violation.getReinforcement());
-            // txtDescription.setText(violation.getDescription());
+            txtDescription.setText(violation.getViolationDescription());
         }
     }
     
     private void saveViolationData() {
         if (violation != null) {
-            violation.setStudentLRN(txtLRN.getText());
-            violation.setFIRST_NAME(txtFIRST_NAME.getText());
-            violation.setLAST_NAME(txtLAST_NAME.getText());
-            violation.setEmail(txtEmail.getText());
-            violation.setContact(txtContact.getText());
-            violation.setParticipantType((String) cmbParticipantType.getSelectedItem());
+            violation.setStudentUid(getStudentUidFromLrn(txtLRN.getText()));
             violation.setViolationType((String) cmbViolationType.getSelectedItem());
             violation.setStatus((String) cmbStatus.getSelectedItem());
             violation.setReinforcement((String) cmbReinforcement.getSelectedItem());
-            // violation.setDescription(txtDescription.getText());
+            violation.setViolationDescription(txtDescription.getText());
         }
     }
-} 
+
+    // Method to get studentUid from LRN
+    private int getStudentUidFromLrn(String lrn) {
+        try {
+            StudentsData student = studentsDataDAO.getStudentDataByLrn(lrn);
+            if (student != null) {
+                return student.getStudentUid();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1; // Return -1 if student not found
+    }
+}

@@ -32,8 +32,8 @@ public class TestModal extends JFrame {
             1, // studentUid
             1, // parentID
             1, // guardianID
-            1, // appointmentID
             1, // contactID
+            1, // anotherID
             "LRN123456790", // lrn
             "Doe", // lastName
             "John", // firstName
@@ -43,7 +43,11 @@ public class TestModal extends JFrame {
             "123 Main St", // address
             1234567890, // phoneNumber
             "Male", // gender
-            "Single" // civilStatus
+            "Single", // civilStatus
+            null, // Address
+            null, // Contact
+            null, // Parent
+            null  // Guardian
         );
 
         ModalDialog.getDefaultOption()

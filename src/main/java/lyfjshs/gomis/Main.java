@@ -5,7 +5,6 @@ import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
@@ -15,21 +14,19 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
 import lyfjshs.gomis.Database.DBConnection;
-import lyfjshs.gomis.components.DrawerBuilder;
 import lyfjshs.gomis.components.GFrame;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.view.LoginView;
 import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import lyfjshs.gomis.view.incident.IncidentList;
+import lyfjshs.gomis.view.loading.SplashScreenFrame;
 import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
-import raven.modal.Drawer;
-import lyfjshs.gomis.view.loading.SplashScreenFrame;
 
 /**
  * The Main class is responsible for initializing the application, setting up
@@ -136,9 +133,8 @@ public class Main {
 		jFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
 		initiPanels();
 
-		Drawer.installDrawer(jFrame, new DrawerBuilder(conn));
 		FormManager.install(jFrame);
-
+		
 		jFrame.refresh();
 	}
 }

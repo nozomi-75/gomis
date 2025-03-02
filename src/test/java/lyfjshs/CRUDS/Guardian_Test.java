@@ -16,7 +16,7 @@ public class Guardian_Test {
 			connection = DBConnection.getConnection();
 			// Insert a new guardian
 			System.out.println("Inserting a new guardian...");
-			boolean insertSuccess = guardianDAO.insertGuardian(connection, "S12345", "Doe", "John", "M", "Father");
+			boolean insertSuccess = guardianDAO.insertGuardian(connection, "Doe", "John", "M", "Father");
 			System.out.println("Insert successful: " + insertSuccess);
 
 			if (!insertSuccess) {

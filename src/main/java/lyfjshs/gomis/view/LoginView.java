@@ -33,7 +33,6 @@ public class LoginView extends Form {
 	private JTextField unTField;
 	private JLabel psLabel;
 	private JLabel unLabel;
-	private LogoPanel logoPanel;
 	private Connection conn;
 
 	public LoginView(Connection connDB) {

@@ -13,6 +13,7 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
 import lyfjshs.gomis.Database.model.Violation;
 import lyfjshs.gomis.components.table.TableActionManager;
@@ -46,7 +47,7 @@ public class ViolationTablePanel extends JPanel {
     }
 
     private void initializeTable() {
-        tableModel = new ViolationTableModel();
+        tableModel = new ViolationTableModel(connect);
         table = new JTable(tableModel);
         setupTableProperties();
 
@@ -82,7 +83,8 @@ public class ViolationTablePanel extends JPanel {
             if (violation != null) {
                 ViewViolationDetails viewDialog = new ViewViolationDetails(
                     (JFrame) SwingUtilities.getWindowAncestor(this),
-                    violation
+                    violation,
+                    new StudentsDataDAO(connect) // Assuming you have a StudentsDataDAO class that takes a Connection
                 );
                 viewDialog.setVisible(true);
             }
@@ -120,7 +122,7 @@ public class ViolationTablePanel extends JPanel {
 
     public void refreshData() {
         try {
-            tableModel.loadViolations(violationCRUD.getAllViolations(connect));
+            tableModel.loadViolations(violationCRUD.getAllViolations());
         } catch (Exception e) {
             showError("Error loading violation data", e);
         }

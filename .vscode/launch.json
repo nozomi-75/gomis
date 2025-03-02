@@ -6,23 +6,9 @@
     "configurations": [
         {
             "type": "java",
-            "name": "RemarksDB_Test",
+            "name": "SplashTest",
             "request": "launch",
-            "mainClass": "lyfjshs.CRUDS.RemarksDB_Test",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "ParentDAOTester",
-            "request": "launch",
-            "mainClass": "lyfjshs.CRUDS.ParentDAOTester",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "ContactDB_Test",
-            "request": "launch",
-            "mainClass": "lyfjshs.CRUDS.ContactDB_Test",
+            "mainClass": "lyfjshs.gomis.SplashTest",
             "projectName": "gomis"
         },
         {

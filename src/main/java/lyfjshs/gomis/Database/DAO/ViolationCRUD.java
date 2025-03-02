@@ -7,9 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import lyfjshs.gomis.Database.SQLExceptionPane;
 import lyfjshs.gomis.Database.model.Violation;
-import javax.swing.JOptionPane; // Import GUI component
-import lyfjshs.gomis.Database.DAO.SQLExceptionPane; // Import your exception handler class
 
 public class ViolationCRUD {
 
@@ -79,6 +78,22 @@ public class ViolationCRUD {
         return null;
     }
 
+    // READ (Retrieve a single violation by LRN)
+    public Violation getViolationByLRN(Connection connection, String lrn) throws SQLException {
+        String sql = "SELECT vr.* FROM VIOLATION_RECORD vr " +
+                     "JOIN STUDENT s ON vr.student_uid = s.STUDENT_UID " +
+                     "WHERE s.STUDENT_LRN = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, lrn);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToViolation(rs);
+                }
+            }
+        }
+        return null;
+    }
+
     // UPDATE (Modify an existing violation)
     public boolean updateViolation(
             int violationId, String violationType, String description,
@@ -99,6 +114,16 @@ public class ViolationCRUD {
         } catch (SQLException e) {
             SQLExceptionPane.showSQLException(e, "Updating Violation");
             return false;
+        }
+    }
+
+    // UPDATE (Modify the status of an existing violation)
+    public boolean updateViolationStatus(Connection connection, int violationId, String status) throws SQLException {
+        String sql = "UPDATE VIOLATION_RECORD SET V_status = ? WHERE VIOLATION_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setInt(2, violationId);
+            return stmt.executeUpdate() > 0;
         }
     }
 
@@ -128,4 +153,22 @@ public class ViolationCRUD {
         violation.setUpdatedAt(rs.getTimestamp("UPDATED_AT"));
         return violation;
     }
+
+    public List<Violation> searchViolations(Connection conn, String searchTerm) throws SQLException {
+        List<Violation> violations = new ArrayList<>();
+        String query = "SELECT * FROM violations WHERE name LIKE ? OR type LIKE ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, "%" + searchTerm + "%");
+            stmt.setString(2, "%" + searchTerm + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Violation violation = new Violation();
+                    // populate violation object with data from result set
+                    violations.add(violation);
+                }
+            }
+        }
+        return violations;
+    }
+
 }

@@ -60,8 +60,8 @@ public class DBConnection {
 	 * Gets an available connection from the pool
 	 */
 	public static synchronized Connection getConnection() throws SQLException {
-		DBConnection instance = getInstance();
-		
+		getInstance();
+
 		// Find first available connection
 		for (int i = 0; i < MAX_POOL_SIZE; i++) {
 			if (connectionPool[i] != null && !isConnectionUsed[i]) {

@@ -26,13 +26,13 @@ public class ParentDAOTester {
             List<String> parents = parentDAO.getAllParents(connection);
             parents.forEach(System.out::println);
 
-            // Test Update Parent (assuming ID 1 exists)
-            System.out.println("Updating Parent ID 1...");
+            // Test Update PARENTS (assuming ID 1 exists)
+            System.out.println("Updating PARENTS ID 1...");
             boolean updateSuccess = parentDAO.updateParent(connection, 1, "Doe", "Johnny", "B.", "Smith", "Janet");
             System.out.println("Update Success: " + updateSuccess);
 
-            // Test Delete Parent (assuming ID 1 exists)
-            System.out.println("Deleting Parent ID 1...");
+            // Test Delete PARENTS (assuming ID 1 exists)
+            System.out.println("Deleting PARENTS ID 1...");
             boolean deleteSuccess = parentDAO.deleteParent(connection, 1);
             System.out.println("Delete Success: " + deleteSuccess);
 

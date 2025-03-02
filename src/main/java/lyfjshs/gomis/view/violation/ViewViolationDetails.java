@@ -2,6 +2,7 @@ package lyfjshs.gomis.view.violation;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.sql.SQLException;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -14,6 +15,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.model.StudentsData;
 import lyfjshs.gomis.Database.model.Violation;
 import net.miginfocom.swing.MigLayout; // Import MigLayout
 
@@ -22,7 +25,6 @@ public class ViewViolationDetails extends JDialog {
 	private JTextField txtLRN;
 	private JTextField txtFIRST_NAME;
 	private JTextField txtLAST_NAME;
-	private JTextField txtEmail;
 	private JTextField txtContact;
 	private JComboBox<String> cmbParticipantType;
 	private JComboBox<String> cmbViolationType;
@@ -33,17 +35,19 @@ public class ViewViolationDetails extends JDialog {
 	private JButton btnClose;	
 	private Violation violation;
 	private boolean isEditing = false;
+	private StudentsDataDAO studentsDataDAO; // Add this line
 
-	public ViewViolationDetails(JFrame parent, Violation violation) {
+	public ViewViolationDetails(JFrame parent, Violation violation, StudentsDataDAO studentsDataDAO) {
 		super(parent, "Violation Details", true);
 		this.violation = violation;
+		this.studentsDataDAO = studentsDataDAO; // Add this line
 		initComponents();
 		loadViolationData();
 		setLocationRelativeTo(parent);
 	}
 
 	private void initComponents() {
-		setLayout(new BorderLayout());
+		getContentPane().setLayout(new BorderLayout());
 
 		// Main panel using MigLayout
 		JPanel mainPanel = new JPanel(new MigLayout("wrap 2, gapy 5, insets 20")); // 2 columns, gapy 5, 20px insets
@@ -53,7 +57,6 @@ public class ViewViolationDetails extends JDialog {
 		txtLRN = new JTextField(20);
 		txtFIRST_NAME = new JTextField(20);
 		txtLAST_NAME = new JTextField(20);
-		txtEmail = new JTextField(20);
 		txtContact = new JTextField(20);
 		cmbViolationType = new JComboBox<>(new String[] { "Minor", "Major", "Critical" });
 		cmbStatus = new JComboBox<>(new String[] { "Pending", "Resolved" });
@@ -78,8 +81,6 @@ public class ViewViolationDetails extends JDialog {
 		mainPanel.add(new JLabel("Last Name:"), "");
 		mainPanel.add(txtLAST_NAME, "growx");
 
-		mainPanel.add(new JLabel("Email:"), "");
-		mainPanel.add(txtEmail, "growx");
 
 		mainPanel.add(new JLabel("Contact:"), "");
 		mainPanel.add(txtContact, "growx");
@@ -108,11 +109,11 @@ public class ViewViolationDetails extends JDialog {
 		buttonPanel.add(btnClose);
 
 		// Add panels to dialog
-		add(mainPanel, BorderLayout.CENTER);
-		add(buttonPanel, BorderLayout.SOUTH);
+		getContentPane().add(mainPanel, BorderLayout.CENTER);
+		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
 		// Set dialog properties
-		setSize(800, 600);
+		setSize(336, 436);
 		setResizable(false);
 	}
 
@@ -124,8 +125,6 @@ public class ViewViolationDetails extends JDialog {
 		txtFIRST_NAME.setEditable(editable);
 
 		txtLAST_NAME.setEditable(editable);
-
-		txtEmail.setEditable(editable);
 
 		txtContact.setEditable(editable);
 
@@ -169,31 +168,44 @@ public class ViewViolationDetails extends JDialog {
 
 	private void loadViolationData() {
 		if (violation != null) {
-			txtLRN.setText(violation.getStudentLRN());
-			txtFIRST_NAME.setText(violation.getFIRST_NAME());
-			txtLAST_NAME.setText(violation.getLAST_NAME());
-			txtEmail.setText(violation.getEmail());
-			txtContact.setText(violation.getContact());
-			cmbParticipantType.setSelectedItem(violation.getParticipantType());
+			try {
+				StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
+				if (student != null) {
+					txtLRN.setText(student.getLrn());
+					txtFIRST_NAME.setText(student.getFirstName());
+					txtLAST_NAME.setText(student.getLastName());
+					txtContact.setText(student.getContact().getCONTACT_NUMBER());
+								}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 			cmbViolationType.setSelectedItem(violation.getViolationType());
 			cmbStatus.setSelectedItem(violation.getStatus());
 			cmbReinforcement.setSelectedItem(violation.getReinforcement());
-			txtDescription.setText(violation.getViolationDescription()); // Load description
+			txtDescription.setText(violation.getViolationDescription());
 		}
 	}
 
 	private void saveViolationData() {
 		if (violation != null) {
-			violation.setStudentLRN(txtLRN.getText());
-			violation.setFIRST_NAME(txtFIRST_NAME.getText());
-			violation.setLAST_NAME(txtLAST_NAME.getText());
-			violation.setEmail(txtEmail.getText());
-			violation.setContact(txtContact.getText());
-			violation.setParticipantType((String) cmbParticipantType.getSelectedItem());
+			violation.setStudentUid(getStudentUidFromLrn(txtLRN.getText()));
 			violation.setViolationType((String) cmbViolationType.getSelectedItem());
 			violation.setStatus((String) cmbStatus.getSelectedItem());
 			violation.setReinforcement((String) cmbReinforcement.getSelectedItem());
 			violation.setViolationDescription(txtDescription.getText()); // Save description
 		}
+	}
+
+	// Method to get studentUid from LRN
+	private int getStudentUidFromLrn(String lrn) {
+		try {
+			StudentsData student = studentsDataDAO.getStudentDataByLrn(lrn);
+			if (student != null) {
+				return student.getStudentUid();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return -1; // Return -1 if student not found
 	}
 }

@@ -3,14 +3,13 @@ package lyfjshs.gomis.Database.model;
 public class Guardian {
 
     int GUARDIAN_ID;
-    String STUDENT_ID;
     String GUARIAN_FIRSTNAME;
     String GUARDIAN_MIDDLENAME;
     String GUARDIAN_LASTNAME;
     String GUARDIAN_RELATIONSHIP;
 
-    public Guardian(int GUARDIAN_ID,
-            String STUDENT_ID,
+    public Guardian(
+            int GUARDIAN_ID,
             String GUARIAN_FIRSTNAME,
             String GUARDIAN_MIDDLENAME,
             String GUARDIAN_LASTNAME,
@@ -56,13 +55,4 @@ public class Guardian {
     public void setGUARDIAN_ID(int GUARDIAN_ID) {
         this.GUARDIAN_ID = GUARDIAN_ID;
     }
-
-    public String getSTUDENT_ID() {
-        return STUDENT_ID;
-    }
-
-    public void setSTUDENT_ID(String STUDENT_ID) {
-        this.STUDENT_ID = STUDENT_ID;
-    }
-
 }

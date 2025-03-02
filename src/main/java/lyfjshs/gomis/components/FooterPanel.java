@@ -1,19 +1,12 @@
 
 package lyfjshs.gomis.components;
 
-import java.awt.Component;
 import java.awt.Font;
 
-import javax.management.loading.PrivateClassLoader;
-import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-import net.miginfocom.swing.MigLayout;
 import raven.extras.AvatarIcon;
-import raven.extras.LightDarkButton;
-import raven.modal.drawer.menu.AbstractMenuElement;
 import raven.modal.drawer.menu.MenuOption;
 import raven.modal.drawer.menu.MenuOption.MenuOpenMode;
 import raven.modal.drawer.simple.footer.SimpleFooter;

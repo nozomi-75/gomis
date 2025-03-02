@@ -5,7 +5,9 @@ import java.sql.SQLException;
 
 import javax.swing.JFrame;
 
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DBConnection;
+import lyfjshs.gomis.components.DrawerBuilder;
 import lyfjshs.gomis.view.LoginView;
 import lyfjshs.gomis.view.MainDashboard;
 import raven.modal.Drawer;
@@ -48,7 +50,8 @@ public class FormManager {
      * Handles user login by setting the main form in the application window 
      * and displaying the navigation drawer.
      */
-    public static void login() {
+    public static void login(Connection conn) {
+        Drawer.installDrawer(Main.jFrame, new DrawerBuilder(conn));
         Drawer.setVisible(true);
         frame.getContentPane().removeAll();
         frame.getContentPane().add(getMainForm());
@@ -63,7 +66,6 @@ public class FormManager {
      * and displaying the login form.
      */
     public static void logout() {
-        Drawer.setVisible(false);
         frame.getContentPane().removeAll();
         Connection conn;
         try {

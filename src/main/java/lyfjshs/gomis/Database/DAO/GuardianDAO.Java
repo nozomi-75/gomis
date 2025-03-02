@@ -13,22 +13,21 @@ import lyfjshs.gomis.Database.model.Guardian;
 public class GuardianDAO {
 
     // CREATE (Insert a new guardian)
-    public boolean insertGuardian(Connection conn, String studentId, String lastName, String firstName,
+    public boolean insertGuardian(Connection conn, String lastName, String firstName,
                                   String middleName, String relationship) {
-        String query = "INSERT INTO GUARDIAN (STUDENT_ID, GUARDIAN_LASTNAME, GUARDIAN_FIRSTNAME, GUARDIAN_MIDDLENAME, GUARDIAN_RELATIONSHIP) VALUES (?, ?, ?, ?, ?)";
+        String query = "INSERT INTO GUARDIAN ( GUARDIAN_LASTNAME, GUARDIAN_FIRSTNAME, GUARDIAN_MIDDLENAME, GUARDIAN_RELATIONSHIP) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, studentId);
-            stmt.setString(2, lastName);
-            stmt.setString(3, firstName);
+            stmt.setString(1, lastName);
+            stmt.setString(2, firstName);
 
             // Handle NULL values for middleName
             if (middleName != null && !middleName.isEmpty()) {
-                stmt.setString(4, middleName);
+                stmt.setString(3, middleName);
             } else {
-                stmt.setNull(4, Types.VARCHAR);
+                stmt.setNull(3, Types.VARCHAR);
             }
 
-            stmt.setString(5, relationship);
+            stmt.setString(4, relationship);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -45,7 +44,6 @@ public class GuardianDAO {
                 if (rs.next()) {
                     return new Guardian(
                         rs.getInt("GUARDIAN_ID"),
-                        rs.getString("STUDENT_ID"),
                         rs.getString("GUARDIAN_LASTNAME"),
                         rs.getString("GUARDIAN_FIRSTNAME"),
                         rs.getString("GUARDIAN_MIDDLENAME"),
@@ -68,7 +66,6 @@ public class GuardianDAO {
             while (rs.next()) {
                 guardians.add(new Guardian(
                     rs.getInt("GUARDIAN_ID"),
-                    rs.getString("STUDENT_ID"),
                     rs.getString("GUARDIAN_LASTNAME"),
                     rs.getString("GUARDIAN_FIRSTNAME"),
                     rs.getString("GUARDIAN_MIDDLENAME"),

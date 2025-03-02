@@ -217,77 +217,76 @@ public class LoginController {
 
     public void login(Connection conn, JTextField usernameTF, JPasswordField passwordTF, JFrame view) {
         PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			if (conn == null || conn.isClosed()) {
-				conn = DBConnection.getConnection();
-			}
-			String username = usernameTF.getText();
-			String password = String.valueOf(passwordTF.getPassword());
-
-			boolean validUser = isValidUser(username, password);
-
-			if (validUser) {
-				ps = conn.prepareStatement("SELECT user_id, guidance_COUNSELORS_ID FROM USERS WHERE U_NAME = ?");
-				ps.setString(1, username);
-				rs = ps.executeQuery();
-
-				if (rs.next()) {
-					// int userId = rs.getInt("user_id");
-					int guidanceCounselorId = rs.getInt("guidance_COUNSELORS_ID");
-
-					if (guidanceCounselorId != 0) {
-						PreparedStatement counselorPs = conn.prepareStatement(
-							"SELECT FIRST_NAME, LAST_NAME, position FROM GUIDANCE_COUNSELORS WHERE guidance_COUNSELORS_ID = ?"
-						);
-						counselorPs.setInt(1, guidanceCounselorId);
-						ResultSet counselorRs = counselorPs.executeQuery();
-						
-						if (counselorRs.next()) {
-							String FIRST_NAME = counselorRs.getString("FIRST_NAME");
-							String LAST_NAME = counselorRs.getString("LAST_NAME");
-							String position = counselorRs.getString("position");
-							
-							// Debug: Print counselor details
-							System.out.println("Counselor Details: " + FIRST_NAME + " " + LAST_NAME + ", " + position);
-							
-							// First set the counselor details
-							FormManager.setCounselorDetails(FIRST_NAME, LAST_NAME, position);
-							
-							// Debug: Verify details set in FormManager
-							System.out.println("Set in FormManager: " + FormManager.getCounselorFullName() + ", " + FormManager.getCounselorPosition());
-							
-							// Then call login() which will create the drawer with the updated details
-							FormManager.login();							
-							// Close the counselor resources
-							counselorRs.close();
-							counselorPs.close();
-						} else {
-							JOptionPane.showMessageDialog(view, "Counselor details not found", "Error",
-									JOptionPane.ERROR_MESSAGE);
-						}
-					} else {
-						JOptionPane.showMessageDialog(view, "User is not a guidance counselor", "Error",
-								JOptionPane.ERROR_MESSAGE);
-					}
-				} else {
-					JOptionPane.showMessageDialog(view, "Invalid username or password", "Error",
-							JOptionPane.ERROR_MESSAGE);
-				}
-			} else {
-				JOptionPane.showMessageDialog(view, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(view, "Database error: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
-		} finally {
-			try {
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        ResultSet rs = null;
+        try {
+            if (conn == null || conn.isClosed()) {
+                conn = DBConnection.getConnection();
+            }
+            String username = usernameTF.getText();
+            String password = String.valueOf(passwordTF.getPassword());
+    
+            boolean validUser = isValidUser(username, password);
+    
+            if (validUser) {
+                ps = conn.prepareStatement("SELECT user_id, guidance_COUNSELORS_ID FROM USERS WHERE U_NAME = ?");
+                ps.setString(1, username);
+                rs = ps.executeQuery();
+    
+                if (rs.next()) {
+                    int guidanceCounselorId = rs.getInt("guidance_COUNSELORS_ID");
+    
+                    if (guidanceCounselorId != 0) {
+                        PreparedStatement counselorPs = conn.prepareStatement(
+                            "SELECT FIRST_NAME, LAST_NAME, position FROM GUIDANCE_COUNSELORS WHERE guidance_COUNSELORS_ID = ?"
+                        );
+                        counselorPs.setInt(1, guidanceCounselorId);
+                        ResultSet counselorRs = counselorPs.executeQuery();
+                        
+                        if (counselorRs.next()) {
+                            String firstName = counselorRs.getString("FIRST_NAME");
+                            String lastName = counselorRs.getString("LAST_NAME");
+                            String position = counselorRs.getString("position");
+                            
+                            // Debug: Print counselor details
+                            System.out.println("Counselor Details: " + firstName + " " + lastName + ", " + position);
+                            
+                            // First set the counselor details
+                            FormManager.setCounselorDetails(firstName, lastName, position);
+                            
+                            // Debug: Verify details set in FormManager
+                            System.out.println("Set in FormManager: " + FormManager.getCounselorFullName() + ", " + FormManager.getCounselorPosition());
+                            
+                            // Then call login() which will create the drawer with the updated details
+                            FormManager.login(conn);							
+                            // Close the counselor resources
+                            counselorRs.close();
+                            counselorPs.close();
+                        } else {
+                            JOptionPane.showMessageDialog(view, "Counselor details not found", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(view, "User is not a guidance counselor", "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(view, "Invalid username or password", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(view, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(view, "Database error: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

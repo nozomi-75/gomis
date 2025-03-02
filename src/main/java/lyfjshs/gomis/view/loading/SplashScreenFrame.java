@@ -19,8 +19,6 @@ import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
-import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
-
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.components.ModelColor;
 import lyfjshs.gomis.components.PanelGradient;
@@ -131,19 +129,16 @@ public class SplashScreenFrame extends JFrame {
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
-                // Simulate database connection test and initialization
-                Thread.sleep(2000); // Simulate time taken for DB connection
+                Main.initDB(); // Call the method to initialize the database connection                
                 Main.initFrame(); // Call the method to initialize the main frame
                 return null;
             }
 
             @Override
             protected void done() {
-    			FlatAnimatedLafChange.showSnapshot();
                 dispose(); // Close the splash screen
                 Main.jFrame.setVisible(true);
-    			FlatAnimatedLafChange.hideSnapshotWithAnimation();
-
+               
             }
         };
         worker.execute(); // Start the SwingWorker

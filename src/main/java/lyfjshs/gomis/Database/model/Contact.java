@@ -11,7 +11,7 @@ public class Contact {
     }
 
     // Getter and Setter for C_ID
-    public int getC_id() {
+    public int getCONTACT_id() {
         return c_id;
     }
 

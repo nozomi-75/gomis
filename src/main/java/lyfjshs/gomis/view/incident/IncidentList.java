@@ -258,10 +258,10 @@ public class IncidentList extends Form {
 			return new IncidentDetails(
 					"Student has been consistently absent from afternoon classes for the past week. "
 							+ "Was found spending time in the school cafeteria during class hours.",
-					"1. Parent notification\n" + "2. Guidance counselor intervention\n"
+					"1. PARENTS notification\n" + "2. Guidance counselor intervention\n"
 							+ "3. Attendance contract created\n" + "4. Make-up assignments given",
 					"1. Regular attendance monitoring\n" + "2. Weekly check-ins with guidance counselor\n"
-							+ "3. Study habit workshop participation\n" + "4. Parent involvement in academic planning");
+							+ "3. Study habit workshop participation\n" + "4. PARENTS involvement in academic planning");
 
 		case "Bullying":
 			return new IncidentDetails(
@@ -277,7 +277,7 @@ public class IncidentList extends Form {
 			return new IncidentDetails(
 					"Student was caught using unauthorized notes during the final examination. "
 							+ "Hidden notes were discovered under the test paper.",
-					"1. Exam paper confiscated\n" + "2. Parent notification and conference\n"
+					"1. Exam paper confiscated\n" + "2. PARENTS notification and conference\n"
 							+ "3. Zero grade given for the exam\n" + "4. Academic integrity violation recorded",
 					"1. Academic integrity workshop attendance\n" + "2. Study skills development program\n"
 							+ "3. Regular academic counseling\n" + "4. Retake opportunity with different questions");

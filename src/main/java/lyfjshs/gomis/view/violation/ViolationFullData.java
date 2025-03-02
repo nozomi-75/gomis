@@ -1,6 +1,8 @@
 package lyfjshs.gomis.view.violation;
 
 import java.awt.BorderLayout;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -9,23 +11,26 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.model.StudentsData;
 import lyfjshs.gomis.Database.model.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import net.miginfocom.swing.MigLayout;
 
 public class ViolationFullData extends Form {
     private JTextField violationIdField;
-    private JTextField participantIdField;
+    private JTextField studentUidField;
     private JTextField studentNameField;
     private JTextField violationTypeField;
     private JTextField statusField;
     private JTextArea descriptionArea;
     private JTextField dateField;
-    private JTextField reportedByField;
-    private JTextField emailField;
-    private JTextField contactField;
+    private JTextField anecdotalRecordField;
+    private JTextField reinforcementField;
+    private Connection connection;
 
-    public ViolationFullData(Violation violation) {
+    public ViolationFullData(Violation violation, Connection connection) {
+        this.connection = connection;
         setLayout(new BorderLayout(0, 0));
         initComponents();
         populateData(violation);
@@ -42,40 +47,51 @@ public class ViolationFullData extends Form {
 
     private void initComponents() {
         violationIdField = new JTextField();
-        participantIdField = new JTextField();
+        studentUidField = new JTextField();
         studentNameField = new JTextField();
         violationTypeField = new JTextField();
         statusField = new JTextField();
         descriptionArea = new JTextArea(5, 20);
         dateField = new JTextField();
-        reportedByField = new JTextField();
-        emailField = new JTextField();
-        contactField = new JTextField();
+        anecdotalRecordField = new JTextField();
+        reinforcementField = new JTextField();
         
         // Make fields read-only
         violationIdField.setEditable(false);
-        participantIdField.setEditable(false);
+        studentUidField.setEditable(false);
         studentNameField.setEditable(false);
         violationTypeField.setEditable(false);
         statusField.setEditable(false);
         descriptionArea.setEditable(false);
         dateField.setEditable(false);
-        reportedByField.setEditable(false);
-        emailField.setEditable(false);
-        contactField.setEditable(false);
+        anecdotalRecordField.setEditable(false);
+        reinforcementField.setEditable(false);
     }
 
     private void populateData(Violation violation) {
         violationIdField.setText(String.valueOf(violation.getViolationId()));
-        participantIdField.setText(String.valueOf(violation.getParticipantId()));
-        studentNameField.setText(violation.getFormattedParticipantInfo());
+        studentUidField.setText(String.valueOf(violation.getStudentUid()));
+        
+        try {
+            StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+            StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
+            if (student != null) {
+                studentNameField.setText(String.format("%s %s", student.getFirstName(), student.getLastName()));
+            } else {
+                studentNameField.setText("N/A");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            studentNameField.setText("Error fetching student data");
+        }
+
         violationTypeField.setText(violation.getViolationType());
         statusField.setText(violation.getStatus());
         descriptionArea.setText(violation.getViolationDescription());
         dateField.setText(violation.getUpdatedAt() != null ? 
             violation.getUpdatedAt().toString() : "");
-        emailField.setText(violation.getEmail());
-        contactField.setText(violation.getContact());
+        anecdotalRecordField.setText(violation.getAnecdotalRecord());
+        reinforcementField.setText(violation.getReinforcement());
     }
 
     private JPanel createViolationDetailsPanel() {
@@ -85,17 +101,11 @@ public class ViolationFullData extends Form {
         panel.add(new JLabel("Violation ID:"));
         panel.add(violationIdField, "growx");
 
-        panel.add(new JLabel("Participant ID:"));
-        panel.add(participantIdField, "growx");
+        panel.add(new JLabel("Student UID:"));
+        panel.add(studentUidField, "growx");
 
         panel.add(new JLabel("Name:"));
         panel.add(studentNameField, "growx");
-
-        panel.add(new JLabel("Email:"));
-        panel.add(emailField, "growx");
-
-        panel.add(new JLabel("Contact:"));
-        panel.add(contactField, "growx");
 
         panel.add(new JLabel("Violation Type:"));
         panel.add(violationTypeField, "growx");
@@ -105,6 +115,12 @@ public class ViolationFullData extends Form {
 
         panel.add(new JLabel("Date:"));
         panel.add(dateField, "growx");
+
+        panel.add(new JLabel("Anecdotal Record:"));
+        panel.add(anecdotalRecordField, "growx");
+
+        panel.add(new JLabel("Reinforcement:"));
+        panel.add(reinforcementField, "growx");
 
         return panel;
     }
@@ -121,4 +137,4 @@ public class ViolationFullData extends Form {
 
         return panel;
     }
-} 
+}

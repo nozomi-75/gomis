@@ -1,6 +1,8 @@
 package lyfjshs.gomis.view.violation;
 
 import java.awt.Color;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.JTable;
@@ -8,19 +10,23 @@ import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.model.StudentsData;
 import lyfjshs.gomis.Database.model.Violation;
 import lyfjshs.gomis.components.table.TableActionManager;
 
 public class ViolationTableModel extends DefaultTableModel {
     private static final String[] COLUMN_NAMES = {
-        "Violation ID", "Student LRN", "Name", "Violation Type", "Status", "Actions"
+        "Student LRN", "Name", "Violation Type", "Reinforcement", "Status", "Actions"
     };
     
     private List<Violation> violations; // Store violations for action handling
     private TableActionManager actionManager;
+    private Connection connection;
 
-    public ViolationTableModel() {
+    public ViolationTableModel(Connection connection) {
         super(COLUMN_NAMES, 0);
+        this.connection = connection;
         initializeActionManager();
     }
 
@@ -56,18 +62,24 @@ public class ViolationTableModel extends DefaultTableModel {
     }
 
     private void addViolationRow(Violation violation) {
-        String studentLRN = violation.getStudentLRN() != null ? 
-            violation.getStudentLRN() : "N/A";
-        
-        Object[] rowData = {
-            violation.getViolationId(),
-            studentLRN,
-            String.format("%s %s", violation.getFIRST_NAME(), violation.getLAST_NAME()),
-            violation.getViolationType(),
-            violation.getStatus(),
-            "" // Actions column - will be handled by TableActionManager
-        };
-        addRow(rowData);
+        try {
+            StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+            StudentsData student = studentsDataDAO.getStudentById(violation.getStudentUid());
+            String studentLRN = student != null ? student.getLrn() : "N/A";
+            String fullName = student != null ? String.format("%s %s", student.getFirstName(), student.getLastName()) : "N/A";
+            
+            Object[] rowData = {
+                studentLRN,
+                fullName,
+                violation.getViolationType(),
+                violation.getReinforcement(),
+                violation.getStatus(),
+                "" // Actions column - will be handled by TableActionManager
+            };
+            addRow(rowData);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void applyActionsToTable(JTable table) {
@@ -112,4 +124,4 @@ public class ViolationTableModel extends DefaultTableModel {
         return violations != null && row >= 0 && row < violations.size() ? 
             violations.get(row) : null;
     }
-} 
+}
