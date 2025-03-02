@@ -2,19 +2,20 @@ package lyfjshs.gomis.view.sessions;
 
 import java.awt.*;
 import java.awt.print.*;
-import java.io.InputStream;
 import java.sql.Connection;
 import javax.swing.*;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.model.Session;
 import net.miginfocom.swing.MigLayout;
+import lyfjshs.gomis.view.appointment.StudentSearchUI;
 
 public class SessionsForm extends Form implements Printable {
-    private JTextField dateField, participantsField, violationField, recordedByField;
+    private JTextField dateField, violationField, recordedByField;
     private JFormattedTextField startSessionTimeField, endSessionTimeField;
     private JTextArea sessionSummaryArea, notesArea;
-    private JButton saveButton, printButton;
+    private JButton saveButton, printButton, searchStudentButton;
+    private JComboBox<String> participantsComboBox;
     private Connection connect;
 
     public SessionsForm(Connection conn) {
@@ -26,7 +27,8 @@ public class SessionsForm extends Form implements Printable {
     private void initializeComponents() {
 
         dateField = new JTextField(20);
-        participantsField = new JTextField(20);
+        participantsComboBox = new JComboBox<>(new String[]{"Student", "Non-Student"});
+        participantsComboBox.addActionListener(e -> toggleSearchStudentButton());
         notesArea = new JTextArea(5, 20);
         sessionSummaryArea = new JTextArea(8, 50);
 
@@ -35,18 +37,31 @@ public class SessionsForm extends Form implements Printable {
         saveButton.setForeground(Color.WHITE);
         saveButton.setFocusPainted(false);
         saveButton.addActionListener(e -> saveSession());
-        
+
         printButton = new JButton("PRINT");
         printButton.setBackground(new Color(70, 130, 180));
         printButton.setForeground(Color.WHITE);
         printButton.setFocusPainted(false);
         printButton.addActionListener(e -> printSessionDetails());
+
+        searchStudentButton = new JButton("Search Student");
+        searchStudentButton.setEnabled(false);
+        searchStudentButton.addActionListener(e -> openStudentSearchUI());
+    }
+
+    private void toggleSearchStudentButton() {
+        searchStudentButton.setEnabled("Student".equals(participantsComboBox.getSelectedItem()));
+    }
+
+    private void openStudentSearchUI() {
+        StudentSearchUI studentSearchUI = new StudentSearchUI();
+        studentSearchUI.createAndShowGUI();
     }
 
     private void saveSession() {
         try {
             String date = dateField.getText();
-            int participants = Integer.parseInt(participantsField.getText());
+            String participants = (String) participantsComboBox.getSelectedItem();
             String violation = violationField.getText();
             String recordedBy = recordedByField.getText();
             String notes = notesArea.getText();
@@ -54,10 +69,10 @@ public class SessionsForm extends Form implements Printable {
 
             // Create a new Session object using the constructor
             Session session = new Session(
-            	0,
+                0,
                 0, // appointmentId (not retrieved in the query)
                 0, // counselorsId (not retrieved in the query)
-                participants, // Use the int directly
+                participants.equals("Student") ? 1 : 0, // Use 1 for Student, 0 for Non-Student
                 0, // violationId (not retrieved in the query)
                 violation, // sessionType
                 null, // sessionDateTime (not retrieved in the query)
@@ -84,9 +99,11 @@ public class SessionsForm extends Form implements Printable {
         this.add(dateField, "cell 4 0");
 
         this.add(new JLabel("PARTICIPANTS:"), "cell 1 1");
-        this.add(participantsField, "cell 2 1");
+        this.add(participantsComboBox, "cell 2 1");
         this.add(new JLabel("NOTES:"), "cell 3 1,aligny top");
         this.add(new JScrollPane(notesArea), "cell 4 1 1 2,grow");
+
+        this.add(searchStudentButton, "cell 2 2");
 
         JLabel label_3 = new JLabel("START SESSION TIME:");
         this.add(label_3, "cell 1 3");
@@ -142,6 +159,4 @@ public class SessionsForm extends Form implements Printable {
         this.printAll(g);
         return PAGE_EXISTS;
     }
-
- 
 }

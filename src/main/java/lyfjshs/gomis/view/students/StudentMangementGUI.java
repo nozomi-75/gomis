@@ -27,6 +27,7 @@ import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
+import lyfjshs.gomis.view.students.studentsearch;
 
 public class StudentMangementGUI extends Form {
 
@@ -39,10 +40,12 @@ public class StudentMangementGUI extends Form {
 	private JButton backBtn;
 	private JPanel mainPanel;
 	private Component currentDetailPanel;
+	private studentsearch studentSearchPanel;
 
 	public StudentMangementGUI(Connection conn) {
 		this.connection = conn;
 		studentsDataCRUD = new StudentsDataDAO(conn);
+		studentSearchPanel = new studentsearch();
 		initializeComponents();
 		setupLayout();
 		loadStudentData();
@@ -139,8 +142,9 @@ public class StudentMangementGUI extends Form {
 		headerPanel.add(backBtn, "cell 3 0");
 
 		// Add components to main frame
-		add(headerPanel, BorderLayout.NORTH);
-		add(slidePane, BorderLayout.CENTER);
+		add(studentSearchPanel, BorderLayout.NORTH);
+		add(headerPanel, BorderLayout.CENTER);
+		add(slidePane, BorderLayout.SOUTH);
 	}
 
 	private JPanel createStudentTablePanel() {

@@ -22,6 +22,7 @@ public class AppointmentDialog extends JDialog {
     private JComboBox<String> statusCombo;
     private boolean confirmed;
     private Appointment appointment;
+    private JButton studentSearchButton;
 
     public AppointmentDialog(Frame parent) {
         this(parent, new Appointment());
@@ -44,11 +45,20 @@ public class AppointmentDialog extends JDialog {
         // Participant Type Selection
         participantTypeCombo = new JComboBox<>(new String[]{"Student", "Non-Student"});
         participantTypeCombo.addActionListener(e -> {
-            participantIdField.setEnabled(participantTypeCombo.getSelectedItem().equals("Student"));
+            boolean isStudent = participantTypeCombo.getSelectedItem().equals("Student");
+            participantIdField.setEnabled(isStudent);
+            studentSearchButton.setEnabled(isStudent);
         });
 
         // Participant ID field
         participantIdField = new JTextField(10);
+
+        // Student Search Button
+        studentSearchButton = new JButton("Search Student");
+        studentSearchButton.setEnabled(false);
+        studentSearchButton.addActionListener(e -> {
+            SwingUtilities.invokeLater(() -> new StudentSearchUI().createAndShowGUI());
+        });
 
         // Counselor ID field
         counselorIdField = new JTextField(10);
@@ -86,28 +96,31 @@ public class AppointmentDialog extends JDialog {
         // Add components
         add(new JLabel("Participant Type:"));
         add(participantTypeCombo, "growx");
-        
+
         add(new JLabel("Participant ID:"));
         add(participantIdField, "growx");
-        
+
+        add(new JLabel(""));
+        add(studentSearchButton, "growx");
+
         add(new JLabel("Counselor ID:"));
         add(counselorIdField, "growx");
-        
+
         add(new JLabel("Title:"));
         add(titleField, "growx");
-        
+
         add(new JLabel("Appointment Type:"));
         add(appointmentTypeCombo, "growx");
-        
+
         add(new JLabel("Date:"));
         add(dateEditor, "growx");
-        
+
         add(new JLabel("Time:"));
         add(timeEditor, "growx");
-        
+
         add(new JLabel("Notes:"));
         add(notesField, "growx");
-        
+
         add(new JLabel("Status:"));
         add(statusCombo, "growx");
 
