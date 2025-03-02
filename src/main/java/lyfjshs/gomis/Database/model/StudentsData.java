@@ -2,8 +2,6 @@ package lyfjshs.gomis.Database.model;
 
 import java.sql.Date;
 
-import lyfjshs.gomis.Database.entity.Parents;
-
 public class StudentsData {
     private int studentUid;
     private int parentId;
@@ -117,11 +115,6 @@ public class StudentsData {
                 ", parent=" + PARENTS +
                 ", guardian=" + guardian +
                 '}';
-    }
-
-    public Parents getParents() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getParents'");
     }
 }
 

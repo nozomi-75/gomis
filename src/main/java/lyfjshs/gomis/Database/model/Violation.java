@@ -28,11 +28,7 @@ public class Violation {
         this.updatedAt = updatedAt;
     }
 
-    public Violation(int index, String violationType2, String reinforcement2, String status2) {
-		// TODO Auto-generated constructor stub
-	}
-
-	// Getters and Setters
+    // Getters and Setters
     public int getViolationId() {
         return violationId;
     }
@@ -110,10 +106,5 @@ public class Violation {
                 ", status='" + status + '\'' +
                 ", updatedAt=" + updatedAt +
                 '}';
-    }
-
-    public int getIndex() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getIndex'");
     }
 }

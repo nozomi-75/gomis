@@ -15,11 +15,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
@@ -35,6 +32,8 @@ import net.miginfocom.swing.MigLayout;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
 
+@SuppressWarnings(value = "serial")
+
 public class StudentFullData extends Form {
 	// Text fields for easy access and validation
 	private JTextField lrnField;
@@ -49,6 +48,8 @@ public class StudentFullData extends Form {
 	private JTextField guardianEmailField;
 	private JTextField guardianContactField;
 	private JTextField addressField;
+	private JTextField violationTypeField;
+	private JTextField violationDescriptionField;
 	private JPanel panel;
 	private final JButton printGMBtn;
 	private boolean violationResolve;
@@ -74,12 +75,12 @@ public class StudentFullData extends Form {
 	private JTextField motherOccupationField;
 	private JPanel violationPanel;
 	private JTextField parentNameField;
-	private JTable violationTable;
-	private TableModel data;
-	private TableColumnModel columnNames;
+	private JTextField appointmentTitleField;
+	private JTextField incidentDescriptionField;
+	private JTextField sessionNotesField;
 
 	public StudentFullData(StudentsData studentData) {
-		this.setLayout(new MigLayout("", "[][grow][]", "[][][grow]"));
+		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
 		initComponents();
 
 		// Set fields with student data
@@ -128,24 +129,17 @@ public class StudentFullData extends Form {
 
 		// Add components to the panel
 		JPanel mainPanel = new JPanel(
-				new MigLayout("", "[40px:n,grow,fill]", "[fill][grow][grow,fill][]"));
+				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow][grow,fill][][grow]"));
 		JScrollPane scroll = new JScrollPane(mainPanel);
 
-		mainPanel.add(createPersonalInfoPanel(), "cell 0 0,grow");
-		mainPanel.add(createAddressPanel(), "cell 0 1,grow");
-		mainPanel.add(createParentPanel(), "cell 0 2,grow");
+		mainPanel.add(createPersonalInfoPanel(), "cell 0 0 2 1,grow");
+		mainPanel.add(createAddressPanel(), "cell 0 1 2 1,grow");
+		mainPanel.add(createParentPanel(), "cell 0 2 2 1,grow");
 		mainPanel.add(createGuardianPanel(), "cell 0 3,grow");
-		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBorder(new TitledBorder(null, "Violation Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		mainPanel.add(panel_1, "cell 0 4,grow");
-		panel_1.setLayout(new MigLayout("", "[40px:n,grow,fill]", "[]"));
-		// Initialize the violation table
-		String[] columnNames = {"#", "Violation Type", "Reinforcement", "Status", "Action"};
-		Object[][] data = {}; // Empty data for now
-		violationTable = new JTable(data, columnNames);
-		JScrollPane violationScrollPane = new JScrollPane(violationTable);
-		panel_1.add(violationScrollPane, "cell 0 0");
+		mainPanel.add(createAppointmentPanel(), "cell 0 4,grow");
+		mainPanel.add(createViolationPanel(), "cell 0 5,grow");
+		mainPanel.add(createIncidentPanel(), "cell 0 6,grow");
+		mainPanel.add(createSessionPanel(), "cell 0 7,grow");
 
 		add(scroll, "cell 1 0,grow");
 
@@ -156,8 +150,6 @@ public class StudentFullData extends Form {
 		printGMBtn.addActionListener(e -> createGoodMoralReport()); // Attach event
 
 		panel.add(printGMBtn, "cell 1 0,grow");
-		
-		
 	}
 
 	private void testViolation() {
@@ -177,11 +169,20 @@ public class StudentFullData extends Form {
 		logoIcon = new FlatSVGIcon("DepEd_Logo.svg");
 		lrnField = new JTextField();
 		lastNameField = new JTextField();
+		firstNameField = new JTextField();
+		middleNameField = new JTextField();
+		sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
+		dobField = new JTextField();
+		ageField = new JTextField();
+		motherTongueField = new JTextField();
 		guardianNameField = new JTextField();
 		guardianEmailField = new JTextField();
 		guardianContactField = new JTextField();
 		addressField = new JTextField();
+		violationTypeField = new JTextField();
+		violationDescriptionField = new JTextField();
 		ipField = new JTextField();
+		textField = new JTextField();
 		houseNoField = new JTextField();
 		streetField = new JTextField();
 		regionField = new JTextField();
@@ -199,100 +200,85 @@ public class StudentFullData extends Form {
 		motherMiddleNameField = new JTextField();
 		motherPhoneNumberField = new JTextField();
 		motherOccupationField = new JTextField();
+		houseNoField = new JTextField(10);
+		streetField = new JTextField(15);
+		regionField = new JTextField(10);
+		provinceField = new JTextField(15);
+		municipalityField = new JTextField(15);
+		barangayField = new JTextField(15);
+		zipCodeField = new JTextField(5);
 		parentNameField = new JTextField();
+		appointmentTitleField = new JTextField();
+		incidentDescriptionField = new JTextField();
+		sessionNotesField = new JTextField();
 	}
 
 	private JPanel createPersonalInfoPanel() {
 		JPanel personalInfoPanel = new JPanel(
-				new MigLayout("wrap 2", "[140px][grow,fill][140px,leading][grow,fill]", "[]5[]5[]5[]5[]"));
+				new MigLayout("wrap 2", "[140px][grow,fill][][140px,leading][grow,fill]", "[]5[]5[]5[]5[]5[]5[]5[]"));
 		personalInfoPanel.setBorder(
 				new TitledBorder(null, "Personal Information", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		personalInfoPanel.add(new JLabel("LRN:"), "cell 0 0, leading");
 		personalInfoPanel.add(lrnField, "cell 1 0, growx");
-		
-				JLabel label = new JLabel("IP (Ethnic Group): ");
-				personalInfoPanel.add(label, "cell 2 0,alignx leading");
-		personalInfoPanel.add(ipField, "cell 3 0,growx");
+
+		personalInfoPanel.add(new JLabel("IP (Ethnic Group): "), "cell 3 0, leading");
+		personalInfoPanel.add(ipField, "cell 4 0, growx");
 
 		personalInfoPanel.add(new JLabel("Last Name:"), "cell 0 1, leading");
 		personalInfoPanel.add(lastNameField, "cell 1 1, growx");
-		
-				JLabel label_2 = new JLabel("First Name:");
-				personalInfoPanel.add(label_2, "cell 2 1,alignx leading");
-				firstNameField = new JTextField();
-				personalInfoPanel.add(firstNameField, "cell 3 1,growx");
-				
-						JLabel label_3 = new JLabel("Middle Name:");
-						personalInfoPanel.add(label_3, "cell 0 2,alignx leading");
-				middleNameField = new JTextField();
-				personalInfoPanel.add(middleNameField, "cell 1 2,growx");
-		
-				JLabel label_1 = new JLabel("Religion: ");
-				personalInfoPanel.add(label_1, "cell 2 2,alignx leading");
-		textField = new JTextField();
-		personalInfoPanel.add(textField, "cell 3 2,growx");
-		
-				JLabel label_4 = new JLabel("Sex:");
-				personalInfoPanel.add(label_4, "cell 0 3,alignx leading");
-		sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
-		personalInfoPanel.add(sexComboBox, "cell 1 3,growx");
-		
-				JLabel label_5 = new JLabel("AGE: ");
-				personalInfoPanel.add(label_5, "cell 2 3,alignx leading");
-		ageField = new JTextField();
-		personalInfoPanel.add(ageField, "cell 3 3,growx");
-				
-						JLabel label_6 = new JLabel("Date of Birth:");
-						personalInfoPanel.add(label_6, "cell 0 4,alignx leading");
-				dobField = new JTextField();
-				personalInfoPanel.add(dobField, "cell 1 4,growx");
-		
-				JLabel label_7 = new JLabel("Mother Tongue");
-				personalInfoPanel.add(label_7, "cell 2 4,alignx leading");
-		motherTongueField = new JTextField();
-		personalInfoPanel.add(motherTongueField, "cell 3 4,growx");
+
+		personalInfoPanel.add(new JLabel("Religion: "), "cell 3 1, leading");
+		personalInfoPanel.add(textField, "cell 4 1, growx");
+
+		personalInfoPanel.add(new JLabel("First Name:"), "cell 0 2, leading");
+		personalInfoPanel.add(firstNameField, "cell 1 2, growx");
+
+		personalInfoPanel.add(new JLabel("Middle Name:"), "cell 0 3, leading");
+		personalInfoPanel.add(middleNameField, "cell 1 3, growx");
+
+		personalInfoPanel.add(new JLabel("Sex:"), "cell 0 4, leading");
+		personalInfoPanel.add(sexComboBox, "cell 1 4, growx");
+
+		personalInfoPanel.add(new JLabel("Date of Birth:"), "cell 0 5, leading");
+		personalInfoPanel.add(dobField, "cell 1 5, growx");
+
+		personalInfoPanel.add(new JLabel("AGE as of 1st Friday June"), "cell 0 6, leading");
+		personalInfoPanel.add(ageField, "cell 1 6, growx");
+
+		personalInfoPanel.add(new JLabel("Mother Tongue"), "cell 0 7, leading");
+		personalInfoPanel.add(motherTongueField, "cell 1 7, growx");
 
 		return personalInfoPanel;
 	}
 
 	private JPanel createAddressPanel() {
-		JPanel addressPanel = new JPanel(new MigLayout("wrap 2", "[][grow][][grow]", "[]5[]5[]5[]"));
+		JPanel addressPanel = new JPanel(new MigLayout("wrap 2", "[][grow]", "[]5[]5[]5[]5[]5[]5[]"));
 		addressPanel.setBorder(
 				new TitledBorder(null, "RESIDENTIAL ADDRESS", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
+		zipCodeField.addKeyListener(new KeyAdapter() {
+			public void keyTyped(KeyEvent e) {
+				if (!Character.isDigit(e.getKeyChar())) {
+					e.consume();
+				}
+			}
+		});
+
 		addressPanel.add(new JLabel("House No:"), "cell 0 0, leading");
-		houseNoField = new JTextField(10);
-		addressPanel.add(houseNoField, "cell 1 0,growx");
-		JLabel label = new JLabel("Municipality:");
-		addressPanel.add(label, "cell 2 0,alignx leading");
-		municipalityField = new JTextField(15);
-		addressPanel.add(municipalityField, "cell 3 0,growx");
+		addressPanel.add(houseNoField, "cell 1 0, growx");
 		addressPanel.add(new JLabel("Street/Subdivision:"), "cell 0 1, leading");
-		streetField = new JTextField(15);
-		addressPanel.add(streetField, "cell 1 1,growx");
-		JLabel label_1 = new JLabel("Barangay:");
-		addressPanel.add(label_1, "cell 2 1,alignx leading");
-		barangayField = new JTextField(15);
-		addressPanel.add(barangayField, "cell 3 1,growx");
+		addressPanel.add(streetField, "cell 1 1, growx");
 		addressPanel.add(new JLabel("Region:"), "cell 0 2, leading");
-		regionField = new JTextField(10);
-		addressPanel.add(regionField, "cell 1 2,growx");
-		zipCodeField = new JTextField(5);
-		
-				zipCodeField.addKeyListener(new KeyAdapter() {
-					public void keyTyped(KeyEvent e) {
-						if (!Character.isDigit(e.getKeyChar())) {
-							e.consume();
-						}
-					}
-				});
-				JLabel label_2 = new JLabel("Zip Code:");
-				addressPanel.add(label_2, "cell 2 2,alignx leading");
-				addressPanel.add(zipCodeField, "cell 3 2,growx");
+		addressPanel.add(regionField, "cell 1 2, growx");
 		addressPanel.add(new JLabel("Province:"), "cell 0 3, leading");
-		provinceField = new JTextField(15);
-		addressPanel.add(provinceField, "cell 1 3,growx");
+		addressPanel.add(provinceField, "cell 1 3, growx");
+		addressPanel.add(new JLabel("Municipality:"), "cell 0 4, leading");
+		addressPanel.add(municipalityField, "cell 1 4, growx");
+		addressPanel.add(new JLabel("Barangay:"), "cell 0 5, leading");
+		addressPanel.add(barangayField, "cell 1 5, growx");
+		addressPanel.add(new JLabel("Zip Code:"), "cell 0 6, leading");
+		addressPanel.add(zipCodeField, "cell 1 6, growx");
 
 		return addressPanel;
 	}
@@ -364,6 +350,49 @@ public class StudentFullData extends Form {
 		parentPanel.add(label, "flowx,cell 0 0,alignx leading");
 
 		return parentPanel;
+	}
+
+	private JPanel createAppointmentPanel() {
+		JPanel appointmentPanel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[]5[]"));
+		appointmentPanel.setBorder(new TitledBorder(null, "Appointment Information", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		appointmentPanel.add(new JLabel("Appointment Title:"), "cell 0 0, leading");
+		appointmentPanel.add(appointmentTitleField, "cell 1 0, growx");
+
+		return appointmentPanel;
+	}
+
+	private JPanel createViolationPanel() {
+		JPanel violationPanel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[]5[]5[]"));
+		violationPanel.setBorder(new TitledBorder(null, "Violation Record", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		violationPanel.add(new JLabel("Violation Type:"), "cell 0 0, leading");
+		violationPanel.add(violationTypeField, "cell 1 0, growx");
+
+		violationPanel.add(new JLabel("Violation Description:"), "cell 0 1, leading");
+		violationPanel.add(violationDescriptionField, "cell 1 1, growx");
+
+		return violationPanel;
+	}
+
+	private JPanel createIncidentPanel() {
+		JPanel incidentPanel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[]5[]"));
+		incidentPanel.setBorder(new TitledBorder(null, "Incident Record", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		incidentPanel.add(new JLabel("Incident Description:"), "cell 0 0, leading");
+		incidentPanel.add(incidentDescriptionField, "cell 1 0, growx");
+
+		return incidentPanel;
+	}
+
+	private JPanel createSessionPanel() {
+		JPanel sessionPanel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[]5[]"));
+		sessionPanel.setBorder(new TitledBorder(null, "Session Notes", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		sessionPanel.add(new JLabel("Session Notes:"), "cell 0 0, leading");
+		sessionPanel.add(sessionNotesField, "cell 1 0, growx");
+
+		return sessionPanel;
 	}
 
 	/**
