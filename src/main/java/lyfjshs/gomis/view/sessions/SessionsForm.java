@@ -32,6 +32,8 @@ public class SessionsForm extends Form implements Printable {
     private JTextArea sessionSummaryArea, notesArea;
     private JButton saveButton, printButton, searchStudentButton;
     private JComboBox<String> participantsComboBox;
+    private JComboBox<String> consultationTypeComboBox;
+    private JComboBox<String> appointmentTypeComboBox;
     private Connection connect;
 
     public SessionsForm(Connection conn) {
@@ -41,7 +43,6 @@ public class SessionsForm extends Form implements Printable {
     }
 
     private void initializeComponents() {
-
         dateField = new JTextField(20);
         participantsComboBox = new JComboBox<>(new String[]{"Student", "Non-Student"});
         participantsComboBox.addActionListener(e -> toggleSearchStudentButton());
@@ -63,6 +64,19 @@ public class SessionsForm extends Form implements Printable {
         searchStudentButton = new JButton("Search Student");
         searchStudentButton.setEnabled(false);
         searchStudentButton.addActionListener(e -> openStudentSearchUI());
+
+        consultationTypeComboBox = new JComboBox<>(new String[]{
+            "Academic Consultation",
+            "Career Guidance",
+            "Personal Consultation",
+            "Behavioral Consultation",
+            "Group Consultation"
+        });
+
+        appointmentTypeComboBox = new JComboBox<>(new String[]{
+            "Walk-in",
+            "From Appointment"
+        });
     }
 
     private void toggleSearchStudentButton() {
@@ -111,46 +125,54 @@ public class SessionsForm extends Form implements Printable {
     private void layoutComponents() {
         this.setLayout(new MigLayout("wrap 4", "[][right]10[grow]20[right]10[grow]", "[][][][][][][][][fill][]"));
         this.setBorder(BorderFactory.createTitledBorder("Session Form"));
+        
         this.add(new JLabel("DATE:"), "cell 3 0");
         this.add(dateField, "cell 4 0");
-
+        
         this.add(new JLabel("PARTICIPANTS:"), "cell 1 1");
         this.add(participantsComboBox, "cell 2 1");
-        this.add(new JLabel("NOTES:"), "cell 3 1,aligny top");
-        this.add(new JScrollPane(notesArea), "cell 4 1 1 2,grow");
+        this.add(searchStudentButton, "cell 3 1");
+        
+        this.add(new JLabel("NOTES:"), "cell 3 2, aligny top");
+        this.add(new JScrollPane(notesArea), "cell 4 2 1 2,grow");
 
-        this.add(searchStudentButton, "cell 2 2");
+        this.add(new JLabel("APPOINTMENT TYPE:"), "cell 1 3");
+        this.add(appointmentTypeComboBox, "cell 2 3");
 
         JLabel label_3 = new JLabel("START SESSION TIME:");
-        this.add(label_3, "cell 1 3");
+        this.add(label_3, "cell 1 4");
         startSessionTimeField = new JFormattedTextField();
         startSessionTimeField.setColumns(20);
-        this.add(startSessionTimeField, "cell 2 3,alignx left");
+        this.add(startSessionTimeField, "cell 2 4,alignx left");
 
         JLabel label_4 = new JLabel("VIOLATION:");
-        this.add(label_4, "cell 3 3");
+        this.add(label_4, "cell 3 4");
         violationField = new JTextField(20);
-        this.add(violationField, "cell 4 3");
+        this.add(violationField, "cell 4 4");
 
         JLabel label = new JLabel("END SESSION TIME:");
-        this.add(label, "flowx,cell 1 4");
+        this.add(label, "flowx,cell 1 5");
         endSessionTimeField = new JFormattedTextField();
         endSessionTimeField.setColumns(20);
-        this.add(endSessionTimeField, "cell 2 4,alignx left");
+        this.add(endSessionTimeField, "cell 2 5,alignx left");
 
         JLabel label_2 = new JLabel("RECORDED BY:");
-        this.add(label_2, "cell 3 4");
+        this.add(label_2, "cell 3 5");
         recordedByField = new JTextField(20);
-        this.add(recordedByField, "cell 4 4");
+        this.add(recordedByField, "cell 4 5");
 
+        // Add some space before the session summary
         JLabel label_1 = new JLabel("SESSION SUMMARY:");
         this.add(label_1, "cell 0 6 2 1,alignx center");
         this.add(new JScrollPane(sessionSummaryArea), "cell 0 7 5 1,grow");
 
+        this.add(new JLabel("CONSULTATION TYPE:"), "cell 1 8");
+        this.add(consultationTypeComboBox, "cell 2 8");
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(saveButton);
         buttonPanel.add(printButton);
-        this.add(buttonPanel, "cell 1 8 4 1,alignx center,growy");
+        this.add(buttonPanel, "cell 1 9 4 1,alignx center,growy");
     }
 
     private void printSessionDetails() {
