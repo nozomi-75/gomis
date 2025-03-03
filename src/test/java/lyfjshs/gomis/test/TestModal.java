@@ -3,6 +3,7 @@ package lyfjshs.gomis.test;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.sql.SQLException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -11,6 +12,7 @@ import javax.swing.UIManager;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
+import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.view.students.StudentFullData;
 import net.miginfocom.swing.MigLayout;
@@ -29,25 +31,25 @@ public class TestModal extends JFrame {
         JButton button = new JButton("show");
 
         Student studentData = new Student(
-            1, // studentUid
-            1, // parentID
-            1, // guardianID
-            1, // contactID
-            1, // anotherID
-            "LRN123456790", // lrn
-            "Doe", // lastName
-            "John", // firstName
-            "Smith", // middleName
-            "john.doe@example.com", // email
-            new java.sql.Date(new java.util.Date().getTime()), // birthDate
-            "123 Main St", // address
-            1234567890, // phoneNumber
-            "Male", // gender
-            "Single", // civilStatus
-            null, // Address
-            null, // Contact
-            null, // Parent
-            null  // Guardian
+                1, // studentUid
+                1, // parentID
+                1, // guardianID
+                1, // contactID
+                1, // anotherID
+                "LRN123456790", // lrn
+                "Doe", // lastName
+                "John", // firstName
+                "Smith", // middleName
+                "john.doe@example.com", // email
+                new java.sql.Date(new java.util.Date().getTime()), // birthDate
+                "123 Main St", // address
+                1234567890, // phoneNumber
+                "Male", // gender
+                "Single", // civilStatus
+                null, // Address
+                null, // Contact
+                null, // Parent
+                null // Guardian
         );
 
         ModalDialog.getDefaultOption()
@@ -59,24 +61,35 @@ public class TestModal extends JFrame {
 
         button.addActionListener(e -> {
             // Create custom options
-            SimpleModalBorder.Option customOption = new SimpleModalBorder.Option("Custom Action", 3); // Custom action type
+            SimpleModalBorder.Option customOption = new SimpleModalBorder.Option("Custom Action", 3); // Custom action
+                                                                                                      // type
             SimpleModalBorder.Option[] customOptions = new SimpleModalBorder.Option[] { customOption };
 
-            SimpleModalBorder modal = new SimpleModalBorder(new StudentFullData(studentData), "Input", customOptions, (controller, action) -> {
-                System.out.println("Action: " + action);
-                if (action == 3) { // Check for custom action
-                    // Handle custom action here
-                    System.out.println("Custom action performed!");
-                    controller.consume(); // Prevent closing the modal if needed
-                } else if (action == SimpleModalBorder.YES_OPTION) {
-                    controller.consume();
-                    ModalDialog.pushModal(new SimpleModalBorder(new Test1(), "New Input", SimpleModalBorder.YES_NO_OPTION, (controller1, action1) -> {
-                    }), "input");
-                }
-            });
-            
+            StudentFullData studentFullData = null;
+            try {
+                studentFullData = new StudentFullData(DBConnection.getConnection(), studentData);
+            } catch (SQLException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            SimpleModalBorder modal = new SimpleModalBorder(studentFullData, "Input", customOptions,
+                    (controller, action) -> {
+                        System.out.println("Action: " + action);
+                        if (action == 3) { // Check for custom action
+                            // Handle custom action here
+                            System.out.println("Custom action performed!");
+                            controller.consume(); // Prevent closing the modal if needed
+                        } else if (action == SimpleModalBorder.YES_OPTION) {
+                            controller.consume();
+                            ModalDialog.pushModal(new SimpleModalBorder(new Test1(), "New Input",
+                                    SimpleModalBorder.YES_NO_OPTION, (controller1, action1) -> {
+                                    }), "input");
+                        }
+                    });
+
             // Set the size of the modal
-            modal.setPreferredSize(new Dimension(this.getWidth() - 200 , this.getHeight() - 100)); // Set your desired width and height
+            modal.setPreferredSize(new Dimension(this.getWidth() - 200, this.getHeight() - 100)); // Set your desired
+                                                                                                  // width and height
 
             ModalDialog.showModal(this, modal, "input");
         });

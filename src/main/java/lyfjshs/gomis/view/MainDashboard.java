@@ -210,6 +210,8 @@ public class MainDashboard extends Form {
 				if (confirm == JOptionPane.YES_OPTION) {
 					violationCRUD.updateViolationStatus(connection, violation.getViolationId(), "Resolved");
 					refreshTable();
+					contentPanel.revalidate();
+					contentPanel.repaint();
 				}
 			}
 		} catch (SQLException e) {
@@ -222,12 +224,11 @@ public class MainDashboard extends Form {
 	}
 
 	private void refreshTable() {
-		// Remove the existing table from the panel
-		Component[] components = contentPanel.getComponents();
-		for (Component component : components) {
+		// Remove the existing table from the centralTablePanel
+		for (Component component : centralTablePanel.getComponents()) {
 			if (component instanceof JScrollPane) {
-				contentPanel.remove(component);
-				break;
+				centralTablePanel.remove(component);
+				break; // Exit after removing the first JScrollPane
 			}
 		}
 
@@ -236,8 +237,8 @@ public class MainDashboard extends Form {
 		centralTablePanel.add(newTableScrollPane, "cell 0 1,grow");
 
 		// Revalidate and repaint the panel
-		contentPanel.revalidate();
-		contentPanel.repaint();
+		centralTablePanel.revalidate();
+		centralTablePanel.repaint();
 	}
 
 	private JPanel createActionPanel(String title, String buttonText) {

@@ -29,7 +29,7 @@ public class Form extends JPanel {
      * Initializes the form's components.
      * This method is intended to be overridden by subclasses if needed.
      */
-    private void init() {
+    protected void init() {
     }
 
     /**
@@ -64,4 +64,5 @@ public class Form extends JPanel {
             SwingUtilities.updateComponentTreeUI(this);
         }
     }
+
 }

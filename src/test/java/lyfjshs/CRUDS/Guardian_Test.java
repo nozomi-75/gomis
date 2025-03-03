@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import lyfjshs.gomis.Database.DBConnection;
-import lyfjshs.gomis.Database.entity.Guardian;
 import lyfjshs.gomis.Database.DAO.GuardianDAO;
+import lyfjshs.gomis.Database.entity.Guardian;
 
 public class Guardian_Test {
 	public static void main(String[] args) {

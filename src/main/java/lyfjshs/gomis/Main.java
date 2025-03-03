@@ -121,7 +121,6 @@ public class Main {
 		appointmentCalendar = new AppointmentManagement(conn);
 		sessionFillUp = new SessionsForm(conn);
 		sessionRecords = new SessionRecords(conn);
-		StudentSearchPanel studentSearchPanel = new StudentSearchPanel(conn);
 		createStudent = new StudentInfoFullForm(conn);
 	}
 

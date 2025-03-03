@@ -170,4 +170,30 @@ public class ViolationCRUD {
         }
         return violations;
     }
+
+    // New method to retrieve violations by student UID
+    public static List<ViolationRecord> getViolationsByStudentUID(Connection connection, int studentUID) throws Exception {
+        List<ViolationRecord> violations = new ArrayList<>();
+        String query = "SELECT vr.* FROM VIOLATION_RECORD vr " +
+                       "JOIN PARTICIPANTS p ON vr.PARTICIPANT_ID = p.PARTICIPANT_ID " +
+                       "WHERE p.STUDENT_UID = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, studentUID);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ViolationRecord violation = new ViolationRecord(
+                    resultSet.getInt("VIOLATION_ID"),
+                    resultSet.getInt("PARTICIPANT_ID"),
+                    resultSet.getString("VIOLATION_TYPE"),
+                    resultSet.getString("VIOLATION_DESCRIPTION"),
+                    resultSet.getString("ANECDOTAL_RECORD"),
+                    resultSet.getString("REINFORCEMENT"),
+                    resultSet.getString("STATUS"),
+                    resultSet.getTimestamp("UPDATED_AT")
+                );
+                violations.add(violation);
+            }
+        }
+        return violations;
+    }
 }

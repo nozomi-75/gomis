@@ -36,7 +36,7 @@ public class AppointmentOverview extends JPanel {
         this.appointmentDAO = appointmentDAO;
         this.connection = conn;
         this.appointments = new ArrayList<>();
-        setLayout(new MigLayout("wrap 1", "[grow]", "[grow]"));
+        setLayout(new MigLayout("wrap 1", "[grow]", "[][grow]"));
 
         appointmentsPanel = new JPanel(new MigLayout("wrap 1, fill, gap 10", "[grow]"));
         

@@ -6,6 +6,27 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TestSearch",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.TestSearch",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestModal",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.test.TestModal",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "StudentSearchUI",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.StudentSearchUI",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "SplashTest",
             "request": "launch",
             "mainClass": "lyfjshs.gomis.SplashTest",

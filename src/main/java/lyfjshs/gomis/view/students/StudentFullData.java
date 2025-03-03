@@ -1,12 +1,14 @@
 package lyfjshs.gomis.view.students;
 
-import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.InputStream;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -15,18 +17,24 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
+import lyfjshs.gomis.Database.DAO.ViolationCRUD;
 import lyfjshs.gomis.Database.entity.Address;
 import lyfjshs.gomis.Database.entity.Contact;
 import lyfjshs.gomis.Database.entity.Guardian;
 import lyfjshs.gomis.Database.entity.Parents;
 import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.components.table.TableActionManager;
 import lyfjshs.gomis.utils.PrintingReport;
 import net.miginfocom.swing.MigLayout;
 import net.sf.jasperreports.engine.JasperCompileManager;
@@ -46,8 +54,6 @@ public class StudentFullData extends Form {
 	private JTextField guardianEmailField;
 	private JTextField guardianContactField;
 	private JTextField addressField;
-	private JTextField violationTypeField;
-	private JTextField violationDescriptionField;
 	private JPanel panel;
 	private final JButton printGMBtn;
 	private boolean violationResolve;
@@ -73,13 +79,18 @@ public class StudentFullData extends Form {
 	private JTextField motherOccupationField;
 	private JPanel violationPanel;
 	private JTextField parentNameField;
-	private JTextField appointmentTitleField;
-	private JTextField incidentDescriptionField;
-	private JTextField sessionNotesField;
+	private JPanel violationTablePanel;
+	private JScrollPane scrollPane;
+	private JTable violationTable;
+	private Connection connect;
 
-	public StudentFullData(Student studentData) {
+	public StudentFullData(Connection connection, Student studentData) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
 		initComponents();
+		this.connect = connection;
+
+		
+		loadViolations(studentData.getStudentUid(), connect);
 
 		// Set fields with student data
 		lrnField.setText(studentData.getStudentLrn());
@@ -127,17 +138,16 @@ public class StudentFullData extends Form {
 
 		// Add components to the panel
 		JPanel mainPanel = new JPanel(
-				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow][grow,fill][][grow]"));
+				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow][grow,fill][]"));
 		JScrollPane scroll = new JScrollPane(mainPanel);
 
-		mainPanel.add(createPersonalInfoPanel(), "cell 0 0 2 1,grow");
-		mainPanel.add(createAddressPanel(), "cell 0 1 2 1,grow");
-		mainPanel.add(createParentPanel(), "cell 0 2 2 1,grow");
-		mainPanel.add(createGuardianPanel(), "cell 0 3,grow");
-		mainPanel.add(createAppointmentPanel(), "cell 0 4,grow");
-		mainPanel.add(createViolationPanel(), "cell 0 5,grow");
-		mainPanel.add(createIncidentPanel(), "cell 0 6,grow");
-		mainPanel.add(createSessionPanel(), "cell 0 7,grow");
+		mainPanel.add(createPersonalInfoPanel(), 	"cell 0 0 2 1,grow");
+		mainPanel.add(createAddressPanel(), 	 	"cell 0 1 2 1,grow");
+		mainPanel.add(createParentPanel(), 		 	"cell 0 2 2 1,grow");
+		mainPanel.add(createGuardianPanel(),	 	"cell 0 3,grow");
+		mainPanel.add(createViolationTablePanel(), "cell 1 3,grow");
+
+		
 
 		add(scroll, "cell 1 0,grow");
 
@@ -150,66 +160,108 @@ public class StudentFullData extends Form {
 		panel.add(printGMBtn, "cell 1 0,grow");
 	}
 
-	private void testViolation() {
-		violationResolve = true; // Example: assume violation is resolved
-
-		if (violationResolve) {
-			// Handle resolved violations (if needed)
-		} else {
-			JPanel noViolationPanel = new JPanel();
-			noViolationPanel.setLayout(new BorderLayout());
-		}
-	}
-
 	private void initComponents() {
-		// Initialize ALL components here
-		sagisagIcon = new FlatSVGIcon("DepEd_Sagisag.svg");
-		logoIcon = new FlatSVGIcon("DepEd_Logo.svg");
-		lrnField = new JTextField();
-		lastNameField = new JTextField();
-		firstNameField = new JTextField();
-		middleNameField = new JTextField();
-		sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
-		dobField = new JTextField();
-		ageField = new JTextField();
-		motherTongueField = new JTextField();
-		guardianNameField = new JTextField();
-		guardianEmailField = new JTextField();
-		guardianContactField = new JTextField();
-		addressField = new JTextField();
-		violationTypeField = new JTextField();
-		violationDescriptionField = new JTextField();
-		ipField = new JTextField();
-		textField = new JTextField();
-		houseNoField = new JTextField();
-		streetField = new JTextField();
-		regionField = new JTextField();
-		provinceField = new JTextField();
-		municipalityField = new JTextField();
-		barangayField = new JTextField();
-		zipCodeField = new JTextField();
-		fatherLastNameField = new JTextField();
-		fatherFirstNameField = new JTextField();
-		fatherMiddleNameField = new JTextField();
-		fatherPhoneNumberField = new JTextField();
-		fatherOccupationField = new JTextField();
-		motherLastNameField = new JTextField();
-		motherFirstNameField = new JTextField();
-		motherMiddleNameField = new JTextField();
-		motherPhoneNumberField = new JTextField();
-		motherOccupationField = new JTextField();
-		houseNoField = new JTextField(10);
-		streetField = new JTextField(15);
-		regionField = new JTextField(10);
-		provinceField = new JTextField(15);
-		municipalityField = new JTextField(15);
-		barangayField = new JTextField(15);
-		zipCodeField = new JTextField(5);
-		parentNameField = new JTextField();
-		appointmentTitleField = new JTextField();
-		incidentDescriptionField = new JTextField();
-		sessionNotesField = new JTextField();
+	    // Initialize ALL components here
+	    sagisagIcon = new FlatSVGIcon("DepEd_Sagisag.svg");
+	    logoIcon = new FlatSVGIcon("DepEd_Logo.svg");
+
+	    lrnField = new JTextField();
+	    lrnField.setEditable(false);
+
+	    lastNameField = new JTextField();
+	    lastNameField.setEditable(false);
+
+	    firstNameField = new JTextField();
+	    firstNameField.setEditable(false);
+
+	    middleNameField = new JTextField();
+	    middleNameField.setEditable(false);
+
+	    sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
+	    sexComboBox.setEnabled(false);
+
+	    dobField = new JTextField();
+	    dobField.setEditable(false);
+
+	    ageField = new JTextField();
+	    ageField.setEditable(false);
+
+	    motherTongueField = new JTextField();
+	    motherTongueField.setEditable(false);
+
+	    guardianNameField = new JTextField();
+	    guardianNameField.setEditable(false);
+
+	    guardianEmailField = new JTextField();
+	    guardianEmailField.setEditable(false);
+
+	    guardianContactField = new JTextField();
+	    guardianContactField.setEditable(false);
+
+	    addressField = new JTextField();
+	    addressField.setEditable(false);
+
+	    ipField = new JTextField();
+	    ipField.setEditable(false);
+
+	    textField = new JTextField();
+	    textField.setEditable(false);
+
+	    houseNoField = new JTextField();
+	    houseNoField.setEditable(false);
+
+	    streetField = new JTextField();
+	    streetField.setEditable(false);
+
+	    regionField = new JTextField();
+	    regionField.setEditable(false);
+
+	    provinceField = new JTextField();
+	    provinceField.setEditable(false);
+
+	    municipalityField = new JTextField();
+	    municipalityField.setEditable(false);
+
+	    barangayField = new JTextField();
+	    barangayField.setEditable(false);
+
+	    zipCodeField = new JTextField();
+	    zipCodeField.setEditable(false);
+
+	    fatherLastNameField = new JTextField();
+	    fatherLastNameField.setEditable(false);
+
+	    fatherFirstNameField = new JTextField();
+	    fatherFirstNameField.setEditable(false);
+
+	    fatherMiddleNameField = new JTextField();
+	    fatherMiddleNameField.setEditable(false);
+
+	    fatherPhoneNumberField = new JTextField();
+	    fatherPhoneNumberField.setEditable(false);
+
+	    fatherOccupationField = new JTextField();
+	    fatherOccupationField.setEditable(false);
+
+	    motherLastNameField = new JTextField();
+	    motherLastNameField.setEditable(false);
+
+	    motherFirstNameField = new JTextField();
+	    motherFirstNameField.setEditable(false);
+
+	    motherMiddleNameField = new JTextField();
+	    motherMiddleNameField.setEditable(false);
+
+	    motherPhoneNumberField = new JTextField();
+	    motherPhoneNumberField.setEditable(false);
+
+	    motherOccupationField = new JTextField();
+	    motherOccupationField.setEditable(false);
+
+	    parentNameField = new JTextField();
+	    parentNameField.setEditable(false);
 	}
+
 
 	private JPanel createPersonalInfoPanel() {
 		JPanel personalInfoPanel = new JPanel(
@@ -350,47 +402,63 @@ public class StudentFullData extends Form {
 		return parentPanel;
 	}
 
-	private JPanel createAppointmentPanel() {
-		JPanel appointmentPanel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[]5[]"));
-		appointmentPanel.setBorder(new TitledBorder(null, "Appointment Information", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+	private JPanel createViolationTablePanel() {
+	    JPanel violationTablePanel = new JPanel();
+	    violationTablePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Violation Table", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+	    violationTablePanel.setLayout(new MigLayout("", "[grow]", "[]"));
 
-		appointmentPanel.add(new JLabel("Appointment Title:"), "cell 0 0, leading");
-		appointmentPanel.add(appointmentTitleField, "cell 1 0, growx");
+	    // Initialize the violation table with an empty model
+	    violationTable = new JTable(new DefaultTableModel(new String[]{"Violation Type", "Reinforcement", "Status", "Actions"}, 0));
+	    scrollPane = new JScrollPane(violationTable);
+	    scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); // Ensure vertical scroll bar is always visible
+	    scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Add horizontal scroll bar if needed
 
-		return appointmentPanel;
+	    // Constrain the height of the scroll pane to prevent it from growing too large
+	    violationTablePanel.add(scrollPane, "cell 0 0,grow,h 150!"); // Set a maximum height for the scroll pane
+
+	    return violationTablePanel;
 	}
 
-	private JPanel createViolationPanel() {
-		JPanel violationPanel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[]5[]5[]"));
-		violationPanel.setBorder(new TitledBorder(null, "Violation Record", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-		violationPanel.add(new JLabel("Violation Type:"), "cell 0 0, leading");
-		violationPanel.add(violationTypeField, "cell 1 0, growx");
-
-		violationPanel.add(new JLabel("Violation Description:"), "cell 0 1, leading");
-		violationPanel.add(violationDescriptionField, "cell 1 1, growx");
-
-		return violationPanel;
+	private void loadViolations(int studentUID, Connection connection) {
+	    try {
+	        // Ensure violationTable is initialized
+	        if (violationTable == null) {
+	            violationTable = new JTable(new DefaultTableModel(new String[]{"Violation Type", "Reinforcement", "Status", "Actions"}, 0));
+	        }
+	        List<ViolationRecord> violations = ViolationCRUD.getViolationsByStudentUID(connection, studentUID);
+	        createViolationTable(violations);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 	}
 
-	private JPanel createIncidentPanel() {
-		JPanel incidentPanel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[]5[]"));
-		incidentPanel.setBorder(new TitledBorder(null, "Incident Record", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+	private void createViolationTable(List<ViolationRecord> violations) {
+	    DefaultTableModel model = (DefaultTableModel) violationTable.getModel();
+	    model.setRowCount(0); // Clear existing rows
 
-		incidentPanel.add(new JLabel("Incident Description:"), "cell 0 0, leading");
-		incidentPanel.add(incidentDescriptionField, "cell 1 0, growx");
+	    for (ViolationRecord violation : violations) {
+	        Object[] row = {
+	            violation.getViolationType(),
+	            violation.getReinforcement(),
+	            violation.getStatus(),
+	            "" // Placeholder for actions
+	        };
+	        model.addRow(row);
+	    }
 
-		return incidentPanel;
+	    TableActionManager actionManager = new TableActionManager();
+	    actionManager.addAction("View", (table, row) -> viewViolation(violations.get(row)), null, null)
+	                 .addAction("Resolve", (table, row) -> resolveViolation(violations.get(row)), null, null);
+	    actionManager.applyTo(violationTable, 3); // Assuming actions are in the 4th column
 	}
 
-	private JPanel createSessionPanel() {
-		JPanel sessionPanel = new JPanel(new MigLayout("wrap 2", "[140px][grow,fill]", "[]5[]"));
-		sessionPanel.setBorder(new TitledBorder(null, "Session Notes", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+	private void viewViolation(ViolationRecord violation) {
+		// Implement view logic
+	}
 
-		sessionPanel.add(new JLabel("Session Notes:"), "cell 0 0, leading");
-		sessionPanel.add(sessionNotesField, "cell 1 0, growx");
-
-		return sessionPanel;
+	private void resolveViolation(ViolationRecord violation) {
+		// Implement resolve logic
 	}
 
 	/**

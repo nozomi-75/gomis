@@ -1,11 +1,15 @@
 package lyfjshs.gomis.view.students.create;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.Date;
+import net.miginfocom.swing.MigLayout;
+import raven.datetime.DatePicker;
 
 import javax.swing.*;
-import net.miginfocom.swing.MigLayout;
+import javax.swing.border.TitledBorder;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
 
 public class StudentPanel extends JPanel {
     private JTextField lrnField;
@@ -13,12 +17,13 @@ public class StudentPanel extends JPanel {
     private JTextField firstNameField;
     private JTextField middleNameField;
     private JComboBox<String> sexComboBox;
-    private JSpinner birthDateSpinner;
+    private DatePicker birthDatePicker;
+    private JFormattedTextField birthDateEditor;
     private JTextField ageField;
     private JTextField birthPlaceField;
 
     public StudentPanel() {
-        setBorder(BorderFactory.createTitledBorder("STUDENT INFORMATION"));
+        setBorder(new TitledBorder("STUDENT INFORMATION"));
         setLayout(new MigLayout("wrap 4", "[][grow,fill]15[][grow,fill]", "[]10[]10[]10[]"));
 
         lrnField = new JTextField(15);
@@ -27,11 +32,18 @@ public class StudentPanel extends JPanel {
         middleNameField = new JTextField(15);
         sexComboBox = new JComboBox<>(new String[]{"Male", "Female"});
 
-        birthDateSpinner = new JSpinner(new SpinnerDateModel());
-        JSpinner.DateEditor editor = new JSpinner.DateEditor(birthDateSpinner, "yyyy-MM-dd");
-        birthDateSpinner.setEditor(editor);
+        // Raven DatePicker with JFormattedTextField as Editor
+        birthDatePicker = new DatePicker();
+        birthDatePicker.setDateSelectionMode(DatePicker.DateSelectionMode.SINGLE_DATE_SELECTED);
+        birthDatePicker.setDateFormat("yyyy-MM-dd");
 
+        birthDateEditor = new JFormattedTextField();
+        birthDatePicker.setEditor(birthDateEditor);
+
+        // Age Field (Read-Only)
         ageField = new JTextField(5);
+        ageField.setEditable(false);
+
         birthPlaceField = new JTextField(20);
 
         // Restrict LRN to digits only
@@ -42,6 +54,9 @@ public class StudentPanel extends JPanel {
                 }
             }
         });
+
+        // Auto-update age when selecting birthdate
+        birthDatePicker.addDateSelectionListener(dateEvent -> updateAgeField());
 
         // Arrange Components
         add(new JLabel("LRN:"));
@@ -57,50 +72,23 @@ public class StudentPanel extends JPanel {
         add(new JLabel("Middle Name:"));
         add(middleNameField);
         add(new JLabel("Birthdate:"), "gapleft 15");
-        add(birthDateSpinner);
+        add(birthDateEditor); // Use the editor instead of the DatePicker component
 
         add(new JLabel("Age:"));
         add(ageField);
         add(new JLabel("Birthplace:"), "gapleft 15");
         add(birthPlaceField, "span");
-
-        // Future Age Calculation Integration (Uncomment when implemented)
-        // ageField.setText(StudentInfoFullForm.calculateAge((Date) birthDateSpinner.getValue()));
-        // birthDateSpinner.addChangeListener(e -> {
-        //    ageField.setText(StudentInfoFullForm.calculateAge((Date) birthDateSpinner.getValue()));
-        // });
     }
 
-    // Getters for form fields
-    public String getLrn() {
-        return lrnField.getText();
+    // Calculate Age Based on Selected Birthdate
+    private void updateAgeField() {
+        LocalDate selectedDate = birthDatePicker.getSelectedDate();
+        if (selectedDate != null) {
+            int age = Period.between(selectedDate, LocalDate.now()).getYears();
+            ageField.setText(String.valueOf(age));
+        } else {
+            ageField.setText("");
+        }
     }
 
-    public String getLastName() {
-        return lastNameField.getText();
-    }
-
-    public String getFirstName() {
-        return firstNameField.getText();
-    }
-
-    public String getMiddleName() {
-        return middleNameField.getText();
-    }
-
-    public String getSex() {
-        return (String) sexComboBox.getSelectedItem();
-    }
-
-    public Date getBirthDate() {
-        return (Date) birthDateSpinner.getValue();
-    }
-
-    public String getAge() {
-        return ageField.getText();
-    }
-
-    public String getBirthPlace() {
-        return birthPlaceField.getText();
-    }
 }

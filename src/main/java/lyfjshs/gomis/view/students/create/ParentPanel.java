@@ -1,10 +1,10 @@
 package lyfjshs.gomis.view.students.create;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.Calendar;
-import java.util.Date;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
 import net.miginfocom.swing.MigLayout;
 
 public class ParentPanel extends JPanel {

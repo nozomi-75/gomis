@@ -142,8 +142,7 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 
 				new Item("Students Management", "article_person.svg")
 						.subMenu("Create Student", StudentInfoFullForm.class)
-						.subMenu("Students Data", StudentMangementGUI.class)
-						.subMenu("Student Search", StudentSearchPanel.class),
+						.subMenu("Students Data", StudentMangementGUI.class),
 				new Item("Incident Management", "assignment.svg")
 						.subMenu("Incident Fill-Up Form", IncidentFillUpForm.class)
 						.subMenu("Incident Records", IncidentList.class),
@@ -257,10 +256,5 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 	 */
 	private static String getDrawerBackgroundStyle() {
 		return "[light]background:tint($Panel.background,100%);" + "[dark]background:tint($Panel.background,5%);";
-	}
-
-	// Method to create the StudentSearchPanel
-	public StudentSearchPanel createStudentSearchPanel() {
-		return new StudentSearchPanel(connection);
 	}
 }

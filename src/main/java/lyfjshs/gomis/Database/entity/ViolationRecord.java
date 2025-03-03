@@ -1,6 +1,11 @@
 package lyfjshs.gomis.Database.entity;
 
 import java.util.Date;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ViolationRecord {
     private int violationId;
@@ -45,4 +50,5 @@ public class ViolationRecord {
     public void setStatus(String status) { this.status = status; }
     public Date getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
+
 }
