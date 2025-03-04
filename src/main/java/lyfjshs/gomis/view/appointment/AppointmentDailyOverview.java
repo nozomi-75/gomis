@@ -90,7 +90,7 @@ public class AppointmentDailyOverview extends JPanel {
     public void updateAppointmentsDisplay() {
         appointmentsPanel.removeAll();
         
-        List<Appointment> appointments = appointmentDAO.getAppointmentsForDate(connection, selectedDate);
+        List<Appointment> appointments = appointmentDAO.getAppointmentsForDate(selectedDate);
 
         if (appointments.isEmpty()) {
             JPanel emptyPanel = new JPanel(new MigLayout("wrap, align center", "[grow]", "[]"));
@@ -185,8 +185,7 @@ public class AppointmentDailyOverview extends JPanel {
             Appointment app = dialog.getAppointment();
             if (existingApp == null) {
                 // Create new appointment
-                boolean success = appointmentDAO.addAppointment(
-                    connection,
+                boolean success = appointmentDAO.insertAppointment(
                     app.getParticipantId(),
                     app.getGuidanceCounselorId(),
                     app.getAppointmentTitle(),
@@ -201,7 +200,7 @@ public class AppointmentDailyOverview extends JPanel {
                 }
             } else {
                 // Update existing appointment
-                boolean success = appointmentDAO.updateAppointment(connection, app);
+                boolean success = appointmentDAO.updateAppointment(app);
                 if (!success) {
                     JOptionPane.showMessageDialog(this, "Failed to update appointment",
                         "Error", JOptionPane.ERROR_MESSAGE);

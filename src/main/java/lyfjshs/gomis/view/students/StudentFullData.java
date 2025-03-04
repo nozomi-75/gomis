@@ -76,7 +76,6 @@ public class StudentFullData extends Form {
 	private JTextField motherFirstNameField;
 	private JTextField motherMiddleNameField;
 	private JTextField motherPhoneNumberField;
-	private JTextField motherOccupationField;
 	private JPanel violationPanel;
 	private JTextField parentNameField;
 	private JPanel violationTablePanel;
@@ -89,7 +88,6 @@ public class StudentFullData extends Form {
 		initComponents();
 		this.connect = connection;
 
-		
 		loadViolations(studentData.getStudentUid(), connect);
 
 		// Set fields with student data
@@ -120,34 +118,32 @@ public class StudentFullData extends Form {
 
 		// Set PARENTS fields
 		Parents parent = studentData.getParents();
-		if (parent != null) {
-			fatherLastNameField.setText(parent.getFatherLastname());
-			fatherFirstNameField.setText(parent.getFatherFirstname());
-			fatherMiddleNameField.setText(parent.getFatherMiddlename());
-			motherLastNameField.setText(parent.getMotherLastname());
-			motherFirstNameField.setText(parent.getMotherFirstname());
-			motherMiddleNameField.setText(parent.getMotherMiddlename());
-		}
 
+		fatherLastNameField.setText(parent.getFatherLastname());
+		fatherFirstNameField.setText(parent.getFatherFirstname());
+		fatherMiddleNameField.setText(parent.getFatherMiddlename());
+		fatherPhoneNumberField.setText(parent.getFatherContactNumber());
+		motherLastNameField.setText(parent.getMotherLastname());
+		motherFirstNameField.setText(parent.getMotherFirstname());
+		motherMiddleNameField.setText(parent.getMotherMiddlename());
+		motherPhoneNumberField.setText(parent.getMotherContactNumber());
+		
 		// Set guardian fields
 		Guardian guardian = studentData.getGuardian();
-		if (guardian != null) {
-			guardianNameField.setText(guardian.getGuardianFirstname() + " " + guardian.getGuardianMiddlename() + " " + guardian.getGuardianLastname());
-			guardianEmailField.setText(guardian.getGuardianRelationship());
-		}
+		guardianNameField.setText(guardian.getGuardianFirstname() + " " + guardian.getGuardianMiddlename() + " "
+				+ guardian.getGuardianLastname());
+		guardianEmailField.setText(guardian.getGuardianRelationship());
 
 		// Add components to the panel
 		JPanel mainPanel = new JPanel(
 				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow][grow,fill][]"));
 		JScrollPane scroll = new JScrollPane(mainPanel);
 
-		mainPanel.add(createPersonalInfoPanel(), 	"cell 0 0 2 1,grow");
-		mainPanel.add(createAddressPanel(), 	 	"cell 0 1 2 1,grow");
-		mainPanel.add(createParentPanel(), 		 	"cell 0 2 2 1,grow");
-		mainPanel.add(createGuardianPanel(),	 	"cell 0 3,grow");
+		mainPanel.add(createPersonalInfoPanel(), "cell 0 0 2 1,grow");
+		mainPanel.add(createAddressPanel(), "cell 0 1 2 1,grow");
+		mainPanel.add(createParentPanel(), "cell 0 2 2 1,grow");
+		mainPanel.add(createGuardianPanel(), "cell 0 3,grow");
 		mainPanel.add(createViolationTablePanel(), "cell 1 3,grow");
-
-		
 
 		add(scroll, "cell 1 0,grow");
 
@@ -161,107 +157,103 @@ public class StudentFullData extends Form {
 	}
 
 	private void initComponents() {
-	    // Initialize ALL components here
-	    sagisagIcon = new FlatSVGIcon("DepEd_Sagisag.svg");
-	    logoIcon = new FlatSVGIcon("DepEd_Logo.svg");
+		// Initialize ALL components here
+		sagisagIcon = new FlatSVGIcon("DepEd_Sagisag.svg");
+		logoIcon = new FlatSVGIcon("DepEd_Logo.svg");
 
-	    lrnField = new JTextField();
-	    lrnField.setEditable(false);
+		lrnField = new JTextField();
+		lrnField.setEditable(false);
 
-	    lastNameField = new JTextField();
-	    lastNameField.setEditable(false);
+		lastNameField = new JTextField();
+		lastNameField.setEditable(false);
 
-	    firstNameField = new JTextField();
-	    firstNameField.setEditable(false);
+		firstNameField = new JTextField();
+		firstNameField.setEditable(false);
 
-	    middleNameField = new JTextField();
-	    middleNameField.setEditable(false);
+		middleNameField = new JTextField();
+		middleNameField.setEditable(false);
 
-	    sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
-	    sexComboBox.setEnabled(false);
+		sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
+		sexComboBox.setEnabled(false);
 
-	    dobField = new JTextField();
-	    dobField.setEditable(false);
+		dobField = new JTextField();
+		dobField.setEditable(false);
 
-	    ageField = new JTextField();
-	    ageField.setEditable(false);
+		ageField = new JTextField();
+		ageField.setEditable(false);
 
-	    motherTongueField = new JTextField();
-	    motherTongueField.setEditable(false);
+		motherTongueField = new JTextField();
+		motherTongueField.setEditable(false);
 
-	    guardianNameField = new JTextField();
-	    guardianNameField.setEditable(false);
+		guardianNameField = new JTextField();
+		guardianNameField.setEditable(false);
 
-	    guardianEmailField = new JTextField();
-	    guardianEmailField.setEditable(false);
+		guardianEmailField = new JTextField();
+		guardianEmailField.setEditable(false);
 
-	    guardianContactField = new JTextField();
-	    guardianContactField.setEditable(false);
+		guardianContactField = new JTextField();
+		guardianContactField.setEditable(false);
 
-	    addressField = new JTextField();
-	    addressField.setEditable(false);
+		addressField = new JTextField();
+		addressField.setEditable(false);
 
-	    ipField = new JTextField();
-	    ipField.setEditable(false);
+		ipField = new JTextField();
+		ipField.setEditable(false);
 
-	    textField = new JTextField();
-	    textField.setEditable(false);
+		textField = new JTextField();
+		textField.setEditable(false);
 
-	    houseNoField = new JTextField();
-	    houseNoField.setEditable(false);
+		houseNoField = new JTextField();
+		houseNoField.setEditable(false);
 
-	    streetField = new JTextField();
-	    streetField.setEditable(false);
+		streetField = new JTextField();
+		streetField.setEditable(false);
 
-	    regionField = new JTextField();
-	    regionField.setEditable(false);
+		regionField = new JTextField();
+		regionField.setEditable(false);
 
-	    provinceField = new JTextField();
-	    provinceField.setEditable(false);
+		provinceField = new JTextField();
+		provinceField.setEditable(false);
 
-	    municipalityField = new JTextField();
-	    municipalityField.setEditable(false);
+		municipalityField = new JTextField();
+		municipalityField.setEditable(false);
 
-	    barangayField = new JTextField();
-	    barangayField.setEditable(false);
+		barangayField = new JTextField();
+		barangayField.setEditable(false);
 
-	    zipCodeField = new JTextField();
-	    zipCodeField.setEditable(false);
+		zipCodeField = new JTextField();
+		zipCodeField.setEditable(false);
 
-	    fatherLastNameField = new JTextField();
-	    fatherLastNameField.setEditable(false);
+		fatherLastNameField = new JTextField();
+		fatherLastNameField.setEditable(false);
 
-	    fatherFirstNameField = new JTextField();
-	    fatherFirstNameField.setEditable(false);
+		fatherFirstNameField = new JTextField();
+		fatherFirstNameField.setEditable(false);
 
-	    fatherMiddleNameField = new JTextField();
-	    fatherMiddleNameField.setEditable(false);
+		fatherMiddleNameField = new JTextField();
+		fatherMiddleNameField.setEditable(false);
 
-	    fatherPhoneNumberField = new JTextField();
-	    fatherPhoneNumberField.setEditable(false);
+		fatherPhoneNumberField = new JTextField();
+		fatherPhoneNumberField.setEditable(false);
 
-	    fatherOccupationField = new JTextField();
-	    fatherOccupationField.setEditable(false);
+		fatherOccupationField = new JTextField();
+		fatherOccupationField.setEditable(false);
 
-	    motherLastNameField = new JTextField();
-	    motherLastNameField.setEditable(false);
+		motherLastNameField = new JTextField();
+		motherLastNameField.setEditable(false);
 
-	    motherFirstNameField = new JTextField();
-	    motherFirstNameField.setEditable(false);
+		motherFirstNameField = new JTextField();
+		motherFirstNameField.setEditable(false);
 
-	    motherMiddleNameField = new JTextField();
-	    motherMiddleNameField.setEditable(false);
+		motherMiddleNameField = new JTextField();
+		motherMiddleNameField.setEditable(false);
 
-	    motherPhoneNumberField = new JTextField();
-	    motherPhoneNumberField.setEditable(false);
+		motherPhoneNumberField = new JTextField();
+		motherPhoneNumberField.setEditable(false);
 
-	    motherOccupationField = new JTextField();
-	    motherOccupationField.setEditable(false);
-
-	    parentNameField = new JTextField();
-	    parentNameField.setEditable(false);
+		parentNameField = new JTextField();
+		parentNameField.setEditable(false);
 	}
-
 
 	private JPanel createPersonalInfoPanel() {
 		JPanel personalInfoPanel = new JPanel(
@@ -354,12 +346,10 @@ public class StudentFullData extends Form {
 		JPanel parentPanel = new JPanel(new MigLayout("wrap 4", "[][grow]15[][grow]", "[]5[]5[]5[]5[]"));
 		parentPanel.setBorder(
 				new TitledBorder(null, "PARENT'S INFORMATION", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		fatherFirstNameField = new JTextField();
 		parentPanel.add(fatherFirstNameField, "cell 1 0,growx");
 
 		JLabel label_1 = new JLabel("Mother's First Name:");
 		parentPanel.add(label_1, "cell 2 0,alignx leading");
-		motherFirstNameField = new JTextField();
 		parentPanel.add(motherFirstNameField, "cell 3 0,growx");
 
 		parentPanel.add(new JLabel("Father's Middle Name:"), "cell 0 1, leading");
@@ -367,12 +357,10 @@ public class StudentFullData extends Form {
 
 		JLabel label_3 = new JLabel("Mother's Middle Name:");
 		parentPanel.add(label_3, "cell 2 1,alignx leading");
-		motherMiddleNameField = new JTextField();
 		parentPanel.add(motherMiddleNameField, "cell 3 1,growx");
 
 		JLabel label_6 = new JLabel("Father's Last Name:");
 		parentPanel.add(label_6, "cell 0 2,alignx leading");
-		fatherLastNameField = new JTextField();
 		parentPanel.add(fatherLastNameField, "cell 1 2,growx");
 
 		parentPanel.add(new JLabel("Mother's Last Name:"), "cell 2 2, leading");
@@ -380,21 +368,11 @@ public class StudentFullData extends Form {
 
 		JLabel label_2 = new JLabel("Father's Phone Number:");
 		parentPanel.add(label_2, "cell 0 3,alignx leading");
-		fatherPhoneNumberField = new JTextField();
 		parentPanel.add(fatherPhoneNumberField, "cell 1 3,growx");
 
 		JLabel label_4 = new JLabel("Mother's Phone Number:");
 		parentPanel.add(label_4, "cell 2 3,alignx leading");
-		motherPhoneNumberField = new JTextField();
 		parentPanel.add(motherPhoneNumberField, "cell 3 3,growx");
-
-		JLabel label_5 = new JLabel("Father's Occupation:");
-		parentPanel.add(label_5, "cell 0 4,alignx leading");
-		fatherOccupationField = new JTextField();
-		parentPanel.add(fatherOccupationField, "cell 1 4,growx");
-
-		parentPanel.add(new JLabel("Mother's Occupation:"), "cell 2 4, leading");
-		parentPanel.add(motherOccupationField, "cell 3 4, growx");
 
 		JLabel label = new JLabel("Father's First Name:");
 		parentPanel.add(label, "flowx,cell 0 0,alignx leading");
@@ -403,54 +381,57 @@ public class StudentFullData extends Form {
 	}
 
 	private JPanel createViolationTablePanel() {
-	    JPanel violationTablePanel = new JPanel();
-	    violationTablePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Violation Table", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-	    violationTablePanel.setLayout(new MigLayout("", "[grow]", "[]"));
+		JPanel violationTablePanel = new JPanel();
+		violationTablePanel.setBorder(new TitledBorder(
+				new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
+				"Violation Table", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		violationTablePanel.setLayout(new MigLayout("", "[grow]", "[]"));
 
-	    // Initialize the violation table with an empty model
-	    violationTable = new JTable(new DefaultTableModel(new String[]{"Violation Type", "Reinforcement", "Status", "Actions"}, 0));
-	    scrollPane = new JScrollPane(violationTable);
-	    scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); // Ensure vertical scroll bar is always visible
-	    scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Add horizontal scroll bar if needed
+		// Initialize the violation table with an empty model
+		violationTable = new JTable(
+				new DefaultTableModel(new String[] { "Violation Type", "Reinforcement", "Status", "Actions" }, 0));
+		scrollPane = new JScrollPane(violationTable);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); // Ensure vertical scroll bar is
+																						// always visible
+		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Add horizontal scroll
+																								// bar if needed
 
-	    // Constrain the height of the scroll pane to prevent it from growing too large
-	    violationTablePanel.add(scrollPane, "cell 0 0,grow,h 150!"); // Set a maximum height for the scroll pane
+		// Constrain the height of the scroll pane to prevent it from growing too large
+		violationTablePanel.add(scrollPane, "cell 0 0,grow,h 150!"); // Set a maximum height for the scroll pane
 
-	    return violationTablePanel;
+		return violationTablePanel;
 	}
 
-
 	private void loadViolations(int studentUID, Connection connection) {
-	    try {
-	        // Ensure violationTable is initialized
-	        if (violationTable == null) {
-	            violationTable = new JTable(new DefaultTableModel(new String[]{"Violation Type", "Reinforcement", "Status", "Actions"}, 0));
-	        }
-	        List<ViolationRecord> violations = ViolationCRUD.getViolationsByStudentUID(connection, studentUID);
-	        createViolationTable(violations);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
+		try {
+			// Ensure violationTable is initialized
+			if (violationTable == null) {
+				violationTable = new JTable(new DefaultTableModel(
+						new String[] { "Violation Type", "Reinforcement", "Status", "Actions" }, 0));
+			}
+			List<ViolationRecord> violations = ViolationCRUD.getViolationsByStudentUID(connection, studentUID);
+			createViolationTable(violations);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void createViolationTable(List<ViolationRecord> violations) {
-	    DefaultTableModel model = (DefaultTableModel) violationTable.getModel();
-	    model.setRowCount(0); // Clear existing rows
+		DefaultTableModel model = (DefaultTableModel) violationTable.getModel();
+		model.setRowCount(0); // Clear existing rows
 
-	    for (ViolationRecord violation : violations) {
-	        Object[] row = {
-	            violation.getViolationType(),
-	            violation.getReinforcement(),
-	            violation.getStatus(),
-	            "" // Placeholder for actions
-	        };
-	        model.addRow(row);
-	    }
+		for (ViolationRecord violation : violations) {
+			Object[] row = { violation.getViolationType(), violation.getReinforcement(), violation.getStatus(), "" // Placeholder
+																													// for
+																													// actions
+			};
+			model.addRow(row);
+		}
 
-	    TableActionManager actionManager = new TableActionManager();
-	    actionManager.addAction("View", (table, row) -> viewViolation(violations.get(row)), null, null)
-	                 .addAction("Resolve", (table, row) -> resolveViolation(violations.get(row)), null, null);
-	    actionManager.applyTo(violationTable, 3); // Assuming actions are in the 4th column
+		TableActionManager actionManager = new TableActionManager();
+		actionManager.addAction("View", (table, row) -> viewViolation(violations.get(row)), null, null)
+				.addAction("Resolve", (table, row) -> resolveViolation(violations.get(row)), null, null);
+		actionManager.applyTo(violationTable, 3); // Assuming actions are in the 4th column
 	}
 
 	private void viewViolation(ViolationRecord violation) {

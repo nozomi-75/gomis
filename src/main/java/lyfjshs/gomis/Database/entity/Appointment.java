@@ -23,6 +23,7 @@ public class Appointment {
             String appointmentType,
             Timestamp appointmentDateTime,
             String appointmentStatus,
+            String appointmentNotes,
             Timestamp updatedAt) {
         this.appointmentId = appointmentId;
         this.participantId = participantId;
@@ -31,6 +32,7 @@ public class Appointment {
         this.appointmentType = appointmentType;
         this.appointmentDateTime = appointmentDateTime;
         this.appointmentStatus = appointmentStatus;
+        this.appointmentNotes = appointmentNotes;
         this.updatedAt = updatedAt;
     }
 

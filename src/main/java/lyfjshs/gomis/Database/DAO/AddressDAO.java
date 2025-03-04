@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,25 @@ public class AddressDAO {
         this.connection = connection;
     }
 
+    // CREATE Address
+    public int createAddress(Address address) throws SQLException {
+        String sql = "INSERT INTO ADDRESS (ADDRESS_HOUSE_NUMBER, ADDRESS_STREET_SUBDIVISION, ADDRESS_REGION, " +
+                "ADDRESS_PROVINCE, ADDRESS_MUNICIPALITY, ADDRESS_BARANGAY, ADDRESS_ZIP_CODE) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, address.getAddressHouseNumber());
+            pstmt.setString(2, address.getAddressStreetSubdivision());
+            pstmt.setString(3, address.getAddressRegion());
+            pstmt.setString(4, address.getAddressProvince());
+            pstmt.setString(5, address.getAddressMunicipality());
+            pstmt.setString(6, address.getAddressBarangay());
+            pstmt.setString(7, address.getAddressZipCode());
+            pstmt.executeUpdate();
+            
+            ResultSet rs = pstmt.getGeneratedKeys();
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+    
     // CREATE (Insert a new address)
     public boolean addAddress(
             String houseNumber,

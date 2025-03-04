@@ -53,8 +53,12 @@ public class StudentDataDb_test {
             // Create a new student
             System.out.println("Creating new student record...");
             // Assuming PARENTS and Guardian objects are created or fetched from the database
-            Parents PARENTS = new Parents(1, "John", "Doe", "123 Main St", "john.doe@example.com", "1234567890", "Some additional info");
-            Guardian guardian = new Guardian(0, "GuardianFirstName", "", "GuardianMiddleName", "GuardianRelationship");
+            Parents PARENTS = new Parents(1, 
+            "John", "Doe", "C" , 
+            "09696912345", 
+            "Jenna", "DoE", "G", 
+            "09261128000");
+            Guardian guardian = new Guardian(0, "GuardianLastName","GuardianFirstName", "GuardianMiddleName", "GuardianRelationship","Gaurdian_Contact_Number");
 
             Student newStudent = new Student(
                     1, // studentUid
@@ -66,7 +70,7 @@ public class StudentDataDb_test {
                     "Doe", // lastName
                     "John", // firstName
                     "Smith", // middleName
-                    "john.doe@example.com", // email
+                    "john.doe@example.com", // emai 
                     new java.sql.Date(new java.util.Date().getTime()), // birthDate
                     "123 Main St", // address
                     1234567890, // phoneNumber
@@ -213,7 +217,7 @@ public class StudentDataDb_test {
             return;
         }
 
-        String insertGuardian = "INSERT INTO GUARDIAN (STUDENT_ID, GUARDIAN_LASTNAME, GUARDIAN_FIRSTNAME, GUARDIAN_MIDDLENAME, GUARDIAN_RELATIONSHIP) VALUES (?, ?, ?, ?, ?)";
+        String insertGuardian = "INSERT INTO GUARDIAN (STUDENT_ID, GUARDIAN_LASTNAME, GUARDIAN_FIRST_NAME, GUARDIAN_MIDDLE_NAME, GUARDIAN_RELATIONSHIP) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(insertGuardian, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, studentId);
             stmt.setString(2, "Test");

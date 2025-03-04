@@ -10,13 +10,14 @@ import lyfjshs.gomis.Database.entity.Guardian;
 
 public class Guardian_Test {
 	public static void main(String[] args) {
-		GuardianDAO guardianDAO = new GuardianDAO();
 		Connection connection = null;
 		try {
 			connection = DBConnection.getConnection();
+			GuardianDAO guardianDAO = new GuardianDAO(connection);
+
 			// Insert a new guardian
 			System.out.println("Inserting a new guardian...");
-			boolean insertSuccess = guardianDAO.insertGuardian(connection, "Doe", "John", "M", "Father");
+			boolean insertSuccess = guardianDAO.insertGuardian(connection, "Doe", "John", "M", "Father","1234567");
 			System.out.println("Insert successful: " + insertSuccess);
 
 			if (!insertSuccess) {
@@ -44,7 +45,7 @@ public class Guardian_Test {
 
 			// Update a guardian
 			System.out.println("Updating guardian with ID: " + lastGuardianId);
-			boolean updateSuccess = guardianDAO.updateGuardian(connection, lastGuardianId, "Doe", "Jonathan", "M", "Father");
+			boolean updateSuccess = guardianDAO.updateGuardian(connection, lastGuardianId, "Doe", "Jonathan", "M", "Father", "12345678910");
 			System.out.println("Update successful: " + updateSuccess);
 
 			// Retrieve all guardians

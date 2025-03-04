@@ -1,8 +1,9 @@
 package lyfjshs.gomis.view.students;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -39,11 +40,14 @@ public class StudentSearchPanel extends Modal {
     // Date Picker
     private JFormattedTextField dobField;
     private DatePicker datePicker;
+    private Connection connection;
+    private JPanel panelResult; // Made this a class field for easier access
 
-    public StudentSearchPanel() {
+    public StudentSearchPanel(Connection connection) {
+        this.connection = connection;
         setLayout(new MigLayout("fillx,insets 0,wrap", "[500,grow,fill][]", "[][][][][100px,grow][]"));
         JTextField textSearch = new JTextField();
-        JPanel panelResult = new JPanel(new MigLayout("insets 3 10 3 10,fillx,wrap", "[fill]"));
+        panelResult = new JPanel(new MigLayout("insets 3 10 3 10,fillx,wrap", "[fill]"));
         textSearch.putClientProperty("JTextField.placeholderText", "Enter LRN");
         add(textSearch, "flowx,cell 0 0,grow");
         
@@ -105,30 +109,80 @@ public class StudentSearchPanel extends Modal {
         btnNewButton.addActionListener(e -> {
             String lrn = textSearch.getText().trim();
             if (!lrn.isEmpty()) {
-                searchAndDisplayStudent(lrn);
+                StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+                try {
+                    Student student = studentsDataDAO.getStudentDataByLrn(lrn);
+                    if (student != null) {
+                        panelResult.removeAll(); // Clear previous results
+                        StudentResult resultPanel = new StudentResult(
+                            student.getStudentFirstname() + " " + student.getStudentLastname(),
+                            student.getStudentLrn()
+                        );
+                        resultPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+                            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                                displayStudentFullData(student);
+                            }
+                        });
+                        panelResult.add(resultPanel);
+                        panelResult.revalidate();
+                        panelResult.repaint();
+                    } else {
+                        JOptionPane.showMessageDialog(StudentSearchPanel.this, "No student found with LRN: " + lrn, "Info", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                    JOptionPane.showMessageDialog(StudentSearchPanel.this, "Error retrieving student data", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             } else {
                 JOptionPane.showMessageDialog(StudentSearchPanel.this, "Please enter LRN", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
-    }
 
-    private void searchAndDisplayStudent(String lrn) {
-        try (Connection connection = DriverManager.getConnection("jdbc:your_database_url", "username", "password")) {
-            StudentsDataDAO dao = new StudentsDataDAO(connection);
-            Student student = dao.getStudentDataByLrn(lrn);
-            if (student != null) {
-                StudentFullData studentFullData = new StudentFullData(connection, student);
-                displayStudentFullData(studentFullData);
+        // Add a new button for searching by name and sex
+        JButton searchByNameButton = new JButton("Search by Name and Sex");
+        searchByNameButton.addActionListener(e -> {
+            String firstName = firstNameField.getText().trim();
+            String middleName = middleNameField.getText().trim();
+            String lastName = lastNameField.getText().trim();
+            String sex = (String) genderBox.getSelectedItem();
+
+            if (!firstName.isEmpty() || !middleName.isEmpty() || !lastName.isEmpty()) {
+                StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+                try {
+                    List<Student> students = studentsDataDAO.getStudentDataByNameAndSex(firstName, middleName, lastName, sex);
+                    panelResult.removeAll(); // Clear previous results
+                    if (!students.isEmpty()) {
+                        for (Student student : students) {
+                            StudentResult resultPanel = new StudentResult(
+                                student.getStudentFirstname() + " " + student.getStudentLastname(),
+                                student.getStudentLrn()
+                            );
+                            resultPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+                                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                                    displayStudentFullData(student);
+                                }
+                            });
+                            panelResult.add(resultPanel);
+                        }
+                        panelResult.revalidate();
+                        panelResult.repaint();
+                    } else {
+                        JOptionPane.showMessageDialog(StudentSearchPanel.this, "No students found", "Info", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                    JOptionPane.showMessageDialog(StudentSearchPanel.this, "Error retrieving student data", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             } else {
-                JOptionPane.showMessageDialog(this, "Student not found", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(StudentSearchPanel.this, "Please enter at least one name field", "Warning", JOptionPane.WARNING_MESSAGE);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        });
+        add(searchByNameButton, "cell 0 5 2 1,alignx right");
     }
 
-    private void displayStudentFullData(StudentFullData studentFullData) {
-        // Implement this method to display the studentFullData panel
+    private void displayStudentFullData(Student student) {
+        // Create and display the StudentFullData panel in a new modal or frame
+        StudentFullData studentFullData = new StudentFullData(connection, student);
+  
     }
 }

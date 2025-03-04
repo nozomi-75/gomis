@@ -4,15 +4,32 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import lyfjshs.gomis.Database.entity.Contact;
 
 public class ContactDAO {
+    private final Connection connection;
+
+    public ContactDAO(Connection connection) {
+        this.connection = connection;
+    }
+
+        // CREATE Contact
+    public int createContact(Contact contact) throws SQLException {
+        String sql = "INSERT INTO CONTACT (CONTACT_NUMBER) VALUES (?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, contact.getContactNumber());
+            pstmt.executeUpdate();
+            
+            ResultSet rs = pstmt.getGeneratedKeys();
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
 
     public boolean insertContact(Connection conn, Contact contact) {
         String query = "INSERT INTO CONTACT (CONTACT_NUMBER) VALUES (?)";
-        try (
-                PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, contact.getContactNumber());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {

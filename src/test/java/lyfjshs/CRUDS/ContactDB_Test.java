@@ -15,7 +15,7 @@ public class ContactDB_Test {
         String password = "YourRootPassword123!"; 
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            ContactDAO contactDAO = new ContactDAO();
+            ContactDAO contactDAO = new ContactDAO(connection);
 
             // Test CREATE operation
             System.out.println("Testing CREATE operation:");

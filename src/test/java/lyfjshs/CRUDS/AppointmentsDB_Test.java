@@ -34,7 +34,7 @@ public class AppointmentsDB_Test {
 
     static void setUp() throws SQLException {
         // Set up the database connection
-        String url = "jdbc:mariadb://localhost:3306/gomis";
+        String url = "jdbc:mariadb://localhost:3306/gomisdb";
         String user = "root";
         String password = "YourRootPassword123!";
 
@@ -50,7 +50,7 @@ public class AppointmentsDB_Test {
 
             boolean result = appointmentDAO.insertAppointment(
                 1, // participant_id
-                2, // counselors_id (nullable)
+                1201, // counselors_id (nullable)
                 "Counseling Session",
                 "Mental Health",
                 appointmentDateTime,
@@ -66,7 +66,7 @@ public class AppointmentsDB_Test {
 
     static void testGetAppointmentById() {
         try {
-            int testAppointmentId = 1; // Make sure this ID exists in your test database
+            int testAppointmentId = 1101; // Make sure this ID exists in your test database
             Appointment appointment = appointmentDAO.getAppointmentById(testAppointmentId);
 
             if (appointment != null && appointment.getAppointmentId() == testAppointmentId) {
@@ -94,7 +94,7 @@ public class AppointmentsDB_Test {
 
     static void testUpdateAppointment() {
         try {
-            int testAppointmentId = 1; // Ensure this appointment exists
+            int testAppointmentId = 1101; // Ensure this appointment exists
             Appointment appointment = appointmentDAO.getAppointmentById(testAppointmentId);
 
             if (appointment == null) {
@@ -102,16 +102,18 @@ public class AppointmentsDB_Test {
                 return;
             }
 
-            boolean updated = appointmentDAO.updateAppointment(
-                testAppointmentId,
-                appointment.getParticipantId(),
-                appointment.getGuidanceCounselorId(),
-                "Updated Title",
-                appointment.getAppointmentType(),
-                Timestamp.valueOf(appointment.getAppointmentDateTime().toLocalDateTime()),
-                appointment.getAppointmentNotes(),
-                "Completed"
-            );
+            Appointment updatedAppointment = new Appointment();
+            updatedAppointment.setAppointmentId(testAppointmentId);
+            updatedAppointment.setParticipantId(appointment.getParticipantId());
+            updatedAppointment.setGuidanceCounselorId(appointment.getGuidanceCounselorId());
+            updatedAppointment.setAppointmentTitle("Updated Title");
+            updatedAppointment.setAppointmentType(appointment.getAppointmentType());
+            updatedAppointment.setAppointmentDateTime(Timestamp.valueOf(appointment.getAppointmentDateTime().toLocalDateTime()));
+            updatedAppointment.setAppointmentNotes("Completed");
+            updatedAppointment.setAppointmentStatus("Completed");
+            updatedAppointment.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
+
+            boolean updated = appointmentDAO.updateAppointment(updatedAppointment);
 
             System.out.println(updated ? "✔ testUpdateAppointment Passed" : "❌ testUpdateAppointment Failed");
         } catch (Exception e) {
@@ -121,7 +123,7 @@ public class AppointmentsDB_Test {
 
     static void testDeleteAppointment() {
         try {
-            int appointmentIdToDelete = 2; // Ensure this appointment exists
+            int appointmentIdToDelete = 1101; // Ensure this appointment exists
             boolean deleted = appointmentDAO.deleteAppointment(appointmentIdToDelete);
 
             System.out.println(deleted ? "✔ testDeleteAppointment Passed" : "❌ testDeleteAppointment Failed");

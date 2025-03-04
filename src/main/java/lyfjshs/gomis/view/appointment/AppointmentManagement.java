@@ -14,7 +14,6 @@ import com.formdev.flatlaf.FlatClientProperties;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
-
 import lyfjshs.gomis.components.FormManager.Form;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
@@ -98,8 +97,7 @@ public class AppointmentManagement extends Form {
                 newAppointment.setParticipantId(1); // Default participant, adjust as needed
             }
             
-            boolean success = appointmentDAO.addAppointment(
-                connection,
+            boolean success = appointmentDAO.insertAppointment(
                 newAppointment.getParticipantId(),
                 newAppointment.getGuidanceCounselorId(),
                 newAppointment.getAppointmentTitle(),

@@ -120,7 +120,7 @@ public class AppointmentCalendar extends JPanel {
         dayLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         dayPanel.add(dayLabel, "align right");
 
-        List<Appointment> appointments = appointmentDao.getAppointmentsForDate(connection, date);
+        List<Appointment> appointments = appointmentDao.getAppointmentsForDate(date);
         if (!appointments.isEmpty()) {
             JPanel appointmentsContainer = new JPanel(new MigLayout("wrap 1, insets 0, gap 2", "[grow,fill]"));
             appointmentsContainer.setOpaque(false);
@@ -190,8 +190,7 @@ public class AppointmentCalendar extends JPanel {
 
             boolean success;
             if (existingAppointment == null) {
-                success = appointmentDao.addAppointment(
-                    connection,
+                success = appointmentDao.insertAppointment(
                     updatedAppointment.getParticipantId(),
                     updatedAppointment.getGuidanceCounselorId(),
                     updatedAppointment.getAppointmentTitle(),
@@ -201,7 +200,7 @@ public class AppointmentCalendar extends JPanel {
                     updatedAppointment.getAppointmentStatus()
                 );
             } else {
-                success = appointmentDao.updateAppointment(connection, updatedAppointment);
+                success = appointmentDao.updateAppointment(updatedAppointment);
             }
 
             if (success) {

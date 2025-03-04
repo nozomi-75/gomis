@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "StudentSearchUI",
+            "request": "launch",
+            "mainClass": "lyfjshs.CRUDS.StudentSearchUI",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "AppointmentsDB_Test",
+            "request": "launch",
+            "mainClass": "lyfjshs.CRUDS.AppointmentsDB_Test",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "TestSearch",
             "request": "launch",
             "mainClass": "lyfjshs.gomis.TestSearch",

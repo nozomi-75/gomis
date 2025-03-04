@@ -121,7 +121,7 @@ public class AppointmentOverview extends JPanel {
             if (dialog.isConfirmed()) {
                 try {
                     Appointment updatedAppt = dialog.getAppointment();
-                    if (appointmentDAO.updateAppointment(connection, updatedAppt)) {
+                    if (appointmentDAO.updateAppointment(updatedAppt)) {
                         loadAppointments(appt.getAppointmentDateTime().toLocalDateTime().toLocalDate());
                         JOptionPane.showMessageDialog(this, "Appointment updated successfully",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -166,7 +166,7 @@ public class AppointmentOverview extends JPanel {
     private void loadAppointments(LocalDate date) {
         SwingUtilities.invokeLater(() -> {
             appointmentsPanel.removeAll();
-            List<Appointment> loadedAppointments = appointmentDAO.getAppointmentsForDate(connection, date);
+            List<Appointment> loadedAppointments = appointmentDAO.getAppointmentsForDate(date);
             appointments.clear();
             appointments.addAll(loadedAppointments);
 

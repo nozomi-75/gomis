@@ -1,6 +1,8 @@
 package lyfjshs.gomis.view.sessions;
 
 import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.print.PageFormat;
@@ -27,174 +29,241 @@ import lyfjshs.gomis.view.appointment.StudentSearchUI;
 import net.miginfocom.swing.MigLayout;
 
 public class SessionsForm extends Form implements Printable {
-    private JTextField dateField, violationField, recordedByField;
-    private JFormattedTextField startSessionTimeField, endSessionTimeField;
-    private JTextArea sessionSummaryArea, notesArea;
-    private JButton saveButton, printButton, searchStudentButton;
-    private JComboBox<String> participantsComboBox;
-    private JComboBox<String> consultationTypeComboBox;
-    private JComboBox<String> appointmentTypeComboBox;
-    private Connection connect;
+	private JTextField dateField, violationField, recordedByField;
+	private JFormattedTextField startSessionTimeField, endSessionTimeField;
+	private JTextArea sessionSummaryArea, notesArea;
+	private JButton saveButton, printButton, searchStudentButton;
+	private JComboBox<String> participantsComboBox;
+	private JComboBox<String> consultationTypeComboBox;
+	private JComboBox<String> appointmentTypeComboBox;
+	private Connection connect;
+	private JPanel mainPanel;
+	private JTextField firstNameField, lastNameField, contactNumberField, emailField;
+	private JPanel contentPanel;
 
-    public SessionsForm(Connection conn) {
-        this.connect = conn;
-        initializeComponents();
-        layoutComponents();
-    }
+	public SessionsForm(Connection conn) {
+		this.connect = conn;
+		initializeComponents();
+		layoutComponents();
+	}
 
-    private void initializeComponents() {
-        dateField = new JTextField(20);
-        participantsComboBox = new JComboBox<>(new String[]{"Student", "Non-Student"});
-        participantsComboBox.addActionListener(e -> toggleSearchStudentButton());
-        notesArea = new JTextArea(5, 20);
-        sessionSummaryArea = new JTextArea(8, 50);
+	private void initializeComponents() {
+	}
 
-        saveButton = new JButton("SAVE");
-        saveButton.setBackground(new Color(70, 130, 180));
-        saveButton.setForeground(Color.WHITE);
-        saveButton.setFocusPainted(false);
-        saveButton.addActionListener(e -> saveSession());
+	private void toggleSearchStudentButton() {
+		searchStudentButton.setEnabled("Student".equals(participantsComboBox.getSelectedItem()));
+	}
 
-        printButton = new JButton("PRINT");
-        printButton.setBackground(new Color(70, 130, 180));
-        printButton.setForeground(Color.WHITE);
-        printButton.setFocusPainted(false);
-        printButton.addActionListener(e -> printSessionDetails());
+	private void openStudentSearchUI() {
+		StudentSearchUI studentSearchUI = new StudentSearchUI();
+		studentSearchUI.createAndShowGUI();
+	}
 
-        searchStudentButton = new JButton("Search Student");
-        searchStudentButton.setEnabled(false);
-        searchStudentButton.addActionListener(e -> openStudentSearchUI());
+	private int getAppointmentId() {
+		// Implement logic to retrieve the actual appointment ID
+		// This is a placeholder implementation and should be replaced with actual logic
+		// For example, you might query the database or get the ID from a selected appointment
+		return 1; // Replace with actual appointment ID retrieval logic
+	}
 
-        consultationTypeComboBox = new JComboBox<>(new String[]{
-            "Academic Consultation",
-            "Career Guidance",
-            "Personal Consultation",
-            "Behavioral Consultation",
-            "Group Consultation"
-        });
+	private void saveSession() {
+		try {
+			String date = dateField.getText();
+			String participants = (String) participantsComboBox.getSelectedItem();
+			String violation = violationField.getText();
+			String recordedBy = recordedByField.getText();
+			String notes = notesArea.getText();
+			String summary = sessionSummaryArea.getText();
+			String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
 
-        appointmentTypeComboBox = new JComboBox<>(new String[]{
-            "Walk-in",
-            "From Appointment"
-        });
-    }
+			int appointmentId = 0; // Default value for Walk-in
+			if (!"Walk-in".equals(appointmentType)) {
+				// Retrieve the actual appointment ID if not Walk-in
+				appointmentId = getAppointmentId();
+			}
 
-    private void toggleSearchStudentButton() {
-        searchStudentButton.setEnabled("Student".equals(participantsComboBox.getSelectedItem()));
-    }
+			// Create a new Session object using the constructor
+			Sessions session = new Sessions(0, appointmentId, // appointmentId
+					0, // counselorsId (not retrieved in the query)
+					participants.equals("Student") ? 1 : 0, // Use 1 for Student, 0 for Non-Student
+					0, // violationId (not retrieved in the query)
+					violation, // sessionType
+					null, // sessionDateTime (not retrieved in the query)
+					notes, // sessionNotes
+					"Active", // sessionStatus
+					new java.sql.Timestamp(System.currentTimeMillis()) // updatedAt
+			);
 
-    private void openStudentSearchUI() {
-        StudentSearchUI studentSearchUI = new StudentSearchUI();
-        studentSearchUI.createAndShowGUI();
-    }
+			// Use SessionsDAO to save the session
+			SessionsDAO sessionsDAO = new SessionsDAO(connect);
+			sessionsDAO.addSession(session); // Assuming you have an addSession method in SessionsDAO
 
-    private void saveSession() {
-        try {
-            String date = dateField.getText();
-            String participants = (String) participantsComboBox.getSelectedItem();
-            String violation = violationField.getText();
-            String recordedBy = recordedByField.getText();
-            String notes = notesArea.getText();
-            String summary = sessionSummaryArea.getText();
+			JOptionPane.showMessageDialog(this, "Session saved successfully!", "Success",
+					JOptionPane.INFORMATION_MESSAGE);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error",
+					JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
+	}
 
-            // Create a new Session object using the constructor
-            Sessions session = new Sessions(
-            	0,
-                0, // appointmentId (not retrieved in the query)
-                0, // counselorsId (not retrieved in the query)
-                participants.equals("Student") ? 1 : 0, // Use 1 for Student, 0 for Non-Student
-                0, // violationId (not retrieved in the query)
-                violation, // sessionType
-                null, // sessionDateTime (not retrieved in the query)
-                notes, // sessionNotes
-                "Active", // sessionStatus
-                new java.sql.Timestamp(System.currentTimeMillis()) // updatedAt
-            );
+	private void layoutComponents() {
+		this.setLayout(new MigLayout("gap 10", "[grow]", "[grow]"));
+		contentPanel = new JPanel(new MigLayout("", "[grow]", "[][grow][]"));
+		add(contentPanel, "cell 0 0,grow");
+		dateField = new JTextField(10);
+		participantsComboBox = new JComboBox<>(new String[] { "Student", "Non-Student" });
+		participantsComboBox.addActionListener(e -> toggleSearchStudentButton());
+		notesArea = new JTextArea(4, 20);
+		sessionSummaryArea = new JTextArea(4, 20);
 
-            // Use SessionsDAO to save the session
-            SessionsDAO sessionsDAO = new SessionsDAO(connect);
-            sessionsDAO.addSession(session); // Assuming you have an addSession method in SessionsDAO
+		saveButton = new JButton("SAVE");
+		saveButton.setBackground(new Color(70, 130, 180));
+		saveButton.setForeground(Color.WHITE);
+		saveButton.setFocusPainted(false);
+		saveButton.addActionListener(e -> saveSession());
 
-            JOptionPane.showMessageDialog(this, "Session saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
-    }
+		printButton = new JButton("PRINT");
+		printButton.setBackground(new Color(70, 130, 180));
+		printButton.setForeground(Color.WHITE);
+		printButton.setFocusPainted(false);
+		printButton.addActionListener(e -> printSessionDetails());
 
-    private void layoutComponents() {
-        this.setLayout(new MigLayout("wrap 4", "[][right]10[grow]20[right]10[grow]", "[][][][][][][][][fill][]"));
-        this.setBorder(BorderFactory.createTitledBorder("Session Form"));
-        
-        this.add(new JLabel("DATE:"), "cell 3 0");
-        this.add(dateField, "cell 4 0");
-        
-        this.add(new JLabel("PARTICIPANTS:"), "cell 1 1");
-        this.add(participantsComboBox, "cell 2 1");
-        this.add(searchStudentButton, "cell 3 1");
-        
-        this.add(new JLabel("NOTES:"), "cell 3 2, aligny top");
-        this.add(new JScrollPane(notesArea), "cell 4 2 1 2,grow");
+		searchStudentButton = new JButton("Search Student");
+		searchStudentButton.setEnabled(false);
+		searchStudentButton.addActionListener(e -> openStudentSearchUI());
 
-        this.add(new JLabel("APPOINTMENT TYPE:"), "cell 1 3");
-        this.add(appointmentTypeComboBox, "cell 2 3");
+		// Header
+		JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		contentPanel.add(headerPanel, "cell 0 0,growx");
+		JLabel headerLabel = new JLabel("Session Documentation Form");
+		headerLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+		headerPanel.add(headerLabel);
+		headerPanel.setBackground(new Color(5, 117, 230));
+		headerPanel.setForeground(Color.WHITE);
 
-        JLabel label_3 = new JLabel("START SESSION TIME:");
-        this.add(label_3, "cell 1 4");
-        startSessionTimeField = new JFormattedTextField();
-        startSessionTimeField.setColumns(20);
-        this.add(startSessionTimeField, "cell 2 4,alignx left");
+		consultationTypeComboBox = new JComboBox<>(new String[] { "Academic Consultation", "Career Guidance",
+				"Personal Consultation", "Behavioral Consultation", "Group Consultation" });
 
-        JLabel label_4 = new JLabel("VIOLATION:");
-        this.add(label_4, "cell 3 4");
-        violationField = new JTextField(20);
-        this.add(violationField, "cell 4 4");
+		appointmentTypeComboBox = new JComboBox<>(new String[] { "Walk-in", "From Appointment" });
 
-        JLabel label = new JLabel("END SESSION TIME:");
-        this.add(label, "flowx,cell 1 5");
-        endSessionTimeField = new JFormattedTextField();
-        endSessionTimeField.setColumns(20);
-        this.add(endSessionTimeField, "cell 2 5,alignx left");
+		firstNameField = new JTextField(10);
+		lastNameField = new JTextField(10);
+		contactNumberField = new JTextField(10);
+		emailField = new JTextField(10);
 
-        JLabel label_2 = new JLabel("RECORDED BY:");
-        this.add(label_2, "cell 3 5");
-        recordedByField = new JTextField(20);
-        this.add(recordedByField, "cell 4 5");
+		// Main Panel
+		mainPanel = new JPanel(new MigLayout("wrap, gap 10, hidemode 3", "[][][][]", "[][][][][][][][grow 40][][][]"));
+		contentPanel.add(mainPanel, "cell 0 1,grow");
+		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Add some space before the session summary
-        JLabel label_1 = new JLabel("SESSION SUMMARY:");
-        this.add(label_1, "cell 0 6 2 1,alignx center");
-        this.add(new JScrollPane(sessionSummaryArea), "cell 0 7 5 1,grow");
+		// Participant
+		JLabel participantLabel = new JLabel("Participant");
+		mainPanel.add(participantLabel, "flowx,cell 0 0,alignx right");
+		mainPanel.add(participantsComboBox, "cell 0 0,growx");
+		mainPanel.add(searchStudentButton, "cell 1 0");
 
-        this.add(new JLabel("CONSULTATION TYPE:"), "cell 1 8");
-        this.add(consultationTypeComboBox, "cell 2 8");
+		// Date
+		JLabel dateLabel = new JLabel("Date");
+		mainPanel.add(dateLabel, "flowx,cell 2 0,alignx left");
+		mainPanel.add(dateField, "cell 2 0,alignx right");
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(saveButton);
-        buttonPanel.add(printButton);
-        this.add(buttonPanel, "cell 1 9 4 1,alignx center,growy");
-    }
+		// Participant Panel
+		JPanel participantPanel = new JPanel(new MigLayout("gap 10", "[][grow][][][]", "[][][][]"));
+		participantPanel.setBorder(BorderFactory.createTitledBorder("Non-Student Participant"));
 
-    private void printSessionDetails() {
-        PrinterJob printerJob = PrinterJob.getPrinterJob();
-        printerJob.setPrintable(this);
-        if (printerJob.printDialog()) {
-            try {
-                printerJob.print();
-            } catch (PrinterException e) {
-                JOptionPane.showMessageDialog(this, "Printing Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
+		participantPanel.add(new JLabel("First Name"), "cell 0 0");
+		participantPanel.add(firstNameField, "cell 1 0,growx");
 
-    @Override
-    public int print(Graphics g, PageFormat pf, int pageIndex) throws PrinterException {
-        if (pageIndex > 0) {
-            return NO_SUCH_PAGE;
-        }
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.translate(pf.getImageableX(), pf.getImageableY());
-        this.printAll(g);
-        return PAGE_EXISTS;
-    }
+		participantPanel.add(new JLabel("Last Name"), "cell 3 0");
+		participantPanel.add(lastNameField, "cell 4 0");
+
+		participantPanel.add(new JLabel("Contact Number"), "cell 0 1");
+		participantPanel.add(contactNumberField, "cell 1 1 3 1,growx");
+
+		participantPanel.add(new JLabel("Email:"), "cell 0 2");
+		participantPanel.add(emailField, "cell 1 2 3 1,growx");
+
+		JButton saveParticipantButton = new JButton("Save Participant");
+		participantPanel.add(saveParticipantButton, "cell 1 3 4 1,alignx center");
+
+		mainPanel.add(participantPanel, "cell 0 1 2 4,growx"); // Initially visible
+
+		// Violation
+		JLabel violationLabel = new JLabel("Violation");
+		mainPanel.add(violationLabel, "flowx,cell 2 1");
+		violationField = new JTextField(10);
+		mainPanel.add(violationField, "cell 2 1");
+
+		// Appointment Type
+		JLabel appointmentTypeLabel = new JLabel("Appointment Type");
+		mainPanel.add(appointmentTypeLabel, "flowx,cell 2 2,alignx left");
+		mainPanel.add(appointmentTypeComboBox, "cell 2 2,growx");
+
+		// Start Time
+		JLabel startTimeLabel = new JLabel("Start Session Time");
+		mainPanel.add(startTimeLabel, "flowx,cell 2 3");
+		startSessionTimeField = new JFormattedTextField();
+		startSessionTimeField.setColumns(10);
+		mainPanel.add(startSessionTimeField, "cell 2 3,growx");
+
+		// End Time
+		JLabel endTimeLabel = new JLabel("End Session Time");
+		mainPanel.add(endTimeLabel, "flowx,cell 3 3");
+		endSessionTimeField = new JFormattedTextField();
+		endSessionTimeField.setColumns(10);
+		mainPanel.add(endSessionTimeField, "cell 3 3,growx");
+
+		// Consultation Type
+		JLabel consultationTypeLabel = new JLabel("Consultation Type");
+		mainPanel.add(consultationTypeLabel, "flowx,cell 2 4,aligny top");
+		mainPanel.add(consultationTypeComboBox, "cell 2 4,growx,aligny top");
+
+		// Notes
+		JLabel notesLabel = new JLabel("Notes");
+		mainPanel.add(notesLabel, "cell 1 5");
+		JScrollPane notesScrollPane = new JScrollPane(notesArea);
+		mainPanel.add(notesScrollPane, "cell 1 5 3 1,growx");
+
+		// Session Summary
+		JLabel summaryLabel = new JLabel("Session Summary");
+		mainPanel.add(summaryLabel, "cell 0 6,aligny bottom");
+		JScrollPane summaryScrollPane = new JScrollPane(sessionSummaryArea);
+		mainPanel.add(summaryScrollPane, "cell 0 7 4 1,grow");
+
+		// Recorded By
+		JLabel recordedByLabel = new JLabel("Recorded By");
+		mainPanel.add(recordedByLabel, "cell 2 8");
+		recordedByField = new JTextField(10);
+		mainPanel.add(recordedByField, "cell 3 8,growx");
+
+		// Buttons
+		mainPanel.add(printButton, "cell 2 9,growx");
+		mainPanel.add(saveButton, "cell 3 9,growx");
+	}
+
+	private void printSessionDetails() {
+		PrinterJob printerJob = PrinterJob.getPrinterJob();
+		printerJob.setPrintable(this);
+		if (printerJob.printDialog()) {
+			try {
+				printerJob.print();
+			} catch (PrinterException e) {
+				JOptionPane.showMessageDialog(this, "Printing Error: " + e.getMessage(), "Error",
+						JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	}
+
+	@Override
+	public int print(Graphics g, PageFormat pf, int pageIndex) throws PrinterException {
+		if (pageIndex > 0) {
+			return NO_SUCH_PAGE;
+		}
+		Graphics2D g2d = (Graphics2D) g;
+		g2d.translate(pf.getImageableX(), pf.getImageableY());
+		this.printAll(g);
+		return PAGE_EXISTS;
+	}
+
 }

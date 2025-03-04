@@ -18,11 +18,32 @@ public class SessionsDAO {
         this.connection = connection;
     }
 
+    // Method to check if an appointment exists
+    private boolean appointmentExists(int appointmentId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM APPOINTMENTS WHERE APPOINTMENT_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, appointmentId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
     // Method to add a session
     public void addSession(Sessions session) throws SQLException {
+        if (session.getAppointmentId() != 0 && !appointmentExists(session.getAppointmentId())) {
+            throw new SQLException("Appointment ID does not exist.");
+        }
         String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, guidance_counselor_id, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, session.getAppointmentId());
+            if (session.getAppointmentId() == 0) {
+                stmt.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(1, session.getAppointmentId());
+            }
             stmt.setInt(2, session.getGuidanceCounselorId());
             stmt.setInt(3, session.getParticipantId());
             stmt.setInt(4, session.getViolationId());

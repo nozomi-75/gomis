@@ -175,7 +175,7 @@ public class StudentMangementGUI extends Form {
 		Option option = ModalDialog.createOption();
 		option.setAnimationEnabled(true);
 		option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
-		ModalDialog.showModal(this, new StudentSearchPanel(), option, "search");
+		ModalDialog.showModal(this, new StudentSearchPanel(connection), option, "search");
 	}
 
 	private JPanel createStudentTablePanel() {
