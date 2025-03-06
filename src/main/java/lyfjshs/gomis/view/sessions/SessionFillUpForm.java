@@ -44,7 +44,7 @@ public class SessionFillUpForm extends JFrame {
 	public SessionFillUpForm() {
 		setTitle("Session Documentation Form");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(784, 715);
+		setSize(982, 743);
 		getContentPane().setLayout(new BorderLayout());
 
 		// Set FlatLaf

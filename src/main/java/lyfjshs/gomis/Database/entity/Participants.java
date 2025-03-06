@@ -11,10 +11,12 @@ public class Participants {
     private Student student;
 
     // Full Constructor
-    public Participants(int participantId, Integer studentUid, String participantType,
-            String participantLastName, String participantFirstName,
+    public Participants(
+            Integer studentUid, 
+            String participantType,
+            String participantLastName, 
+            String participantFirstName,
             String email, String contactNumber) {
-        this.participantId = participantId;
         this.studentUid = studentUid;
         this.participantType = participantType;
         this.participantLastName = participantLastName;

@@ -19,6 +19,8 @@ public class ViolationCRUD {
     }
 
     // CREATE (Insert a new violation)
+
+    // Modified addViolation() to check for participant existence
     public boolean addViolation(
             int participantId,
             String violationType,
@@ -27,10 +29,25 @@ public class ViolationCRUD {
             String reinforcement,
             String status,
             java.sql.Timestamp updatedAt) {
-        String sql = "INSERT INTO VIOLATION_RECORD "
-                + "(PARTICIPANT_ID, VIOLATION_TYPE, VIOLATION_DESCRIPTION, "
-                + "ANECDOTAL_RECORD, REINFORCEMENT, STATUS, UPDATED_AT) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        // First, check if PARTICIPANT_ID exists
+        String checkParticipantSQL = "SELECT COUNT(*) FROM PARTICIPANTS WHERE PARTICIPANT_ID = ?";
+        
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkParticipantSQL)) {
+            checkStmt.setInt(1, participantId);
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) == 0) {
+                System.out.println("Error: PARTICIPANT_ID " + participantId + " does not exist. Please check the PARTICIPANTS table.");
+                return false; // Prevent insertion
+            }
+        } catch (SQLException e) {
+            SQLExceptionPane.showSQLException(e, "Checking Participant Existence");
+            return false;
+        }
+
+        // Now, insert the violation
+        String sql = "INSERT INTO VIOLATION_RECORD (PARTICIPANT_ID, VIOLATION_TYPE, VIOLATION_DESCRIPTION, "
+                + "ANECDOTAL_RECORD, REINFORCEMENT, STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, participantId);
             stmt.setString(2, violationType);
@@ -45,6 +62,7 @@ public class ViolationCRUD {
             return false;
         }
     }
+
 
     // READ (Retrieve all violations)
     public List<ViolationRecord> getAllViolations() {
@@ -119,14 +137,18 @@ public class ViolationCRUD {
     }
 
     // UPDATE (Modify the status of an existing violation)
-    public boolean updateViolationStatus(Connection connection, int violationId, String status) throws SQLException {
-        String sql = "UPDATE VIOLATION_RECORD SET STATUS = ? WHERE VIOLATION_ID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, status);
-            stmt.setInt(2, violationId);
-            return stmt.executeUpdate() > 0;
-        }
+    public boolean updateViolationStatus(Connection connection, int violationId, String status) {
+    String sql = "UPDATE VIOLATION_RECORD SET STATUS = ? WHERE VIOLATION_ID = ?";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        stmt.setString(1, status);
+        stmt.setInt(2, violationId);
+        return stmt.executeUpdate() > 0;
+    } catch (SQLException e) {
+        SQLExceptionPane.showSQLException(e, "Updating Violation Status");
+        return false; 
     }
+}
+
 
     // DELETE (Remove a violation by ID)
     public boolean deleteViolation(int violationId) {
@@ -157,19 +179,19 @@ public class ViolationCRUD {
 
     // Search violations
     public List<ViolationRecord> searchViolations(Connection conn, String searchTerm) throws SQLException {
-        List<ViolationRecord> violations = new ArrayList<>();
-        String query = "SELECT * FROM VIOLATION_RECORD WHERE VIOLATION_TYPE LIKE ? OR VIOLATION_DESCRIPTION LIKE ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, "%" + searchTerm + "%");
-            stmt.setString(2, "%" + searchTerm + "%");
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    violations.add(mapResultSetToViolation(rs));
-                }
+    List<ViolationRecord> violations = new ArrayList<>();
+    String query = "SELECT * FROM VIOLATION_RECORD WHERE VIOLATION_TYPE LIKE CONCAT('%', ?, '%') OR VIOLATION_DESCRIPTION LIKE CONCAT('%', ?, '%')";
+    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        stmt.setString(1, searchTerm);
+        stmt.setString(2, searchTerm);
+        try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                violations.add(mapResultSetToViolation(rs));
             }
         }
-        return violations;
     }
+    return violations;
+}
 
     // New method to retrieve violations by student UID
     public static List<ViolationRecord> getViolationsByStudentUID(Connection connection, int studentUID) throws Exception {

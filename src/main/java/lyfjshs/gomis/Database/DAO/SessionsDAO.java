@@ -34,19 +34,34 @@ public class SessionsDAO {
 
     // Method to add a session
     public void addSession(Sessions session) throws SQLException {
-        if (session.getAppointmentId() != 0 && !appointmentExists(session.getAppointmentId())) {
+        if (!"walk-in".equalsIgnoreCase(session.getSessionType()) &&
+                !"individual counseling".equalsIgnoreCase(session.getSessionType()) &&
+                session.getAppointmentId() != 0 && !appointmentExists(session.getAppointmentId())) {
             throw new SQLException("Appointment ID does not exist.");
         }
-        String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, guidance_counselor_id, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, GUIDANCE_COUNSELOR_ID, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            if (session.getAppointmentId() == 0) {
+            if ("walk-in".equalsIgnoreCase(session.getSessionType())
+                    || "individual counseling".equalsIgnoreCase(session.getSessionType())) {
+                stmt.setNull(1, java.sql.Types.INTEGER);
+            } else if (session.getAppointmentId() == 0) {
                 stmt.setNull(1, java.sql.Types.INTEGER);
             } else {
                 stmt.setInt(1, session.getAppointmentId());
             }
+
             stmt.setInt(2, session.getGuidanceCounselorId());
             stmt.setInt(3, session.getParticipantId());
-            stmt.setInt(4, session.getViolationId());
+
+            // Handle null violationId
+            if (session.getViolationId() == null) {
+                stmt.setNull(4, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(4, session.getViolationId());
+            }
+
             stmt.setString(5, session.getSessionType());
             stmt.setTimestamp(6, session.getSessionDateTime());
             stmt.setString(7, session.getSessionNotes());
@@ -69,6 +84,20 @@ public class SessionsDAO {
         return sessions;
     }
 
+    // Method to get a session by ID
+    public Sessions getSessionById(int id) throws SQLException {
+        String sql = "SELECT * FROM SESSIONS WHERE SESSION_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToSession(rs);
+                }
+            }
+        }
+        return null; // Return null if no session is found with the given ID
+    }
+
     // Method to add a participant to a session
     public void addParticipantToSession(SessionParticipant participant) throws SQLException {
         String sql = "INSERT INTO SESSIONS_PARTICIPANTS (SESSION_ID, PARTICIPANT_ID) VALUES (?, ?)";
@@ -84,7 +113,7 @@ public class SessionsDAO {
         return new Sessions(
                 rs.getInt("SESSION_ID"),
                 rs.getInt("APPOINTMENT_ID"),
-                rs.getInt("guidance_counselor_id"),
+                rs.getInt("GUIDANCE_COUNSELOR_ID"),
                 rs.getInt("PARTICIPANT_ID"),
                 rs.getInt("VIOLATION_ID"),
                 rs.getString("SESSION_TYPE"),
@@ -96,10 +125,15 @@ public class SessionsDAO {
 
     // update session
     public void updateSession(Sessions session) throws SQLException {
-        String sql = "UPDATE SESSIONS SET APPOINTMENT_ID = ?, guidance_counselor_id = ?, PARTICIPANT_ID = ?, VIOLATION_ID = ?, SESSION_TYPE = ?, SESSION_DATE_TIME = ?, SESSION_NOTES = ?, SESSION_STATUS = ?, UPDATED_AT = ? WHERE SESSION_ID = ?";
+        String sql = "UPDATE SESSIONS SET APPOINTMENT_ID = ?, GUIDANCE_COUNSELOR_ID = ?, PARTICIPANT_ID = ?, VIOLATION_ID = ?, SESSION_TYPE = ?, SESSION_DATE_TIME = ?, SESSION_NOTES = ?, SESSION_STATUS = ?, UPDATED_AT = ? WHERE SESSION_ID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            // Set parameters
-            stmt.setInt(1, session.getAppointmentId());
+            if ("walk-in".equalsIgnoreCase(session.getSessionType())
+                    || "individual counseling".equalsIgnoreCase(session.getSessionType())) {
+                stmt.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(1, session.getAppointmentId());
+            }
+
             stmt.setInt(2, session.getGuidanceCounselorId());
             stmt.setInt(3, session.getParticipantId());
             stmt.setInt(4, session.getViolationId());
@@ -114,7 +148,6 @@ public class SessionsDAO {
     }
 
     // delete session
-
     public void deleteSession(int sessionId) throws SQLException {
         String sql = "DELETE FROM SESSIONS WHERE SESSION_ID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -127,55 +160,29 @@ public class SessionsDAO {
     public List<Sessions> getSessionDataWithParticipantCount() throws SQLException {
         List<Sessions> sessions = new ArrayList<>();
         String sql = "SELECT s.SESSION_ID, COUNT(sp.PARTICIPANT_ID) AS Participants, s.SESSION_TYPE, "
-                + "a.APPOINTMENT_DATE_TIME, s.SESSION_STATUS, s.UPDATED_AT "
+                + "COALESCE(a.APPOINTMENT_DATE_TIME, NULL) AS APPOINTMENT_DATE_TIME, s.SESSION_STATUS, s.UPDATED_AT "
                 + "FROM SESSIONS s "
-                + "LEFT JOIN sessions_participants sp ON s.SESSION_ID = sp.SESSION_ID "
+                + "LEFT JOIN SESSIONS_PARTICIPANTS sp ON s.SESSION_ID = sp.SESSION_ID "
                 + "LEFT JOIN APPOINTMENTS a ON s.APPOINTMENT_ID = a.APPOINTMENT_ID "
-                + "GROUP BY s.SESSION_ID";
+                + "GROUP BY s.SESSION_ID, s.SESSION_TYPE, a.APPOINTMENT_DATE_TIME, s.SESSION_STATUS, s.UPDATED_AT";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Sessions session = new Sessions(
                         rs.getInt("SESSION_ID"),
-                        0, // appointmentId (not retrieved in the query)
-                        0, // counselorsId (not retrieved in the query)
-                        0, // participantId (not retrieved in the query)
-                        0, // violationId (not retrieved in the query)
+                        0, 0, 0, 0, // Ignored foreign keys
                         rs.getString("SESSION_TYPE"),
-                        null, // sessionDateTime (not retrieved in the query)
-                        null, // sessionNotes (not retrieved in the query)
+                        null,
+                        null,
                         rs.getString("SESSION_STATUS"),
                         rs.getTimestamp("UPDATED_AT"));
-                session.setParticipantCount(rs.getInt("Participants")); // Set participant count
-                session.setAppointmentDateTime(rs.getTimestamp("APPOINTMENT_DATE_TIME")); // Set appointment date time
+
+                session.setParticipantCount(rs.getInt("Participants"));
+                session.setAppointmentDateTime(rs.getTimestamp("APPOINTMENT_DATE_TIME"));
                 sessions.add(session);
             }
         }
         return sessions;
     }
-
-    // New method to get a session by ID
-    public Sessions getSessionById(int sessionId) throws SQLException {
-        String sql = "SELECT * FROM SESSIONS WHERE SESSION_ID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, sessionId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return new Sessions(
-                        rs.getInt("SESSION_ID"),
-                        rs.getInt("APPOINTMENT_ID"),
-                        rs.getInt("guidance_counselor_id"),
-                        rs.getInt("PARTICIPANT_ID"),
-                        rs.getInt("VIOLATION_ID"),
-                        rs.getString("SESSION_TYPE"),
-                        rs.getTimestamp("SESSION_DATE_TIME"),
-                        rs.getString("SESSION_NOTES"),
-                        rs.getString("SESSION_STATUS"),
-                        rs.getTimestamp("UPDATED_AT"));
-            }
-        }
-        return null; // Return null if no session found
-    }
-
 }

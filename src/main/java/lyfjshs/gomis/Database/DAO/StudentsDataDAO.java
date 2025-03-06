@@ -215,6 +215,46 @@ public class StudentsDataDAO {
         return students;
     }
 
+    // READ Student by Participant ID
+    public Student getStudentByParticipantId(int participantId) throws SQLException {
+        String sql = "SELECT s.*, a.*, c.*, p.*, g.* FROM STUDENT s "
+                + "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID "
+                + "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID "
+                + "LEFT JOIN PARENTS p ON s.Parent_ID = p.PARENT_ID "
+                + "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID "
+                + "WHERE s.STUDENT_UID = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, participantId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToStudentWithRelations(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    public Student getStudentByFirstNLastName(String firstName, String lastName) throws SQLException {
+        String sql = "SELECT s.*, a.*, c.*, p.*, g.* FROM STUDENT s "
+                + "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID "
+                + "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID "
+                + "LEFT JOIN PARENTS p ON s.Parent_ID = p.PARENT_ID "
+                + "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID "
+                + "WHERE s.STUDENT_FIRSTNAME = ? AND s.STUDENT_LASTNAME = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToStudentWithRelations(rs);
+                }
+            }
+        }
+        return null;
+    }
+
     // Helper method to map ResultSet to StudentsData with Address and Contact
     private Student mapResultSetToStudentWithRelations(ResultSet rs) throws SQLException {
         Address address = new Address(

@@ -9,13 +9,19 @@ import java.util.List;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 
 public class GuidanceCounselorDAO {
+    private final Connection connection;
 
-    // CREATE Method
-    public boolean createGuidanceCounselor(Connection conn, GuidanceCounselor counselor) {
+    // Constructor to initialize the database connection
+    public GuidanceCounselorDAO(Connection conn) {
+        this.connection = conn;
+    }
+
+    // CREATE Method: Inserts a new guidance counselor into the database
+    public boolean createGuidanceCounselor(GuidanceCounselor counselor) {
         String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELORS_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, " +
                      "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, counselor.getGuidanceCounselorId());
             pstmt.setString(2, counselor.getLastName());
             pstmt.setString(3, counselor.getFirstName());
@@ -26,7 +32,7 @@ public class GuidanceCounselorDAO {
             pstmt.setString(8, counselor.getContactNum());
             pstmt.setString(9, counselor.getEmail());
             pstmt.setString(10, counselor.getPosition());
-            pstmt.setBytes(11, counselor.getProfilePicture());
+            pstmt.setBytes(11, counselor.getProfilePicture());  // Stores profile picture as byte array
 
             pstmt.executeUpdate();
             System.out.println("Guidance counselor added successfully.");
@@ -37,11 +43,11 @@ public class GuidanceCounselorDAO {
         return false;
     }
 
-    // READ Method
-    public GuidanceCounselor readGuidanceCounselor(Connection conn, int id) {
+    // READ Method: Retrieves a guidance counselor's details by ID
+    public GuidanceCounselor readGuidanceCounselor(int id) {
         String sql = "SELECT * FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELORS_ID = ?";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -63,14 +69,14 @@ public class GuidanceCounselorDAO {
         } catch (SQLException e) {
             handleSQLException(e, "readGuidanceCounselor");
         }
-        return null;
+        return null;    // Returns null if no matching counselor is found
     }
 
-    // Batch Processing Example
-    public void createGuidanceCounselorsBatch(Connection conn, List<GuidanceCounselor> counselors) {
+    // Batch Processing: Inserts multiple guidance counselors in one transaction
+    public void createGuidanceCounselorsBatch(List<GuidanceCounselor> counselors) {
         String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELORS_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, " +
                      "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             for (GuidanceCounselor counselor : counselors) {
                 pstmt.setInt(1, counselor.getGuidanceCounselorId());
                 pstmt.setString(2, counselor.getLastName());
@@ -82,23 +88,24 @@ public class GuidanceCounselorDAO {
                 pstmt.setString(8, counselor.getContactNum());
                 pstmt.setString(9, counselor.getEmail());
                 pstmt.setString(10, counselor.getPosition());
-                pstmt.setBytes(11, counselor.getProfilePicture());
-                pstmt.addBatch();
+                pstmt.setBytes(11, counselor.getProfilePicture());  // Stores image data
+                
+                pstmt.addBatch();    // Adds statement to batch processing
             }
-            int[] result = pstmt.executeBatch();
+            int[] result = pstmt.executeBatch();    // Executes batch insertion
             System.out.println("Batch insert completed: " + result.length + " rows added.");
         } catch (SQLException e) {
             handleSQLException(e, "createGuidanceCounselorsBatch");
         }
     }
 
-    // DELETE Method
-    public boolean deleteGuidanceCounselor(Connection conn, int id) {
+    // DELETE Method: Removes a guidance counselor record based on ID
+    public boolean deleteGuidanceCounselor( int id) {
         String sql = "DELETE FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELORS_ID = ?";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, id);
-            int affectedRows = pstmt.executeUpdate();
+            int affectedRows = pstmt.executeUpdate();   // Executes deletion query
             if (affectedRows > 0) {
                 System.out.println("Guidance counselor deleted successfully.");
                 return true;
@@ -106,10 +113,10 @@ public class GuidanceCounselorDAO {
         } catch (SQLException e) {
             handleSQLException(e, "deleteGuidanceCounselor");
         }
-        return false;
+        return false;   // Returns false if deletion fails
     }
 
-    // Error Handling Method
+    // Error Handling Method: Logs SQL errors with additional details
     private void handleSQLException(SQLException e, String operation) {
         System.err.println("Error during " + operation + ": " + e.getMessage());
         System.err.println("SQL State: " + e.getSQLState());

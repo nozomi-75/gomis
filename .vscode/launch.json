@@ -6,6 +6,55 @@
     "configurations": [
         {
             "type": "java",
+            "name": "AppointmentView",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.appointment.AppointmentView",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "FlatLafExtrasDemo",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.FlatTest.FlatLafExtrasDemo",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "AddAppointmentPanel",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.appointment.AddAppointmentPanel",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "ViolationDB_Test",
+            "request": "launch",
+            "mainClass": "lyfjshs.CRUDS.ViolationDB_Test",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "SessionDB_Test",
+            "request": "launch",
+            "mainClass": "lyfjshs.CRUDS.SessionDB_Test",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "AppointmentDetails",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.appointment.AppointmentDetails",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "AddAppointmentForm",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.appointment.AddAppointmentForm",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "StudentSearchUI",
             "request": "launch",
             "mainClass": "lyfjshs.CRUDS.StudentSearchUI",

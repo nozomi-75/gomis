@@ -13,13 +13,14 @@ import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 
 public class IncidentsDAO {
-    private final Connection connection;
+    private final Connection connection;    // Database connection instance
 
+    // Constructor to initialize DAO with a database connection
     public IncidentsDAO(Connection connection) {
         this.connection = connection;
     }
 
-    // Create a new incident
+     // Inserts a new incident into the database and returns the generated ID
     public int createIncident(Incident incident) throws SQLException {
         String sql = "INSERT INTO INCIDENTS (PARTICIPANT_ID, INCIDENT_DATE, " +
                 "INCIDENT_DESCRIPTION, ACTION_TAKEN, RECOMMENDATION, STATUS, UPDATED_AT) " +
@@ -36,16 +37,17 @@ public class IncidentsDAO {
 
             stmt.executeUpdate();
 
+            // Retrieves the generated ID of the inserted incident
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
             }
         }
-        return -1; // Indicate failure
+        return -1; // Returns -1 if insertion failed
     }
 
-    // Retrieve an incident by ID
+    // Retrieves an incident by its ID
     public Incident getIncidentById(int incidentId) throws SQLException {
         String sql = "SELECT * FROM INCIDENTS WHERE INCIDENT_ID = ?";
 
@@ -57,10 +59,10 @@ public class IncidentsDAO {
                 }
             }
         }
-        return null;
+        return null;    // Returns null if no incident is found
     }
 
-    // Update an existing incident
+     // Updates an existing incident in the database
     public boolean updateIncident(Incident incident) throws SQLException {
         String sql = "UPDATE INCIDENTS SET PARTICIPANT_ID = ?, INCIDENT_DATE = ?, " +
                 "INCIDENT_DESCRIPTION = ?, ACTION_TAKEN = ?, RECOMMENDATION = ?, STATUS = ?, UPDATED_AT = ? " +
@@ -76,21 +78,21 @@ public class IncidentsDAO {
             stmt.setTimestamp(7, incident.getUpdatedAt());
             stmt.setInt(8, incident.getIncidentId());
 
-            return stmt.executeUpdate() > 0;
+            return stmt.executeUpdate() > 0;    // Returns true if update was successful
         }
     }
 
-    // Delete an incident by ID
+    // Deletes an incident by its ID
     public boolean deleteIncident(int incidentId) throws SQLException {
         String sql = "DELETE FROM INCIDENTS WHERE INCIDENT_ID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, incidentId);
-            return stmt.executeUpdate() > 0;
+            return stmt.executeUpdate() > 0;    // Returns true if deletion was successful
         }
     }
 
-    // Retrieve all incidents
+    // Retrieves all incidents from the database
     public List<Incident> getAllIncidents() throws SQLException {
         List<Incident> incidents = new ArrayList<>();
         String sql = "SELECT * FROM INCIDENTS ORDER BY INCIDENT_DATE DESC";
@@ -104,7 +106,7 @@ public class IncidentsDAO {
         return incidents;
     }
 
-    // Retrieve incidents by participant ID
+    // Retrieves incidents based on participant ID
     public List<Incident> getIncidentsByParticipant(int participantId) throws SQLException {
         List<Incident> incidents = new ArrayList<>();
         String sql = "SELECT * FROM INCIDENTS WHERE PARTICIPANT_ID = ? ORDER BY INCIDENT_DATE DESC";
@@ -120,7 +122,7 @@ public class IncidentsDAO {
         return incidents;
     }
 
-    // Map a ResultSet to an Incident object
+    // Converts a ResultSet to an Incident object
     private Incident mapResultSetToIncident(ResultSet rs) throws SQLException {
         Incident incident = new Incident();
         incident.setIncidentId(rs.getInt("INCIDENT_ID"));
@@ -134,18 +136,18 @@ public class IncidentsDAO {
         return incident;
     }
 
-    // Retrieve complete incident details including related data
+    // Retrieves an incident with related participant and student details
     public Incident getCompleteIncidentDetails(int incidentId) throws SQLException {
         Incident incident = getIncidentById(incidentId);
         if (incident == null) {
             return null;
         }
 
-        // Fetch participant details
+        // Fetches the participant details
         Participants participant = getParticipantById(incident.getParticipantId());
         incident.setParticipants(participant);
 
-        // If participant is a student, fetch student details
+        // If the participant is a student, retrieves student details
         if (participant.getStudentUid() != null) {
             Student student = getStudentById(participant.getStudentUid());
             incident.setStudent(student);
@@ -168,7 +170,7 @@ public class IncidentsDAO {
         return null;
     }
 
-    // Map a ResultSet to a Participant object
+    // Converts a ResultSet to a Participant object
     private Participants mapResultSetToParticipant(ResultSet rs) throws SQLException {
         Participants participant = new Participants();
         participant.setParticipantId(rs.getInt("PARTICIPANT_ID"));
@@ -181,7 +183,7 @@ public class IncidentsDAO {
         return participant;
     }
 
-    // Retrieve student by ID
+    // Retrieves a student by ID
     private Student getStudentById(int studentUid) throws SQLException {
         String sql = "SELECT * FROM STUDENT WHERE STUDENT_UID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -195,7 +197,7 @@ public class IncidentsDAO {
         return null;
     }
 
-    // Map a ResultSet to a Student object
+    // Converts a ResultSet to a Student object
     private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
         Student student = new Student(
             rs.getInt("STUDENT_UID"),

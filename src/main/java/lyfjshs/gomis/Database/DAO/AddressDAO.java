@@ -15,101 +15,109 @@ public class AddressDAO {
 
     private final Connection connection;
 
+    // Constructor to initialize the AddressDAO with a database connection
     public AddressDAO(Connection connection) {
         this.connection = connection;
     }
 
-    // CREATE Address
-    public int createAddress(Address address) throws SQLException {
-        String sql = "INSERT INTO ADDRESS (ADDRESS_HOUSE_NUMBER, ADDRESS_STREET_SUBDIVISION, ADDRESS_REGION, " +
-                "ADDRESS_PROVINCE, ADDRESS_MUNICIPALITY, ADDRESS_BARANGAY, ADDRESS_ZIP_CODE) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setString(1, address.getAddressHouseNumber());
-            pstmt.setString(2, address.getAddressStreetSubdivision());
-            pstmt.setString(3, address.getAddressRegion());
-            pstmt.setString(4, address.getAddressProvince());
-            pstmt.setString(5, address.getAddressMunicipality());
-            pstmt.setString(6, address.getAddressBarangay());
-            pstmt.setString(7, address.getAddressZipCode());
-            pstmt.executeUpdate();
-            
-            ResultSet rs = pstmt.getGeneratedKeys();
+     // CREATE: Inserts a new address into the database and returns the generated ID
+    public int createAddress(Address address) {
+    String sql = "INSERT INTO ADDRESS (ADDRESS_HOUSE_NUMBER, ADDRESS_STREET_SUBDIVISION, ADDRESS_REGION, " +
+            "ADDRESS_PROVINCE, ADDRESS_MUNICIPALITY, ADDRESS_BARANGAY, ADDRESS_ZIP_CODE) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        // Setting values from the Address object
+        pstmt.setString(1, address.getAddressHouseNumber());
+        pstmt.setString(2, address.getAddressStreetSubdivision());
+        pstmt.setString(3, address.getAddressRegion());
+        pstmt.setString(4, address.getAddressProvince());
+        pstmt.setString(5, address.getAddressMunicipality());
+        pstmt.setString(6, address.getAddressBarangay());
+        pstmt.setString(7, address.getAddressZipCode());
+        pstmt.executeUpdate();
+
+        // Retrieving the generated ID
+        try (ResultSet rs = pstmt.getGeneratedKeys()) {
             return rs.next() ? rs.getInt(1) : 0;
         }
+    } catch (SQLException e) {
+        SQLExceptionPane.showSQLException(e, "Creating Address");
+        return 0;
     }
+}
+
     
-    // CREATE (Insert a new address)
+    // CREATE: Alternative method to add an address using individual parameters
     public boolean addAddress(
-            String houseNumber,
-            String streetSubdivision,
-            String region,
-            String province,
-            String municipality,
-            String barangay,
-            String zipCode) {
-        String sql = "INSERT INTO ADDRESS "
-                + "(ADDRESS_HOUSE_NUMBER, ADDRESS_STREET_SUBDIVISION, ADDRESS_REGION, "
-                + "ADDRESS_PROVINCE, ADDRESS_MUNICIPALITY, ADDRESS_BARANGAY, ADDRESS_ZIP_CODE) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, houseNumber);
-            stmt.setString(2, streetSubdivision);
-            stmt.setString(3, region);
-            stmt.setString(4, province);
-            stmt.setString(5, municipality);
-            stmt.setString(6, barangay);
-            stmt.setString(7, zipCode);
+        String houseNumber,
+        String streetSubdivision,
+        String region,
+        String province,
+        String municipality,
+        String barangay,
+        String zipCode) {
+    String sql = "INSERT INTO ADDRESS (ADDRESS_HOUSE_NUMBER, ADDRESS_STREET_SUBDIVISION, ADDRESS_REGION, " +
+                 "ADDRESS_PROVINCE, ADDRESS_MUNICIPALITY, ADDRESS_BARANGAY, ADDRESS_ZIP_CODE) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    try (PreparedStatement stmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        stmt.setString(1, houseNumber);
+        stmt.setString(2, streetSubdivision);
+        stmt.setString(3, region);
+        stmt.setString(4, province);
+        stmt.setString(5, municipality);
+        stmt.setString(6, barangay);
+        stmt.setString(7, zipCode);
 
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows > 0) {
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        // Optionally handle the generated ADDRESS_ID if needed in the model
-                    }
+        int affectedRows = stmt.executeUpdate();
+        if (affectedRows > 0) {
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    // Generated Address ID can be retrieved if needed
                 }
-                return true;
             }
-            return false;
-        } catch (SQLException e) {
-            SQLExceptionPane.showSQLException(e, "Adding Address");
-            return false;
+            return true;
         }
+    } catch (SQLException e) {
+        SQLExceptionPane.showSQLException(e, "Adding Address");
     }
+    return false;
+}
 
-    // READ (Retrieve all addresses)
+
+    // READ: Retrieves all addresses from the database
     public List<Address> getAllAddresses() {
-        List<Address> addresses = new ArrayList<>();
-        String sql = "SELECT * FROM ADDRESS";
+    List<Address> addresses = new ArrayList<>();
+    String sql = "SELECT * FROM ADDRESS";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                addresses.add(mapResultSetToAddress(rs));
-            }
-        } catch (SQLException e) {
-            SQLExceptionPane.showSQLException(e, "Fetching All Addresses");
+    try (PreparedStatement stmt = connection.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+            addresses.add(mapResultSetToAddress(rs));
         }
-        return addresses;
+    } catch (SQLException e) {
+        SQLExceptionPane.showSQLException(e, "Fetching All Addresses");
     }
+    return addresses;
+}
 
-    // READ (Retrieve a single address by ID)
+
+    // READ: Retrieves a single address by ID
     public Address getAddressById(int addressId) {
-        String sql = "SELECT * FROM ADDRESS WHERE ADDRESS_ID = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, addressId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToAddress(rs);
-                }
+    String sql = "SELECT * FROM ADDRESS WHERE ADDRESS_ID = ?";
+    
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        stmt.setInt(1, addressId);
+        try (ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return mapResultSetToAddress(rs);
             }
-        } catch (SQLException e) {
-            SQLExceptionPane.showSQLException(e, "Fetching Address by ID");
         }
-        return null;
+    } catch (SQLException e) {
+        SQLExceptionPane.showSQLException(e, "Fetching Address by ID");
     }
+    return null;
+}
 
-    // UPDATE (Modify an existing address)
+
+    // UPDATE: Updates an existing address by ID
     public boolean updateAddress(
             int addressId,
             String houseNumber,
@@ -140,7 +148,7 @@ public class AddressDAO {
         }
     }
 
-    // DELETE (Remove an address by ID)
+    // DELETE: Deletes an address from the database by ID
     public boolean deleteAddress(int addressId) {
         String sql = "DELETE FROM ADDRESS WHERE ADDRESS_ID = ?";
 
@@ -153,7 +161,7 @@ public class AddressDAO {
         }
     }
 
-    // Helper method to map a ResultSet to an Address object
+    // Helper method to map a ResultSet row to an Address object
     private Address mapResultSetToAddress(ResultSet rs) throws SQLException {
         Address address = new Address(
             rs.getInt("ADDRESS_ID"),

@@ -1,8 +1,13 @@
 package lyfjshs.gomis.view.appointment;
 
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -85,37 +90,44 @@ public class AppointmentManagement extends Form {
     }
 
     private void createAppointment() {
-        AppointmentDialog dialog = new AppointmentDialog(
-            (JFrame) SwingUtilities.getWindowAncestor(this),
-            new Appointment()
-        );
+        Appointment newAppointment = new Appointment();
+        newAppointment.setAppointmentDateTime(Timestamp.valueOf(LocalDateTime.now())); // Set default date and time
+
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Add Appointment", true);
+        AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
+        dialog.getContentPane().add(addAppointmentPanel);
+        dialog.setSize(600, 400);
+        dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
 
-        if (dialog.isConfirmed()) {
-            Appointment newAppointment = dialog.getAppointment();
-            if (newAppointment.getParticipantId() == 0) {
-                newAppointment.setParticipantId(1); // Default participant, adjust as needed
-            }
-            
-            boolean success = appointmentDAO.insertAppointment(
-                newAppointment.getParticipantId(),
-                newAppointment.getGuidanceCounselorId(),
-                newAppointment.getAppointmentTitle(),
-                newAppointment.getAppointmentType(),
-                newAppointment.getAppointmentDateTime(),
-                newAppointment.getAppointmentNotes(),
-                newAppointment.getAppointmentStatus()
-            );
-
-            if (success) {
-                if (slidePane.getSlideComponent() instanceof AppointmentCalendar) {
-                    ((AppointmentCalendar) slidePane.getSlideComponent()).updateCalendar();
-                } else if (slidePane.getSlideComponent() instanceof AppointmentDailyOverview) {
-                    ((AppointmentDailyOverview) slidePane.getSlideComponent()).updateAppointmentsDisplay();
+        if (addAppointmentPanel.isConfirmed()) {
+            Appointment updatedAppointment = addAppointmentPanel.getAppointment();
+            try {
+                // Use the updated insertAppointment method with participantIds
+                List<Integer> participantIds = addAppointmentPanel.getParticipantIds();
+                int generatedId = appointmentDAO.insertAppointment(
+                    updatedAppointment.getGuidanceCounselorId(),
+                    updatedAppointment.getAppointmentTitle(),
+                    updatedAppointment.getAppointmentType(),
+                    updatedAppointment.getAppointmentDateTime(),
+                    updatedAppointment.getAppointmentNotes(),
+                    updatedAppointment.getAppointmentStatus(),
+                    participantIds
+                );
+                if (generatedId > 0) {
+                    if (slidePane.getSlideComponent() instanceof AppointmentCalendar) {
+                        ((AppointmentCalendar) slidePane.getSlideComponent()).updateCalendar();
+                    } else if (slidePane.getSlideComponent() instanceof AppointmentDailyOverview) {
+                        ((AppointmentDailyOverview) slidePane.getSlideComponent()).updateAppointmentsDisplay();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to create appointment",
+                        "Error", JOptionPane.ERROR_MESSAGE);
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to create appointment",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
             }
         }
     }

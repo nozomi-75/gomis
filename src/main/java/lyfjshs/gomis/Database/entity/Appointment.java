@@ -1,23 +1,24 @@
 package lyfjshs.gomis.Database.entity;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Appointment {
     private int appointmentId;
-    private int participantId;
-    private Integer guidanceCounselorId; // Change to Integer
+    private Integer guidanceCounselorId;
     private String appointmentTitle;
     private String appointmentType;
     private Timestamp appointmentDateTime;
     private String appointmentStatus;
     private String appointmentNotes;
     private Timestamp updatedAt;
+    private List<Participants> participants; // New field for multiple participants
 
     public Appointment() {
     }
 
     public Appointment(int appointmentId,
-            int participantId,
             Integer guidanceCounselorId, // Change to Integer
             String appointmentTitle,
             String appointmentType,
@@ -26,7 +27,6 @@ public class Appointment {
             String appointmentNotes,
             Timestamp updatedAt) {
         this.appointmentId = appointmentId;
-        this.participantId = participantId;
         this.guidanceCounselorId = guidanceCounselorId;
         this.appointmentTitle = appointmentTitle;
         this.appointmentType = appointmentType;
@@ -43,14 +43,6 @@ public class Appointment {
 
     public void setAppointmentId(int appointmentId) {
         this.appointmentId = appointmentId;
-    }
-
-    public int getParticipantId() {
-        return participantId;
-    }
-
-    public void setParticipantId(int participantId) {
-        this.participantId = participantId;
     }
 
     public Integer getGuidanceCounselorId() { // Change to Integer
@@ -107,5 +99,13 @@ public class Appointment {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<Participants> getParticipants() {
+        return participants != null ? participants : new ArrayList<>();
+    }
+
+    public void setParticipants(List<Participants> participants) {
+        this.participants = participants;
     }
 }

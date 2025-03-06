@@ -11,13 +11,14 @@ import java.util.List;
 import lyfjshs.gomis.Database.entity.Parents;
 
 public class ParentsDAO {
-    private final Connection connection;
+    private final Connection connection;    // Database connection instance
 
+    // Constructor to initialize DAO with a database connection
     public ParentsDAO(Connection connection) {
         this.connection = connection;
     }
 
-    // CREATE Parents
+    // Inserts a new parent record into the database and returns the generated ID
     public int createParents(Parents parents) throws SQLException {
         String sql = "INSERT INTO PARENTS (FATHER_FIRSTNAME, FATHER_LASTNAME, FATHER_MIDDLENAME, FATHER_CONTACT_NUMBER, "
                 + "MOTHER_FIRSTNAME, MOTHER_LASTNAME, MOTHER_MIDDLE_NAME, MOTHER_CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -32,10 +33,13 @@ public class ParentsDAO {
             pstmt.setString(8, parents.getMotherContactNumber());
             
             int affectedRows = pstmt.executeUpdate();
+            
+            // Checks if the insertion was successful
             if (affectedRows == 0) {
                 throw new SQLException("Creating parent failed, no rows affected.");
             }
             
+            // Retrieves the generated parent ID
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -47,11 +51,11 @@ public class ParentsDAO {
     }
 
 
-    // Insert a new PARENTS record
+    // Inserts a new parent record into the database
     public boolean insertParent(Connection connection, String fatherLastName, String fatherFirstName,
-                                String fatherMiddleName, String fatherContactNumber, // ✅ Added father contact
+                                String fatherMiddleName, String fatherContactNumber, 
                                 String motherLastName, String motherFirstName, 
-                                String motherMiddleName, String motherContactNumber) { // ✅ Added mother contact
+                                String motherMiddleName, String motherContactNumber) { 
         String sql = "INSERT INTO PARENTS (FATHER_LASTNAME, FATHER_FIRSTNAME, FATHER_MIDDLENAME, FATHER_CONTACT_NUMBER, " +
                     "MOTHER_LASTNAME, MOTHER_FIRSTNAME, MOTHER_MIDDLE_NAME, MOTHER_CONTACT_NUMBER) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -60,24 +64,26 @@ public class ParentsDAO {
             statement.setString(1, fatherLastName);
             statement.setString(2, fatherFirstName);
             statement.setString(3, fatherMiddleName);
-            statement.setString(4, fatherContactNumber); // ✅ Added father's contact
+            statement.setString(4, fatherContactNumber); 
             statement.setString(5, motherLastName);
             statement.setString(6, motherFirstName);
             statement.setString(7, motherMiddleName);
-            statement.setString(8, motherContactNumber); // ✅ Added mother's contact
-            return statement.executeUpdate() > 0;
+            statement.setString(8, motherContactNumber); 
+            
+            
+            return statement.executeUpdate() > 0;   // Returns true if insertion was successful
         } catch (SQLException e) {
             System.err.println("Error inserting parent: " + e.getMessage());
         }
         return false;
     }
 
-    // Update a parent's details by ID
+     // Updates an existing parent's details in the database
     public boolean updateParent(Connection connection, int parentId, 
                                 String fatherLastName, String fatherFirstName, String fatherMiddleName, 
-                                String fatherContactNumber, // ✅ Added father contact
+                                String fatherContactNumber, 
                                 String motherLastName, String motherFirstName, String motherMiddleName,
-                                String motherContactNumber) { // ✅ Added mother contact
+                                String motherContactNumber) { 
         String sql = "UPDATE PARENTS SET FATHER_LASTNAME = ?, FATHER_FIRSTNAME = ?, FATHER_MIDDLENAME = ?, FATHER_CONTACT_NUMBER = ?, " +
                     "MOTHER_LASTNAME = ?, MOTHER_FIRSTNAME = ?, MOTHER_MIDDLE_NAME = ?, MOTHER_CONTACT_NUMBER = ? " +
                     "WHERE PARENT_ID = ?";
@@ -86,35 +92,38 @@ public class ParentsDAO {
             statement.setString(1, fatherLastName);
             statement.setString(2, fatherFirstName);
             statement.setString(3, fatherMiddleName);
-            statement.setString(4, fatherContactNumber); // ✅ Added father's contact
+            statement.setString(4, fatherContactNumber); 
             statement.setString(5, motherLastName);
             statement.setString(6, motherFirstName);
             statement.setString(7, motherMiddleName);
-            statement.setString(8, motherContactNumber); // ✅ Added mother's contact
+            statement.setString(8, motherContactNumber); 
             statement.setInt(9, parentId);
-            return statement.executeUpdate() > 0;
+            
+            return statement.executeUpdate() > 0;   // Returns true if update was successful
         } catch (SQLException e) {
             System.err.println("Error updating parent: " + e.getMessage());
         }
         return false;
     }
 
-    // Delete a PARENTS record by ID
+    // Deletes a parent record by its ID
     public boolean deleteParent(Connection connection, int parentId) {
         String sql = "DELETE FROM PARENTS WHERE parent_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, parentId);
-            return statement.executeUpdate() > 0;
+            return statement.executeUpdate() > 0;   // Returns true if deletion was successful
         } catch (SQLException e) {
             System.err.println("Error deleting parent: " + e.getMessage());
         }
         return false;
     }
 
-    // Retrieve all parents
+    // Retrieves all parent records from the database
     public List<String> getAllParents() {
         List<String> parents = new ArrayList<>();
-        String sql = "SELECT * FROM PARENTS"; // Ensure correct table name
+        String sql = "SELECT * FROM PARENTS"; // Query to retrieve all parents
+
+        // Formats parent details into a readable string
         try (Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql)) {
             while (resultSet.next()) {

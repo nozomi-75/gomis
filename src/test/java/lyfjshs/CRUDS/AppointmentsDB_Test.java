@@ -48,17 +48,20 @@ public class AppointmentsDB_Test {
         try {
             Timestamp appointmentDateTime = Timestamp.valueOf(LocalDateTime.now().plusDays(1));
 
-            boolean result = appointmentDAO.insertAppointment(
+            int result = appointmentDAO.insertAppointment(
                 1, // participant_id
-                1201, // counselors_id (nullable)
+                121, // counselors_id (nullable)
                 "Counseling Session",
                 "Mental Health",
                 appointmentDateTime,
                 "Follow-up session",
                 "Scheduled"
             );
-
-            System.out.println(result ? "✔ testAddAppointment Passed" : "❌ testAddAppointment Failed");
+            if (result == 0) {
+                System.out.println("❌ testAddAppointment Failed");
+            } else {
+                System.out.println("✔ testAddAppointment Passed");
+            }
         } catch (Exception e) {
             System.err.println("❌ testAddAppointment Failed: " + e.getMessage());
         }

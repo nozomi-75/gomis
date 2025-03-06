@@ -11,10 +11,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.entity.Participants;
-import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.FormManager.Form;
 import net.miginfocom.swing.MigLayout;
@@ -74,17 +72,12 @@ public class ViolationFullData extends Form {
         violationIdField.setText(String.valueOf(violation.getViolationId()));
         participantIdField.setText(String.valueOf(violation.getParticipantId()));
         
-        try {
-            ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
-            Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
-            if (participant != null) {
-                participantNameField.setText(String.format("%s %s", participant.getParticipantFirstName(), participant.getParticipantLastName()));
-            } else {
-                participantNameField.setText("N/A");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            participantNameField.setText("Error fetching participant data");
+        ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
+        Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
+        if (participant != null) {
+            participantNameField.setText(String.format("%s %s", participant.getParticipantFirstName(), participant.getParticipantLastName()));
+        } else {
+            participantNameField.setText("N/A");
         }
 
         violationTypeField.setText(violation.getViolationType());

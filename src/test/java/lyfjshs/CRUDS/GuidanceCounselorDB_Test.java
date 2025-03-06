@@ -15,7 +15,7 @@ public class GuidanceCounselorDB_Test {
 
     public static void main(String[] args) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            GuidanceCounselorDAO dao = new GuidanceCounselorDAO();
+            GuidanceCounselorDAO dao = new GuidanceCounselorDAO(conn);
 
             // Test Create
             testCreateGuidanceCounselor(conn, dao);

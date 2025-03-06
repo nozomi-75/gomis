@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -27,6 +29,7 @@ import com.toedter.calendar.JDateChooser;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
+import lyfjshs.gomis.Database.entity.Participants;
 import net.miginfocom.swing.MigLayout;
 
 public class AppointmentDailyOverview extends JPanel {
@@ -69,7 +72,7 @@ public class AppointmentDailyOverview extends JPanel {
 
         JButton addButton = new JButton("Add Appointment");
         addButton.setPreferredSize(new Dimension(120, 25));
-        addButton.addActionListener(e -> showAppointmentDialog(null));
+        addButton.addActionListener(e -> showAddAppointmentDialog());
 
         headerPanel.add(titleLabel, "span 2");
         headerPanel.add(subtitleLabel, "span 2");
@@ -90,14 +93,21 @@ public class AppointmentDailyOverview extends JPanel {
     public void updateAppointmentsDisplay() {
         appointmentsPanel.removeAll();
         
-        List<Appointment> appointments = appointmentDAO.getAppointmentsForDate(selectedDate);
+        List<Appointment> appointments = null;
+        try {
+            appointments = appointmentDAO.getAppointmentsForDate(selectedDate);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error fetching appointments: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
 
-        if (appointments.isEmpty()) {
+        if (appointments == null || appointments.isEmpty()) {
             JPanel emptyPanel = new JPanel(new MigLayout("wrap, align center", "[grow]", "[]"));
             emptyPanel.add(new JLabel("No appointments scheduled for this day"));
             JButton addButton = new JButton("Add Your First Appointment");
             addButton.setPreferredSize(new Dimension(150, 25));
-            addButton.addActionListener(e -> showAppointmentDialog(null));
+            addButton.addActionListener(e -> showAddAppointmentDialog());
             emptyPanel.add(addButton, "gapy 5");
             appointmentsPanel.add(emptyPanel, "growx");
         } else {
@@ -121,23 +131,30 @@ public class AppointmentDailyOverview extends JPanel {
         title.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
-        JButton editButton = new JButton("Edit");
-        editButton.setPreferredSize(new Dimension(60, 25));
-        editButton.addActionListener(e -> showAppointmentDialog(app));
+        JButton viewButton = new JButton("View");
+        viewButton.setPreferredSize(new Dimension(60, 25));
+        viewButton.addActionListener(e -> showAppointmentDetailsPopup(app));
         JButton deleteButton = new JButton("Delete");
         deleteButton.setPreferredSize(new Dimension(80, 25));
         deleteButton.addActionListener(e -> {
             if (JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this appointment?",
                 "Confirm Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-                if (appointmentDAO.deleteAppointment(app.getAppointmentId())) {
-                    updateAppointmentsDisplay();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Failed to delete appointment",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                try {
+                    boolean success = appointmentDAO.deleteAppointment(app.getAppointmentId());
+                    if (success) {
+                        updateAppointmentsDisplay();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to delete appointment",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (SQLException e1) {
+                    JOptionPane.showMessageDialog(this, "Database error: " + e1.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    e1.printStackTrace();
                 }
             }
         });
-        buttonPanel.add(editButton);
+        buttonPanel.add(viewButton);
         buttonPanel.add(deleteButton);
 
         card.add(title);
@@ -170,43 +187,72 @@ public class AppointmentDailyOverview extends JPanel {
             card.add(notesLabel, "span 2");
         }
 
+        // Display participants if available
+        if (app.getParticipants() != null && !app.getParticipants().isEmpty()) {
+            StringBuilder participantsText = new StringBuilder("Participants: ");
+            for (int i = 0; i < app.getParticipants().size(); i++) {
+                Participants p = app.getParticipants().get(i);
+                participantsText.append(p.getParticipantFirstName()).append(" ").append(p.getParticipantLastName());
+                if (i < app.getParticipants().size() - 1) {
+                    participantsText.append(", ");
+                }
+            }
+            card.add(new JLabel(participantsText.toString()) {
+                { setFont(new Font("Segoe UI", Font.PLAIN, 12)); }
+            }, "span 2");
+        }
+
         return card;
     }
 
-    private void showAppointmentDialog(Appointment existingApp) {
-        AppointmentDialog dialog = new AppointmentDialog(
-            (Frame) SwingUtilities.getWindowAncestor(this), 
-            existingApp != null ? existingApp : new Appointment()
-        );
-        
+    private void showAppointmentDetailsPopup(Appointment appointment) {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
+        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
+        try {
+            appointmentDetails.loadAppointmentsForDate(appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        dialog.getContentPane().add(appointmentDetails);
+        dialog.setSize(600, 400);
+        dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
-        
-        if (dialog.isConfirmed()) {
-            Appointment app = dialog.getAppointment();
-            if (existingApp == null) {
-                // Create new appointment
-                boolean success = appointmentDAO.insertAppointment(
-                    app.getParticipantId(),
-                    app.getGuidanceCounselorId(),
-                    app.getAppointmentTitle(),
-                    app.getAppointmentType(),
-                    app.getAppointmentDateTime(),
-                    app.getAppointmentNotes(),
-                    app.getAppointmentStatus()
+    }
+
+    private void showAddAppointmentDialog() {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add Appointment", true);
+        AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(new Appointment(), appointmentDAO, connection);
+        dialog.getContentPane().add(addAppointmentPanel);
+        dialog.setSize(600, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+
+        if (addAppointmentPanel.isConfirmed()) {
+            Appointment newAppointment = addAppointmentPanel.getAppointment();
+            try {
+                // Use the updated insertAppointment method with participantIds
+                List<Integer> participantIds = addAppointmentPanel.getParticipantIds();
+                int generatedId = appointmentDAO.insertAppointment(
+                    newAppointment.getGuidanceCounselorId(),
+                    newAppointment.getAppointmentTitle(),
+                    newAppointment.getAppointmentType(),
+                    newAppointment.getAppointmentDateTime(),
+                    newAppointment.getAppointmentNotes(),
+                    newAppointment.getAppointmentStatus(),
+                    participantIds
                 );
-                if (!success) {
+                if (generatedId > 0) {
+                    updateAppointmentsDisplay();
+                } else {
                     JOptionPane.showMessageDialog(this, "Failed to add appointment",
                         "Error", JOptionPane.ERROR_MESSAGE);
                 }
-            } else {
-                // Update existing appointment
-                boolean success = appointmentDAO.updateAppointment(app);
-                if (!success) {
-                    JOptionPane.showMessageDialog(this, "Failed to update appointment",
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(),
                         "Error", JOptionPane.ERROR_MESSAGE);
-                }
+                e.printStackTrace();
             }
-            updateAppointmentsDisplay();
         }
     }
 

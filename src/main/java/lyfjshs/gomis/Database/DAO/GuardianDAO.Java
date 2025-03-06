@@ -14,10 +14,11 @@ import lyfjshs.gomis.Database.entity.Guardian;
 public class GuardianDAO {
     private final Connection connection;
     
+    // Constructor that initializes the database connection
     public GuardianDAO(Connection connection) {
         this.connection = connection;
     }
-    // CREATE Guardian
+    // CREATE Guardian: Inserts a new guardian record into the database
     public int createGuardian(Guardian guardian) throws SQLException {
         String sql = "INSERT INTO GUARDIAN (GUARDIAN_LASTNAME, GUARDIAN_FIRST_NAME, GUARDIAN_MIDDLE_NAME, " +
                 "GUARDIAN_RELATIONSHIP, GUARDIAN_CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?)";
@@ -29,12 +30,13 @@ public class GuardianDAO {
             pstmt.setString(5, guardian.getGuardianContactNumber());
             pstmt.executeUpdate();
 
+             // Retrieves the generated ID for the newly inserted record
             ResultSet rs = pstmt.getGeneratedKeys();
             return rs.next() ? rs.getInt(1) : 0;
         }
     }
 
-    // READ (Retrieve a guardian by ID)
+    // READ: Retrieves a guardian by their unique ID
     public Guardian getGuardianById(Connection conn, int guardianId) {
         String query = "SELECT * FROM GUARDIAN WHERE GUARDIAN_ID = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -47,15 +49,15 @@ public class GuardianDAO {
                             rs.getString("GUARDIAN_FIRST_NAME"),
                             rs.getString("GUARDIAN_MIDDLE_NAME"),
                             rs.getString("GUARDIAN_RELATIONSHIP"),
-                            rs.getString("GAURDIAN_CONTACT_NUMBER"));                }
+                            rs.getString("GAURDIAN_CONTACT_NUMBER"));                } // Typo in column name
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // Consider using a proper logging mechanism
         }
-        return null;
+        return null; // Returns null if no guardian is found
     }
 
-    // READ ALL (Retrieve all guardians)
+    // READ ALL: Retrieves all guardian records from the database
     public List<Guardian> getAllGuardians(Connection conn) {
         List<Guardian> guardians = new ArrayList<>();
         String query = "SELECT * FROM GUARDIAN";
@@ -73,10 +75,10 @@ public class GuardianDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return guardians;
+        return guardians;   // Returns an empty list if no records are found
     }
 
-    // UPDATE (Modify an existing guardian)
+    // INSERT: Adds a new guardian to the database
    public boolean insertGuardian(Connection conn, String lastName, String firstName,
         String middleName, String relationship, String contactNumber) {
     String query = "INSERT INTO GUARDIAN (GUARDIAN_LASTNAME, GUARDIAN_FIRST_NAME, GUARDIAN_MIDDLE_NAME, GUARDIAN_RELATIONSHIP, GUARDIAN_CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?)";
@@ -84,7 +86,7 @@ public class GuardianDAO {
         stmt.setString(1, lastName);
         stmt.setString(2, firstName);
 
-        // Handle NULL values for middleName
+        // Handles NULL values for middleName
         if (middleName != null && !middleName.isEmpty()) {
             stmt.setString(3, middleName);
         } else {
@@ -93,7 +95,7 @@ public class GuardianDAO {
 
         stmt.setString(4, relationship);
 
-        // Set contact number
+        // Sets contact number
         if (contactNumber != null && !contactNumber.isEmpty()) {
             stmt.setString(5, contactNumber);
         } else {
@@ -107,7 +109,7 @@ public class GuardianDAO {
     return false;
 }
 
-// UPDATE (Modify an existing guardian)
+// UPDATE: Modifies an existing guardian's details
 public boolean updateGuardian(Connection conn, int guardianId, String lastName, String firstName,
         String middleName, String relationship, String contactNumber) {
     String query = "UPDATE GUARDIAN SET GUARDIAN_LASTNAME = ?, GUARDIAN_FIRST_NAME = ?, GUARDIAN_MIDDLE_NAME = ?, GUARDIAN_RELATIONSHIP = ?, GUARDIAN_CONTACT_NUMBER = ? WHERE GUARDIAN_ID = ?";
@@ -115,7 +117,7 @@ public boolean updateGuardian(Connection conn, int guardianId, String lastName, 
         stmt.setString(1, lastName);
         stmt.setString(2, firstName);
 
-        // Handle NULL values for middleName
+        // Handles NULL values for middleName
         if (middleName != null && !middleName.isEmpty()) {
             stmt.setString(3, middleName);
         } else {
@@ -124,7 +126,7 @@ public boolean updateGuardian(Connection conn, int guardianId, String lastName, 
 
         stmt.setString(4, relationship);
 
-        // Set contact number
+        // Sets contact number
         if (contactNumber != null && !contactNumber.isEmpty()) {
             stmt.setString(5, contactNumber);
         } else {
@@ -132,7 +134,7 @@ public boolean updateGuardian(Connection conn, int guardianId, String lastName, 
         }
 
         stmt.setInt(6, guardianId);
-        return stmt.executeUpdate() > 0;
+        return stmt.executeUpdate() > 0;    // Returns true if update is successful
     } catch (SQLException e) {
         e.printStackTrace();
     }
@@ -140,12 +142,12 @@ public boolean updateGuardian(Connection conn, int guardianId, String lastName, 
 }
 
 
-    // DELETE (Remove a guardian)
+    // DELETE: Removes a guardian from the database
     public boolean deleteGuardian(Connection conn, int guardianId) {
         String query = "DELETE FROM GUARDIAN WHERE GUARDIAN_ID = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, guardianId);
-            return stmt.executeUpdate() > 0;
+            return stmt.executeUpdate() > 0;    // Returns true if deletion is successful
         } catch (SQLException e) {
             e.printStackTrace();
         }
