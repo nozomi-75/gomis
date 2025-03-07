@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "AppointmentDayDetails",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.appointment.AppointmentDayDetails",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "GuidanceCounselorDB_Test",
+            "request": "launch",
+            "mainClass": "lyfjshs.CRUDS.GuidanceCounselorDB_Test",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "AppointmentView",
             "request": "launch",
             "mainClass": "lyfjshs.gomis.view.appointment.AppointmentView",

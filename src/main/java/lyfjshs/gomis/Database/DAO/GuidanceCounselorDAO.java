@@ -9,7 +9,7 @@ import java.util.List;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 
 public class GuidanceCounselorDAO {
-    private final Connection connection;
+    private Connection connection;
 
     // Constructor to initialize the database connection
     public GuidanceCounselorDAO(Connection conn) {
@@ -18,21 +18,21 @@ public class GuidanceCounselorDAO {
 
     // CREATE Method: Inserts a new guidance counselor into the database
     public boolean createGuidanceCounselor(GuidanceCounselor counselor) {
-        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELORS_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, " +
+        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELOR_ID, LAST_NAME, FIRST_NAME, MIDDLE_NAME, SUFFIX, " +
                      "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, counselor.getGuidanceCounselorId());
             pstmt.setString(2, counselor.getLastName());
             pstmt.setString(3, counselor.getFirstName());
-            pstmt.setString(4, counselor.getMiddleInitial());
+            pstmt.setString(4, counselor.getMiddleName()); // Updated method call
             pstmt.setString(5, counselor.getSuffix());
             pstmt.setString(6, counselor.getGender());
             pstmt.setString(7, counselor.getSpecialization());
             pstmt.setString(8, counselor.getContactNum());
             pstmt.setString(9, counselor.getEmail());
             pstmt.setString(10, counselor.getPosition());
-            pstmt.setBytes(11, counselor.getProfilePicture());  // Stores profile picture as byte array
+            pstmt.setBytes(11, counselor.getProfilePicture());
 
             pstmt.executeUpdate();
             System.out.println("Guidance counselor added successfully.");
@@ -44,18 +44,17 @@ public class GuidanceCounselorDAO {
     }
 
     // READ Method: Retrieves a guidance counselor's details by ID
-    public GuidanceCounselor readGuidanceCounselor(int id) {
-        String sql = "SELECT * FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELORS_ID = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+    public GuidanceCounselor readGuidanceCounselor(int guidanceCounselorId) {
+        String sql = "SELECT * FROM GUIDANCE_COUNSELORS WHERE guidance_counselor_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, guidanceCounselorId);
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new GuidanceCounselor(
-                        rs.getInt("GUIDANCE_COUNSELORS_ID"),
+                        rs.getInt("guidance_counselor_id"),
                         rs.getString("LAST_NAME"),
                         rs.getString("FIRST_NAME"),
-                        rs.getString("MIDDLE_INITIAL"),
+                        rs.getString("MIDDLE_NAME"),
                         rs.getString("SUFFIX"),
                         rs.getString("GENDER"),
                         rs.getString("SPECIALIZATION"),
@@ -67,32 +66,33 @@ public class GuidanceCounselorDAO {
                 }
             }
         } catch (SQLException e) {
-            handleSQLException(e, "readGuidanceCounselor");
+            e.printStackTrace();
         }
-        return null;    // Returns null if no matching counselor is found
+        return null;
     }
 
     // Batch Processing: Inserts multiple guidance counselors in one transaction
     public void createGuidanceCounselorsBatch(List<GuidanceCounselor> counselors) {
-        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELORS_ID, LAST_NAME, FIRST_NAME, MIDDLE_INITIAL, SUFFIX, " +
+        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELOR_ID, LAST_NAME, FIRST_NAME, MIDDLE_NAME, SUFFIX, " +
                      "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             for (GuidanceCounselor counselor : counselors) {
                 pstmt.setInt(1, counselor.getGuidanceCounselorId());
                 pstmt.setString(2, counselor.getLastName());
                 pstmt.setString(3, counselor.getFirstName());
-                pstmt.setString(4, counselor.getMiddleInitial());
+                pstmt.setString(4, counselor.getMiddleName()); // Updated method call
                 pstmt.setString(5, counselor.getSuffix());
                 pstmt.setString(6, counselor.getGender());
                 pstmt.setString(7, counselor.getSpecialization());
                 pstmt.setString(8, counselor.getContactNum());
                 pstmt.setString(9, counselor.getEmail());
                 pstmt.setString(10, counselor.getPosition());
-                pstmt.setBytes(11, counselor.getProfilePicture());  // Stores image data
-                
-                pstmt.addBatch();    // Adds statement to batch processing
+                pstmt.setBytes(11, counselor.getProfilePicture());
+
+                pstmt.addBatch();
             }
-            int[] result = pstmt.executeBatch();    // Executes batch insertion
+            int[] result = pstmt.executeBatch();
+            pstmt.clearBatch();  // Ensure batch is cleared
             System.out.println("Batch insert completed: " + result.length + " rows added.");
         } catch (SQLException e) {
             handleSQLException(e, "createGuidanceCounselorsBatch");
@@ -100,12 +100,12 @@ public class GuidanceCounselorDAO {
     }
 
     // DELETE Method: Removes a guidance counselor record based on ID
-    public boolean deleteGuidanceCounselor( int id) {
-        String sql = "DELETE FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELORS_ID = ?";
+    public boolean deleteGuidanceCounselor(int id) {
+        String sql = "DELETE FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELOR_ID = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, id);
-            int affectedRows = pstmt.executeUpdate();   // Executes deletion query
+            int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 System.out.println("Guidance counselor deleted successfully.");
                 return true;
@@ -113,10 +113,10 @@ public class GuidanceCounselorDAO {
         } catch (SQLException e) {
             handleSQLException(e, "deleteGuidanceCounselor");
         }
-        return false;   // Returns false if deletion fails
+        return false;
     }
 
-    // Error Handling Method: Logs SQL errors with additional details
+    // Error Handling Method
     private void handleSQLException(SQLException e, String operation) {
         System.err.println("Error during " + operation + ": " + e.getMessage());
         System.err.println("SQL State: " + e.getSQLState());

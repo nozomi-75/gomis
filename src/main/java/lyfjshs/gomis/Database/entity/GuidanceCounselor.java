@@ -4,7 +4,7 @@ public class GuidanceCounselor {
     private int guidanceCounselorId;
     private String lastName;
     private String firstName;
-    private String middleInitial;
+    private String middleName;  // Renamed from middleInitial
     private String suffix;
     private String gender;
     private String specialization;
@@ -13,15 +13,15 @@ public class GuidanceCounselor {
     private String position;
     private byte[] profilePicture;
 
-    public GuidanceCounselor(int guidanceCounselorId, String lastName, String firstName, String middleInitial,
-            String suffix, String GENDER, String specialization, String contactNum, String email, String position,
+    public GuidanceCounselor(int guidanceCounselorId, String lastName, String firstName, String middleName,
+            String suffix, String gender, String specialization, String contactNum, String email, String position,
             byte[] profilePicture) {
         this.guidanceCounselorId = guidanceCounselorId;
         this.lastName = lastName;
         this.firstName = firstName;
-        this.middleInitial = middleInitial;
+        this.middleName = middleName;  // Updated
         this.suffix = suffix;
-        this.gender = GENDER;
+        this.gender = gender;
         this.specialization = specialization;
         this.contactNum = contactNum;
         this.email = email;
@@ -53,12 +53,12 @@ public class GuidanceCounselor {
         this.firstName = firstName;
     }
 
-    public String getMiddleInitial() {
-        return middleInitial;
+    public String getMiddleName() {  // Renamed method
+        return middleName;
     }
 
-    public void setMiddleInitial(String middleInitial) {
-        this.middleInitial = middleInitial;
+    public void setMiddleName(String middleName) {  // Renamed method
+        this.middleName = middleName;
     }
 
     public String getSuffix() {

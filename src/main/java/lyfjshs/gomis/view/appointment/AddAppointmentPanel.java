@@ -28,19 +28,22 @@ import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ContactDAO;
+import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Contact;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.components.FormManager.FormManager;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 import raven.datetime.TimePicker;
 
 public class AddAppointmentPanel extends JPanel {
     private JPanel participantsPanel;
-    private int participantCount;
+    private int participantCount; // THIS IS THE PROBLEM
     private DatePicker datePicker;
     private TimePicker timePicker;
     private boolean confirmed;
@@ -72,7 +75,6 @@ public class AddAppointmentPanel extends JPanel {
     }
 
     private void initializeComponents() {
-        participantCount = 0;
         // Header Panel
         JPanel headerPanel = new JPanel(new MigLayout("insets 0", "[grow][]", "[]"));
         JLabel titleLabel = new JLabel("Add New Appointment");
@@ -88,7 +90,7 @@ public class AddAppointmentPanel extends JPanel {
         add(headerPanel, "north");
 
         // Body Panel with MigLayout
-        JPanel bodyPanel = new JPanel(new MigLayout("wrap 1", "[grow][grow]", "[][][][][][][][][][][][][][]"));
+        JPanel bodyPanel = new JPanel(new MigLayout("wrap 1", "[grow][grow]", "[][][][][][][][][][][]"));
         bodyPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
         // Title Field
@@ -117,11 +119,42 @@ public class AddAppointmentPanel extends JPanel {
         typeComboBox.setSelectedItem(appointment.getAppointmentType());
         bodyPanel.add(typeComboBox, "cell 0 4 2 1,growx");
 
+        // Guidance Counselor Details
+        JLabel counselorLabel = new JLabel("Guidance Counselor:");
+        bodyPanel.add(counselorLabel, "cell 0 5,alignx label");
+        JTextField counselorDetailsField = new JTextField();
+        counselorDetailsField.setEditable(false);
+
+        // Read guidance counselor details from FormManager after login
+        FormManager formManager = new FormManager();
+        GuidanceCounselorDAO counselorDAO = new GuidanceCounselorDAO(connection);
+
+        // Fetch the counselor ID from FormManager
+        int counselorID = formManager.getCounselorID();
+        System.out.println("Counselor ID: " + counselorID); // Debug statement
+
+        // Fetch the counselor details using the ID
+        GuidanceCounselor counselor = counselorDAO.readGuidanceCounselor(counselorID);
+        if (counselor != null) {
+            // Populate the counselor's name in the field
+            counselorDetailsField.setText(counselor.getFirstName() + " " + counselor.getLastName());
+        } else {
+            counselorDetailsField.setText("No counselor assigned");
+        }
+
+        bodyPanel.add(counselorDetailsField, "cell 0 6 2 1,growx");
+
+        // Status Field
+        JLabel statusLabel = new JLabel("Status:");
+        bodyPanel.add(statusLabel, "cell 0 7,alignx label");
+        JTextField statusField = new JTextField(appointment.getAppointmentStatus());
+        bodyPanel.add(statusField, "cell 0 8 2 1,growx");
+
         // Participants Section
         participantsPanel = new JPanel(new MigLayout("wrap 1", "[grow]", "[]"));
         participantsPanel.setBorder(BorderFactory.createTitledBorder("Participants"));
         addParticipantPanel(participantsPanel); // Add initial participant
-        bodyPanel.add(participantsPanel, "cell 0 5 2 1,grow");
+        bodyPanel.add(participantsPanel, "cell 0 9 2 1,grow");
 
         // Add Participant Button
         JButton addParticipantButton = new JButton("Add Another Participant");
@@ -134,26 +167,22 @@ public class AddAppointmentPanel extends JPanel {
                 addParticipantPanel(participantsPanel);
             }
         });
-        bodyPanel.add(addParticipantButton, "cell 0 6 2 1,alignx center");
+        bodyPanel.add(addParticipantButton, "cell 0 10 2 1,alignx center");
 
         // Notes Field
         JLabel label_2 = new JLabel("Notes:");
-        bodyPanel.add(label_2, "cell 0 7,alignx label");
-
-        // Form Actions
-        JPanel actionsPanel = new JPanel(new MigLayout("insets 0", "[grow, right]"));
+        bodyPanel.add(label_2, "cell 0 11,alignx label");
         JTextArea notesArea = new JTextArea(appointment.getAppointmentNotes());
         notesArea.setRows(3);
         notesArea.setLineWrap(true);
         JScrollPane scrollPane_1 = new JScrollPane(notesArea);
-        bodyPanel.add(scrollPane_1, "cell 0 8 2 1,growx");
+        bodyPanel.add(scrollPane_1, "cell 0 12 2 1,growx");
         JButton cancelButton = new JButton("Cancel");
-        bodyPanel.add(cancelButton, "flowx,cell 1 9");
+        bodyPanel.add(cancelButton, "flowx,cell 1 13,alignx right");
         cancelButton.setBackground(new Color(244, 67, 54));
         cancelButton.setForeground(Color.WHITE);
         cancelButton.setFocusPainted(false);
         cancelButton.addActionListener(e -> SwingUtilities.getWindowAncestor(this).dispose());
-        bodyPanel.add(actionsPanel, "cell 0 12,alignx right");
 
         JScrollPane scrollPane = new JScrollPane(bodyPanel);
         datePicker = new DatePicker();
@@ -181,7 +210,7 @@ public class AddAppointmentPanel extends JPanel {
 
         bodyPanel.add(timeField, "cell 1 2,growx");
         JButton submitButton = new JButton("Add Appointment");
-        bodyPanel.add(submitButton, "cell 1 9");
+        bodyPanel.add(submitButton, "cell 1 13,alignx right");
         submitButton.setBackground(new Color(76, 175, 80));
         submitButton.setForeground(Color.WHITE);
         submitButton.setFocusPainted(false);
@@ -189,6 +218,7 @@ public class AddAppointmentPanel extends JPanel {
             if (validateInputs(titleField, datePicker, timePicker)) {
                 appointment.setAppointmentTitle(titleField.getText());
                 appointment.setAppointmentType((String) typeComboBox.getSelectedItem());
+                appointment.setAppointmentStatus(statusField.getText());
                 appointment.setAppointmentDateTime(java.sql.Timestamp
                         .valueOf(LocalDateTime.of(datePicker.getSelectedDate(), timePicker.getSelectedTime())));
                 appointment.setAppointmentNotes(notesArea.getText());
@@ -214,13 +244,6 @@ public class AddAppointmentPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Time is required.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        // Validate participants
-        if (participantCount > 0 && participantIds.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "At least one participant must have valid data (first name and last name are required).",
-                    "Input Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
         return true;
     }
 
@@ -239,8 +262,8 @@ public class AddAppointmentPanel extends JPanel {
         JPanel nonStudentPanel = createNonStudentPanel();
 
         // Add both panels to the same cell but initially show only student panel
-        participantPanel.add(studentPanel, "cell 0 1 2 1, growx");
-        participantPanel.add(nonStudentPanel, "cell 0 1 2 1, growx");
+        participantPanel.add(studentPanel, "cell 0 1 2 1,grow");
+        participantPanel.add(nonStudentPanel, "cell 0 1 2 1,grow");
         studentPanel.setVisible(true);
         nonStudentPanel.setVisible(false);
 
@@ -283,7 +306,7 @@ public class AddAppointmentPanel extends JPanel {
         JLabel lrnLabel = new JLabel("LRN:");
         studentLrnField = new JTextField();
         panel.add(lrnLabel);
-        panel.add(studentLrnField, "growx, wrap");
+        panel.add(studentLrnField, "grow,wrap");
 
         // First Name
         JLabel firstNameLabel = new JLabel("First Name:");
@@ -464,156 +487,74 @@ public class AddAppointmentPanel extends JPanel {
         return appointment;
     }
 
-    // Method to extract and save participants
     private void extractAndSaveParticipants() {
         ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
-        participantIds.clear(); // Clear existing IDs
-        boolean hasValidParticipant = false;
-        for (int i = 0; i < participantsPanel.getComponentCount(); i++) {
-            if (participantsPanel.getComponent(i) instanceof JPanel) {
-                JPanel participantPanel = (JPanel) participantsPanel.getComponent(i);
-                for (int j = 0; j < participantPanel.getComponentCount(); j++) {
-                    if (participantPanel.getComponent(j) instanceof JPanel) {
-                        JPanel innerPanel = (JPanel) participantPanel.getComponent(j);
-                        if (innerPanel.isVisible()) {
-                            Participants participant = createParticipantFromPanel(innerPanel);
-                            if (isParticipantValid(participant, innerPanel)) {
-                                try {
-                                    participantsDAO.createParticipant(participant); // Save to DB and set participantId
-                                    participantIds.add(participant.getParticipantId()); // Add to list
-                                    hasValidParticipant = true;
-                                } catch (SQLException e) {
-                                    JOptionPane.showMessageDialog(this, "Error saving participant: " + e.getMessage(),
-                                            "Error", JOptionPane.ERROR_MESSAGE);
-                                    e.printStackTrace();
-                                    return; // Stop processing on error
-                                }
-                            }
-                        }
+
+        for (Component comp : participantsPanel.getComponents()) {
+            if (comp instanceof JPanel) {
+                JPanel participantPanel = (JPanel) comp;
+                JPanel innerPanel = getVisibleParticipantPanel(participantPanel);
+
+                if (innerPanel != null) {
+                    Participants participant = createParticipantFromPanel(innerPanel);
+                    try {
+                        participantsDAO.createParticipant(participant); // Save to DB and set participantId
+                        participantIds.add(participant.getParticipantId()); // Add to list
+                    } catch (SQLException e) {
+                        JOptionPane.showMessageDialog(this, "Error saving participant: " + e.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                        e.printStackTrace();
+                        return; // Stop processing on error
                     }
                 }
             }
-        }
-        if (!hasValidParticipant && participantCount > 0) {
-            JOptionPane.showMessageDialog(this,
-                    "At least one participant must have valid data (first name and last name are required).",
-                    "Input Error", JOptionPane.ERROR_MESSAGE);
-            participantIds.clear(); // Clear invalid participant IDs
         }
     }
 
-    // Helper method to validate participant data with panel context
-    private boolean isParticipantValid(Participants participant, JPanel panel) {
-        boolean isValid = false;
-
-        // Check the type of participant and validate accordingly
-        if (participant.getParticipantType().equals("Student")) {
-            // Validate student fields
-            JTextField firstNameField = null;
-            JTextField lastNameField = null;
-
-            for (Component comp : panel.getComponents()) {
-                if (comp instanceof JLabel) {
-                    JLabel label = (JLabel) comp;
-                    if ("First Name:".equals(label.getText())) {
-                        for (int k = 0; k < panel.getComponentCount(); k++) {
-                            if (panel.getComponent(k) == comp && k + 1 < panel.getComponentCount()) {
-                                lastNameField = (JTextField) panel.getComponent(k + 1);
-                                break;
-                            }
-                        }
-                    } else if ("Last Name:".equals(label.getText())) {
-                        for (int k = 0; k < panel.getComponentCount(); k++) {
-                            if (panel.getComponent(k) == comp && k + 1 < panel.getComponentCount()) {
-                                lastNameField = (JTextField) panel.getComponent(k + 1);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (firstNameField != null && lastNameField != null) {
-                System.out.println("Validating Student: " + firstNameField.getText() + " " + lastNameField.getText());
-                isValid = !firstNameField.getText().trim().isEmpty() && !lastNameField.getText().trim().isEmpty();
-            }
-        } else if (participant.getParticipantType().equals("Non-Student")) {
-            // Validate non-student fields
-            JTextField firstNameField = null;
-            JTextField lastNameField = null;
-
-            for (Component comp : panel.getComponents()) {
-                if (comp instanceof JLabel) {
-                    JLabel label = (JLabel) comp;
-                    if ("First Name:".equals(label.getText())) {
-                        for (int k = 0; k < panel.getComponentCount(); k++) {
-                            if (panel.getComponent(k) == comp && k + 1 < panel.getComponentCount()) {
-                                firstNameField = (JTextField) panel.getComponent(k + 1);
-                                break;
-                            }
-                        }
-                    } else if ("Last Name:".equals(label.getText())) {
-                        for (int k = 0; k < panel.getComponentCount(); k++) {
-                            if (panel.getComponent(k) == comp && k + 1 < panel.getComponentCount()) {
-                                lastNameField = (JTextField) panel.getComponent(k + 1);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (firstNameField != null && lastNameField != null) {
-                System.out
-                        .println("Validating Non-Student: " + firstNameField.getText() + " " + lastNameField.getText());
-                isValid = !firstNameField.getText().trim().isEmpty() && !lastNameField.getText().trim().isEmpty();
-            }
-        }
-
-        if (!isValid) {
-            JOptionPane.showMessageDialog(this,
-                    "Participant data is incomplete (first name and last name are required).",
-                    "Input Error", JOptionPane.ERROR_MESSAGE);
-            panel.setBorder(BorderFactory.createLineBorder(Color.RED, 2));
-        } else {
-            panel.setBorder(BorderFactory.createEtchedBorder()); // Reset border if valid
-        }
-        return isValid;
-    }
-
-    // Helper method to create a Participant from a panel
     private Participants createParticipantFromPanel(JPanel panel) {
         Participants participant = new Participants();
-        for (int i = 0; i < panel.getComponentCount(); i++) {
-            if (panel.getComponent(i) instanceof JLabel) {
-                JLabel label = (JLabel) panel.getComponent(i);
-                int nextIndex = i + 1;
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JLabel) {
+                JLabel label = (JLabel) comp;
+                int nextIndex = panel.getComponentZOrder(comp) + 1;
                 if (nextIndex < panel.getComponentCount()) {
                     Component nextComponent = panel.getComponent(nextIndex);
                     if (nextComponent instanceof JTextField) {
                         JTextField field = (JTextField) nextComponent;
                         String text = field.getText().trim();
-                        if (label.getText().equals("First Name:")) {
-                            participant.setParticipantFirstName(text);
-                        } else if (label.getText().equals("Last Name:")) {
-                            participant.setParticipantLastName(text);
-                        } else if (label.getText().equals("Contact Number:")) {
-                            participant.setContactNumber(text);
-                        } else if (label.getText().equals("Email:")) {
-                            participant.setEmail(text);
+                        switch (label.getText()) {
+                            case "First Name:":
+                                participant.setParticipantFirstName(text);
+                                break;
+                            case "Last Name:":
+                                participant.setParticipantLastName(text);
+                                break;
+                            case "Contact Number:":
+                                participant.setContactNumber(text);
+                                break;
+                            case "Email:":
+                                participant.setEmail(text);
+                                break;
                         }
-                        i = nextIndex; // Skip the field
                     } else if (nextComponent instanceof JComboBox) {
                         JComboBox<?> combo = (JComboBox<?>) nextComponent;
                         if (label.getText().equals("Type:")) {
                             participant.setParticipantType((String) combo.getSelectedItem());
                         }
-                        i = nextIndex; // Skip the combo box
                     }
                 }
             }
         }
         return participant;
+    }
+
+    private JPanel getVisibleParticipantPanel(JPanel participantPanel) {
+        for (Component comp : participantPanel.getComponents()) {
+            if (comp instanceof JPanel && comp.isVisible()) {
+                return (JPanel) comp;
+            }
+        }
+        return null;
     }
 
     // Method to get participant IDs

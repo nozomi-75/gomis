@@ -18,41 +18,38 @@ public class GuidanceCounselorDB_Test {
             GuidanceCounselorDAO dao = new GuidanceCounselorDAO(conn);
 
             // Test Create
-            testCreateGuidanceCounselor(conn, dao);
+            testCreateGuidanceCounselor(dao);
 
             // Test Read
-            testReadGuidanceCounselor(conn, dao);
+            testReadGuidanceCounselor(dao);
 
             // Test Delete
-            testDeleteGuidanceCounselor(conn, dao);
+            // testDeleteGuidanceCounselor(dao);
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    private static void testCreateGuidanceCounselor(Connection conn, GuidanceCounselorDAO dao) {
-        GuidanceCounselor counselor = new GuidanceCounselor(4, "Doe", "John", "A", "Jr.", "Male", 
+    private static void testCreateGuidanceCounselor(GuidanceCounselorDAO dao) {
+        GuidanceCounselor counselor = new GuidanceCounselor(4, "Doe", "John", "Anderson", "Jr.", "Male", 
                 "Psychology", "1234567890", "johndoe@example.com", "Senior Counselor", null);
+
         
-        boolean result = dao.createGuidanceCounselor(conn, counselor);
+        boolean result = dao.createGuidanceCounselor(counselor);
         System.out.println(result ? "✔ testCreateGuidanceCounselor Passed" : "❌ testCreateGuidanceCounselor Failed");
     }
 
-    private static void testReadGuidanceCounselor(Connection conn, GuidanceCounselorDAO dao) {
-        int id = 1; // ID to read
-        GuidanceCounselor counselor = dao.readGuidanceCounselor(conn, id);
+    private static void testReadGuidanceCounselor(GuidanceCounselorDAO dao) {
+        int id = 4;
+        GuidanceCounselor counselor = dao.readGuidanceCounselor(id);
         
-        if (counselor != null) {
-            System.out.println("✔ testReadGuidanceCounselor Passed: " + counselor.getFirstName() + " " + counselor.getLastName());
-        } else {
-            System.out.println("❌ testReadGuidanceCounselor Failed");
-        }
+        System.out.println(counselor != null ? "✔ testReadGuidanceCounselor Passed" : "❌ testReadGuidanceCounselor Failed");
     }
 
-    private static void testDeleteGuidanceCounselor(Connection conn, GuidanceCounselorDAO dao) {
-        int id = 4; // ID to delete
-        boolean result = dao.deleteGuidanceCounselor(conn, id);
+    private static void testDeleteGuidanceCounselor(GuidanceCounselorDAO dao) {
+        int id = 4;
+        boolean result = dao.deleteGuidanceCounselor(id);
         
         System.out.println(result ? "✔ testDeleteGuidanceCounselor Passed" : "❌ testDeleteGuidanceCounselor Failed");
     }

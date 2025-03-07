@@ -42,7 +42,7 @@ public class AppointmentDayDetails extends JPanel {
         // Header Panel
         JPanel headerPanel = new JPanel(new MigLayout("insets 0", "[grow][right]", "[]"));
         JLabel titleLabel = new JLabel("Appointment Details");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         JButton closeButton = new JButton("×");
         closeButton.setFont(new Font("Arial", Font.BOLD, 16));
         closeButton.setMargin(new java.awt.Insets(0, 0, 0, 0));
@@ -54,7 +54,7 @@ public class AppointmentDayDetails extends JPanel {
         add(headerPanel, "north");
 
         // Body Panel with MigLayout
-        bodyPanel = new JPanel(new MigLayout("insets 0", "[grow]", "[]"));
+        bodyPanel = new JPanel(new MigLayout("wrap 1, insets 10", "[grow]", "[]"));
         bodyPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
         JScrollPane scrollPane = new JScrollPane(bodyPanel);
@@ -95,24 +95,31 @@ public class AppointmentDayDetails extends JPanel {
     // Method to display appointment details
     private void displayAppointmentDetails(Appointment appointment) {
         // Appointment Information Section
-        JPanel appointmentSection = new JPanel(new MigLayout("insets 0", "[grow]", "[]"));
-        appointmentSection.setBorder(BorderFactory.createTitledBorder("Appointment Information"));
-        appointmentSection.add(new JLabel("Title: " + appointment.getAppointmentTitle()), "cell 0 0");
-        appointmentSection.add(new JLabel("Type: " + appointment.getAppointmentType()), "cell 0 1");
-        appointmentSection.add(new JLabel("Date & Time: " + appointment.getAppointmentDateTime()), "cell 0 2");
-        appointmentSection.add(new JLabel("Status: " + appointment.getAppointmentStatus()), "cell 0 3");
+        JPanel appointmentSection = new JPanel(new MigLayout("wrap 2, insets 10", "[grow][grow]", "[]"));
+        appointmentSection.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Appointment Information"));
+        appointmentSection.setBackground(new Color(245, 245, 245));
+        appointmentSection.add(new JLabel("Title: "), "cell 0 0, alignx right");
+        appointmentSection.add(new JLabel(appointment.getAppointmentTitle()), "cell 1 0");
+        appointmentSection.add(new JLabel("Type: "), "cell 0 1, alignx right");
+        appointmentSection.add(new JLabel(appointment.getAppointmentType()), "cell 1 1");
+        appointmentSection.add(new JLabel("Date & Time: "), "cell 0 2, alignx right");
+        appointmentSection.add(new JLabel(appointment.getAppointmentDateTime().toString()), "cell 1 2");
+        appointmentSection.add(new JLabel("Status: "), "cell 0 3, alignx right");
+        appointmentSection.add(new JLabel(appointment.getAppointmentStatus()), "cell 1 3");
         if (appointment.getAppointmentNotes() != null && !appointment.getAppointmentNotes().isEmpty()) {
-            appointmentSection.add(new JLabel("Notes: " + appointment.getAppointmentNotes()), "cell 0 4");
+            appointmentSection.add(new JLabel("Notes: "), "cell 0 4, alignx right");
+            appointmentSection.add(new JLabel(appointment.getAppointmentNotes()), "cell 1 4");
         }
-        appointmentSection.add(new JLabel("Last Updated: " + appointment.getUpdatedAt()), "cell 0 5");
-        bodyPanel.add(appointmentSection, "cell 0 0,growx");
+        appointmentSection.add(new JLabel("Last Updated: "), "cell 0 5, alignx right");
+        appointmentSection.add(new JLabel(appointment.getUpdatedAt().toString()), "cell 1 5");
+        bodyPanel.add(appointmentSection, "growx, wrap");
 
         // Participants Section
-        JPanel participantsSection = new JPanel(new MigLayout("insets 0", "[grow]", "[]"));
-        participantsSection.setBorder(BorderFactory.createTitledBorder("Participants"));
+        JPanel participantsSection = new JPanel(new MigLayout("wrap 1, insets 10", "[grow]", "[]"));
+        participantsSection.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Participants"));
+        participantsSection.setBackground(new Color(245, 245, 245));
         if (appointment.getParticipants() != null && !appointment.getParticipants().isEmpty()) {
-            for (int i = 0; i < appointment.getParticipants().size(); i++) {
-                Participants participant = appointment.getParticipants().get(i);
+            for (Participants participant : appointment.getParticipants()) {
                 String participantInfo = "Name: " + participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
                 if (participant.getStudentUid() != null) {
                     participantInfo += " (Student UID: " + participant.getStudentUid() + ")";
@@ -123,30 +130,39 @@ public class AppointmentDayDetails extends JPanel {
                 if (participant.getEmail() != null) {
                     participantInfo += ", Email: " + participant.getEmail();
                 }
-                participantsSection.add(new JLabel(participantInfo), "cell 0 " + i);
+                participantsSection.add(new JLabel(participantInfo), "growx");
             }
         } else {
-            participantsSection.add(new JLabel("No participants assigned."), "cell 0 0");
+            participantsSection.add(new JLabel("No participants assigned."), "growx");
         }
-        bodyPanel.add(participantsSection, "cell 0 1,growx");
+        bodyPanel.add(participantsSection, "growx, wrap");
 
         // Guidance Counselor Section
-        JPanel counselorSection = new JPanel(new MigLayout("insets 0", "[grow]", "[]"));
-        counselorSection.setBorder(BorderFactory.createTitledBorder("Guidance Counselor Information"));
+        JPanel counselorSection = new JPanel(new MigLayout("wrap 2, insets 10", "[grow][grow]", "[]"));
+        counselorSection.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Guidance Counselor Information"));
+        counselorSection.setBackground(new Color(245, 245, 245));
         GuidanceCounselorDAO counselorDAO = new GuidanceCounselorDAO(connection);
         GuidanceCounselor counselor = null;
-        counselor = counselorDAO.readGuidanceCounselor(appointment.getGuidanceCounselorId());
-        if (counselor != null) {
-            counselorSection.add(new JLabel("Name: " + counselor.getFirstName() + " " + counselor.getLastName()), "cell 0 0");
-            counselorSection.add(new JLabel("Gender: " + counselor.getGender()), "cell 0 1");
-            counselorSection.add(new JLabel("Specialization: " + counselor.getSpecialization()), "cell 0 2");
-            counselorSection.add(new JLabel("Contact: " + counselor.getContactNum()), "cell 0 3");
-            counselorSection.add(new JLabel("Email: " + counselor.getEmail()), "cell 0 4");
-            counselorSection.add(new JLabel("Position: " + counselor.getPosition()), "cell 0 5");
-        } else {
-            counselorSection.add(new JLabel("No guidance counselor information available."), "cell 0 0");
+        if (appointment.getGuidanceCounselorId() != null) {
+            counselor = counselorDAO.readGuidanceCounselor(appointment.getGuidanceCounselorId());
         }
-        bodyPanel.add(counselorSection, "cell 0 2,growx");
+        if (counselor != null) {
+            counselorSection.add(new JLabel("Name: "), "cell 0 0, alignx right");
+            counselorSection.add(new JLabel(counselor.getFirstName() + " " + counselor.getLastName()), "cell 1 0");
+            counselorSection.add(new JLabel("Gender: "), "cell 0 1, alignx right");
+            counselorSection.add(new JLabel(counselor.getGender()), "cell 1 1");
+            counselorSection.add(new JLabel("Specialization: "), "cell 0 2, alignx right");
+            counselorSection.add(new JLabel(counselor.getSpecialization()), "cell 1 2");
+            counselorSection.add(new JLabel("Contact: "), "cell 0 3, alignx right");
+            counselorSection.add(new JLabel(counselor.getContactNum()), "cell 1 3");
+            counselorSection.add(new JLabel("Email: "), "cell 0 4, alignx right");
+            counselorSection.add(new JLabel(counselor.getEmail()), "cell 1 4");
+            counselorSection.add(new JLabel("Position: "), "cell 0 5, alignx right");
+            counselorSection.add(new JLabel(counselor.getPosition()), "cell 1 5");
+        } else {
+            counselorSection.add(new JLabel("No guidance counselor information available."), "cell 0 0, span 2");
+        }
+        bodyPanel.add(counselorSection, "growx, wrap");
     }
 
     // Example usage in a JFrame
@@ -174,7 +190,7 @@ public class AppointmentDayDetails extends JPanel {
 
             // Load appointments for a specific date
             try {
-                panel.loadAppointmentsForDate(LocalDate.of(2025, 3, 13)); // Replace with actual date
+                panel.loadAppointmentsForDate(LocalDate.of(2025, 3, 7)); // Replace with actual date
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(frame, "Error loading appointments: " + e.getMessage(),
                         "Error", JOptionPane.ERROR_MESSAGE);

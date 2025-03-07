@@ -13,6 +13,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import lyfjshs.gomis.Database.DBConnection;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.FormManager.FormManager;
 
 /**
@@ -186,7 +187,7 @@ public class LoginController {
     public PreparedStatement updateUser(Connection connection, int userId, String username, String password,
                                          Integer guidanceCounselorId) throws SQLException {
         // SQL query to update the user's details
-        String sql = "UPDATE users SET U_NAME = ?, U_PASS = ?, GUIDANCE_COUNSELORS_ID = ? WHERE user_id = ?";
+        String sql = "UPDATE users SET U_NAME = ?, U_PASS = ?, GUIDANCE_COUNSELOR_ID = ? WHERE user_id = ?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setString(1, username);
         ps.setString(2, hashPassword(password));  // Store hashed password
@@ -224,34 +225,45 @@ public class LoginController {
             }
             String username = usernameTF.getText();
             String password = String.valueOf(passwordTF.getPassword());
-    
+
             boolean validUser = isValidUser(username, password);
-    
+
             if (validUser) {
                 ps = conn.prepareStatement("SELECT user_id, guidance_counselor_id FROM USERS WHERE U_NAME = ?");
                 ps.setString(1, username);
                 rs = ps.executeQuery();
-    
+
                 if (rs.next()) {
                     int guidanceCounselorId = rs.getInt("guidance_counselor_id");
-    
+
                     if (guidanceCounselorId != 0) {
                         PreparedStatement counselorPs = conn.prepareStatement(
-                            "SELECT FIRST_NAME, LAST_NAME, position FROM GUIDANCE_COUNSELORS WHERE guidance_counselor_id = ?"
+                            "SELECT * FROM GUIDANCE_COUNSELORS WHERE guidance_counselor_id = ?"
                         );
                         counselorPs.setInt(1, guidanceCounselorId);
                         ResultSet counselorRs = counselorPs.executeQuery();
                         
                         if (counselorRs.next()) {
-                            String firstName = counselorRs.getString("FIRST_NAME");
-                            String lastName = counselorRs.getString("LAST_NAME");
-                            String position = counselorRs.getString("position");
-                            
+                            GuidanceCounselor counselor = new GuidanceCounselor(
+                                counselorRs.getInt("guidance_counselor_id"),
+                                counselorRs.getString("LAST_NAME"),
+                                counselorRs.getString("FIRST_NAME"),
+                                counselorRs.getString("MIDDLE_NAME"),
+                                counselorRs.getString("SUFFIX"),
+                                counselorRs.getString("GENDER"),
+                                counselorRs.getString("SPECIALIZATION"),
+                                counselorRs.getString("CONTACT_NUM"),
+                                counselorRs.getString("EMAIL"),
+                                counselorRs.getString("POSITION"),
+                                counselorRs.getBytes("PROFILE_PICTURE")
+                            );
+
                             // Debug: Print counselor details
-                            System.out.println("Counselor Details: " + firstName + " " + lastName + ", " + position);
+                            System.out.println("Counselor Details: " + counselor.getFirstName() + " " + counselor.getLastName() + ", " + counselor.getPosition());
                             
                             // First set the counselor details
-                            FormManager.setCounselorDetails(firstName, lastName, position);
+                            FormManager.setCounselorDetails(counselor);
+                            FormManager.setCounselorID(counselor.getGuidanceCounselorId());
                             
                             // Debug: Verify details set in FormManager
                             System.out.println("Set in FormManager: " + FormManager.getCounselorFullName() + ", " + FormManager.getCounselorPosition());

@@ -99,7 +99,7 @@ public class SessionDB_Test {
             }
 
             // Check if GUIDANCE_COUNSELOR_ID exists
-            int guidanceCounselorId = 1; // example ID
+            int guidanceCounselorId = 4; // example ID
             if (!guidanceCounselorExists(conn, guidanceCounselorId)) {
                 System.out.println("❌ Guidance Counselor ID does not exist.");
                 return;

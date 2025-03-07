@@ -24,7 +24,6 @@ import lyfjshs.gomis.view.loading.SplashScreenFrame;
 import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
-import lyfjshs.gomis.view.students.StudentSearchPanel;
 import lyfjshs.gomis.view.students.create.StudentInfoFullForm;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
@@ -99,7 +98,7 @@ public class Main {
 		UIManager.put("TextComponent.arc", 50);
 	}
 
-	// instance of every panel
+	// instance of every Form Panel
 	private static LoginView loginPanel;
 	private static IncidentFillUpForm incidentFillUp;
 	private static StudentMangementGUI studManagement;

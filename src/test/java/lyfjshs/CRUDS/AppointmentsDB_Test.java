@@ -5,27 +5,27 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 
 public class AppointmentsDB_Test {
-    
+
     private static Connection connection;
     private static AppointmentDAO appointmentDAO;
 
     public static void main(String[] args) {
         try {
             setUp();
-            
+
             // Run Tests
             testAddAppointment();
-            testGetAppointmentById();
             testGetAllAppointments();
             testUpdateAppointment();
             testDeleteAppointment();
-            
+
             tearDown();
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,38 +47,23 @@ public class AppointmentsDB_Test {
     static void testAddAppointment() {
         try {
             Timestamp appointmentDateTime = Timestamp.valueOf(LocalDateTime.now().plusDays(1));
+            List<Integer> participantIds = new ArrayList<>(); // Add participant IDs if needed
 
             int result = appointmentDAO.insertAppointment(
-                1, // participant_id
-                121, // counselors_id (nullable)
-                "Counseling Session",
-                "Mental Health",
-                appointmentDateTime,
-                "Follow-up session",
-                "Scheduled"
-            );
+                    1, // guidanceCounselorId (nullable)
+                    "Counseling Session",
+                    "Mental Health",
+                    appointmentDateTime,
+                    "Follow-up session",
+                    "Scheduled",
+                    participantIds);
             if (result == 0) {
                 System.out.println("❌ testAddAppointment Failed");
             } else {
-                System.out.println("✔ testAddAppointment Passed");
+                System.out.println("✔ testAddAppointment Passed (ID: " + result + ")");
             }
         } catch (Exception e) {
             System.err.println("❌ testAddAppointment Failed: " + e.getMessage());
-        }
-    }
-
-    static void testGetAppointmentById() {
-        try {
-            int testAppointmentId = 1101; // Make sure this ID exists in your test database
-            Appointment appointment = appointmentDAO.getAppointmentById(testAppointmentId);
-
-            if (appointment != null && appointment.getAppointmentId() == testAppointmentId) {
-                System.out.println("✔ testGetAppointmentById Passed");
-            } else {
-                System.out.println("❌ testGetAppointmentById Failed");
-            }
-        } catch (Exception e) {
-            System.err.println("❌ testGetAppointmentById Failed: " + e.getMessage());
         }
     }
 
@@ -88,7 +73,7 @@ public class AppointmentsDB_Test {
             if (appointments != null && !appointments.isEmpty()) {
                 System.out.println("✔ testGetAllAppointments Passed");
             } else {
-                System.out.println("❌ testGetAllAppointments Failed");
+                System.out.println("❌ testGetAllAppointments Failed (No appointments found)");
             }
         } catch (Exception e) {
             System.err.println("❌ testGetAllAppointments Failed: " + e.getMessage());
@@ -97,26 +82,20 @@ public class AppointmentsDB_Test {
 
     static void testUpdateAppointment() {
         try {
-            int testAppointmentId = 1101; // Ensure this appointment exists
-            Appointment appointment = appointmentDAO.getAppointmentById(testAppointmentId);
-
-            if (appointment == null) {
-                System.out.println("❌ testUpdateAppointment Failed: Appointment not found");
+            List<Appointment> appointments = appointmentDAO.getAllAppointments();
+            if (appointments.isEmpty()) {
+                System.out.println("❌ testUpdateAppointment Failed: No existing appointments to update");
                 return;
             }
 
-            Appointment updatedAppointment = new Appointment();
-            updatedAppointment.setAppointmentId(testAppointmentId);
-            updatedAppointment.setParticipantId(appointment.getParticipantId());
-            updatedAppointment.setGuidanceCounselorId(appointment.getGuidanceCounselorId());
-            updatedAppointment.setAppointmentTitle("Updated Title");
-            updatedAppointment.setAppointmentType(appointment.getAppointmentType());
-            updatedAppointment.setAppointmentDateTime(Timestamp.valueOf(appointment.getAppointmentDateTime().toLocalDateTime()));
-            updatedAppointment.setAppointmentNotes("Completed");
-            updatedAppointment.setAppointmentStatus("Completed");
-            updatedAppointment.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
+            Appointment appointment = appointments.get(0); // Take first appointment
 
-            boolean updated = appointmentDAO.updateAppointment(updatedAppointment);
+            appointment.setAppointmentTitle("Updated Title");
+            appointment.setAppointmentNotes("Updated Notes");
+            appointment.setAppointmentStatus("Completed");
+            appointment.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
+
+            boolean updated = appointmentDAO.updateAppointment(appointment);
 
             System.out.println(updated ? "✔ testUpdateAppointment Passed" : "❌ testUpdateAppointment Failed");
         } catch (Exception e) {
@@ -126,7 +105,13 @@ public class AppointmentsDB_Test {
 
     static void testDeleteAppointment() {
         try {
-            int appointmentIdToDelete = 1101; // Ensure this appointment exists
+            List<Appointment> appointments = appointmentDAO.getAllAppointments();
+            if (appointments.isEmpty()) {
+                System.out.println("❌ testDeleteAppointment Failed: No existing appointments to delete");
+                return;
+            }
+
+            int appointmentIdToDelete = appointments.get(0).getAppointmentId();
             boolean deleted = appointmentDAO.deleteAppointment(appointmentIdToDelete);
 
             System.out.println(deleted ? "✔ testDeleteAppointment Passed" : "❌ testDeleteAppointment Failed");

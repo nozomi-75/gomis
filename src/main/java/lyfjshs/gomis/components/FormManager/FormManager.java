@@ -7,14 +7,17 @@ import javax.swing.JFrame;
 
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DBConnection;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.DrawerBuilder;
 import lyfjshs.gomis.view.LoginView;
 import lyfjshs.gomis.view.MainDashboard;
 import raven.modal.Drawer;
 
 /**
- * The {@code FormManager} class is responsible for managing the application's form navigation, 
- * including login, logout, and displaying various forms in the main application frame.
+ * The {@code FormManager} class is responsible for managing the application's
+ * form navigation,
+ * including login, logout, and displaying various forms in the main application
+ * frame.
  */
 public class FormManager {
 
@@ -24,9 +27,11 @@ public class FormManager {
     private static String counselorFIRST_NAME;
     private static String counselorLAST_NAME;
     private static String counselorPosition;
+    private static int counselorID;
 
     /**
-     * Initializes the form manager with a given JFrame and logs out the current user by default.
+     * Initializes the form manager with a given JFrame and logs out the current
+     * user by default.
      * 
      * @param f The main application frame.
      */
@@ -47,7 +52,7 @@ public class FormManager {
     }
 
     /**
-     * Handles user login by setting the main form in the application window 
+     * Handles user login by setting the main form in the application window
      * and displaying the navigation drawer.
      */
     public static void login(Connection conn) {
@@ -62,7 +67,8 @@ public class FormManager {
     }
 
     /**
-     * Handles user logout by removing all content from the frame, hiding the drawer,
+     * Handles user logout by removing all content from the frame, hiding the
+     * drawer,
      * and displaying the login form.
      */
     public static void logout() {
@@ -117,20 +123,29 @@ public class FormManager {
         return login;
     }
 
-    public static void setCounselorDetails(String FIRST_NAME, String LAST_NAME, String position) {
-        counselorFIRST_NAME = FIRST_NAME;
-        counselorLAST_NAME = LAST_NAME;
-        counselorPosition = position;
-
+    public static void setCounselorDetails(GuidanceCounselor counselor) {
+        counselorFIRST_NAME = counselor.getFirstName();
+        counselorLAST_NAME = counselor.getLastName();
+        counselorPosition = counselor.getPosition();
+        System.out.println("Counselor Details Set: " + counselorFIRST_NAME + " " + counselorLAST_NAME + ", " + counselorPosition); // Debug statement
     }
-    
+
+    public static int getCounselorID() {
+        System.out.println("Getting Counselor ID: " + counselorID); // Debug statement
+        return counselorID;
+    }
+
+    public static void setCounselorID(int counselorID) {
+        FormManager.counselorID = counselorID;
+        System.out.println("Setting Counselor ID: " + counselorID); // Debug statement
+    }
+
     public static String getCounselorFullName() {
         return counselorFIRST_NAME + " " + counselorLAST_NAME;
     }
-    
+
     public static String getCounselorPosition() {
         return counselorPosition;
     }
-
 
 }
