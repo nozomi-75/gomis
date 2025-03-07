@@ -8,6 +8,9 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -19,17 +22,22 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
+import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.entity.Appointment;
 import net.miginfocom.swing.MigLayout;
 
 public class AppointmentsListView extends JPanel {
     private JButton closeButton;
+    private Connection connection;
 
-    public AppointmentsListView() {
+    public AppointmentsListView(Connection connection) {
+        this.connection = connection;
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(636, 555));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -75,7 +83,7 @@ public class AppointmentsListView extends JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("Appointment clicked: Team Meeting at 10:00 AM");
+                showAppointmentDetails(LocalDate.of(2025, 3, 10)); // Replace with actual date
             }
         });
 
@@ -148,13 +156,20 @@ public class AppointmentsListView extends JPanel {
         add(footerPanel, BorderLayout.SOUTH);
     }
 
-    // Placeholder method (not used statically)
-    private JPanel createAppointmentPanel(Appointment app) {
-        return new JPanel(); // Empty for now, as we're using static panels
-    }
-
-    private String getFormattedDate() {
-        return "March 10, 2025"; // Static date for testing
+    private void showAppointmentDetails(LocalDate date) {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
+        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
+        try {
+            appointmentDetails.loadAppointmentsForDate(date);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading appointment details: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+        dialog.getContentPane().add(appointmentDetails);
+        dialog.setSize(600, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     // Example usage in a JFrame
@@ -163,9 +178,18 @@ public class AppointmentsListView extends JPanel {
             FlatLaf.setup(new FlatLightLaf());
             JFrame frame = new JFrame("Appointment Dialog");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(500, 400);
-            AppointmentsListView panel = new AppointmentsListView();
+            Connection connection = null;
+            try {
+                connection = DBConnection.getConnection();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Database connection failed: " + e.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+                return;
+            }
+            AppointmentsListView panel = new AppointmentsListView(connection);
             frame.getContentPane().add(panel);
+            frame.setSize(500, 400);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });

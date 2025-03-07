@@ -85,6 +85,14 @@ public class AppointmentDayDetails extends JPanel {
         bodyPanel.repaint();
     }
 
+    // Method to load a specific appointment
+    public void loadAppointmentDetails(Appointment appointment) {
+        bodyPanel.removeAll(); // Clear existing components
+        displayAppointmentDetails(appointment);
+        bodyPanel.revalidate();
+        bodyPanel.repaint();
+    }
+
     // Method to display no appointments message
     private void displayNoAppointmentsMessage() {
         JLabel noAppointmentsLabel = new JLabel("No appointments scheduled for this day.");
@@ -177,10 +185,7 @@ public class AppointmentDayDetails extends JPanel {
             try {
                 connection = DBConnection.getConnection();
             } catch (SQLException e) {
-                JOptionPane.showMessageDialog(null, "Database connection failed: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
                 e.printStackTrace();
-                return;
             }
             AppointmentDayDetails panel = new AppointmentDayDetails(connection);
             frame.getContentPane().add(panel);
@@ -190,10 +195,8 @@ public class AppointmentDayDetails extends JPanel {
 
             // Load appointments for a specific date
             try {
-                panel.loadAppointmentsForDate(LocalDate.of(2025, 3, 7)); // Replace with actual date
+                panel.loadAppointmentsForDate(LocalDate.now());
             } catch (SQLException e) {
-                JOptionPane.showMessageDialog(frame, "Error loading appointments: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
                 e.printStackTrace();
             }
         });

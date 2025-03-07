@@ -126,7 +126,6 @@ public class AppointmentCalendar extends JPanel {
         try {
             appointments = appointmentDao.getAppointmentsForDate(date);
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         if (!appointments.isEmpty()) {
@@ -153,10 +152,13 @@ public class AppointmentCalendar extends JPanel {
                 appLabel.setForeground(Color.BLACK);
                 appointmentPanel.add(appLabel, "grow");
 
-                JButton viewButton = new JButton("...");
-                viewButton.setPreferredSize(new Dimension(20, 20));
-                viewButton.addActionListener(e -> showAppointmentDialog(date, appt));
-                appointmentPanel.add(viewButton, "align right");
+                // Make the appointment panel clickable
+                appointmentPanel.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        showAppointmentDetailsPopup(appt);
+                    }
+                });
 
                 appointmentsContainer.add(appointmentPanel, "grow");
             }
@@ -172,69 +174,27 @@ public class AppointmentCalendar extends JPanel {
         return dayPanel;
     }
 
-    private void showAppointmentDetailsPopup(LocalDate selectedDate) {
+    private void showAppointmentDetailsPopup(Appointment appointment) {
         JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
         AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
-        try {
-            appointmentDetails.loadAppointmentsForDate(selectedDate);
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        appointmentDetails.loadAppointmentDetails(appointment);
         dialog.getContentPane().add(appointmentDetails);
         dialog.setSize(600, 400);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 
-    private void showAppointmentDialog(LocalDate selectedDate, Appointment existingAppointment) {
-        Appointment appointmentToEdit = existingAppointment != null ? existingAppointment : new Appointment();
-        if (existingAppointment == null) {
-            appointmentToEdit.setAppointmentDateTime(java.sql.Timestamp.valueOf(selectedDate.atTime(9, 0)));
+    private void showAppointmentDetailsPopup(LocalDate selectedDate) {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
+        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
+        try {
+            appointmentDetails.loadAppointmentsForDate(selectedDate);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Add/Edit Appointment", true);
-        AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(appointmentToEdit, appointmentDao,
-                connection);
-        dialog.getContentPane().add(addAppointmentPanel);
+        dialog.getContentPane().add(appointmentDetails);
         dialog.setSize(600, 400);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
-
-        if (addAppointmentPanel.isConfirmed()) {
-            Appointment updatedAppointment = addAppointmentPanel.getAppointment();
-
-            boolean success;
-            try {
-                if (existingAppointment == null) {
-                    // New appointment with multiple participants
-                    List<Integer> participantIds = addAppointmentPanel.getParticipantIds(); // Assume this method exists
-                    success = appointmentDao.insertAppointment(
-                            updatedAppointment.getGuidanceCounselorId(),
-                            updatedAppointment.getAppointmentTitle(),
-                            updatedAppointment.getAppointmentType(),
-                            updatedAppointment.getAppointmentDateTime(),
-                            updatedAppointment.getAppointmentNotes(),
-                            updatedAppointment.getAppointmentStatus(),
-                            participantIds) > 0;
-                } else {
-                    // Update existing appointment
-                    success = appointmentDao.updateAppointment(updatedAppointment);
-                }
-
-                if (success) {
-                    updateCalendar();
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Failed to " + (existingAppointment == null ? "save" : "update") + " appointment",
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this,
-                        "Database error: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-            }
-        }
     }
 }

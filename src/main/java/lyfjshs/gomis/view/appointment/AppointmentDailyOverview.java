@@ -3,7 +3,6 @@ package lyfjshs.gomis.view.appointment;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
 import java.sql.Connection;
@@ -19,7 +18,6 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -85,7 +83,7 @@ public class AppointmentDailyOverview extends JPanel {
 
         mainPanel.add(headerPanel, "growx");
         mainPanel.add(new JSeparator(), "growx, gapy 5");
-        mainPanel.add(new JScrollPane(appointmentsPanel), "grow");
+        mainPanel.add(appointmentsPanel, "grow");
 
         add(mainPanel);
     }
@@ -130,36 +128,8 @@ public class AppointmentDailyOverview extends JPanel {
         JLabel title = new JLabel(app.getAppointmentTitle());
         title.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
-        JButton viewButton = new JButton("View");
-        viewButton.setPreferredSize(new Dimension(60, 25));
-        viewButton.addActionListener(e -> showAppointmentDetailsPopup(app));
-        JButton deleteButton = new JButton("Delete");
-        deleteButton.setPreferredSize(new Dimension(80, 25));
-        deleteButton.addActionListener(e -> {
-            if (JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this appointment?",
-                "Confirm Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-                try {
-                    boolean success = appointmentDAO.deleteAppointment(app.getAppointmentId());
-                    if (success) {
-                        updateAppointmentsDisplay();
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Failed to delete appointment",
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (SQLException e1) {
-                    JOptionPane.showMessageDialog(this, "Database error: " + e1.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                    e1.printStackTrace();
-                }
-            }
-        });
-        buttonPanel.add(viewButton);
-        buttonPanel.add(deleteButton);
+        card.add(title, "span 2");
 
-        card.add(title);
-        card.add(buttonPanel, "right");
-        
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a");
         LocalDateTime appointmentDateTime = app.getAppointmentDateTime().toLocalDateTime();
         String timeSlot = appointmentDateTime.format(timeFormatter);
@@ -202,6 +172,12 @@ public class AppointmentDailyOverview extends JPanel {
             }, "span 2");
         }
 
+        card.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                showAppointmentDetailsPopup(app);
+            }
+        });
+
         return card;
     }
 
@@ -211,7 +187,6 @@ public class AppointmentDailyOverview extends JPanel {
         try {
             appointmentDetails.loadAppointmentsForDate(appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         dialog.getContentPane().add(appointmentDetails);
@@ -231,7 +206,6 @@ public class AppointmentDailyOverview extends JPanel {
         if (addAppointmentPanel.isConfirmed()) {
             Appointment newAppointment = addAppointmentPanel.getAppointment();
             try {
-                // Use the updated insertAppointment method with participantIds
                 List<Integer> participantIds = addAppointmentPanel.getParticipantIds();
                 int generatedId = appointmentDAO.insertAppointment(
                     newAppointment.getGuidanceCounselorId(),
