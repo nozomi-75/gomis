@@ -10,6 +10,8 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -21,6 +23,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.entity.Sessions;
@@ -31,6 +35,10 @@ import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import java.awt.Rectangle;
 import java.awt.Dimension;
+import javax.swing.JFrame;
+import java.awt.GridLayout;
+import java.awt.BorderLayout;
+
 
 public class SessionsForm extends Form implements Printable {
 	private JTextField dateField, violationField, recordedByField;
@@ -47,6 +55,9 @@ public class SessionsForm extends Form implements Printable {
 	private JPanel panel;
 	private JSeparator separator;
 	private JPanel panel_1;
+	private JTable participantTable;
+	private DefaultTableModel participantTableModel;
+	private Map<Integer, Map<String, String>> participantDetails = new HashMap<>();
 
 	public SessionsForm(Connection conn) {
 		this.connect = conn;
@@ -55,6 +66,8 @@ public class SessionsForm extends Form implements Printable {
 	}
 
 	private void initializeComponents() {
+		// Initialize the table model
+		participantTableModel = new DefaultTableModel(new Object[]{"#", "Participant Name", "Participant Type", "Actions"}, 0);
 	}
 
 	private void toggleSearchStudentButton() {
@@ -112,6 +125,80 @@ public class SessionsForm extends Form implements Printable {
 					JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
+	}
+
+	private void addParticipant() {
+		String firstName = firstNameField.getText();
+		String lastName = lastNameField.getText();
+		String contact = contactNumberField.getText();
+		String email = emailField.getText();
+		
+		// Validate that at least name fields are filled
+		if (firstName.trim().isEmpty() || lastName.trim().isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Please enter at least first and last name", "Missing Information", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		
+		// Add the new participant to the table
+		String fullName = firstName + " " + lastName;
+		int rowNum = participantTableModel.getRowCount() + 1; // Get the next row number
+		participantTableModel.addRow(new Object[]{rowNum, fullName, "Non-Student", "View | Remove"}); // Add to the table
+		
+		// Store all participant details for later viewing
+		Map<String, String> details = new HashMap<>();
+		details.put("firstName", firstName);
+		details.put("lastName", lastName);
+		details.put("fullName", fullName);
+		
+		details.put("contact", contact);
+		details.put("email", email);
+		details.put("type", "Non-Student");
+		
+		// Store using row index as key
+		participantDetails.put(rowNum, details);
+		
+		// Clear the input fields after saving
+		firstNameField.setText("");
+		lastNameField.setText("");
+		contactNumberField.setText("");
+		emailField.setText("");
+	}
+
+	private void setupParticipantTableListener() {
+		participantTable.addMouseListener(new java.awt.event.MouseAdapter() {
+			public void mouseClicked(java.awt.event.MouseEvent evt) {
+				int row = participantTable.rowAtPoint(evt.getPoint());
+				int col = participantTable.columnAtPoint(evt.getPoint());
+
+				// Check if the "Actions" column was clicked
+				if (col == 3) {
+					String action = (String) participantTable.getValueAt(row, col);
+					int rowNumber = (int) participantTable.getValueAt(row, 0);
+					
+					// Parse click position to determine if View or Remove was clicked
+					int clickX = evt.getX();
+					int cellX = participantTable.getCellRect(row, col, false).x;
+					int relativeX = clickX - cellX;
+					
+					// Approximate width of "View" text - adjust as needed
+					int viewWidth = 40;
+					
+					if (relativeX <= viewWidth) {
+						// "View" part was clicked
+						showParticipantDetails(rowNumber);
+					} else {
+						// "Remove" part was clicked
+						int option = JOptionPane.showConfirmDialog(SessionsForm.this, "Are you sure you want to remove this participant?", "Confirm Remove", JOptionPane.YES_NO_OPTION);
+						if (option == JOptionPane.YES_OPTION) {
+							// Remove participant from the table
+							participantTableModel.removeRow(row);
+							// Also remove from our details map
+							participantDetails.remove(rowNumber);
+						}
+					}
+				}
+			}
+		});
 	}
 
 	private void layoutComponents() {
@@ -187,9 +274,24 @@ public class SessionsForm extends Form implements Printable {
 		participantPanel.add(emailField, "cell 1 2 3 1,growx");
 
 		JButton saveParticipantButton = new JButton("Save Participant");
+		saveParticipantButton.addActionListener(e -> addParticipant());
 		participantPanel.add(saveParticipantButton, "cell 1 3 4 1,alignx center");
 
 		mainPanel.add(participantPanel, "cell 1 1 2 4,growx"); // Initially visible
+
+		// Participant Table
+		participantTable = new JTable(participantTableModel);
+		participantTable.setPreferredScrollableViewportSize(new Dimension(400, 100)); // Set preferred size for the table
+		JScrollPane tableScrollPane = new JScrollPane(participantTable); // Wrap the table in a scroll pane
+		tableScrollPane.setBorder(BorderFactory.createTitledBorder("Participant Table")); // Set border for the scroll pane
+
+		panel_1 = new JPanel();
+		panel_1.setLayout(new BorderLayout()); // Use BorderLayout for better control
+		panel_1.add(tableScrollPane, BorderLayout.CENTER); // Add the scroll pane to the panel
+		mainPanel.add(panel_1, "cell 1 5 2 1,grow"); // Adjust the cell position to align with the participant panel
+
+		// Setup listener for participant table actions
+		setupParticipantTableListener();
 
 		// Violation
 		JLabel violationLabel = new JLabel("Violation");
@@ -224,9 +326,6 @@ public class SessionsForm extends Form implements Printable {
 						// Date
 						JLabel dateLabel = new JLabel("Date");
 						mainPanel.add(dateLabel, "flowx,cell 5 4,alignx left,aligny top");
-		
-		panel_1 = new JPanel();
-		mainPanel.add(panel_1, "cell 1 5 2 1,grow");
 		
 		panel = new JPanel();
 		mainPanel.add(panel, "cell 4 5 2 1,grow");
@@ -286,6 +385,52 @@ public class SessionsForm extends Form implements Printable {
 		g2d.translate(pf.getImageableX(), pf.getImageableY());
 		this.printAll(g);
 		return PAGE_EXISTS;
+	}
+
+	// Add this method to display participant details
+	private void showParticipantDetails(int rowNumber) {
+		// Get the stored details for this participant
+		Map<String, String> details = participantDetails.get(rowNumber);
+		
+		if (details == null) {
+			JOptionPane.showMessageDialog(this, "Participant details not found", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		// Create a new JFrame for showing the details
+		JFrame detailFrame = new JFrame("Participant Details");
+		detailFrame.setSize(300, 200);
+		detailFrame.setLocationRelativeTo(this); // Center on parent frame
+		
+		// Create a panel to show details with a more organized layout
+		JPanel detailsPanel = new JPanel();
+		detailsPanel.setLayout(new GridLayout(0, 2, 10, 10)); // Rows adjust automatically, 2 columns
+		detailsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Add padding
+		
+		// Add all available details
+		detailsPanel.add(new JLabel("Full Name:"));
+		detailsPanel.add(new JLabel(details.get("fullName")));
+		
+		detailsPanel.add(new JLabel("Contact Number:"));
+		detailsPanel.add(new JLabel(details.get("contact")));
+		
+		detailsPanel.add(new JLabel("Email:"));
+		detailsPanel.add(new JLabel(details.get("email")));
+		
+		// Add a close button
+		JButton closeButton = new JButton("Close");
+		closeButton.addActionListener(e -> detailFrame.dispose());
+		
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.add(closeButton);
+		
+		// Add panels to the frame
+		detailFrame.getContentPane().setLayout(new BorderLayout());
+		detailFrame.getContentPane().add(detailsPanel, BorderLayout.CENTER);
+		detailFrame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+		
+		// Show the frame
+		detailFrame.setVisible(true);
 	}
 
 }
