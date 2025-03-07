@@ -16,6 +16,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
@@ -84,8 +85,15 @@ public class AppointmentOverview extends JPanel {
 		// Title Section
 		JPanel titlePanel = new JPanel(new MigLayout("insets 0", "[grow][]", ""));
 		titlePanel.setOpaque(false);
-		JLabel nameLabel = new JLabel(appt.getAppointmentTitle());
+		JTextArea nameLabel = new JTextArea(appt.getAppointmentTitle());
 		nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD, 14f));
+		nameLabel.setLineWrap(true); // Enable line wrapping
+		nameLabel.setWrapStyleWord(true); // Wrap at word boundaries
+		nameLabel.setOpaque(false); // Make it transparent
+		nameLabel.setEditable(false); // Make it non-editable
+		nameLabel.setBorder(null); // Remove border for better appearance
+		nameLabel.setPreferredSize(new Dimension(0, 40)); // Allow width to grow
+		nameLabel.setMaximumSize(new Dimension(300, Integer.MAX_VALUE)); // Set a maximum width
 		titlePanel.add(nameLabel, "cell 0 0, growx");
 		JButton viewButton = new JButton("View");
 		viewButton.setPreferredSize(new Dimension(60, 25));
