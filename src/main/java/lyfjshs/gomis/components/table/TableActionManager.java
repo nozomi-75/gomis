@@ -1,5 +1,7 @@
 package lyfjshs.gomis.components.table;
 
+import javax.swing.JTable;
+
 /**
  * Utility class for managing and applying action columns to {@link JTable}
  * instances. This class allows dynamic addition of action buttons to a table
@@ -23,7 +25,7 @@ public class TableActionManager {
 	 * @return this instance for method chaining
 	 */
 	public TableActionManager addAction(String text, java.util.function.BiConsumer<javax.swing.JTable, Integer> action,
-			java.awt.Color buttonColor,  javax.swing.Icon icon) {
+			java.awt.Color buttonColor, javax.swing.Icon icon) {
 		actions.add(new TableRowAction(text, action, buttonColor, icon));
 		return this;
 	}

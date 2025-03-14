@@ -18,7 +18,6 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
@@ -142,7 +141,7 @@ public class AppointmentCalendar extends JPanel {
 
             for (Appointment appt : appointments) {
                 JPanel appointmentPanel = new JPanel(new MigLayout("fill, insets 2", "[grow][]"));
-                Color bgColor = appointmentColors.getOrDefault(appt.getAppointmentType(), Color.GRAY);
+                Color bgColor = appointmentColors.getOrDefault(appt.getConsultationType(), Color.GRAY);
                 appointmentPanel.setBackground(bgColor);
 
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");

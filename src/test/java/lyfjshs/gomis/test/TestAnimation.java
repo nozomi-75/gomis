@@ -8,8 +8,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import lyfjshs.gomis.test.forms.SimpleInputForms;
-import lyfjshs.gomis.test.forms.SimpleInputForms2;
+import lyfjshs.gomis.test.simple.SimpleInputForms;
+import lyfjshs.gomis.test.simple.SimpleInputForms2;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
 

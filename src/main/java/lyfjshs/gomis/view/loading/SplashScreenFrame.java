@@ -137,16 +137,27 @@ public class SplashScreenFrame extends JFrame {
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
-                Main.initDB(); // Call the method to initialize the database connection                
-                Main.initFrame(); // Call the method to initialize the main frame
+                Main.initDB(); // Initialize the database connection
+                Main.initFrame(); // Initialize the main frame
+
                 return null;
             }
 
             @Override
             protected void done() {
-                dispose(); // Close the splash screen
-                Main.jFrame.setVisible(true);
-               
+                try {
+                    dispose(); // Close the splash screen
+                    if (Main.jFrame == null) {
+                        System.err.println("Error: Main.jFrame is null. Ensure initFrame() is called before accessing Main.jFrame.");
+                        System.exit(1); // Exit with error code
+                    } else {
+                        Main.jFrame.setVisible(true); // Make the main frame visible
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.err.println("Error during splash screen completion: " + e.getMessage());
+                    System.exit(1); // Exit with error code
+                }
             }
         };
         worker.execute(); // Start the SwingWorker

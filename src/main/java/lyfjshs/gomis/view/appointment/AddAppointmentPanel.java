@@ -2,12 +2,10 @@ package lyfjshs.gomis.view.appointment;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,11 +19,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ContactDAO;
 import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
@@ -36,7 +34,6 @@ import lyfjshs.gomis.Database.entity.Contact;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
-import lyfjshs.gomis.components.FormManager.FormManager;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 import raven.datetime.TimePicker;
@@ -75,22 +72,9 @@ public class AddAppointmentPanel extends JPanel {
     }
 
     private void initializeComponents() {
-        // Header Panel
-        JPanel headerPanel = new JPanel(new MigLayout("insets 0", "[grow][]", "[]"));
-        JLabel titleLabel = new JLabel("Add New Appointment");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        JButton closeButton = new JButton("×");
-        closeButton.setFont(new Font("Arial", Font.BOLD, 16));
-        closeButton.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        closeButton.setPreferredSize(new java.awt.Dimension(30, 30));
-        closeButton.addActionListener(e -> SwingUtilities.getWindowAncestor(this).dispose());
-        headerPanel.add(titleLabel, "align center");
-        headerPanel.add(closeButton, "align right");
-        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
-        add(headerPanel, "north");
 
         // Body Panel with MigLayout
-        JPanel bodyPanel = new JPanel(new MigLayout("wrap 1", "[grow][grow]", "[][][][][][][][][][][]"));
+        JPanel bodyPanel = new JPanel(new MigLayout("wrap 1", "[grow][grow]", "[][][][][][][][][][][][][][]"));
         bodyPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
         // Title Field
@@ -104,7 +88,7 @@ public class AddAppointmentPanel extends JPanel {
         // Time Field
         JLabel label = new JLabel("Time:");
         bodyPanel.add(label, "flowx,cell 1 2,alignx label");
-        String[] appointmentTypes = {
+        String[] consultationTypes = {
                 "Academic Consultation",
                 "Career Guidance",
                 "Personal Consultation",
@@ -113,10 +97,10 @@ public class AddAppointmentPanel extends JPanel {
         };
 
         // Appointment Type Dropdown
-        JLabel label_1 = new JLabel("Appointment Type:");
-        bodyPanel.add(label_1, "cell 0 3 2 1,growx");
-        JComboBox<String> typeComboBox = new JComboBox<>(appointmentTypes);
-        typeComboBox.setSelectedItem(appointment.getAppointmentType());
+        JLabel lblConsultationType = new JLabel("Consultation Type:");
+        bodyPanel.add(lblConsultationType, "cell 0 3 2 1,growx");
+        JComboBox<String> typeComboBox = new JComboBox<>(consultationTypes);
+        typeComboBox.setSelectedItem(appointment.getConsultationType());
         bodyPanel.add(typeComboBox, "cell 0 4 2 1,growx");
 
         // Guidance Counselor Details
@@ -126,11 +110,10 @@ public class AddAppointmentPanel extends JPanel {
         counselorDetailsField.setEditable(false);
 
         // Read guidance counselor details from FormManager after login
-        FormManager formManager = new FormManager();
         GuidanceCounselorDAO counselorDAO = new GuidanceCounselorDAO(connection);
 
         // Fetch the counselor ID from FormManager
-        int counselorID = formManager.getCounselorID();
+        int counselorID = Main.formManager.getCounselorID();
         System.out.println("Counselor ID: " + counselorID); // Debug statement
 
         // Fetch the counselor details using the ID
@@ -176,13 +159,7 @@ public class AddAppointmentPanel extends JPanel {
         notesArea.setRows(3);
         notesArea.setLineWrap(true);
         JScrollPane scrollPane_1 = new JScrollPane(notesArea);
-        bodyPanel.add(scrollPane_1, "cell 0 12 2 1,growx");
-        JButton cancelButton = new JButton("Cancel");
-        bodyPanel.add(cancelButton, "flowx,cell 1 13,alignx right");
-        cancelButton.setBackground(new Color(244, 67, 54));
-        cancelButton.setForeground(Color.WHITE);
-        cancelButton.setFocusPainted(false);
-        cancelButton.addActionListener(e -> SwingUtilities.getWindowAncestor(this).dispose());
+        bodyPanel.add(scrollPane_1, "cell 0 12 2 2,growx");
 
         JScrollPane scrollPane = new JScrollPane(bodyPanel);
         datePicker = new DatePicker();
@@ -209,29 +186,11 @@ public class AddAppointmentPanel extends JPanel {
         }
 
         bodyPanel.add(timeField, "cell 1 2,growx");
-        JButton submitButton = new JButton("Add Appointment");
-        bodyPanel.add(submitButton, "cell 1 13,alignx right");
-        submitButton.setBackground(new Color(76, 175, 80));
-        submitButton.setForeground(Color.WHITE);
-        submitButton.setFocusPainted(false);
-        submitButton.addActionListener(e -> {
-            if (validateInputs(titleField, datePicker, timePicker)) {
-                appointment.setAppointmentTitle(titleField.getText());
-                appointment.setAppointmentType((String) typeComboBox.getSelectedItem());
-                appointment.setAppointmentStatus(statusField.getText());
-                appointment.setAppointmentDateTime(java.sql.Timestamp
-                        .valueOf(LocalDateTime.of(datePicker.getSelectedDate(), timePicker.getSelectedTime())));
-                appointment.setAppointmentNotes(notesArea.getText());
-                extractAndSaveParticipants(); // Save participants and set IDs
-                setConfirmed(true);
-                SwingUtilities.getWindowAncestor(this).dispose();
-            }
-        });
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, "growx");
     }
 
-    private boolean validateInputs(JTextField titleField, DatePicker datePicker, TimePicker timePicker) {
+    public boolean validateInputs(JTextField titleField, DatePicker datePicker, TimePicker timePicker) {
         if (titleField.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Title is required.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return false;

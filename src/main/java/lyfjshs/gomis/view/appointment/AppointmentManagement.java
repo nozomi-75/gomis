@@ -108,7 +108,7 @@ public class AppointmentManagement extends Form {
                 int generatedId = appointmentDAO.insertAppointment(
                     updatedAppointment.getGuidanceCounselorId(),
                     updatedAppointment.getAppointmentTitle(),
-                    updatedAppointment.getAppointmentType(),
+                    updatedAppointment.getConsultationType(),
                     updatedAppointment.getAppointmentDateTime(),
                     updatedAppointment.getAppointmentNotes(),
                     updatedAppointment.getAppointmentStatus(),

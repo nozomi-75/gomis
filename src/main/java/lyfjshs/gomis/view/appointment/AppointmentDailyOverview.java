@@ -29,6 +29,8 @@ import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.ModalDialog;
+import raven.modal.component.SimpleModalBorder;
 
 public class AppointmentDailyOverview extends JPanel {
     private LocalDate selectedDate;
@@ -121,9 +123,9 @@ public class AppointmentDailyOverview extends JPanel {
     private JPanel createAppointmentCard(Appointment app) {
         JPanel card = new JPanel(new MigLayout("wrap 2", "[grow][]", ""));
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 4, 0, 0, getTypeColor(app.getAppointmentType())),
+            BorderFactory.createMatteBorder(0, 4, 0, 0, getTypeColor(app.getConsultationType())),
             BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        card.setBackground(getTypeBackground(app.getAppointmentType()));
+        card.setBackground(getTypeBackground(app.getConsultationType()));
 
         JLabel title = new JLabel(app.getAppointmentTitle());
         title.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -196,38 +198,57 @@ public class AppointmentDailyOverview extends JPanel {
     }
 
     private void showAddAppointmentDialog() {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add Appointment", true);
-        AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(new Appointment(), appointmentDAO, connection);
-        dialog.getContentPane().add(addAppointmentPanel);
-        dialog.setSize(600, 400);
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
 
-        if (addAppointmentPanel.isConfirmed()) {
-            Appointment newAppointment = addAppointmentPanel.getAppointment();
-            try {
-                List<Integer> participantIds = addAppointmentPanel.getParticipantIds();
-                int generatedId = appointmentDAO.insertAppointment(
-                    newAppointment.getGuidanceCounselorId(),
-                    newAppointment.getAppointmentTitle(),
-                    newAppointment.getAppointmentType(),
-                    newAppointment.getAppointmentDateTime(),
-                    newAppointment.getAppointmentNotes(),
-                    newAppointment.getAppointmentStatus(),
-                    participantIds
-                );
-                if (generatedId > 0) {
-                    updateAppointmentsDisplay();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Failed to add appointment",
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-            }
-        }
+      
+        AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(new Appointment(), appointmentDAO, connection);
+
+			ModalDialog.showModal(this,
+					new SimpleModalBorder(addAppointmentPanel, "Add Appointment", new SimpleModalBorder.Option[] {
+						new SimpleModalBorder.Option("Add Appointment", SimpleModalBorder.YES_OPTION),
+						new SimpleModalBorder.Option("Cancel", SimpleModalBorder.NO_OPTION)
+					}, (controller, action) -> {
+						if (action == SimpleModalBorder.YES_OPTION) {
+							controller.consume();
+                            if (addAppointmentPanel.isConfirmed()) {
+                                Appointment newAppointment = addAppointmentPanel.getAppointment();
+                                try {
+                                    List<Integer> participantIds = addAppointmentPanel.getParticipantIds();
+                                    int generatedId = appointmentDAO.insertAppointment(
+                                        newAppointment.getGuidanceCounselorId(),
+                                        newAppointment.getAppointmentTitle(),
+                                        newAppointment.getConsultationType(),
+                                        newAppointment.getAppointmentDateTime(),
+                                        newAppointment.getAppointmentNotes(),
+                                        newAppointment.getAppointmentStatus(),
+                                        participantIds
+                                    );
+                                    if (generatedId > 0) {
+                                        updateAppointmentsDisplay();
+                                    } else {
+                                        JOptionPane.showMessageDialog(this, "Failed to add appointment",
+                                            "Error", JOptionPane.ERROR_MESSAGE);
+                                    }
+                                } catch (SQLException e) {
+                                    JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(),
+                                            "Error", JOptionPane.ERROR_MESSAGE);
+                                    e.printStackTrace();
+                                }
+                            }
+                        } else if (action == SimpleModalBorder.NO_OPTION) {
+                            //a condition to ask if the user wants to cancel the operation
+                            // if the participants are already added
+                            controller.close();
+							
+                        } else if (action == SimpleModalBorder.CLOSE_OPTION
+								|| action == SimpleModalBorder.CANCEL_OPTION) {
+							controller.close();
+							// actions todo next after Close or Cancel
+						}
+					}),
+					"input");
+				// set size of modal dialog to 800x800
+				ModalDialog.getDefaultOption().getLayoutOption().setSize(800, 800);
+
     }
 
     private Color getTypeColor(String type) {

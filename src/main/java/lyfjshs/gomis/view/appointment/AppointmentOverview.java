@@ -113,7 +113,7 @@ public class AppointmentOverview extends JPanel {
 
 		// Type Section
 		JLabel typeLabel = new JLabel(
-				"Type: " + (appt.getAppointmentType() != null ? appt.getAppointmentType() : "N/A"));
+				"Type: " + (appt.getConsultationType() != null ? appt.getConsultationType() : "N/A"));
 		typeLabel.setFont(typeLabel.getFont().deriveFont(Font.ITALIC));
 		typeLabel.setForeground(new Color(139, 0, 139)); // Purple for type
 		card.add(typeLabel, "growx");
@@ -171,7 +171,7 @@ public class AppointmentOverview extends JPanel {
 				.append(appt.getGuidanceCounselorId() != null ? appt.getGuidanceCounselorId() : "Not assigned")
 				.append("<br>")
 				.append("Title: ").append(appt.getAppointmentTitle()).append("<br>")
-				.append("Type: ").append(appt.getAppointmentType() != null ? appt.getAppointmentType() : "N/A")
+				.append("Type: ").append(appt.getConsultationType() != null ? appt.getConsultationType() : "N/A")
 				.append("<br>")
 				.append("Date/Time: ").append(appt.getAppointmentDateTime().toLocalDateTime()
 						.format(DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a")))

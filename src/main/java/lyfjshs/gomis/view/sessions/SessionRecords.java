@@ -20,6 +20,8 @@ import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
+import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.TableActionManager;
@@ -38,6 +40,7 @@ public class SessionRecords extends Form {
     private JButton backBtn;
     private JPanel mainPanel;
     private JPanel sessionFullDataPanel; // Panel to show session details
+    private JButton addSessionBtn;
 
     public SessionRecords(Connection conn) {
         this.connection = conn;
@@ -69,6 +72,10 @@ public class SessionRecords extends Form {
             backBtn.setVisible(false);
             FlatAnimatedLafChange.hideSnapshotWithAnimation();
         });
+
+        // Initialize add session button
+        addSessionBtn = new JButton("Add Session");
+        addSessionBtn.addActionListener(e -> openAddSessionForm());
 
         // Add the main panel as the first slide
         slidePane.addSlide(mainPanel, SlidePaneTransition.Type.FORWARD);
@@ -118,11 +125,16 @@ public class SessionRecords extends Form {
     }
 
     private void showSessionFullData(Sessions session) {
-        // Create the SessionFullData panel
-        sessionFullDataPanel = new SessionFullData(session);
-        
-        // Add the SessionFullData panel to the SlidePane
-        slidePane.addSlide(sessionFullDataPanel, SlidePaneTransition.Type.FORWARD);
+        try {
+            GuidanceCounselor counselor = sessionsDAO.getCounselorById(session.getGuidanceCounselorId());
+            List<Participants> participants = sessionsDAO.getParticipantsBySessionId(session.getSessionId());
+            sessionFullDataPanel = new SessionFullData(session, counselor, participants);
+            slidePane.addSlide(sessionFullDataPanel, SlidePaneTransition.Type.FORWARD);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error retrieving session details: " + e.getMessage(), 
+                "Database Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 
     private void setupLayout() {
@@ -134,6 +146,7 @@ public class SessionRecords extends Form {
         headerLabel.setFont(new Font("Tahoma", Font.BOLD, 16));
 
         headerPanel.add(headerLabel, "flowx,cell 1 0,alignx center,growy");
+        headerPanel.add(addSessionBtn, "cell 2 0");
         headerPanel.add(backBtn, "cell 3 0");
 
         // Add components to main frame
@@ -148,6 +161,13 @@ public class SessionRecords extends Form {
         return panel;
     }
 
+    private void openAddSessionForm() {
+        SessionsForm sessionsForm = new SessionsForm(connection);
+        sessionsForm.setSaveCallback(this::loadSessionData);
+        sessionsForm.setVisible(true);
+    }
+
+
     private void loadSessionData() {
         try {
             List<Sessions> sessions = sessionsDAO.getSessionDataWithParticipantCount();
@@ -159,7 +179,7 @@ public class SessionRecords extends Form {
                 model.addRow(new Object[] { 
                     rowNum++, 
                     session.getSessionId(),
-                    session.getSessionType(),
+                    session.getConsultationType(),
                     session.getParticipantCount(),
                     session.getAppointmentDateTime(),
                     session.getSessionStatus()

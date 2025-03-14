@@ -22,7 +22,7 @@ public class FooterPanel extends SimpleFooter {
 	public FooterPanel() {
 		super(sfd = new SimpleFooterData()); // Create a SimpleFooterData instance
 		
-		AvatarIcon icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x200.png"), 60, 60, 0);
+		AvatarIcon icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x.png"), 60, 60, 0);
 
 		logoLabel = new JLabel("", icon, SwingConstants.HORIZONTAL);
 

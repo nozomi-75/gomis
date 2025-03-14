@@ -123,28 +123,28 @@ public class FormManager {
         return login;
     }
 
-    public static void setCounselorDetails(GuidanceCounselor counselor) {
+    public void setCounselorDetails(GuidanceCounselor counselor) {
         counselorFIRST_NAME = counselor.getFirstName();
         counselorLAST_NAME = counselor.getLastName();
         counselorPosition = counselor.getPosition();
         System.out.println("Counselor Details Set: " + counselorFIRST_NAME + " " + counselorLAST_NAME + ", " + counselorPosition); // Debug statement
     }
 
-    public static int getCounselorID() {
+    public int getCounselorID() {
         System.out.println("Getting Counselor ID: " + counselorID); // Debug statement
         return counselorID;
     }
 
-    public static void setCounselorID(int counselorID) {
+    public void setCounselorID(int counselorID) {
         FormManager.counselorID = counselorID;
         System.out.println("Setting Counselor ID: " + counselorID); // Debug statement
     }
 
-    public static String getCounselorFullName() {
+    public String getCounselorFullName() {
         return counselorFIRST_NAME + " " + counselorLAST_NAME;
     }
 
-    public static String getCounselorPosition() {
+    public String getCounselorPosition() {
         return counselorPosition;
     }
 

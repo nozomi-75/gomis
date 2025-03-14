@@ -8,7 +8,8 @@ public class Sessions {
     private int guidanceCounselorId;
     private int participantId;
     private Integer violationId; // Use Integer to handle potential null values
-    private String sessionType;
+    private String appointmentType;
+    private String consultationType;
     private Timestamp sessionDateTime;
     private String sessionNotes;
     private String sessionStatus;
@@ -18,14 +19,15 @@ public class Sessions {
 
     // Full Constructor
     public Sessions(int sessionId, int appointmentId, int guidanceCounselorId, int participantId, Integer violationId,
-                    String sessionType, Timestamp sessionDateTime, String sessionNotes, String sessionStatus,
+                    String appointmentType, String consultationType, Timestamp sessionDateTime, String sessionNotes, String sessionStatus,
                     Timestamp updatedAt) {
         this.sessionId = sessionId;
         this.appointmentId = appointmentId;
         this.guidanceCounselorId = guidanceCounselorId;
         this.participantId = participantId;
         this.violationId = violationId;
-        this.sessionType = sessionType;
+        this.appointmentType = appointmentType;
+        this.consultationType = consultationType;
         this.sessionDateTime = sessionDateTime;
         this.sessionNotes = sessionNotes;
         this.sessionStatus = sessionStatus;
@@ -76,12 +78,20 @@ public class Sessions {
         this.violationId = violationId;
     }
 
-    public String getSessionType() {
-        return sessionType;
+    public String getAppointmentType() {
+        return appointmentType;
     }
 
-    public void setSessionType(String sessionType) {
-        this.sessionType = sessionType;
+    public void setAppointmentType(String appointmentType) {
+        this.appointmentType = appointmentType;
+    }
+
+    public String getConsultationType() {
+        return consultationType;
+    }
+
+    public void setConsultationType(String consultationType) {
+        this.consultationType = consultationType;
     }
 
     public Timestamp getSessionDateTime() {
@@ -140,7 +150,8 @@ public class Sessions {
                 ", guidanceCounselorId=" + guidanceCounselorId +
                 ", participantId=" + participantId +
                 ", violationId=" + violationId +
-                ", sessionType='" + sessionType + '\'' +
+                ", appointmentType='" + appointmentType + '\'' +
+                ", consultationType='" + consultationType + '\'' +
                 ", sessionDateTime=" + sessionDateTime +
                 ", sessionNotes='" + sessionNotes + '\'' +
                 ", sessionStatus='" + sessionStatus + '\'' +

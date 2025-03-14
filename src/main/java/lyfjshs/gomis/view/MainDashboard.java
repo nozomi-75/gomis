@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -17,6 +16,8 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.formdev.flatlaf.extras.components.FlatButton;
+import com.formdev.flatlaf.extras.components.FlatButton.ButtonType;
 
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
@@ -42,7 +43,7 @@ public class MainDashboard extends Form {
 		this.connection = conn;
 		this.setLayout(new BorderLayout());
 
-		contentPanel = new JPanel(new MigLayout("fill, gap 10", "[grow][300]", "[grow 60][]"));
+		contentPanel = new JPanel(new MigLayout("fill", "[grow][300]", "[grow 70][grow]"));
 		this.add(contentPanel, BorderLayout.CENTER); // Center the content panel
 
 		centralTablePanel = new JPanel(new MigLayout("", "[386.00,grow]", "[30px][grow]"));
@@ -52,6 +53,8 @@ public class MainDashboard extends Form {
 		centralTablePanel.add(headerTablePanel, "cell 0 0,grow");
 
 		JLabel lblNewLabel = new JLabel("List of Violations:");
+		lblNewLabel.putClientProperty("FlatLaf.styleClass", "large");
+
 		headerTablePanel.add(lblNewLabel, "cell 0 1 2 1");
 
 		JScrollPane tableScrollPane = createTablePanel();
@@ -61,25 +64,20 @@ public class MainDashboard extends Form {
 		contentPanel.add(sideRPanel, "cell 1 0 1 2,grow");
 
 		JLabel lblNewLabel_1 = new JLabel("Appointments overview");
+		lblNewLabel_1.putClientProperty("FlatLaf.styleClass", "large");
+
 		sideRPanel.add(lblNewLabel_1, "cell 0 0");
 		AppointmentDAO appointmentDAO = new AppointmentDAO(conn);
 		AppointmentOverview appointmentOverview = new AppointmentOverview(appointmentDAO, conn);
 		sideRPanel.add(appointmentOverview, "cell 0 1,grow");
 
-		JPanel actionPanel = new JPanel(new MigLayout("wrap 4, insets 20, gap 20", "[grow][grow][grow][grow]", "[][]"));
+		JPanel actionPanel = new JPanel(new MigLayout("fill", "[grow]", "[]"));
 		contentPanel.add(actionPanel, "cell 0 1,grow");
 
 		// Create panels for each section
-		JPanel violationPanel = createActionPanel("VIOLATION", "VIEW");
-		JPanel appointmentPanel = createActionPanel("APPOINTMENT", "SET SCHEDULE");
-		JPanel sessionsPanel = createActionPanel("SESSIONS", "VIEW");
-		JPanel incidentPanel = createActionPanel("INCIDENT REPORT", "PRINT");
+		JPanel violationPanel = createActionPanel();
 
-		// Add panels to the action panel
 		actionPanel.add(violationPanel, "grow");
-		actionPanel.add(appointmentPanel, "grow");
-		actionPanel.add(sessionsPanel, "grow");
-		actionPanel.add(incidentPanel, "grow");
 
 		// Add this debug code temporarily in MainDashboard constructor
 		try {
@@ -128,23 +126,18 @@ public class MainDashboard extends Form {
 				// If participant is a student, fetch student details
 				if (participant.getStudentUid() != null) {
 					Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
-					String fullName = String.format("%s %s", student.getStudentFirstname(), student.getStudentLastname());
+					String fullName = String.format("%s %s", student.getStudentFirstname(),
+							student.getStudentLastname());
 
-					Object[] rowData = {
-							student.getStudentLrn(),
-							fullName,
-							violation.getViolationType(),
-							violation.getStatus(),
-							"" // Actions column
+					Object[] rowData = { student.getStudentLrn(), fullName, violation.getViolationType(),
+							violation.getStatus(), "" // Actions column
 					};
 					model.addRow(rowData);
 				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this,
-					"Error loading violations: " + e.getMessage(),
-					"Error",
+			JOptionPane.showMessageDialog(this, "Error loading violations: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
 
@@ -189,9 +182,7 @@ public class MainDashboard extends Form {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this,
-					"Error retrieving violation details: " + e.getMessage(),
-					"Error",
+			JOptionPane.showMessageDialog(this, "Error retrieving violation details: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
 	}
@@ -203,8 +194,7 @@ public class MainDashboard extends Form {
 
 			if (violation != null) {
 				int confirm = JOptionPane.showConfirmDialog(this,
-						"Are you sure you want to mark this violation as resolved?",
-						"Confirm Resolution",
+						"Are you sure you want to mark this violation as resolved?", "Confirm Resolution",
 						JOptionPane.YES_NO_OPTION);
 
 				if (confirm == JOptionPane.YES_OPTION) {
@@ -216,9 +206,7 @@ public class MainDashboard extends Form {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this,
-					"Error resolving violation: " + e.getMessage(),
-					"Error",
+			JOptionPane.showMessageDialog(this, "Error resolving violation: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
 	}
@@ -241,23 +229,44 @@ public class MainDashboard extends Form {
 		centralTablePanel.repaint();
 	}
 
-	private JPanel createActionPanel(String title, String buttonText) {
-		JPanel panel = new JPanel(new MigLayout("wrap 1, insets 10, gap 5", "[center]", "[][]"));
-		panel.setBackground(new Color(240, 240, 240));
+	private JPanel createActionPanel() {
+		JPanel panel = new JPanel(new MigLayout("", "[grow][][grow][][grow][][grow]", "[][][][][]"));
 
-		JLabel titleLabel = new JLabel(title);
-		titleLabel.setFont(titleLabel.getFont().deriveFont(12f));
+		JLabel titleLabel = new JLabel("Management");
+		titleLabel.putClientProperty("FlatLaf.styleClass", "h1");
+		panel.add(titleLabel, "cell 0 0 4 1,growx,aligny center");
 
-		JButton actionButton = new JButton(buttonText);
-		actionButton.setBackground(new Color(220, 220, 220));
-		actionButton.setForeground(new Color(60, 60, 60));
-		actionButton.setFocusPainted(false);
-		actionButton.setBorderPainted(false);
-		actionButton.setOpaque(true);
+		JLabel violationLabel = new JLabel("Violation");
+		violationLabel.putClientProperty("FlatLaf.styleClass", "large");
+		panel.add(violationLabel, "cell 1 2,alignx center");
 
-		panel.add(titleLabel);
-		panel.add(actionButton, "w 120!, h 30!");
+		JLabel appointmentLabel = new JLabel("Appointment");
+		appointmentLabel.putClientProperty("FlatLaf.styleClass", "large");
+		panel.add(appointmentLabel, "cell 3 2,alignx center");
 
+		JLabel studentLabel = new JLabel("Student");
+		studentLabel.putClientProperty("FlatLaf.styleClass", "large");
+		panel.add(studentLabel, "cell 5 2,alignx center");
+
+		FlatButton standardButton_1 = new FlatButton();
+		standardButton_1.setText("View Violation");
+		standardButton_1.setButtonType(ButtonType.none);
+		panel.add(standardButton_1, "cell 1 3");
+
+		FlatButton standardButton_2 = new FlatButton();
+		standardButton_2.setText("Set Appointment");
+		standardButton_2.setButtonType(ButtonType.none);
+		panel.add(standardButton_2, "flowx,cell 3 3");
+
+		FlatButton standardButton_3 = new FlatButton();
+		standardButton_3.setText("View Appointments");
+		standardButton_3.setButtonType(ButtonType.none);
+		panel.add(standardButton_3, "cell 3 3");
+
+		FlatButton standardButton_4 = new FlatButton();
+		standardButton_4.setText("View Students");
+		standardButton_4.setButtonType(ButtonType.none);
+		panel.add(standardButton_4, "cell 5 3");
 		return panel;
 	}
 

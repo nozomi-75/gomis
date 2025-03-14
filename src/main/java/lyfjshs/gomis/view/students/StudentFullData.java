@@ -1,8 +1,6 @@
 package lyfjshs.gomis.view.students;
 
 import java.awt.Color;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.time.LocalDateTime;
@@ -60,13 +58,6 @@ public class StudentFullData extends Form {
 	private FlatSVGIcon sagisagIcon, logoIcon;
 	private JTextField ipField;
 	private JTextField textField;
-	private JTextField houseNoField;
-	private JTextField streetField;
-	private JTextField regionField;
-	private JTextField provinceField;
-	private JTextField municipalityField;
-	private JTextField barangayField;
-	private JTextField zipCodeField;
 	private JTextField fatherLastNameField;
 	private JTextField fatherFirstNameField;
 	private JTextField fatherMiddleNameField;
@@ -82,6 +73,8 @@ public class StudentFullData extends Form {
 	private JScrollPane scrollPane;
 	private JTable violationTable;
 	private Connection connect;
+	private JLabel lblNewLabel;
+	private JTextField fullAddField;
 
 	public StudentFullData(Connection connection, Student studentData) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
@@ -91,59 +84,16 @@ public class StudentFullData extends Form {
 		loadViolations(studentData.getStudentUid(), connect);
 
 		// Set fields with student data
-		lrnField.setText(studentData.getStudentLrn());
-		lastNameField.setText(studentData.getStudentLastname());
-		firstNameField.setText(studentData.getStudentFirstname());
-		middleNameField.setText(studentData.getStudentMiddlename());
-		sexComboBox.setSelectedItem(studentData.getStudentSex());
-		dobField.setText(studentData.getStudentBirthdate().toString());
-		ageField.setText(String.valueOf(studentData.getStudentAge()));
-		motherTongueField.setText(studentData.getStudentMothertongue());
-		ipField.setText(studentData.getStudentIpType());
-		textField.setText(studentData.getStudentReligion());
-
-		// Set address fields
-		Address address = studentData.getAddress();
-		houseNoField.setText(address.getAddressHouseNumber());
-		streetField.setText(address.getAddressStreetSubdivision());
-		regionField.setText(address.getAddressRegion());
-		provinceField.setText(address.getAddressProvince());
-		municipalityField.setText(address.getAddressMunicipality());
-		barangayField.setText(address.getAddressBarangay());
-		zipCodeField.setText(address.getAddressZipCode());
-
-		// Set contact fields
-		Contact contact = studentData.getContact();
-		guardianContactField.setText(contact.getContactNumber());
-
-		// Set PARENTS fields
-		Parents parent = studentData.getParents();
-
-		fatherLastNameField.setText(parent.getFatherLastname());
-		fatherFirstNameField.setText(parent.getFatherFirstname());
-		fatherMiddleNameField.setText(parent.getFatherMiddlename());
-		fatherPhoneNumberField.setText(parent.getFatherContactNumber());
-		motherLastNameField.setText(parent.getMotherLastname());
-		motherFirstNameField.setText(parent.getMotherFirstname());
-		motherMiddleNameField.setText(parent.getMotherMiddlename());
-		motherPhoneNumberField.setText(parent.getMotherContactNumber());
-		
-		// Set guardian fields
-		Guardian guardian = studentData.getGuardian();
-		guardianNameField.setText(guardian.getGuardianFirstname() + " " + guardian.getGuardianMiddlename() + " "
-				+ guardian.getGuardianLastname());
-		guardianEmailField.setText(guardian.getGuardianRelationship());
+		setStudentData(studentData);
 
 		// Add components to the panel
-		JPanel mainPanel = new JPanel(
-				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow][grow,fill][]"));
+		JPanel mainPanel = new JPanel(new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow,fill][]"));
 		JScrollPane scroll = new JScrollPane(mainPanel);
 
 		mainPanel.add(createPersonalInfoPanel(), "cell 0 0 2 1,grow");
-		mainPanel.add(createAddressPanel(), "cell 0 1 2 1,grow");
-		mainPanel.add(createParentPanel(), "cell 0 2 2 1,grow");
-		mainPanel.add(createGuardianPanel(), "cell 0 3,grow");
-		mainPanel.add(createViolationTablePanel(), "cell 1 3,grow");
+		mainPanel.add(createParentPanel(), "cell 0 1 2 1,grow");
+		mainPanel.add(createGuardianPanel(), "cell 0 2,grow");
+		mainPanel.add(createViolationTablePanel(), "cell 1 2,grow");
 
 		add(scroll, "cell 1 0,grow");
 
@@ -203,27 +153,6 @@ public class StudentFullData extends Form {
 		textField = new JTextField();
 		textField.setEditable(false);
 
-		houseNoField = new JTextField();
-		houseNoField.setEditable(false);
-
-		streetField = new JTextField();
-		streetField.setEditable(false);
-
-		regionField = new JTextField();
-		regionField.setEditable(false);
-
-		provinceField = new JTextField();
-		provinceField.setEditable(false);
-
-		municipalityField = new JTextField();
-		municipalityField.setEditable(false);
-
-		barangayField = new JTextField();
-		barangayField.setEditable(false);
-
-		zipCodeField = new JTextField();
-		zipCodeField.setEditable(false);
-
 		fatherLastNameField = new JTextField();
 		fatherLastNameField.setEditable(false);
 
@@ -253,11 +182,57 @@ public class StudentFullData extends Form {
 
 		parentNameField = new JTextField();
 		parentNameField.setEditable(false);
+
+		fullAddField = new JTextField();
+		fullAddField.setEditable(false);
+	}
+
+	private void setStudentData(Student studentData) {
+		lrnField.setText(studentData.getStudentLrn());
+		lastNameField.setText(studentData.getStudentLastname());
+		firstNameField.setText(studentData.getStudentFirstname());
+		middleNameField.setText(studentData.getStudentMiddlename());
+		sexComboBox.setSelectedItem(studentData.getStudentSex());
+		dobField.setText(studentData.getStudentBirthdate().toString());
+		ageField.setText(String.valueOf(studentData.getStudentAge()));
+		motherTongueField.setText(studentData.getStudentMothertongue());
+		ipField.setText(studentData.getStudentIpType());
+		textField.setText(studentData.getStudentReligion());
+
+		// Set address fields
+		Address address = studentData.getAddress();
+		System.out.println(address.getAddressHouseNumber() + " " + address.getAddressStreetSubdivision() + " "
+				+ address.getAddressBarangay() + " " + address.getAddressMunicipality() + " "
+				+ address.getAddressProvince() + " " + address.getAddressZipCode());
+		fullAddField.setText(address.getAddressHouseNumber() + " " + address.getAddressStreetSubdivision() + " "
+				+ address.getAddressBarangay() + " " + address.getAddressMunicipality() + " "
+				+ address.getAddressProvince() + " " + address.getAddressZipCode());
+
+		// Set contact fields
+		Contact contact = studentData.getContact();
+		guardianContactField.setText(contact.getContactNumber());
+
+		// Set PARENTS fields
+		Parents parent = studentData.getParents();
+		fatherLastNameField.setText(parent.getFatherLastname());
+		fatherFirstNameField.setText(parent.getFatherFirstname());
+		fatherMiddleNameField.setText(parent.getFatherMiddlename());
+		fatherPhoneNumberField.setText(parent.getFatherContactNumber());
+		motherLastNameField.setText(parent.getMotherLastname());
+		motherFirstNameField.setText(parent.getMotherFirstname());
+		motherMiddleNameField.setText(parent.getMotherMiddlename());
+		motherPhoneNumberField.setText(parent.getMotherContactNumber());
+
+		// Set guardian fields
+		Guardian guardian = studentData.getGuardian();
+		guardianNameField.setText(guardian.getGuardianFirstname() + " " + guardian.getGuardianMiddlename() + " "
+				+ guardian.getGuardianLastname());
+		guardianEmailField.setText(guardian.getGuardianRelationship());
 	}
 
 	private JPanel createPersonalInfoPanel() {
 		JPanel personalInfoPanel = new JPanel(
-				new MigLayout("wrap 2", "[140px][grow,fill][][140px,leading][grow,fill]", "[]5[]5[]5[]5[]5[]5[]5[]"));
+				new MigLayout("wrap 2", "[140px][grow,fill][][140px,leading][grow,fill]", "[]5[]5[]5[]5[]5[]"));
 		personalInfoPanel.setBorder(
 				new TitledBorder(null, "Personal Information", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
@@ -276,53 +251,38 @@ public class StudentFullData extends Form {
 		personalInfoPanel.add(new JLabel("First Name:"), "cell 0 2, leading");
 		personalInfoPanel.add(firstNameField, "cell 1 2, growx");
 
+		JLabel label = new JLabel("Mother Tongue");
+		personalInfoPanel.add(label, "cell 3 2,alignx leading");
+
+		motherTongueField = new JTextField();
+		motherTongueField.setEditable(false);
+		personalInfoPanel.add(motherTongueField, "cell 4 2,growx");
+
 		personalInfoPanel.add(new JLabel("Middle Name:"), "cell 0 3, leading");
 		personalInfoPanel.add(middleNameField, "cell 1 3, growx");
+
+		lblNewLabel = new JLabel("Full Address:");
+		personalInfoPanel.add(lblNewLabel, "cell 3 3,alignx left");
+
+		fullAddField = new JTextField();
+		fullAddField.setEditable(false);
+		personalInfoPanel.add(fullAddField, "cell 4 3,growx");
+		fullAddField.setColumns(10);
 
 		personalInfoPanel.add(new JLabel("Sex:"), "cell 0 4, leading");
 		personalInfoPanel.add(sexComboBox, "cell 1 4, growx");
 
 		personalInfoPanel.add(new JLabel("Date of Birth:"), "cell 0 5, leading");
-		personalInfoPanel.add(dobField, "cell 1 5, growx");
+		personalInfoPanel.add(dobField, "flowx,cell 1 5,growx");
 
-		personalInfoPanel.add(new JLabel("AGE as of 1st Friday June"), "cell 0 6, leading");
-		personalInfoPanel.add(ageField, "cell 1 6, growx");
+		JLabel label_1 = new JLabel("AGE as of 1st Friday June");
+		personalInfoPanel.add(label_1, "cell 1 5,alignx leading");
 
-		personalInfoPanel.add(new JLabel("Mother Tongue"), "cell 0 7, leading");
-		personalInfoPanel.add(motherTongueField, "cell 1 7, growx");
+		ageField = new JTextField();
+		ageField.setEditable(false);
+		personalInfoPanel.add(ageField, "cell 1 5,alignx center");
 
 		return personalInfoPanel;
-	}
-
-	private JPanel createAddressPanel() {
-		JPanel addressPanel = new JPanel(new MigLayout("wrap 2", "[][grow]", "[]5[]5[]5[]5[]5[]5[]"));
-		addressPanel.setBorder(
-				new TitledBorder(null, "RESIDENTIAL ADDRESS", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-		zipCodeField.addKeyListener(new KeyAdapter() {
-			public void keyTyped(KeyEvent e) {
-				if (!Character.isDigit(e.getKeyChar())) {
-					e.consume();
-				}
-			}
-		});
-
-		addressPanel.add(new JLabel("House No:"), "cell 0 0, leading");
-		addressPanel.add(houseNoField, "cell 1 0, growx");
-		addressPanel.add(new JLabel("Street/Subdivision:"), "cell 0 1, leading");
-		addressPanel.add(streetField, "cell 1 1, growx");
-		addressPanel.add(new JLabel("Region:"), "cell 0 2, leading");
-		addressPanel.add(regionField, "cell 1 2, growx");
-		addressPanel.add(new JLabel("Province:"), "cell 0 3, leading");
-		addressPanel.add(provinceField, "cell 1 3, growx");
-		addressPanel.add(new JLabel("Municipality:"), "cell 0 4, leading");
-		addressPanel.add(municipalityField, "cell 1 4, growx");
-		addressPanel.add(new JLabel("Barangay:"), "cell 0 5, leading");
-		addressPanel.add(barangayField, "cell 1 5, growx");
-		addressPanel.add(new JLabel("Zip Code:"), "cell 0 6, leading");
-		addressPanel.add(zipCodeField, "cell 1 6, growx");
-
-		return addressPanel;
 	}
 
 	private JPanel createGuardianPanel() {
@@ -343,7 +303,7 @@ public class StudentFullData extends Form {
 	}
 
 	private JPanel createParentPanel() {
-		JPanel parentPanel = new JPanel(new MigLayout("wrap 4", "[][grow]15[][grow]", "[]5[]5[]5[]5[]"));
+		JPanel parentPanel = new JPanel(new MigLayout("wrap 4", "[][grow]15[][grow]", "[]5[]5[]5[]"));
 		parentPanel.setBorder(
 				new TitledBorder(null, "PARENT'S INFORMATION", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		parentPanel.add(fatherFirstNameField, "cell 1 0,growx");

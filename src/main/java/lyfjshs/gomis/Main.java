@@ -72,7 +72,6 @@ public class Main {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(null, "Error connecting to the database: " + e.getMessage(),
 					"Database Error: GMS-001", JOptionPane.ERROR_MESSAGE);
-			System.exit(1); // Stop execution if DB connection fails
 		}
 	}
 
@@ -123,19 +122,23 @@ public class Main {
 		createStudent = new StudentInfoFullForm(conn);
 	}
 
+	public static FormManager formManager;
+
 	/**
 	 * Initializes and configures the main application frame. Installs the drawer
 	 * navigation system and form manager.
 	 */
 	public static void initFrame() {
-		initializeLookAndFeel();
-		initDB();
-		jFrame = new GFrame(1000, 700, false, "GOMIS", null);
-		jFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
-		initiPanels();
+	    initializeLookAndFeel();
+	    initDB();
+	    jFrame = new GFrame(1280, 720, false, "GOMIS", null);
+	    jFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
+	    initiPanels();
 
-		FormManager.install(jFrame);
-		
-		jFrame.refresh();
+	    FormManager.install(jFrame);
+	    formManager = new FormManager();
+
+	    jFrame.refresh();
 	}
+
 }

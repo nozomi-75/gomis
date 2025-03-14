@@ -33,6 +33,7 @@ import com.formdev.flatlaf.extras.components.FlatToggleButton;
 import com.formdev.flatlaf.extras.components.FlatTree;
 import com.formdev.flatlaf.extras.components.FlatTriStateCheckBox;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import net.miginfocom.swing.MigLayout;
 
 public class FlatLafExtrasDemo {
     public static void main(String[] args) {
@@ -46,117 +47,118 @@ public class FlatLafExtrasDemo {
             JFrame frame = new JFrame("FlatLaf Extras Components");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(600, 600);
-            frame.setLayout(new BorderLayout());
+            frame.getContentPane().setLayout(new BorderLayout());
             frame.setLocationRelativeTo(null);
 
             // Main Panel
             JPanel panel = new JPanel();
-            panel.setLayout(new GridLayout(0, 2, 10, 10)); // Two columns layout
-
-            // Buttons
-            panel.add(new JLabel("FlatButton:"));
+            panel.setLayout(new MigLayout("", "[279px][279px]", "[][][baseline][][][][][][][][][][][][][][]"));
+            
+                        // Buttons
+                        JLabel label = new JLabel("FlatButton:");
+                        panel.add(label, "cell 0 0,grow");
             FlatButton flatButton = new FlatButton();
             flatButton.setText("Click Me");
             flatButton.setButtonType(FlatButton.ButtonType.roundRect);
-            panel.add(flatButton);
+            panel.add(flatButton, "cell 1 0,grow");
 
             // Toggle Button
-            panel.add(new JLabel("FlatToggleButton:"));
+            panel.add(new JLabel("FlatToggleButton:"), "cell 0 1,grow");
             FlatToggleButton toggleButton = new FlatToggleButton();
             toggleButton.setText("Toggle Me");
-            panel.add(toggleButton);
+            panel.add(toggleButton, "cell 1 1,grow");
 
             // Tri-State Checkbox
-            panel.add(new JLabel("FlatTriStateCheckBox:"));
+            panel.add(new JLabel("FlatTriStateCheckBox:"), "cell 0 2,grow");
             FlatTriStateCheckBox triStateCheckBox = new FlatTriStateCheckBox("Tri-State");
-            panel.add(triStateCheckBox);
+            panel.add(triStateCheckBox, "cell 1 2,grow");
 
             // Checkbox
-            panel.add(new JLabel("FlatCheckBox:"));
+            panel.add(new JLabel("FlatCheckBox:"), "cell 0 3,grow");
             FlatCheckBox flatCB = new FlatCheckBox();
             flatCB.setText("Check Me");
-            panel.add(flatCB);
+            panel.add(flatCB, "cell 1 3,grow");
 
             // Radio Button
-            panel.add(new JLabel("FlatRadioButton:"));
+            panel.add(new JLabel("FlatRadioButton:"), "cell 0 4,grow");
             FlatRadioButton FlatRB = new FlatRadioButton();
             FlatRB.setText("Select Me");
-            panel.add(FlatRB);
+            panel.add(FlatRB, "cell 1 4,grow");
             
 
             // Text Fields
-            panel.add(new JLabel("FlatTextField:"));
-            panel.add(new FlatTextField());
+            panel.add(new JLabel("FlatTextField:"), "cell 0 5,grow");
+            panel.add(new FlatTextField(), "cell 1 5,grow");
 
-            panel.add(new JLabel("FlatPasswordField:"));
-            panel.add(new FlatPasswordField());
+            panel.add(new JLabel("FlatPasswordField:"), "cell 0 6,grow");
+            panel.add(new FlatPasswordField(), "cell 1 6,grow");
 
-            panel.add(new JLabel("FlatFormattedTextField:"));
-            panel.add(new FlatFormattedTextField());
+            panel.add(new JLabel("FlatFormattedTextField:"), "cell 0 7,grow");
+            panel.add(new FlatFormattedTextField(), "cell 1 7,grow");
 
             // Spinner
-            panel.add(new JLabel("FlatSpinner:"));
+            panel.add(new JLabel("FlatSpinner:"), "cell 0 8,grow");
             FlatSpinner FlatSpinner = new FlatSpinner();
             FlatSpinner.setModel(new SpinnerNumberModel(5, 0, 10, 1));
-            panel.add(FlatSpinner);
+            panel.add(FlatSpinner, "cell 1 8,grow");
 
             // ComboBox
-            panel.add(new JLabel("FlatComboBox:"));
+            panel.add(new JLabel("FlatComboBox:"), "cell 0 9,grow");
             FlatComboBox<String> comboBox = new FlatComboBox<>();
             comboBox.addItem("Option 1");
             comboBox.addItem("Option 2");
             comboBox.addItem("Option 3");
-            panel.add(comboBox);
+            panel.add(comboBox, "cell 1 9,grow");
 
             // List
-            panel.add(new JLabel("FlatList:"));
+            panel.add(new JLabel("FlatList:"), "cell 0 10,grow");
             DefaultListModel<String> listModel = new DefaultListModel<>();
             listModel.addElement("Item 1");
             listModel.addElement("Item 2");
             listModel.addElement("Item 3");
             FlatList<String> list = new FlatList<>();
             list.setModel(listModel);
-            panel.add(new JScrollPane(list));
+            panel.add(new JScrollPane(list), "cell 1 10,grow");
 
             // Label
-            panel.add(new JLabel("FlatLabel:"));
+            panel.add(new JLabel("FlatLabel:"), "cell 0 11,grow");
             FlatLabel flatLabel = new FlatLabel();
             flatLabel.setText("This is a FlatLabel");
-            panel.add(flatLabel);
+            panel.add(flatLabel, "cell 1 11,grow");
 
             // Progress Bar
-            panel.add(new JLabel("FlatProgressBar:"));
+            panel.add(new JLabel("FlatProgressBar:"), "cell 0 12,grow");
             FlatProgressBar progressBar = new FlatProgressBar();
             progressBar.setValue(50);
-            panel.add(progressBar);
+            panel.add(progressBar, "cell 1 12,grow");
 
             // Slider
-            panel.add(new JLabel("FlatSlider:"));
-            panel.add(new FlatSlider());
+            panel.add(new JLabel("FlatSlider:"), "cell 0 13,grow");
+            panel.add(new FlatSlider(), "cell 1 13,grow");
 
             // Tabbed Pane
-            panel.add(new JLabel("FlatTabbedPane:"));
+            panel.add(new JLabel("FlatTabbedPane:"), "cell 0 14,grow");
             FlatTabbedPane tabbedPane = new FlatTabbedPane();
             tabbedPane.addTab("Tab 1", new JLabel("Content 1"));
             tabbedPane.addTab("Tab 2", new JLabel("Content 2"));
-            panel.add(tabbedPane);
+            panel.add(tabbedPane, "cell 1 14,grow");
 
             // Tree
-            panel.add(new JLabel("FlatTree:"));
+            panel.add(new JLabel("FlatTree:"), "cell 0 15,grow");
             JTree tree = new FlatTree();
             tree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Root") {{
                 add(new DefaultMutableTreeNode("Node 1"));
                 add(new DefaultMutableTreeNode("Node 2"));
             }}));
-            panel.add(new JScrollPane(tree));
+            panel.add(new JScrollPane(tree), "cell 1 15,grow");
 
             // Separator
-            panel.add(new JLabel("FlatSeparator:"));
-            panel.add(new FlatSeparator());
+            panel.add(new JLabel("FlatSeparator:"), "cell 0 16,grow");
+            panel.add(new FlatSeparator(), "cell 1 16,grow");
 
             // Scroll Pane for Overflow
             JScrollPane scrollPane = new JScrollPane(panel);
-            frame.add(scrollPane, BorderLayout.CENTER);
+            frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
             
             frame.setVisible(true);
         });

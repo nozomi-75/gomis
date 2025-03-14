@@ -109,7 +109,7 @@ public class AppointmentDayDetails extends JPanel {
         appointmentSection.add(new JLabel("Title: "), "cell 0 0, alignx right");
         appointmentSection.add(new JLabel(appointment.getAppointmentTitle()), "cell 1 0");
         appointmentSection.add(new JLabel("Type: "), "cell 0 1, alignx right");
-        appointmentSection.add(new JLabel(appointment.getAppointmentType()), "cell 1 1");
+        appointmentSection.add(new JLabel(appointment.getConsultationType()), "cell 1 1");
         appointmentSection.add(new JLabel("Date & Time: "), "cell 0 2, alignx right");
         appointmentSection.add(new JLabel(appointment.getAppointmentDateTime().toString()), "cell 1 2");
         appointmentSection.add(new JLabel("Status: "), "cell 0 3, alignx right");

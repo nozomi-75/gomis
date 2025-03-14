@@ -51,8 +51,8 @@ public class LoginView extends Form {
 		this.setLayout(new MigLayout("insets 0", "[grow]", "[grow]"));
 
 		try {
-			// Add the LogoPanel with a target size of 300x300
-			LogoPanel logoPanel = new LogoPanel("/LYFJSHS_Logo.png", 150, 150);
+			
+			LogoPanel logoPanel = new LogoPanel("/LYFJSHS_Logo_0.5x.png", 200, 200);
 
 			panelGradient = new PanelGradient();
 			panelGradient.setLayout(new MigLayout("insets 0, fill", "[]", "[]"));

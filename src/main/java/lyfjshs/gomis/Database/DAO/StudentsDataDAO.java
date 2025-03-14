@@ -286,7 +286,7 @@ public class StudentsDataDAO {
                 rs.getString("GUARDIAN_MIDDLE_NAME"),
                 rs.getString("GUARDIAN_RELATIONSHIP"),
                 rs.getString("GUARDIAN_CONTACT_NUMBER"));
-
+        
         return new Student(
                 rs.getInt("STUDENT_UID"),
                 rs.getInt("Parent_ID"),

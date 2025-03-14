@@ -25,7 +25,7 @@ public class AppointmentDAO {
     public int insertAppointment(Integer guidanceCounselorId, String appointmentTitle,
             String appointmentType, Timestamp appointmentDateTime, String appointmentNotes,
             String appointmentStatus, List<Integer> participantIds) throws SQLException {
-        String query = "INSERT INTO APPOINTMENTS (guidance_counselor_id, appointment_title, appointment_type, " +
+        String query = "INSERT INTO APPOINTMENTS (guidance_counselor_id, appointment_title, CONSULTATION_TYPE, " +
                 "APPOINTMENT_DATE_TIME, appointment_notes, appointment_status, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, NOW())";
 
@@ -150,14 +150,14 @@ public class AppointmentDAO {
     // UPDATE: Modify an existing appointment (excluding participants for now)
     public boolean updateAppointment(Appointment appointment) throws SQLException {
         String query = "UPDATE APPOINTMENTS SET guidance_counselor_id = ?, appointment_title = ?, " +
-                "appointment_type = ?, APPOINTMENT_DATE_TIME = ?, appointment_notes = ?, appointment_status = ?, updated_at = NOW() "
+                "CONSULTATION_TYPE = ?, APPOINTMENT_DATE_TIME = ?, appointment_notes = ?, appointment_status = ?, updated_at = NOW() "
                 +
                 "WHERE appointment_id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setObject(1, appointment.getGuidanceCounselorId());
             stmt.setString(2, appointment.getAppointmentTitle());
-            stmt.setString(3, appointment.getAppointmentType());
+            stmt.setString(3, appointment.getConsultationType());
             stmt.setTimestamp(4, appointment.getAppointmentDateTime());
             stmt.setString(5, appointment.getAppointmentNotes());
             stmt.setString(6, appointment.getAppointmentStatus());
@@ -268,7 +268,7 @@ public class AppointmentDAO {
                 rs.getInt("appointment_id"),
                 rs.getObject("guidance_counselor_id", Integer.class), // Updated to match schema
                 rs.getString("appointment_title"),
-                rs.getString("appointment_type"),
+                rs.getString("CONSULTATION_TYPE"),
                 rs.getTimestamp("APPOINTMENT_DATE_TIME"),
                 rs.getString("appointment_status"),
                 rs.getString("appointment_notes"),

@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.FormManager.FormManager;
@@ -262,11 +263,11 @@ public class LoginController {
                             System.out.println("Counselor Details: " + counselor.getFirstName() + " " + counselor.getLastName() + ", " + counselor.getPosition());
                             
                             // First set the counselor details
-                            FormManager.setCounselorDetails(counselor);
-                            FormManager.setCounselorID(counselor.getGuidanceCounselorId());
+                            Main.formManager.setCounselorDetails(counselor);
+                            Main.formManager.setCounselorID(counselor.getGuidanceCounselorId());
                             
                             // Debug: Verify details set in FormManager
-                            System.out.println("Set in FormManager: " + FormManager.getCounselorFullName() + ", " + FormManager.getCounselorPosition());
+                            System.out.println("Set in FormManager: " + Main.formManager.getCounselorFullName() + ", " + Main.formManager.getCounselorPosition());
                             
                             // Then call login() which will create the drawer with the updated details
                             FormManager.login(conn);							

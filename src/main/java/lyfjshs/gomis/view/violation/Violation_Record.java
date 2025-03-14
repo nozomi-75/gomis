@@ -49,7 +49,7 @@ public class Violation_Record extends Form {
         JButton searchBtn = new JButton("Search");
         searchBtn.setFont(new Font("Tahoma", Font.BOLD, 10));
         
-        searchBtn.addActionListener(e -> tablePanel.searchViolations(searchField.getText()));
+        // searchBtn.addActionListener(e -> tablePanel.searchViolations(searchField.getText()));
         
         searchPanel.add(searchField, "cell 0 0,grow");
         searchPanel.add(searchBtn, "cell 1 0");

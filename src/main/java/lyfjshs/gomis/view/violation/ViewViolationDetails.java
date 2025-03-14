@@ -117,7 +117,7 @@ public class ViewViolationDetails extends JDialog {
 		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
 		// Set dialog properties
-		setSize(336, 436);
+		setSize(364, 446);
 		setResizable(false);
 	}
 

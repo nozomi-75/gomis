@@ -8,6 +8,7 @@ import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.components.FormManager.AllForms;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
@@ -18,7 +19,6 @@ import lyfjshs.gomis.view.incident.IncidentList;
 import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
-import lyfjshs.gomis.view.students.StudentSearchPanel;
 import lyfjshs.gomis.view.students.create.StudentInfoFullForm;
 import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
@@ -44,10 +44,11 @@ import raven.modal.drawer.simple.header.SimpleHeaderData;
  * {@code SimpleDrawerBuilder} and provides custom header, footer, and menu
  * options.
  */
+@SuppressWarnings("unused")
 public class DrawerBuilder extends SimpleDrawerBuilder {
 
 	private static Connection conn;
-	private Connection connection;
+	private final Connection connection;
 
 	/**
 	 * Constructs a {@code DrawerBuilder} with a given database connection.
@@ -74,7 +75,7 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 	 */
 	@Override
 	public SimpleHeaderData getSimpleHeaderData() {
-		AvatarIcon icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x200.png"), 50, 50, 3.5f);
+		AvatarIcon icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x.png"), 50, 50, 3.5f);
 		icon.setType(AvatarIcon.Type.MASK_SQUIRCLE);
 		icon.setBorder(2, 2);
 		changeAvatarIconBorderColor(icon);
@@ -85,8 +86,8 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 			}
 		});
 
-		String fullName = FormManager.getCounselorFullName();
-		String position = FormManager.getCounselorPosition();
+		String fullName = Main.formManager.getCounselorFullName();
+		String position = Main.formManager.getCounselorPosition();
 
 		// Debug: Print the details being set in the header
 		System.out.println("Drawer Header: " + fullName + ", " + position);
@@ -133,6 +134,7 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 		MenuOption simpleMenuOption = new MenuOption();
 
 		MenuItem items[] = new MenuItem[] {
+				new Item.Label("Dashboard"),
 				new Item("Home", "home.svg", MainDashboard.class),
 				new Item.Label("Management"),
 				new Item("Appointments", "calendar.svg", AppointmentManagement.class),

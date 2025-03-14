@@ -8,7 +8,7 @@ public class Appointment {
     private int appointmentId;
     private Integer guidanceCounselorId;
     private String appointmentTitle;
-    private String appointmentType;
+    private String ConsultationType;
     private Timestamp appointmentDateTime;
     private String appointmentStatus;
     private String appointmentNotes;
@@ -21,7 +21,7 @@ public class Appointment {
     public Appointment(int appointmentId,
             Integer guidanceCounselorId, // Change to Integer
             String appointmentTitle,
-            String appointmentType,
+            String ConsultationType,
             Timestamp appointmentDateTime,
             String appointmentStatus,
             String appointmentNotes,
@@ -29,7 +29,7 @@ public class Appointment {
         this.appointmentId = appointmentId;
         this.guidanceCounselorId = guidanceCounselorId;
         this.appointmentTitle = appointmentTitle;
-        this.appointmentType = appointmentType;
+        this.ConsultationType = ConsultationType;
         this.appointmentDateTime = appointmentDateTime;
         this.appointmentStatus = appointmentStatus;
         this.appointmentNotes = appointmentNotes;
@@ -61,12 +61,12 @@ public class Appointment {
         this.appointmentTitle = appointmentTitle;
     }
 
-    public String getAppointmentType() {
-        return appointmentType;
+    public String getConsultationType() {
+        return ConsultationType;
     }
 
-    public void setAppointmentType(String appointmentType) {
-        this.appointmentType = appointmentType;
+    public void setConsultationType(String ConsultationType) {
+        this.ConsultationType = ConsultationType;
     }
 
     public Timestamp getAppointmentDateTime() {

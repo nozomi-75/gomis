@@ -140,7 +140,7 @@ public class DatabaseSplashScreen extends JFrame {
 	}
 
 	public static void main(String[] args) {
-		ImageIcon splashImage = new ImageIcon(DatabaseSplashScreen.class.getResource("/LYFJSHS_Logo_200x200.png")); 
+		ImageIcon splashImage = new ImageIcon(DatabaseSplashScreen.class.getResource("/LYFJSHS_Logo_200x.png")); 
 		EventQueue.invokeLater(() -> {
 			DatabaseSplashScreen splash = new DatabaseSplashScreen(splashImage);
 			splash.startDatabaseTest();

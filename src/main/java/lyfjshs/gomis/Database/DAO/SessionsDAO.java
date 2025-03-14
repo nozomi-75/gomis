@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
+import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.SessionParticipant;
 import lyfjshs.gomis.Database.entity.Sessions;
 
@@ -34,19 +36,14 @@ public class SessionsDAO {
 
     // Method to add a session
     public void addSession(Sessions session) throws SQLException {
-        if (!"walk-in".equalsIgnoreCase(session.getSessionType()) &&
-                !"individual counseling".equalsIgnoreCase(session.getSessionType()) &&
-                session.getAppointmentId() != 0 && !appointmentExists(session.getAppointmentId())) {
+        if (session.getAppointmentId() != 0 && !appointmentExists(session.getAppointmentId())) {
             throw new SQLException("Appointment ID does not exist.");
         }
 
-        String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, GUIDANCE_COUNSELOR_ID, PARTICIPANT_ID, VIOLATION_ID, SESSION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, GUIDANCE_COUNSELOR_ID, PARTICIPANT_ID, VIOLATION_ID, APPOINTMENT_TYPE, CONSULTATION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            if ("walk-in".equalsIgnoreCase(session.getSessionType())
-                    || "individual counseling".equalsIgnoreCase(session.getSessionType())) {
-                stmt.setNull(1, java.sql.Types.INTEGER);
-            } else if (session.getAppointmentId() == 0) {
+            if (session.getAppointmentId() == 0) {
                 stmt.setNull(1, java.sql.Types.INTEGER);
             } else {
                 stmt.setInt(1, session.getAppointmentId());
@@ -62,11 +59,12 @@ public class SessionsDAO {
                 stmt.setInt(4, session.getViolationId());
             }
 
-            stmt.setString(5, session.getSessionType());
-            stmt.setTimestamp(6, session.getSessionDateTime());
-            stmt.setString(7, session.getSessionNotes());
-            stmt.setString(8, session.getSessionStatus());
-            stmt.setTimestamp(9, session.getUpdatedAt());
+            stmt.setString(5, session.getAppointmentType());
+            stmt.setString(6, session.getConsultationType());
+            stmt.setTimestamp(7, session.getSessionDateTime());
+            stmt.setString(8, session.getSessionNotes());
+            stmt.setString(9, session.getSessionStatus());
+            stmt.setTimestamp(10, session.getUpdatedAt());
             stmt.executeUpdate();
         }
     }
@@ -116,19 +114,19 @@ public class SessionsDAO {
                 rs.getInt("GUIDANCE_COUNSELOR_ID"),
                 rs.getInt("PARTICIPANT_ID"),
                 rs.getInt("VIOLATION_ID"),
-                rs.getString("SESSION_TYPE"),
+                rs.getString("APPOINTMENT_TYPE"),
+                rs.getString("CONSULTATION_TYPE"),
                 rs.getTimestamp("SESSION_DATE_TIME"),
                 rs.getString("SESSION_NOTES"),
                 rs.getString("SESSION_STATUS"),
                 rs.getTimestamp("UPDATED_AT"));
     }
 
-    // update session
+    // Update session
     public void updateSession(Sessions session) throws SQLException {
-        String sql = "UPDATE SESSIONS SET APPOINTMENT_ID = ?, GUIDANCE_COUNSELOR_ID = ?, PARTICIPANT_ID = ?, VIOLATION_ID = ?, SESSION_TYPE = ?, SESSION_DATE_TIME = ?, SESSION_NOTES = ?, SESSION_STATUS = ?, UPDATED_AT = ? WHERE SESSION_ID = ?";
+        String sql = "UPDATE SESSIONS SET APPOINTMENT_ID = ?, GUIDANCE_COUNSELOR_ID = ?, PARTICIPANT_ID = ?, VIOLATION_ID = ?, APPOINTMENT_TYPE = ?, CONSULTATION_TYPE = ?, SESSION_DATE_TIME = ?, SESSION_NOTES = ?, SESSION_STATUS = ?, UPDATED_AT = ? WHERE SESSION_ID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            if ("walk-in".equalsIgnoreCase(session.getSessionType())
-                    || "individual counseling".equalsIgnoreCase(session.getSessionType())) {
+            if (session.getAppointmentId() == 0) {
                 stmt.setNull(1, java.sql.Types.INTEGER);
             } else {
                 stmt.setInt(1, session.getAppointmentId());
@@ -137,17 +135,18 @@ public class SessionsDAO {
             stmt.setInt(2, session.getGuidanceCounselorId());
             stmt.setInt(3, session.getParticipantId());
             stmt.setInt(4, session.getViolationId());
-            stmt.setString(5, session.getSessionType());
-            stmt.setTimestamp(6, session.getSessionDateTime());
-            stmt.setString(7, session.getSessionNotes());
-            stmt.setString(8, session.getSessionStatus());
-            stmt.setTimestamp(9, session.getUpdatedAt());
-            stmt.setInt(10, session.getSessionId()); // WHERE condition
+            stmt.setString(5, session.getAppointmentType());
+            stmt.setString(6, session.getConsultationType());
+            stmt.setTimestamp(7, session.getSessionDateTime());
+            stmt.setString(8, session.getSessionNotes());
+            stmt.setString(9, session.getSessionStatus());
+            stmt.setTimestamp(10, session.getUpdatedAt());
+            stmt.setInt(11, session.getSessionId()); // WHERE condition
             stmt.executeUpdate();
         }
     }
 
-    // delete session
+    // Delete session
     public void deleteSession(int sessionId) throws SQLException {
         String sql = "DELETE FROM SESSIONS WHERE SESSION_ID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -158,31 +157,82 @@ public class SessionsDAO {
 
     // New method to get session data with participant count
     public List<Sessions> getSessionDataWithParticipantCount() throws SQLException {
-        List<Sessions> sessions = new ArrayList<>();
-        String sql = "SELECT s.SESSION_ID, COUNT(sp.PARTICIPANT_ID) AS Participants, s.SESSION_TYPE, "
-                + "COALESCE(a.APPOINTMENT_DATE_TIME, NULL) AS APPOINTMENT_DATE_TIME, s.SESSION_STATUS, s.UPDATED_AT "
-                + "FROM SESSIONS s "
-                + "LEFT JOIN SESSIONS_PARTICIPANTS sp ON s.SESSION_ID = sp.SESSION_ID "
-                + "LEFT JOIN APPOINTMENTS a ON s.APPOINTMENT_ID = a.APPOINTMENT_ID "
-                + "GROUP BY s.SESSION_ID, s.SESSION_TYPE, a.APPOINTMENT_DATE_TIME, s.SESSION_STATUS, s.UPDATED_AT";
-
+        List<Sessions> sessionDataList = new ArrayList<>();
+        String sql = "SELECT s.SESSION_ID, s.APPOINTMENT_ID, s.GUIDANCE_COUNSELOR_ID, s.PARTICIPANT_ID, " +
+                     "s.VIOLATION_ID, s.APPOINTMENT_TYPE, s.CONSULTATION_TYPE, s.SESSION_DATE_TIME, " +
+                     "s.SESSION_NOTES, s.SESSION_STATUS, s.UPDATED_AT, COUNT(sp.PARTICIPANT_ID) AS participant_count " +
+                     "FROM SESSIONS s " +
+                     "LEFT JOIN SESSIONS_PARTICIPANTS sp ON s.SESSION_ID = sp.SESSION_ID " +
+                     "GROUP BY s.SESSION_ID";
+    
         try (PreparedStatement stmt = connection.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
+             ResultSet rs = stmt.executeQuery()) {
+    
             while (rs.next()) {
-                Sessions session = new Sessions(
-                        rs.getInt("SESSION_ID"),
-                        0, 0, 0, 0, // Ignored foreign keys
-                        rs.getString("SESSION_TYPE"),
-                        null,
-                        null,
-                        rs.getString("SESSION_STATUS"),
-                        rs.getTimestamp("UPDATED_AT"));
-
-                session.setParticipantCount(rs.getInt("Participants"));
-                session.setAppointmentDateTime(rs.getTimestamp("APPOINTMENT_DATE_TIME"));
-                sessions.add(session);
+                Sessions sessionData = new Sessions();
+                sessionData.setSessionId(rs.getInt("SESSION_ID"));
+                sessionData.setAppointmentId(rs.getInt("APPOINTMENT_ID"));
+                sessionData.setGuidanceCounselorId(rs.getInt("GUIDANCE_COUNSELOR_ID"));
+                sessionData.setParticipantId(rs.getInt("PARTICIPANT_ID"));
+                sessionData.setViolationId(rs.getInt("VIOLATION_ID"));
+                sessionData.setAppointmentType(rs.getString("APPOINTMENT_TYPE")); // Ensure this matches the query
+                sessionData.setConsultationType(rs.getString("CONSULTATION_TYPE"));
+                sessionData.setSessionDateTime(rs.getTimestamp("SESSION_DATE_TIME"));
+                sessionData.setSessionNotes(rs.getString("SESSION_NOTES"));
+                sessionData.setSessionStatus(rs.getString("SESSION_STATUS"));
+                sessionData.setUpdatedAt(rs.getTimestamp("UPDATED_AT"));
+                sessionData.setParticipantCount(rs.getInt("participant_count"));
+                sessionDataList.add(sessionData);
             }
         }
-        return sessions;
+        return sessionDataList;
+    }
+    
+
+    public GuidanceCounselor getCounselorById(int counselorId) throws SQLException {
+        String sql = "SELECT * FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELOR_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, counselorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new GuidanceCounselor(
+                        rs.getInt("GUIDANCE_COUNSELOR_ID"),
+                        rs.getString("LAST_NAME"),
+                        rs.getString("FIRST_NAME"),
+                        rs.getString("MIDDLE_NAME"),
+                        rs.getString("SUFFIX"),
+                        rs.getString("GENDER"),
+                        rs.getString("SPECIALIZATION"),
+                        rs.getString("CONTACT_NUM"),
+                        rs.getString("EMAIL"),
+                        rs.getString("POSITION"),
+                        rs.getBytes("PROFILE_PICTURE")
+                    );
+                }
+            }
+        }
+        return null;
+    }
+
+    public List<Participants> getParticipantsBySessionId(int sessionId) throws SQLException {
+        List<Participants> participants = new ArrayList<>();
+        String sql = "SELECT p.* FROM PARTICIPANTS p JOIN SESSIONS_PARTICIPANTS sp ON p.PARTICIPANT_ID = sp.PARTICIPANT_ID WHERE sp.SESSION_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, sessionId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    participants.add(new Participants(
+                        rs.getInt("PARTICIPANT_ID"),
+                        rs.getObject("STUDENT_UID", Integer.class), // Handle potential null values
+                        rs.getString("PARTICIPANT_TYPE"),
+                        rs.getString("PARTICIPANT_LASTNAME"),
+                        rs.getString("PARTICIPANT_FIRSTNAME"),
+                        rs.getString("EMAIL"),
+                        rs.getString("CONTACT_NUMBER")
+                    ));
+                }
+            }
+        }
+        return participants;
     }
 }

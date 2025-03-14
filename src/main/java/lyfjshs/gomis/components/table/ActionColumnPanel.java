@@ -55,7 +55,6 @@ public class ActionColumnPanel extends JPanel {
 			btn.setIcon(action.getIcon());
 		}
 		btn.setFocusPainted(false);
-//		btn.setFont(new Font("Arial", Font.PLAIN, 12));
 		btn.setBackground(action.getButtonColor());
 		btn.setForeground(Color.WHITE);
 

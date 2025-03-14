@@ -10,7 +10,6 @@ public class Participants {
     private String contactNumber;
     private Student student;
 
-    // Full Constructor
     public Participants(
             Integer studentUid, 
             String participantType,
@@ -27,6 +26,18 @@ public class Participants {
 
     // Default Constructor
     public Participants() {
+    }
+    
+    // Full Constructor
+    public Participants(int participantId, Integer studentUid, String participantType, String participantLastName,
+            String participantFirstName, String email, String contactNumber) {
+        this.participantId = participantId;
+        this.studentUid = studentUid;
+        this.participantType = participantType;
+        this.participantLastName = participantLastName;
+        this.participantFirstName = participantFirstName;
+        this.email = email;
+        this.contactNumber = contactNumber;
     }
 
     // Getters and Setters
