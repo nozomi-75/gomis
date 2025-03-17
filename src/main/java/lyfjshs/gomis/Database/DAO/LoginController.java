@@ -260,7 +260,7 @@ public class LoginController {
                             );
 
                             // Debug: Print counselor details
-                            System.out.println("Counselor Details: " + counselor.getFirstName() + " " + counselor.getLastName() + ", " + counselor.getPosition());
+                            System.out.println("Counselor Details while LOGING IN: " + counselor.getFirstName() + " " + counselor.getLastName() + ", " + counselor.getPosition());
                             
                             // First set the counselor details
                             Main.formManager.setCounselorDetails(counselor);

@@ -34,7 +34,6 @@ public class ActionColumnRenderer extends javax.swing.table.DefaultTableCellRend
     @Override
     public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected, boolean hasFocus,
                                                    int row, int column) {
-        System.out.println("Rendering Actions column for row " + row + ", column " + column); // Debug log
         ActionColumnPanel panel = new ActionColumnPanel(actions, table, -1);
         panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
         return panel;

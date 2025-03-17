@@ -1,173 +1,102 @@
 package lyfjshs.gomis.test.simple;
 
 import java.awt.Color;
-import java.awt.Font;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
- 
+
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.ButtonGroup;
- 
-import com.formdev.flatlaf.FlatLightLaf;
+
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
+
 import net.miginfocom.swing.MigLayout;
- 
+
 public class SignUpTEST {
+    private static JLabel passwordStrengthLabel;
+    
     public static void main(String[] args) {
-        // Setup FlatLaf
-        FlatLightLaf.setup();
- 
-        JFrame frame = new JFrame("Sign-Up Creation");
-        frame.setSize(950, 650);
+        FlatMacLightLaf.setup();
+
+        JFrame frame = new JFrame("Sign Up");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
- 
-        JPanel mainPanel = new JPanel(new MigLayout("insets 10", "[140][350,fill][grow][]", "[][][][][][]"));
-        mainPanel.setBackground(new Color(240, 240, 240));
- 
-        JScrollPane scrollPane = new JScrollPane(mainPanel);
-        frame.getContentPane().add(scrollPane);
- 
-        // Title
-        JLabel titleLabel = new JLabel("SIGN-UP CREATION");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        mainPanel.add(titleLabel, "cell 0 0 3 1");
- 
-        String[] labels = { "LAST NAME:", "FIRST NAME:", "MIDDLE NAME:", "SUFFIX:", "SEX:", "SPECIALIZATION:",
-                "WORK POSITION:", "EMAIL:", "CONTACT NO:" };
-        JTextField[] textFields = new JTextField[labels.length];
- 
-        // Form fields
-        int row = 1;
-        for (int i = 0; i < labels.length; i++) {
-            JLabel label = new JLabel(labels[i]);
-            label.setFont(new Font("Arial", Font.BOLD, 11));
-            mainPanel.add(label, "cell 0 " + row);
- 
-            if (labels[i].equals("SEX:")) {
-                JComboBox<String> sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
-                mainPanel.add(sexComboBox, "cell 1 " + row);
-            } else {
-                textFields[i] = new JTextField();
-                mainPanel.add(textFields[i], "cell 1 " + row);
-            }
-            row++;
-        }
- 
-        // Contact number restriction
-        textFields[8].addKeyListener(new KeyAdapter() {
-            public void keyTyped(KeyEvent e) {
-                char c = e.getKeyChar();
-                if (!Character.isDigit(c) || textFields[8].getText().length() >= 11) {
-                    e.consume();
-                }
-            }
-        });
- 
-        // Separator
-        mainPanel.add(new JSeparator(), "cell 0 " + row + " 2 1");
-        row++;
- 
-        // Username
-        JLabel usernameLabel = new JLabel("USERNAME:");
-        usernameLabel.setFont(new Font("Arial", Font.BOLD, 11));
-        JTextField usernameField = new JTextField();
-        JLabel usernameWarning = new JLabel("Password must be at least 6 characters long");
-        usernameWarning.setForeground(Color.RED);
-        usernameWarning.setVisible(false);
- 
-        mainPanel.add(usernameLabel, "cell 0 " + row);
-        mainPanel.add(usernameField, "cell 1 " + row);
-        mainPanel.add(usernameWarning, "cell 2 " + row);
-        row++;
- 
-        // Password
-        JLabel passwordLabel = new JLabel("PASSWORD:");
-        passwordLabel.setFont(new Font("Arial", Font.BOLD, 11));
-        JPasswordField passwordField = new JPasswordField();
-        JButton togglePassword = new JButton("👁");
-        JLabel passwordWarning = new JLabel("⚠");
-        passwordWarning.setForeground(Color.RED);
-        passwordWarning.setVisible(false);
- 
-        mainPanel.add(passwordLabel, "cell 0 " + row);
-        mainPanel.add(passwordField, "cell 1 " + row);
-        mainPanel.add(togglePassword, "cell 1 " + row + ", split 2, flowx");
-        mainPanel.add(passwordWarning, "cell 2 " + row);
-        row++;
- 
-        togglePassword.addActionListener(e -> {
-            passwordField.setEchoChar(passwordField.getEchoChar() == '\u2022' ? (char) 0 : '\u2022');
-        });
- 
-        // Confirm Password
-        JLabel confirmPasswordLabel = new JLabel("CONFIRM PASSWORD:");
-        confirmPasswordLabel.setFont(new Font("Arial", Font.BOLD, 11));
-        JPasswordField confirmPasswordField = new JPasswordField();
-        JButton toggleConfirmPassword = new JButton("👁");
-        JLabel confirmPasswordWarning = new JLabel("⚠");
-        confirmPasswordWarning.setForeground(Color.RED);
-        confirmPasswordWarning.setVisible(false);
- 
-        mainPanel.add(confirmPasswordLabel, "cell 0 " + row);
-        mainPanel.add(confirmPasswordField, "cell 1 " + row);
-        mainPanel.add(toggleConfirmPassword, "cell 1 " + row + ", split 2, flowx");
-        mainPanel.add(confirmPasswordWarning, "cell 2 " + row);
-        row++;
- 
-        toggleConfirmPassword.addActionListener(e -> {
-            confirmPasswordField.setEchoChar(confirmPasswordField.getEchoChar() == '\u2022' ? (char) 0 : '\u2022');
-        });
- 
-        // Gender Selection
-        JLabel genderLabel = new JLabel("GENDER:");
-        genderLabel.setFont(new Font("Arial", Font.BOLD, 11));
-        JRadioButton maleButton = new JRadioButton("Male");
-        JRadioButton femaleButton = new JRadioButton("Female");
+        frame.setSize(500, 780);
+        frame.setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel(new MigLayout("wrap,fillx,insets 20", "[350,fill]", "[][][][][][][][][][][][][][][][][]"));
+        panel.putClientProperty(FlatClientProperties.STYLE, "arc:20; background:darken(@background,3%)");
+
+        JLabel titleLabel = new JLabel("Create an Account", SwingConstants.CENTER);
+        titleLabel.putClientProperty(FlatClientProperties.STYLE, "font:bold +10");
         
-        // Group the radio buttons
-        ButtonGroup genderGroup = new ButtonGroup();
-        genderGroup.add(maleButton);
-        genderGroup.add(femaleButton);
+        JTextField txtFirstName = new JTextField();
+        JTextField txtLastName = new JTextField();
+        JTextField txtMiddleName = new JTextField();
+        JTextField txtSuffix = new JTextField();
+        JTextField txtUsername = new JTextField();
+        JPasswordField txtPassword = new JPasswordField();
+        JPasswordField txtConfirmPassword = new JPasswordField();
+        JTextField txtEmail = new JTextField();
+        JTextField txtContact = new JTextField();
+        JTextField txtSpecialization = new JTextField();
+        JTextField txtWorkPosition = new JTextField();
+        JButton btnSignUp = new JButton("Sign Up");
+
+        txtFirstName.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "First Name");
+        txtLastName.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Last Name");
+        txtMiddleName.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Middle Name");
+        txtSuffix.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Suffix (Optional)");
+        txtUsername.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Username");
+        txtPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Password");
+        txtConfirmPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Confirm Password");
+        txtEmail.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Email");
+        txtContact.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contact No.");
+        txtSpecialization.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Specialization");
+        txtWorkPosition.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Work Position");
         
-        // Add the gender selection to the main panel
-        mainPanel.add(genderLabel, "cell 0 " + row);
-        mainPanel.add(maleButton, "cell 1 " + row);
-        mainPanel.add(femaleButton, "cell 1 " + row);
-        row++;
- 
-        // Submit Button
-        JButton submitButton = new JButton("SIGN UP");
-        submitButton.setFont(new Font("Arial", Font.BOLD, 11));
-        submitButton.setBackground(Color.BLACK);
-        submitButton.setForeground(Color.WHITE);
-        submitButton.setEnabled(false);
-        mainPanel.add(submitButton, "cell 1 " + row + ", gaptop 10");
- 
-        // Profile Picture
-        JLabel pictureBox = new JLabel("Select Profile Picture", SwingConstants.CENTER);
-        pictureBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        pictureBox.setPreferredSize(new java.awt.Dimension(150, 150));
-        mainPanel.add(pictureBox, "cell 3 1 1 5");
- 
-        pictureBox.addMouseListener(new MouseAdapter() {
+        txtPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
+        txtConfirmPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
+        
+        passwordStrengthLabel = new JLabel();
+        txtPassword.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { updatePasswordStrength(txtPassword); }
+            public void removeUpdate(DocumentEvent e) { updatePasswordStrength(txtPassword); }
+            public void changedUpdate(DocumentEvent e) { updatePasswordStrength(txtPassword); }
+        });
+        
+        btnSignUp.putClientProperty(FlatClientProperties.STYLE, "background:darken(@background,10%); borderWidth:0; focusWidth:0");
+
+        panel.add(titleLabel, "cell 0 0,gapy 10");
+        
+        JPanel panel_1 = new JPanel();
+        panel.add(panel_1, "cell 0 1,alignx center,growy");
+        panel_1.setLayout(new MigLayout("", "[grow][200px,center][grow]", "[200px]"));
+        
+        JLabel profilePicture = new JLabel("Select Profile Picture", SwingConstants.CENTER);
+        panel_1.add(profilePicture, "cell 1 0,grow");
+        profilePicture.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        profilePicture.setPreferredSize(new Dimension(150, 150));
+        profilePicture.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "jpeg"));
@@ -176,54 +105,60 @@ public class SignUpTEST {
                     File selectedFile = fileChooser.getSelectedFile();
                     ImageIcon imageIcon = new ImageIcon(new ImageIcon(selectedFile.getAbsolutePath()).getImage()
                             .getScaledInstance(150, 150, Image.SCALE_SMOOTH));
-                    pictureBox.setIcon(imageIcon);
-                    pictureBox.setText("");
+                    profilePicture.setIcon(imageIcon);
+                    profilePicture.setText("");
                 }
             }
         });
- 
-        // Validation
-        KeyAdapter validationListener = new KeyAdapter() {
-            public void keyReleased(KeyEvent e) {
-                boolean usernameValid = usernameField.getText().length() >= 6;
-                boolean passwordValid = isStrongPassword(new String(passwordField.getPassword()));
-                boolean passwordsMatch = new String(passwordField.getPassword())
-                        .equals(new String(confirmPasswordField.getPassword()));
- 
-                usernameWarning.setVisible(!usernameValid);
-                passwordWarning.setVisible(!passwordValid);
-                confirmPasswordWarning.setVisible(!passwordsMatch);
- 
-                submitButton.setEnabled(usernameValid && passwordValid && passwordsMatch);
-            }
-        };
- 
-        usernameField.addKeyListener(validationListener);
-        passwordField.addKeyListener(validationListener);
-        confirmPasswordField.addKeyListener(validationListener);
- 
-        submitButton.addActionListener(e -> {
-            boolean usernameValid = usernameField.getText().length() >= 6;
-            boolean passwordValid = isStrongPassword(new String(passwordField.getPassword()));
-            boolean passwordsMatch = new String(passwordField.getPassword())
-                    .equals(new String(confirmPasswordField.getPassword()));
+        panel.add(txtFirstName, "cell 0 2");
+        panel.add(txtLastName, "cell 0 2");
+        panel.add(txtMiddleName, "cell 0 3");
+        panel.add(txtSuffix, "cell 0 4");
+        panel.add(new JLabel("Gender"), "cell 0 5,gapy 8");
+        panel.add(createGenderPanel());
+        panel.add(txtSpecialization, "cell 0 6");
+        panel.add(txtWorkPosition, "cell 0 7");
+        panel.add(txtEmail, "cell 0 8");
+        panel.add(txtContact, "cell 0 9");
+        panel.add(txtUsername, "cell 0 10");
+        panel.add(new JLabel("Password"), "cell 0 11,gapy 8");
+        panel.add(txtPassword, "cell 0 12");
+        panel.add(passwordStrengthLabel, "cell 0 13,gapy 5");
+        panel.add(new JLabel("Confirm Password"), "cell 0 14,gapy 5");
+        panel.add(txtConfirmPassword, "cell 0 15");
+        panel.add(btnSignUp, "cell 0 16,gapy 20");
 
-            if (!usernameValid) {
-                JOptionPane.showMessageDialog(frame, "Username must be at least 6 characters long.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-            } else if (!passwordValid) {
-                JOptionPane.showMessageDialog(frame, "Password must be at least 6 characters long and contain letters, numbers, and special characters.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-            } else if (!passwordsMatch) {
-                JOptionPane.showMessageDialog(frame, "Passwords do not match.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(frame, "Signed Up Successfully!!!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        frame.getContentPane().add(panel);
+        frame.setVisible(true);
+
+        txtContact.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!Character.isDigit(c) || txtContact.getText().length() >= 11) {
+                    e.consume();
+                }
             }
         });
- 
-        frame.setVisible(true);
     }
- 
-    private static boolean isStrongPassword(String password) {
-        return password.length() >= 6 && password.matches(".*[A-Za-z].*") && password.matches(".*\\d.*")
-                && password.matches(".*[^A-Za-z0-9].*");
+
+    private static Component createGenderPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.putClientProperty(FlatClientProperties.STYLE, "background:null");
+        JRadioButton maleButton = new JRadioButton("Male");
+        JRadioButton femaleButton = new JRadioButton("Female");
+        ButtonGroup groupGender = new ButtonGroup();
+        groupGender.add(maleButton);
+        groupGender.add(femaleButton);
+        maleButton.setSelected(true);
+        panel.add(maleButton);
+        panel.add(femaleButton);
+        return panel;
+    }
+    
+    private static void updatePasswordStrength(JPasswordField passwordField) {
+        String password = new String(passwordField.getPassword());
+        int strength = password.length() < 6 ? 1 : password.matches(".*[A-Z].*") && password.matches(".*[!@#$%^&*].*") ? 3 : 2;
+        passwordStrengthLabel.setText(strength == 1 ? "Weak" : strength == 2 ? "Medium" : "Strong");
+        passwordStrengthLabel.setForeground(strength == 1 ? Color.RED : strength == 2 ? Color.ORANGE : Color.GREEN);
     }
 }

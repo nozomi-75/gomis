@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,37 +36,28 @@ public class SessionsDAO {
     }
 
     // Method to add a session
-    public void addSession(Sessions session) throws SQLException {
-        if (session.getAppointmentId() != 0 && !appointmentExists(session.getAppointmentId())) {
-            throw new SQLException("Appointment ID does not exist.");
-        }
-
+    public int addSession(Sessions session) throws SQLException {
         String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, GUIDANCE_COUNSELOR_ID, PARTICIPANT_ID, VIOLATION_ID, APPOINTMENT_TYPE, CONSULTATION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            if (session.getAppointmentId() == 0) {
-                stmt.setNull(1, java.sql.Types.INTEGER);
-            } else {
-                stmt.setInt(1, session.getAppointmentId());
-            }
-
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, session.getAppointmentId());
             stmt.setInt(2, session.getGuidanceCounselorId());
             stmt.setInt(3, session.getParticipantId());
-
-            // Handle null violationId
-            if (session.getViolationId() == null) {
-                stmt.setNull(4, java.sql.Types.INTEGER);
-            } else {
-                stmt.setInt(4, session.getViolationId());
-            }
-
+            stmt.setInt(4, session.getViolationId());
             stmt.setString(5, session.getAppointmentType());
             stmt.setString(6, session.getConsultationType());
             stmt.setTimestamp(7, session.getSessionDateTime());
             stmt.setString(8, session.getSessionNotes());
             stmt.setString(9, session.getSessionStatus());
             stmt.setTimestamp(10, session.getUpdatedAt());
-            stmt.executeUpdate();
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getInt(1); // Return the generated SESSION_ID
+                }
+            }
+            return 0; // Return 0 if no ID was generated
         }
     }
 

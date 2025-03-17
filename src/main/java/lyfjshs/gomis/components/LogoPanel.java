@@ -13,14 +13,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.formdev.flatlaf.extras.FlatSVGIcon;
-
 import net.miginfocom.swing.MigLayout;
 
-@SuppressWarnings("serial")
 public class LogoPanel extends JPanel {
 
-	private Image scaledImage;
 
 	public LogoPanel(String imagePath, int targetWidth, int targetHeight) throws IOException {
 		try {
@@ -30,7 +26,6 @@ public class LogoPanel extends JPanel {
 
 //             Load and scale the image
 			BufferedImage originalImage = loadImage(imagePath);
-			this.scaledImage = getScaledImage(originalImage, targetWidth, targetHeight);
 
 			// Add the scaled image to the panel
 //			FlatSVGIcon customIcon = new FlatSVGIcon(imagePath, targetWidth, targetHeight);

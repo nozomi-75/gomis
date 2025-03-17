@@ -1,5 +1,19 @@
 -- SQLBook: Code
 
+-- Insert sample data into GUIDANCE_COUNSELORS table
+INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELOR_ID, LAST_NAME, FIRST_NAME, MIDDLE_NAME, SUFFIX, GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE)
+VALUES
+(2, 'Smith', 'Alice', 'B', 'Jr', 'Female', 'Counseling', 987654321, 'alice.smith@example.com', 'Counselor', NULL)
+ON DUPLICATE KEY UPDATE EMAIL = VALUES(EMAIL);
+
+
+-- Insert sample data into USERS table
+INSERT INTO USERS (USER_ID, U_NAME, U_PASS, GUIDANCE_COUNSELOR_ID)
+VALUES
+(2, 'admin2', 'admin2', 2)
+ON DUPLICATE KEY UPDATE U_NAME = VALUES(U_NAME);
+
+
 -- Insert sample data into CONTACT table
 INSERT INTO CONTACT (CONTACT_ID, CONTACT_NUMBER)
 VALUES
@@ -52,11 +66,6 @@ VALUES
 (21, '123', 'Beech St', 'Region 21', 'Province 21', 'City 21', 'Barangay 21', '1234')
 ON DUPLICATE KEY UPDATE ADDRESS_HOUSE_NUMBER = VALUES(ADDRESS_HOUSE_NUMBER);
 
--- Insert sample data into GUIDANCE_COUNSELORS table
-INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELOR_ID, LAST_NAME, FIRST_NAME, MIDDLE_NAME, SUFFIX, GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE)
-VALUES
-(1, 'Smith', 'Alice', 'B', 'Jr', 'Female', 'Counseling', 987654321, 'alice.smith@example.com', 'Counselor', NULL)
-ON DUPLICATE KEY UPDATE EMAIL = VALUES(EMAIL);
 
 -- Insert sample data into GUARDIAN table
 INSERT INTO GUARDIAN (GUARDIAN_ID, GUARDIAN_LASTNAME, GUARDIAN_FIRST_NAME, GUARDIAN_MIDDLE_NAME, GUARDIAN_RELATIONSHIP, GUARDIAN_CONTACT_NUMBER)
@@ -110,37 +119,6 @@ VALUES
 (21, 'Gina', 'Lee', 'NN', '0123456789', 'George', 'Lee', 'OO', '1234567890')
 ON DUPLICATE KEY UPDATE FATHER_FIRSTNAME = VALUES(FATHER_FIRSTNAME);
 
--- Insert sample data into USERS table
-INSERT INTO USERS (USER_ID, U_NAME, U_PASS, GUIDANCE_COUNSELOR_ID)
-VALUES
-(1, 'admin', 'admin', 1)
-ON DUPLICATE KEY UPDATE U_NAME = VALUES(U_NAME);
-
--- Insert sample data into STUDENT table
-INSERT INTO STUDENT (STUDENT_UID, PARENT_ID, GUARDIAN_ID, ADDRESS_ID, CONTACT_ID, SF_SECTION, STUDENT_LRN, STUDENT_LASTNAME, STUDENT_FIRSTNAME, STUDENT_MIDDLENAME, STUDENT_SEX, STUDENT_BIRTHDATE, STUDENT_MOTHERTONGUE, STUDENT_AGE, STUDENT_IP_TYPE, STUDENT_RELIGION)
-VALUES
-(1, 1, 1, 1, 1, 'Section A', 'LRN123', 'Doe', 'Jane', 'C', 'Female', '2005-01-01', 'English', 18, 'Type A', 'Christian'),
-(2, 2, 2, 2, 2, 'Section B', 'LRN234', 'Smith', 'Alice', 'B', 'Female', '2006-02-02', 'English', 17, 'Type B', 'Christian'),
-(3, 3, 3, 3, 3, 'Section C', 'LRN345', 'Johnson', 'Bob', 'C', 'Male', '2007-03-03', 'English', 16, 'Type C', 'Christian'),
-(4, 4, 4, 4, 4, 'Section D', 'LRN456', 'Williams', 'Charlie', 'D', 'Female', '2008-04-04', 'English', 15, 'Type D', 'Christian'),
-(5, 5, 5, 5, 5, 'Section E', 'LRN567', 'Brown', 'Daisy', 'E', 'Female', '2009-05-05', 'English', 14, 'Type E', 'Christian'),
-(6, 6, 6, 6, 6, 'Section F', 'LRN678', 'Jones', 'Eve', 'F', 'Male', '2010-06-06', 'English', 13, 'Type F', 'Christian'),
-(7, 7, 7, 7, 7, 'Section G', 'LRN789', 'Garcia', 'Frank', 'G', 'Male', '2011-07-07', 'English', 12, 'Type G', 'Christian'),
-(8, 8, 8, 8, 8, 'Section H', 'LRN890', 'Miller', 'Grace', 'H', 'Female', '2012-08-08', 'English', 11, 'Type H', 'Christian'),
-(9, 9, 9, 9, 9, 'Section I', 'LRN901', 'Davis', 'Heidi', 'I', 'Female', '2013-09-09', 'English', 10, 'Type I', 'Christian'),
-(10, 10, 10, 10, 10, 'Section J', 'LRN012', 'Rodriguez', 'Ivy', 'J', 'Male', '2014-10-10', 'English', 9, 'Type J', 'Christian'),
-(11, 11, 11, 11, 11, 'Section K', 'LRN123', 'Martinez', 'Jack', 'K', 'Male', '2015-11-11', 'English', 8, 'Type K', 'Christian'),
-(12, 12, 12, 12, 12, 'Section L', 'LRN234', 'Hernandez', 'Kate', 'L', 'Female', '2016-12-12', 'English', 7, 'Type L', 'Christian'),
-(13, 13, 13, 13, 13, 'Section M', 'LRN345', 'Lopez', 'Leo', 'M', 'Male', '2017-01-01', 'English', 6, 'Type M', 'Christian'),
-(14, 14, 14, 14, 14, 'Section N', 'LRN456', 'Gonzalez', 'Mia', 'N', 'Female', '2018-02-02', 'English', 5, 'Type N', 'Christian'),
-(15, 15, 15, 15, 15, 'Section O', 'LRN567', 'Wilson', 'Nina', 'O', 'Female', '2019-03-03', 'English', 4, 'Type O', 'Christian'),
-(16, 16, 16, 16, 16, 'Section P', 'LRN678', 'Anderson', 'Oscar', 'P', 'Male', '2020-04-04', 'English', 3, 'Type P', 'Christian'),
-(17, 17, 17, 17, 17, 'Section Q', 'LRN789', 'Thomas', 'Peter', 'Q', 'Male', '2021-05-05', 'English', 2, 'Type Q', 'Christian'),
-(18, 18, 18, 18, 18, 'Section R', 'LRN890', 'Moore', 'Quinn', 'R', 'Female', '2022-06-06', 'English', 1, 'Type R', 'Christian'),
-(19, 19, 19, 19, 19, 'Section S', 'LRN901', 'Taylor', 'Rachel', 'S', 'Female', '2023-07-07', 'English', 0, 'Type S', 'Christian'),
-(20, 20, 20, 20, 20, 'Section T', 'LRN012', 'Martin', 'Sam', 'T', 'Male', '2024-08-08', 'English', 18, 'Type T', 'Christian'),
-(21, 21, 21, 21, 21, 'Section U', 'LRN123', 'Lee', 'Tina', 'U', 'Female', '2025-09-09', 'English', 18, 'Type U', 'Christian')
-ON DUPLICATE KEY UPDATE STUDENT_LASTNAME = VALUES(STUDENT_LASTNAME);
 
 -- Insert sample data into SCHOOL_FORM table
 INSERT INTO SCHOOL_FORM (SF_ID, SF_SCHOOL_NAME, SF_SCHOOL_ID, SF_DISTRICT, SF_DIVISION, SF_REGION, SF_SEMESTER, SF_SCHOOL_YEAR, SF_GRADE_LEVEL, SF_SECTION, SF_TRACK_AND_STRAND, SF_COURSE)
@@ -168,6 +146,33 @@ VALUES
 (21, 'School U', 'SCH021', 'District 21', 'Division 21', 'Region 21', 'First', '2023-2024', 'Grade 10', 'Section U', 'Track 21', 'Course 21')
 ON DUPLICATE KEY UPDATE SF_SCHOOL_NAME = VALUES(SF_SCHOOL_NAME);
 
+
+-- Insert sample data into STUDENT table
+INSERT INTO STUDENT (STUDENT_UID, PARENT_ID, GUARDIAN_ID, ADDRESS_ID, CONTACT_ID, SF_SECTION, STUDENT_LRN, STUDENT_LASTNAME, STUDENT_FIRSTNAME, STUDENT_MIDDLENAME, STUDENT_SEX, STUDENT_BIRTHDATE, STUDENT_MOTHERTONGUE, STUDENT_AGE, STUDENT_IP_TYPE, STUDENT_RELIGION)
+VALUES
+(1, 1, 1, 1, 1, 'Section A', 'LRN123', 'Doe', 'Jane', 'C', 'Female', '2005-01-01', 'English', 18, 'Type A', 'Christian'),
+(2, 2, 2, 2, 2, 'Section B', 'LRN234', 'Smith', 'Alice', 'B', 'Female', '2006-02-02', 'English', 17, 'Type B', 'Christian'),
+(3, 3, 3, 3, 3, 'Section C', 'LRN345', 'Johnson', 'Bob', 'C', 'Male', '2007-03-03', 'English', 16, 'Type C', 'Christian'),
+(4, 4, 4, 4, 4, 'Section D', 'LRN456', 'Williams', 'Charlie', 'D', 'Female', '2008-04-04', 'English', 15, 'Type D', 'Christian'),
+(5, 5, 5, 5, 5, 'Section E', 'LRN567', 'Brown', 'Daisy', 'E', 'Female', '2009-05-05', 'English', 14, 'Type E', 'Christian'),
+(6, 6, 6, 6, 6, 'Section F', 'LRN678', 'Jones', 'Eve', 'F', 'Male', '2010-06-06', 'English', 13, 'Type F', 'Christian'),
+(7, 7, 7, 7, 7, 'Section G', 'LRN789', 'Garcia', 'Frank', 'G', 'Male', '2011-07-07', 'English', 12, 'Type G', 'Christian'),
+(8, 8, 8, 8, 8, 'Section H', 'LRN890', 'Miller', 'Grace', 'H', 'Female', '2012-08-08', 'English', 11, 'Type H', 'Christian'),
+(9, 9, 9, 9, 9, 'Section I', 'LRN901', 'Davis', 'Heidi', 'I', 'Female', '2013-09-09', 'English', 10, 'Type I', 'Christian'),
+(10, 10, 10, 10, 10, 'Section J', 'LRN012', 'Rodriguez', 'Ivy', 'J', 'Male', '2014-10-10', 'English', 9, 'Type J', 'Christian'),
+(11, 11, 11, 11, 11, 'Section K', 'LRN123', 'Martinez', 'Jack', 'K', 'Male', '2015-11-11', 'English', 8, 'Type K', 'Christian'),
+(12, 12, 12, 12, 12, 'Section L', 'LRN234', 'Hernandez', 'Kate', 'L', 'Female', '2016-12-12', 'English', 7, 'Type L', 'Christian'),
+(13, 13, 13, 13, 13, 'Section M', 'LRN345', 'Lopez', 'Leo', 'M', 'Male', '2017-01-01', 'English', 6, 'Type M', 'Christian'),
+(14, 14, 14, 14, 14, 'Section N', 'LRN456', 'Gonzalez', 'Mia', 'N', 'Female', '2018-02-02', 'English', 5, 'Type N', 'Christian'),
+(15, 15, 15, 15, 15, 'Section O', 'LRN567', 'Wilson', 'Nina', 'O', 'Female', '2019-03-03', 'English', 4, 'Type O', 'Christian'),
+(16, 16, 16, 16, 16, 'Section P', 'LRN678', 'Anderson', 'Oscar', 'P', 'Male', '2020-04-04', 'English', 3, 'Type P', 'Christian'),
+(17, 17, 17, 17, 17, 'Section Q', 'LRN789', 'Thomas', 'Peter', 'Q', 'Male', '2021-05-05', 'English', 2, 'Type Q', 'Christian'),
+(18, 18, 18, 18, 18, 'Section R', 'LRN890', 'Moore', 'Quinn', 'R', 'Female', '2022-06-06', 'English', 1, 'Type R', 'Christian'),
+(19, 19, 19, 19, 19, 'Section S', 'LRN901', 'Taylor', 'Rachel', 'S', 'Female', '2023-07-07', 'English', 0, 'Type S', 'Christian'),
+(20, 20, 20, 20, 20, 'Section T', 'LRN012', 'Martin', 'Sam', 'T', 'Male', '2024-08-08', 'English', 18, 'Type T', 'Christian'),
+(21, 21, 21, 21, 21, 'Section U', 'LRN123', 'Lee', 'Tina', 'U', 'Female', '2025-09-09', 'English', 18, 'Type U', 'Christian')
+ON DUPLICATE KEY UPDATE STUDENT_LASTNAME = VALUES(STUDENT_LASTNAME);
+
 -- Insert sample data into PARTICIPANTS table
 INSERT INTO PARTICIPANTS (PARTICIPANT_ID, STUDENT_UID, PARTICIPANT_TYPE, PARTICIPANT_LASTNAME, PARTICIPANT_FIRSTNAME, EMAIL, CONTACT_NUMBER)
 VALUES
@@ -178,7 +183,7 @@ ON DUPLICATE KEY UPDATE PARTICIPANT_LASTNAME = VALUES(PARTICIPANT_LASTNAME);
 -- Insert sample data into APPOINTMENTS table
 INSERT INTO APPOINTMENTS (GUIDANCE_COUNSELOR_ID, APPOINTMENT_TITLE, CONSULTATION_TYPE, APPOINTMENT_DATE_TIME, APPOINTMENT_STATUS, APPOINTMENT_NOTES, UPDATED_AT)
 VALUES
-(1, 'First Appointment', 'Initial', '2023-10-02 10:00:00', 'Scheduled', 'Initial meeting', '2023-10-01 12:00:00')
+(2, 'First Appointment', 'Initial', '2023-10-02 10:00:00', 'Scheduled', NULL, '2023-10-01 12:00:00')
 ON DUPLICATE KEY UPDATE APPOINTMENT_TITLE = VALUES(APPOINTMENT_TITLE);
 
 -- Insert sample data into VIOLATION_RECORD table

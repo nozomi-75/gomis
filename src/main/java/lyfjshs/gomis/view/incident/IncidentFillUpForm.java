@@ -6,20 +6,23 @@ import java.sql.Connection;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
-import lyfjshs.gomis.view.appointment.StudentSearchUI;
-import javax.swing.JComboBox;
-import javax.swing.JTable;
-import javax.swing.JOptionPane;
+import raven.modal.ModalDialog;
+import raven.modal.option.Location;
+import raven.modal.option.Option;
 
 public class IncidentFillUpForm extends Form {
 
@@ -294,7 +297,12 @@ public class IncidentFillUpForm extends Form {
     }
 
     private void openStudentSearchUI() {
-        StudentSearchUI studentSearchUI = new StudentSearchUI();
-        studentSearchUI.createAndShowGUI();
+       if (ModalDialog.isIdExist("search")) {
+            return;
+        }
+        Option option = ModalDialog.createOption();
+        option.setAnimationEnabled(true);
+        option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
+        ModalDialog.showModal(this, new StudentSearchPanel(conn), option, "search");
     }
 }

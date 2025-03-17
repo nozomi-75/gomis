@@ -7,19 +7,17 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.components.FlatButton;
 import com.formdev.flatlaf.extras.components.FlatButton.ButtonType;
 
-import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
@@ -28,10 +26,13 @@ import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
 import lyfjshs.gomis.view.appointment.AppointmentOverview;
 import lyfjshs.gomis.view.violation.ViolationFullData;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.ModalDialog;
+import raven.modal.component.SimpleModalBorder;
 
 public class MainDashboard extends Form {
 
@@ -43,10 +44,10 @@ public class MainDashboard extends Form {
 		this.connection = conn;
 		this.setLayout(new BorderLayout());
 
-		contentPanel = new JPanel(new MigLayout("fill", "[grow][300]", "[grow 70][grow]"));
+		contentPanel = new JPanel(new MigLayout("fill", "[grow][290]", "[grow 70][grow]"));
 		this.add(contentPanel, BorderLayout.CENTER); // Center the content panel
 
-		centralTablePanel = new JPanel(new MigLayout("", "[386.00,grow]", "[30px][grow]"));
+		centralTablePanel = new JPanel(new MigLayout("", "[grow]", "[30px][grow]"));
 		contentPanel.add(centralTablePanel, "cell 0 0,grow");
 
 		JPanel headerTablePanel = new JPanel(new MigLayout("", "[40px:70px][40px:70px][grow]", "[grow][]"));
@@ -79,15 +80,7 @@ public class MainDashboard extends Form {
 
 		actionPanel.add(violationPanel, "grow");
 
-		// Add this debug code temporarily in MainDashboard constructor
-		try {
-			Connection testConn = DBConnection.getConnection();
-			if (testConn != null && !testConn.isClosed()) {
-				System.out.println("Database connected successfully");
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		refreshTable();
 	}
 
 	FlatSVGIcon viewIcon = new FlatSVGIcon("icons/view.svg", 0.5f);
@@ -95,22 +88,31 @@ public class MainDashboard extends Form {
 
 	private JScrollPane createTablePanel() {
 		String[] columnNames = { "LRN", "Full Name", "Violation Type", "Violation Status", "Actions" };
-
-		// Create table model that doesn't allow direct editing
-		DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
-			@Override
-			public boolean isCellEditable(int row, int column) {
-				return column == 4; // Only allow editing in Actions column
-			}
+		Class<?>[] columnTypes = { String.class, String.class, String.class, String.class, Object.class };
+		boolean[] editableColumns = { false, false, false, false, true };
+		double[] columnWidths = { 0.15, 0.30, 0.19, 0.19, 0.18 };
+		int[] alignments = { SwingConstants.CENTER, // LRN
+				SwingConstants.LEFT, // Full Name
+				SwingConstants.LEFT, // Violation Type
+				SwingConstants.CENTER, // Violation Status
+				SwingConstants.CENTER // Actions
 		};
 
-		JTable table = new JTable(model);
-		table.setRowHeight(30); // Set a fixed height for rows to shorten the panel
-		table.getColumnModel().getColumn(0).setPreferredWidth(50); // LRN
-		table.getColumnModel().getColumn(1).setPreferredWidth(150); // Full Name
-		table.getColumnModel().getColumn(2).setPreferredWidth(150); // Violation Type
-		table.getColumnModel().getColumn(3).setPreferredWidth(100); // Violation Status
-		table.getColumnModel().getColumn(4).setPreferredWidth(100); // Actions
+		TableActionManager actionsColumn = new TableActionManager();
+		actionsColumn.addAction("View", (t, row) -> {
+			String lrn = (String) t.getValueAt(row, 0);
+			showViolationDetails(lrn);
+		}, new Color(0, 150, 136), viewIcon);
+
+//		actionsColumn.addAction("Resolve", (t, row) -> {
+//			String lrn = (String) t.getValueAt(row, 0);
+//			resolveViolation(lrn);
+//		}, new Color(0, 150, 136), resolveIcon);
+
+		Object[][] initialData = new Object[0][columnNames.length];
+		GTable table = new GTable(initialData, columnNames, columnTypes, editableColumns, columnWidths, alignments,
+				false, // No checkbox column
+				actionsColumn);
 
 		// Load violation data
 		try {
@@ -119,20 +121,16 @@ public class MainDashboard extends Form {
 			StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
 
 			List<ViolationRecord> violations = violationCRUD.getAllViolations();
+			DefaultTableModel model = (DefaultTableModel) table.getModel();
 			for (ViolationRecord violation : violations) {
-				// Fetch participant details
 				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
-
-				// If participant is a student, fetch student details
 				if (participant.getStudentUid() != null) {
 					Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
 					String fullName = String.format("%s %s", student.getStudentFirstname(),
 							student.getStudentLastname());
-
-					Object[] rowData = { student.getStudentLrn(), fullName, violation.getViolationType(),
-							violation.getStatus(), "" // Actions column
-					};
-					model.addRow(rowData);
+					model.addRow(new Object[] { student.getStudentLrn(), fullName, violation.getViolationType(),
+							violation.getStatus(), null // Actions column handled by TableActionManager
+					});
 				}
 			}
 		} catch (SQLException e) {
@@ -140,23 +138,6 @@ public class MainDashboard extends Form {
 			JOptionPane.showMessageDialog(this, "Error loading violations: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
-
-		// Configure action column
-		TableActionManager actionsColumn = new TableActionManager();
-
-		// View action
-		actionsColumn.addAction("View", (t, row) -> {
-			String lrn = (String) t.getValueAt(row, 0);
-			showViolationDetails(lrn);
-		}, new Color(0, 150, 136), viewIcon);
-
-		// Resolve action
-		actionsColumn.addAction("Resolve", (t, row) -> {
-			String lrn = (String) t.getValueAt(row, 0);
-			resolveViolation(lrn);
-		}, new Color(0, 150, 136), resolveIcon);
-
-		actionsColumn.applyTo(table, 4);
 
 		return new JScrollPane(table);
 	}
@@ -171,42 +152,29 @@ public class MainDashboard extends Form {
 				// Create and show violation details panel
 				JPanel violationDetailPanel = new ViolationFullData(violation, connection);
 
-				// Show in dialog
-				JDialog dialog = new JDialog();
-				dialog.setTitle("Violation Details");
-				dialog.setModal(true);
-				dialog.setSize(800, 600);
-				dialog.setLocationRelativeTo(null);
-				dialog.getContentPane().add(violationDetailPanel);
-				dialog.setVisible(true);
+				ModalDialog.showModal(this,
+						new SimpleModalBorder(violationDetailPanel, "Violation Details", new SimpleModalBorder.Option[] {
+							new SimpleModalBorder.Option("View in Violation Record", SimpleModalBorder.YES_OPTION),
+						}, (controller, action) -> {
+							if (action == SimpleModalBorder.YES_OPTION) {
+								controller.consume();
+								// actions todo next after Confirm
+							} else if (action == SimpleModalBorder.NO_OPTION|| action == SimpleModalBorder.CLOSE_OPTION
+									|| action == SimpleModalBorder.CANCEL_OPTION) {
+								controller.close();
+								refreshTable();
+								// actions todo next after Close or Cancel
+							}
+						}),
+						"ViolationDetails");
+					// set size of modal dialog to 800x800
+					ModalDialog.getDefaultOption().getLayoutOption().setSize(800, 800);
+			} else if (violation == null) {
+				JOptionPane.showMessageDialog(this, "Violation not found", "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this, "Error retrieving violation details: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
-	private void resolveViolation(String lrn) {
-		try {
-			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
-			ViolationRecord violation = violationCRUD.getViolationByLRN(connection, lrn);
-
-			if (violation != null) {
-				int confirm = JOptionPane.showConfirmDialog(this,
-						"Are you sure you want to mark this violation as resolved?", "Confirm Resolution",
-						JOptionPane.YES_NO_OPTION);
-
-				if (confirm == JOptionPane.YES_OPTION) {
-					violationCRUD.updateViolationStatus(connection, violation.getViolationId(), "Resolved");
-					refreshTable();
-					contentPanel.revalidate();
-					contentPanel.repaint();
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Error resolving violation: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
 	}
@@ -236,7 +204,7 @@ public class MainDashboard extends Form {
 		titleLabel.putClientProperty("FlatLaf.styleClass", "h1");
 		panel.add(titleLabel, "cell 0 0 4 1,growx,aligny center");
 
-		JLabel violationLabel = new JLabel("Violation");
+		JLabel violationLabel = new JLabel("Create a Session");
 		violationLabel.putClientProperty("FlatLaf.styleClass", "large");
 		panel.add(violationLabel, "cell 1 2,alignx center");
 
@@ -249,7 +217,7 @@ public class MainDashboard extends Form {
 		panel.add(studentLabel, "cell 5 2,alignx center");
 
 		FlatButton standardButton_1 = new FlatButton();
-		standardButton_1.setText("View Violation");
+		standardButton_1.setText("Session Form");
 		standardButton_1.setButtonType(ButtonType.none);
 		panel.add(standardButton_1, "cell 1 3");
 

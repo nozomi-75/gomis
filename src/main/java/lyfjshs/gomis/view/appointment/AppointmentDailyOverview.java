@@ -7,6 +7,7 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,12 +26,13 @@ import javax.swing.border.EmptyBorder;
 
 import com.toedter.calendar.JDateChooser;
 
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.view.appointment.add.AddAppointmentModal;
+import lyfjshs.gomis.view.appointment.add.AddAppointmentPanel;
 import net.miginfocom.swing.MigLayout;
-import raven.modal.ModalDialog;
-import raven.modal.component.SimpleModalBorder;
 
 public class AppointmentDailyOverview extends JPanel {
     private LocalDate selectedDate;
@@ -65,14 +67,14 @@ public class AppointmentDailyOverview extends JPanel {
         dateChooser.addPropertyChangeListener("date", evt -> {
             if (evt.getNewValue() != null) {
                 selectedDate = ((java.util.Date) evt.getNewValue()).toInstant()
-                    .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+                        .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
                 updateAppointmentsDisplay();
             }
         });
 
         JButton addButton = new JButton("Add Appointment");
         addButton.setPreferredSize(new Dimension(120, 25));
-        addButton.addActionListener(e -> showAddAppointmentDialog());
+        addButton.addActionListener(e -> createAppointment());
 
         headerPanel.add(titleLabel, "span 2");
         headerPanel.add(subtitleLabel, "span 2");
@@ -92,7 +94,7 @@ public class AppointmentDailyOverview extends JPanel {
 
     public void updateAppointmentsDisplay() {
         appointmentsPanel.removeAll();
-        
+
         List<Appointment> appointments = null;
         try {
             appointments = appointmentDAO.getAppointmentsForDate(selectedDate);
@@ -107,7 +109,7 @@ public class AppointmentDailyOverview extends JPanel {
             emptyPanel.add(new JLabel("No appointments scheduled for this day"));
             JButton addButton = new JButton("Add Your First Appointment");
             addButton.setPreferredSize(new Dimension(150, 25));
-            addButton.addActionListener(e -> showAddAppointmentDialog());
+            addButton.addActionListener(e -> createAppointment());
             emptyPanel.add(addButton, "gapy 5");
             appointmentsPanel.add(emptyPanel, "growx");
         } else {
@@ -115,7 +117,7 @@ public class AppointmentDailyOverview extends JPanel {
                 appointmentsPanel.add(createAppointmentCard(app), "growx");
             }
         }
-        
+
         appointmentsPanel.revalidate();
         appointmentsPanel.repaint();
     }
@@ -123,8 +125,8 @@ public class AppointmentDailyOverview extends JPanel {
     private JPanel createAppointmentCard(Appointment app) {
         JPanel card = new JPanel(new MigLayout("wrap 2", "[grow][]", ""));
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 4, 0, 0, getTypeColor(app.getConsultationType())),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+                BorderFactory.createMatteBorder(0, 4, 0, 0, getTypeColor(app.getConsultationType())),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         card.setBackground(getTypeBackground(app.getConsultationType()));
 
         JLabel title = new JLabel(app.getAppointmentTitle());
@@ -136,21 +138,25 @@ public class AppointmentDailyOverview extends JPanel {
         LocalDateTime appointmentDateTime = app.getAppointmentDateTime().toLocalDateTime();
         String timeSlot = appointmentDateTime.format(timeFormatter);
         card.add(new JLabel(timeSlot + " • " + app.getAppointmentStatus()) {
-            { setFont(new Font("Segoe UI", Font.PLAIN, 12)); }
+            {
+                setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            }
         }, "span 2");
 
         if (app.getGuidanceCounselorId() != null) {
             card.add(new JLabel("Counselor ID: " + app.getGuidanceCounselorId()) {
-                { setFont(new Font("Segoe UI", Font.PLAIN, 12)); }
+                {
+                    setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                }
             }, "span 2");
         }
-        
+
         if (app.getAppointmentNotes() != null && !app.getAppointmentNotes().isEmpty()) {
-            String truncatedNotes = app.getAppointmentNotes().length() > 100 ? 
-                app.getAppointmentNotes().substring(0, 100) + "..." : 
-                app.getAppointmentNotes();
+            String truncatedNotes = app.getAppointmentNotes().length() > 100
+                    ? app.getAppointmentNotes().substring(0, 100) + "..."
+                    : app.getAppointmentNotes();
             JLabel notesLabel = new JLabel("<html>Notes: " + truncatedNotes + "</html>") {
-                { 
+                {
                     setFont(new Font("Segoe UI", Font.PLAIN, 12));
                     setPreferredSize(new Dimension(300, 50));
                     setVerticalAlignment(SwingConstants.TOP);
@@ -170,7 +176,9 @@ public class AppointmentDailyOverview extends JPanel {
                 }
             }
             card.add(new JLabel(participantsText.toString()) {
-                { setFont(new Font("Segoe UI", Font.PLAIN, 12)); }
+                {
+                    setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                }
             }, "span 2");
         }
 
@@ -187,7 +195,8 @@ public class AppointmentDailyOverview extends JPanel {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
         AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
         try {
-            appointmentDetails.loadAppointmentsForDate(appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
+            appointmentDetails
+                    .loadAppointmentsForDate(appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -197,79 +206,63 @@ public class AppointmentDailyOverview extends JPanel {
         dialog.setVisible(true);
     }
 
-    private void showAddAppointmentDialog() {
+    private void createAppointment() {
+        try {
+            Appointment newAppointment = new Appointment();
+            newAppointment.setAppointmentDateTime(Timestamp.valueOf(LocalDateTime.now())); // Set default date and time
 
-      
-        AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(new Appointment(), appointmentDAO, connection);
+            // Check if the guidance counselor is logged in
+            if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
+                newAppointment.setGuidanceCounselorId(Main.formManager.getCounselorObject().getGuidanceCounselorId());
+            } else {
+                JOptionPane.showMessageDialog(this, "No counselor logged in. Please log in first.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-			ModalDialog.showModal(this,
-					new SimpleModalBorder(addAppointmentPanel, "Add Appointment", new SimpleModalBorder.Option[] {
-						new SimpleModalBorder.Option("Add Appointment", SimpleModalBorder.YES_OPTION),
-						new SimpleModalBorder.Option("Cancel", SimpleModalBorder.NO_OPTION)
-					}, (controller, action) -> {
-						if (action == SimpleModalBorder.YES_OPTION) {
-							controller.consume();
-                            if (addAppointmentPanel.isConfirmed()) {
-                                Appointment newAppointment = addAppointmentPanel.getAppointment();
-                                try {
-                                    List<Integer> participantIds = addAppointmentPanel.getParticipantIds();
-                                    int generatedId = appointmentDAO.insertAppointment(
-                                        newAppointment.getGuidanceCounselorId(),
-                                        newAppointment.getAppointmentTitle(),
-                                        newAppointment.getConsultationType(),
-                                        newAppointment.getAppointmentDateTime(),
-                                        newAppointment.getAppointmentNotes(),
-                                        newAppointment.getAppointmentStatus(),
-                                        participantIds
-                                    );
-                                    if (generatedId > 0) {
-                                        updateAppointmentsDisplay();
-                                    } else {
-                                        JOptionPane.showMessageDialog(this, "Failed to add appointment",
-                                            "Error", JOptionPane.ERROR_MESSAGE);
-                                    }
-                                } catch (SQLException e) {
-                                    JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(),
-                                            "Error", JOptionPane.ERROR_MESSAGE);
-                                    e.printStackTrace();
-                                }
-                            }
-                        } else if (action == SimpleModalBorder.NO_OPTION) {
-                            //a condition to ask if the user wants to cancel the operation
-                            // if the participants are already added
-                            controller.close();
-							
-                        } else if (action == SimpleModalBorder.CLOSE_OPTION
-								|| action == SimpleModalBorder.CANCEL_OPTION) {
-							controller.close();
-							// actions todo next after Close or Cancel
-						}
-					}),
-					"input");
-				// set size of modal dialog to 800x800
-				ModalDialog.getDefaultOption().getLayoutOption().setSize(800, 800);
+            AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
 
+            // Use AddAppointmentModal to show the dialog
+            AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO);
+
+            // Update the current view after the modal is closed
+            updateAppointmentsDisplay();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error creating appointment: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 
     private Color getTypeColor(String type) {
         switch (type) {
-            case "Academic Consultation": return new Color(59, 130, 246);
-            case "Career Guidance": return new Color(147, 51, 234);
-            case "Personal Counseling": return new Color(16, 185, 129);
-            case "Behavioral Counseling": return new Color(202, 138, 4);
-            case "Group Counseling": return new Color(239, 68, 68);
-            default: return Color.GRAY;
+            case "Academic Consultation":
+                return new Color(59, 130, 246);
+            case "Career Guidance":
+                return new Color(147, 51, 234);
+            case "Personal Counseling":
+                return new Color(16, 185, 129);
+            case "Behavioral Counseling":
+                return new Color(202, 138, 4);
+            case "Group Counseling":
+                return new Color(239, 68, 68);
+            default:
+                return Color.GRAY;
         }
     }
 
     private Color getTypeBackground(String type) {
         switch (type) {
-            case "Academic Consultation": return new Color(219, 234, 254);
-            case "Career Guidance": return new Color(233, 213, 255);
-            case "Personal Counseling": return new Color(209, 250, 229);
-            case "Behavioral Counseling": return new Color(254, 243, 199);
-            case "Group Counseling": return new Color(254, 226, 226);
-            default: return new Color(243, 244, 246);
+            case "Academic Consultation":
+                return new Color(219, 234, 254);
+            case "Career Guidance":
+                return new Color(233, 213, 255);
+            case "Personal Counseling":
+                return new Color(209, 250, 229);
+            case "Behavioral Counseling":
+                return new Color(254, 243, 199);
+            case "Group Counseling":
+                return new Color(254, 226, 226);
+            default:
+                return new Color(243, 244, 246);
         }
     }
 }

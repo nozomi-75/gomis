@@ -15,21 +15,20 @@ import java.time.LocalDate;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import lyfjshs.gomis.Database.DBConnection;
-import lyfjshs.gomis.Database.entity.Appointment;
 import net.miginfocom.swing.MigLayout;
 
 public class AppointmentsListView extends JPanel {

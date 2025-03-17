@@ -40,6 +40,7 @@ public class ViolationTablePanel extends JPanel {
         initializePanel();
         initializeTable();
         refreshData();
+
     }
 
     private void initializePanel() {
@@ -76,11 +77,9 @@ public class ViolationTablePanel extends JPanel {
         String[] columnNames = { "Student LRN", "Name", "Violation Type", "Reinforcement", "Status", "Actions" };
         Class<?>[] columnTypes = { String.class, String.class, String.class, String.class, String.class, Object.class };
         boolean[] editableColumns = { false, false, false, false, false, true };
-        double[] columnWidths = {0.15, 0.25, 0.20, 0.25, 0.10, 0.05}; // Adjusted widths for better spacing
+        double[] columnWidths = { 0.15, 0.25, 0.20, 0.25, 0.10, 0.05 }; // Adjusted widths for better spacing
         int[] alignments = { SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.LEFT, SwingConstants.LEFT,
                 SwingConstants.CENTER, SwingConstants.CENTER };
-
-    
 
         actionManager = setupTableActions();
 
@@ -141,7 +140,7 @@ public class ViolationTablePanel extends JPanel {
                         ? String.format("%s %s", student.getStudentFirstname(), student.getStudentLastname())
                         : "N/A";
 
-                        model.addRow(new Object[] {
+                model.addRow(new Object[] {
                         studentLRN,
                         fullName,
                         violation.getViolationType(),

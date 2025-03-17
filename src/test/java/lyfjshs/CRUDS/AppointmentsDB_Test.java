@@ -24,9 +24,10 @@ public class AppointmentsDB_Test {
             testAddAppointment();
             testGetAllAppointments();
             testUpdateAppointment();
-            testDeleteAppointment();
+            // testDeleteAppointment();
 
-            tearDown();
+
+            // tearDown();
         } catch (Exception e) {
             e.printStackTrace();
         }

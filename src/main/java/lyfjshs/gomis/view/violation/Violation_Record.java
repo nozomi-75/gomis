@@ -23,7 +23,7 @@ public class Violation_Record extends Form {
         violationCRUD = new ViolationCRUD(connect);
 
         setLayout(new MigLayout("", "[grow]", "[pref!][grow]"));
-        
+
         initializeHeader();
         initializeTablePanel(connect);
     }
@@ -44,16 +44,17 @@ public class Violation_Record extends Form {
 
     private JPanel createSearchPanel() {
         JPanel searchPanel = new JPanel(new MigLayout("", "[grow][65px]", "[23px]"));
-        
+
         searchField = new JTextField(15);
         JButton searchBtn = new JButton("Search");
         searchBtn.setFont(new Font("Tahoma", Font.BOLD, 10));
-        
-        // searchBtn.addActionListener(e -> tablePanel.searchViolations(searchField.getText()));
-        
+
+        // searchBtn.addActionListener(e ->
+        // tablePanel.searchViolations(searchField.getText()));
+
         searchPanel.add(searchField, "cell 0 0,grow");
         searchPanel.add(searchBtn, "cell 1 0");
-        
+
         return searchPanel;
     }
 

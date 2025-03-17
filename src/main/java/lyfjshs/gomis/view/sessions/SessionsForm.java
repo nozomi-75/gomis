@@ -1,43 +1,54 @@
 package lyfjshs.gomis.view.sessions;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.sql.Connection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 
+import lyfjshs.gomis.Main;
+import lyfjshs.gomis.Database.DAO.AppointmentDAO;
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
+import lyfjshs.gomis.Database.entity.Appointment;
+import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.Database.entity.SessionParticipant;
 import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.components.FormManager.Form;
-import lyfjshs.gomis.view.appointment.StudentSearchUI;
+import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-import java.awt.Rectangle;
-import java.awt.Dimension;
-import javax.swing.JFrame;
-import java.awt.GridLayout;
-import java.awt.BorderLayout;
+import raven.modal.ModalDialog;
+import raven.modal.option.Location;
+import raven.modal.option.Option;
 
 public class SessionsForm extends Form implements Printable {
 	private JComboBox<String> violationField, recordedByField;
@@ -66,6 +77,7 @@ public class SessionsForm extends Form implements Printable {
 		this.connect = conn;
 		initializeComponents();
 		layoutComponents();
+		populateRecordedByField(); // Call the method to populate the recordedByField
 	}
 
 	private void initializeComponents() {
@@ -79,8 +91,13 @@ public class SessionsForm extends Form implements Printable {
 	}
 
 	private void openStudentSearchUI() {
-		StudentSearchUI studentSearchUI = new StudentSearchUI();
-		studentSearchUI.createAndShowGUI();
+		if (ModalDialog.isIdExist("search")) {
+            return;
+        }
+        Option option = ModalDialog.createOption();
+        option.setAnimationEnabled(true);
+        option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
+        ModalDialog.showModal(this, new StudentSearchPanel(connect), option, "search");
 	}
 
 	private int getAppointmentId() {
@@ -393,6 +410,12 @@ public class SessionsForm extends Form implements Printable {
 		dateField = new JFormattedTextField();
 		dateField.setColumns(10);
 		mainPanel.add(dateField, "cell 3 1,growx");
+
+		searchBtn.addActionListener(e -> openAppointmentSearchDialog());
+
+		JButton addWalkInParticipantButton = new JButton("Add Walk-In Participant");
+		addWalkInParticipantButton.addActionListener(e -> addParticipantForWalkIn());
+		mainPanel.add(addWalkInParticipantButton, "cell 4 3,alignx center");
 	}
 
 	private void printSessionDetails() {
@@ -465,4 +488,218 @@ public class SessionsForm extends Form implements Printable {
 		detailFrame.setVisible(true);
 	}
 
+	private void populateRecordedByField() {
+		try {
+			if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
+				String counselorName = Main.formManager.getCounselorObject().getFirstName() + " "
+						+ Main.formManager.getCounselorObject().getMiddleName() + " "
+						+ Main.formManager.getCounselorObject().getLastName();
+				if (counselorName != null && !counselorName.isEmpty()) {
+					recordedByField.addItem(counselorName);
+					recordedByField.setSelectedItem(counselorName);
+				}
+			} else {
+				System.out.println("No counselor logged in. Skipping population of 'Recorded By' field.");
+			}
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Error retrieving counselor information: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
+	}
+
+	private void openAppointmentSearchDialog() {
+		JDialog dialog = new JDialog((JFrame) null, "Search Appointment", true);
+		dialog.setSize(600, 400);
+		dialog.setLocationRelativeTo(this);
+		dialog.setLayout(new BorderLayout());
+
+		JPanel searchPanel = new JPanel(new FlowLayout());
+		JTextField searchField = new JTextField(20);
+		JButton searchButton = new JButton("Search");
+		searchPanel.add(new JLabel("Search by Title:"));
+		searchPanel.add(searchField);
+		searchPanel.add(searchButton);
+
+		DefaultTableModel appointmentTableModel = new DefaultTableModel(
+				new Object[] { "ID", "Title", "Date & Time", "Status" }, 0);
+		JTable appointmentTable = new JTable(appointmentTableModel);
+		JScrollPane tableScrollPane = new JScrollPane(appointmentTable);
+
+		searchButton.addActionListener(e -> {
+			String searchText = searchField.getText();
+			if (searchText.trim().isEmpty()) {
+				JOptionPane.showMessageDialog(dialog, "Please enter a search term.", "Warning", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			searchAppointments(searchText, appointmentTableModel);
+		});
+
+		JButton selectButton = new JButton("Select");
+		selectButton.addActionListener(e -> {
+			int selectedRow = appointmentTable.getSelectedRow();
+			if (selectedRow == -1) {
+				JOptionPane.showMessageDialog(dialog, "Please select an appointment.", "Warning", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			int appointmentId = (int) appointmentTableModel.getValueAt(selectedRow, 0);
+			populateParticipantsFromAppointment(appointmentId);
+			dialog.dispose();
+		});
+
+		dialog.add(searchPanel, BorderLayout.NORTH);
+		dialog.add(tableScrollPane, BorderLayout.CENTER);
+		dialog.add(selectButton, BorderLayout.SOUTH);
+		dialog.setVisible(true);
+	}
+
+	private void searchAppointments(String searchText, DefaultTableModel tableModel) {
+		try {
+			AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
+			List<Appointment> appointments = appointmentDAO.getAllAppointments();
+			tableModel.setRowCount(0);
+			for (Appointment appointment : appointments) {
+				if (appointment.getAppointmentTitle().toLowerCase().contains(searchText.toLowerCase())) {
+					tableModel.addRow(new Object[] {
+							appointment.getAppointmentId(),
+							appointment.getAppointmentTitle(),
+							appointment.getAppointmentDateTime(),
+							appointment.getAppointmentStatus()
+					});
+				}
+			}
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Error searching appointments: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
+	}
+
+	private void populateParticipantsFromAppointment(int appointmentId) {
+		try {
+			AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
+			Appointment appointment = appointmentDAO.getAppointmentById(appointmentId);
+			if (appointment != null && appointment.getParticipants() != null) {
+				participantTableModel.setRowCount(0); // Clear existing participants
+				int rowNum = 1;
+				for (Participants participant : appointment.getParticipants()) {
+					participantTableModel.addRow(new Object[] {
+							rowNum++,
+							participant.getParticipantFirstName() + " " + participant.getParticipantLastName(),
+							participant.getParticipantType(),
+							"View | Remove"
+					});
+				}
+			}
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Error populating participants: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
+	}
+
+	private void addParticipantForWalkIn() {
+		String firstName = firstNameField.getText();
+		String lastName = lastNameField.getText();
+		String contact = contactNumberField.getText();
+		String email = (String) sexCBox.getSelectedItem();
+
+		if (firstName.trim().isEmpty() || lastName.trim().isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Please enter at least first and last name.", "Warning", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		try {
+			ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
+			Participants participant = new Participants();
+			participant.setParticipantFirstName(firstName);
+			participant.setParticipantLastName(lastName);
+			participant.setContactNumber(contact);
+			participant.setEmail(email);
+			participant.setParticipantType("Non-Student");
+			participantsDAO.createParticipant(participant);
+
+			participantTableModel.addRow(new Object[] {
+					participantTableModel.getRowCount() + 1,
+					firstName + " " + lastName,
+					"Non-Student",
+					"View | Remove"
+			});
+
+			firstNameField.setText("");
+			lastNameField.setText("");
+			contactNumberField.setText("");
+			sexCBox.setSelectedIndex(0);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Error adding participant: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
+	}
+
+	private void saveSessionToDatabase() {
+		try {
+			// Retrieve session details
+			String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
+			String consultationType = (String) consultationTypeComboBox.getSelectedItem();
+			String violation = (String) violationField.getSelectedItem();
+			String notes = notesArea.getText();
+			String summary = sessionSummaryArea.getText();
+			String recordedBy = (String) recordedByField.getSelectedItem();
+
+			int guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
+			int appointmentId = 0; // Default for Walk-in
+			if (!"Walk-in".equals(appointmentType)) {
+				appointmentId = getAppointmentId(); // Retrieve appointment ID if not Walk-in
+			}
+
+			// Create a new session object
+			Sessions session = new Sessions(
+				0, // Auto-incremented SESSION_ID
+				appointmentId,
+				guidanceCounselorId,
+				0, // PARTICIPANT_ID (not applicable for the session itself)
+				0, // VIOLATION_ID (not retrieved in this form)
+				appointmentType,
+				consultationType,
+				new java.sql.Timestamp(System.currentTimeMillis()), // SESSION_DATE_TIME
+				notes,
+				"Active", // SESSION_STATUS
+				new java.sql.Timestamp(System.currentTimeMillis()) // UPDATED_AT
+			);
+
+			// Save session to the database
+			SessionsDAO sessionsDAO = new SessionsDAO(connect);
+			int sessionId = sessionsDAO.addSession(session);
+
+			// Save participants related to the session
+			for (int i = 0; i < participantTableModel.getRowCount(); i++) {
+				String participantName = (String) participantTableModel.getValueAt(i, 1);
+				String participantType = (String) participantTableModel.getValueAt(i, 2);
+
+				// Create a participant object
+				ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
+				Participants participant = new Participants();
+				participant.setParticipantFirstName(participantName.split(" ")[0]);
+				participant.setParticipantLastName(participantName.split(" ")[1]);
+				participant.setParticipantType(participantType);
+
+				// Save participant to the database
+				participantsDAO.createParticipant(participant);
+
+				// Link participant to the session
+				sessionsDAO.addParticipantToSession(new SessionParticipant(sessionId, participant.getParticipantId()));
+			}
+
+			JOptionPane.showMessageDialog(this, "Session and related data saved successfully!", "Success",
+					JOptionPane.INFORMATION_MESSAGE);
+
+			if (saveCallback != null) {
+				saveCallback.run();
+			}
+
+			// Clear fields after saving
+			clearFields();
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error",
+					JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
+	}
 }

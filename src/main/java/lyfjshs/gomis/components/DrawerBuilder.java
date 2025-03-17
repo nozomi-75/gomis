@@ -13,6 +13,7 @@ import lyfjshs.gomis.components.FormManager.AllForms;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.view.MainDashboard;
+import lyfjshs.gomis.view.SettingsPanel;
 import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import lyfjshs.gomis.view.incident.IncidentList;
@@ -20,7 +21,6 @@ import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
 import lyfjshs.gomis.view.students.create.StudentInfoFullForm;
-import lyfjshs.gomis.view.violation.ViolationFillUpForm;
 import lyfjshs.gomis.view.violation.Violation_Record;
 import raven.extras.AvatarIcon;
 import raven.modal.Drawer;
@@ -148,10 +148,8 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 				new Item("Incident Management", "assignment.svg")
 						.subMenu("Incident Fill-Up Form", IncidentFillUpForm.class)
 						.subMenu("Incident Records", IncidentList.class),
-				new Item("Violation Management", "forms.svg")
-						.subMenu("Violation Fill-Up Form", ViolationFillUpForm.class)
-						.subMenu("Violation Records", Violation_Record.class),
-				new Item("Setting", "setting.svg", MainDashboard.class),
+				new Item("Violation Records", "forms.svg", Violation_Record.class),
+				new Item("Setting", "setting.svg", SettingsPanel.class),
 				new Item("Logout", "logout.svg")
 		};
 
@@ -176,12 +174,6 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 					action.consume();
 					Drawer.setVisible(false);
 					FormManager.logout();
-					return;
-				}
-
-				// Handle settings (second to last item)
-				if (i == 7) {
-					action.consume();
 					return;
 				}
 

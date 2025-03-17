@@ -169,7 +169,8 @@ public class StudentsDataDAO {
     }
 
     // New Method: Retrieve Student Data by Name and Sex
-    public List<Student> getStudentDataByNameAndSex(String firstName, String middleName, String lastName, String sex) throws SQLException {
+    public List<Student> getStudentDataByNameAndSex(String firstName, String middleName, String lastName, String sex)
+            throws SQLException {
         List<Student> students = new ArrayList<>();
         StringBuilder query = new StringBuilder("SELECT s.*, a.*, c.*, p.*, g.* FROM STUDENT s ")
                 .append("LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID ")
@@ -255,6 +256,28 @@ public class StudentsDataDAO {
         return null;
     }
 
+    public List<Student> getStudentsByLrnPrefix(String lrnPrefix) {
+        List<Student> students = new ArrayList<>();
+        String query = "SELECT s.*, a.*, c.*, p.*, g.* FROM STUDENT s "
+                + "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID "
+                + "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID "
+                + "LEFT JOIN PARENTS p ON s.Parent_ID = p.PARENT_ID "
+                + "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID "
+                + "WHERE s.STUDENT_LRN LIKE ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, lrnPrefix + "%"); // Wildcard for prefix search
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    students.add(mapResultSetToStudentWithRelations(rs));
+                }
+            }
+        } catch (SQLException e) {
+            handleSQLException(e, "getStudentsByLrnPrefix");
+        }
+        return students;
+    }
+
     // Helper method to map ResultSet to StudentsData with Address and Contact
     private Student mapResultSetToStudentWithRelations(ResultSet rs) throws SQLException {
         Address address = new Address(
@@ -286,7 +309,7 @@ public class StudentsDataDAO {
                 rs.getString("GUARDIAN_MIDDLE_NAME"),
                 rs.getString("GUARDIAN_RELATIONSHIP"),
                 rs.getString("GUARDIAN_CONTACT_NUMBER"));
-        
+
         return new Student(
                 rs.getInt("STUDENT_UID"),
                 rs.getInt("Parent_ID"),

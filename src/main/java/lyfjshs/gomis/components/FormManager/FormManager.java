@@ -5,6 +5,8 @@ import java.sql.SQLException;
 
 import javax.swing.JFrame;
 
+import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
@@ -42,13 +44,28 @@ public class FormManager {
 
     /**
      * Displays a given form within the main application window.
+     * If the form is shown for the second time, it revalidates and closes the
+     * drawer.
      * 
      * @param form The form to be displayed.
      */
     public static void showForm(Form form) {
+        FlatAnimatedLafChange.showSnapshot();
         form.formCheck();
         form.formOpen();
+
+        mainForm.revalidate();
+        mainForm.repaint();
+
+        // if (Drawer.isOpen() ) {
+        // Drawer.setDrawerOpenMode(MenuOpenMode.COMPACT);;
+        // } else {
+        // Drawer.toggleMenuOpenMode();
+        // }
+
         mainForm.setForm(form);
+        FlatAnimatedLafChange.hideSnapshotWithAnimation();
+
     }
 
     /**
@@ -123,21 +140,31 @@ public class FormManager {
         return login;
     }
 
+    private GuidanceCounselor counselorObjedct;
+
     public void setCounselorDetails(GuidanceCounselor counselor) {
+        this.counselorObjedct = counselor;
         counselorFIRST_NAME = counselor.getFirstName();
         counselorLAST_NAME = counselor.getLastName();
         counselorPosition = counselor.getPosition();
-        System.out.println("Counselor Details Set: " + counselorFIRST_NAME + " " + counselorLAST_NAME + ", " + counselorPosition); // Debug statement
+        System.out.println(
+                "Counselor Details Set: " + counselorFIRST_NAME + " " + counselorLAST_NAME + ", " + counselorPosition); // Debug
+                                                                                                                        // statement
+    }
+
+    public GuidanceCounselor getCounselorObject() {
+        return counselorObjedct;
     }
 
     public int getCounselorID() {
         System.out.println("Getting Counselor ID: " + counselorID); // Debug statement
-        return counselorID;
+        return counselorObjedct.getGuidanceCounselorId();
     }
 
     public void setCounselorID(int counselorID) {
-        FormManager.counselorID = counselorID;
-        System.out.println("Setting Counselor ID: " + counselorID); // Debug statement
+        this.counselorObjedct.setGuidanceCounselorId(counselorID);
+        ;
+        System.out.println("Setting Counselor ID: " + getCounselorID()); // Debug statement
     }
 
     public String getCounselorFullName() {

@@ -63,10 +63,10 @@ public class StudentMangementGUI extends Form {
         backBtn = new JButton("Back");
         backBtn.setVisible(false);
         backBtn.addActionListener(e -> {
-            FlatAnimatedLafChange.showSnapshot();
             slidePane.addSlide(mainPanel, SlidePaneTransition.Type.BACK);
             currentDetailPanel = null;
             backBtn.setVisible(false);
+            headerSearchPanel.setVisible(true); // Show search panel when returning to main view
             FlatAnimatedLafChange.hideSnapshotWithAnimation();
         });
 
@@ -115,6 +115,7 @@ public class StudentMangementGUI extends Form {
                     currentDetailPanel = new StudentFullData(connection, studentData);
                     slidePane.addSlide(currentDetailPanel, SlidePaneTransition.Type.FORWARD);
                     backBtn.setVisible(true);
+                    headerSearchPanel.setVisible(false); // Hide search panel when viewing student
                 } else {
                     JOptionPane.showMessageDialog(this, "Student data not found for LRN: " + lrn, "Data Not Found",
                         JOptionPane.WARNING_MESSAGE);

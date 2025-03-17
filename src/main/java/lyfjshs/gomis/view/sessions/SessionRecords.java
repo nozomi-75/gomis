@@ -12,8 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
@@ -24,6 +23,7 @@ import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
@@ -32,7 +32,7 @@ import raven.extras.SlidePaneTransition;
 public class SessionRecords extends Form {
 
     private static final long serialVersionUID = 1L;
-    private JTable sessionTable;
+    private GTable sessionTable; // Use GTable instead of JTable
     private SessionsDAO sessionsDAO;
     private final Connection connection;
     private final String[] columnNames = { "#", "Session ID", "Session Type", "Participants", "Date & Time", "Status", "Actions" };
@@ -51,10 +51,7 @@ public class SessionRecords extends Form {
     }
 
     private void initializeComponents() {
-        // Initialize table
-        DefaultTableModel model = new DefaultTableModel(null, columnNames);
-        sessionTable = new JTable(model);
-        setupTable();
+        setupTable(); // Initialize GTable
 
         // Initialize SlidePane
         slidePane = new SlidePane();
@@ -70,6 +67,7 @@ public class SessionRecords extends Form {
             FlatAnimatedLafChange.showSnapshot();
             slidePane.addSlide(mainPanel, SlidePaneTransition.Type.BACK);
             backBtn.setVisible(false);
+            addSessionBtn.setVisible(true); // Show Add Session button when returning
             FlatAnimatedLafChange.hideSnapshotWithAnimation();
         });
 
@@ -82,36 +80,46 @@ public class SessionRecords extends Form {
     }
 
     private void setupTable() {
-        sessionTable.setShowVerticalLines(false);
-        sessionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        sessionTable.setRowHeight(30);
-        sessionTable.setFont(new Font("Tahoma", Font.PLAIN, 14));
-        sessionTable.setShowGrid(false);
+        Object[][] initialData = new Object[0][7]; // Adjusted for new column structure
+        String[] columnNames = { "#", "Appointment Type", "Consultation Type", "Date", "Status", "Participants", "Actions" };
+        Class<?>[] columnTypes = { Integer.class, String.class, String.class, String.class, String.class, Integer.class, Object.class };
+        boolean[] editableColumns = { false, false, false, false, false, false, true };
+        double[] columnWidths = { 0.05, 0.2, 0.2, 0.2, 0.15, 0.1, 0.1 }; // Sum to 1.0
+        int[] alignments = {
+            SwingConstants.CENTER,  // #
+            SwingConstants.LEFT,    // Appointment Type
+            SwingConstants.LEFT,    // Consultation Type
+            SwingConstants.CENTER,  // Date
+            SwingConstants.CENTER,  // Status
+            SwingConstants.CENTER,  // Participants
+            SwingConstants.CENTER   // Actions
+        };
 
-        // Set column widths
-        sessionTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // #
-        sessionTable.getColumnModel().getColumn(1).setPreferredWidth(100); // Session ID
-        sessionTable.getColumnModel().getColumn(2).setPreferredWidth(150); // Session Type
-        sessionTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Participants
-        sessionTable.getColumnModel().getColumn(4).setPreferredWidth(150); // Date & Time
-        sessionTable.getColumnModel().getColumn(5).setPreferredWidth(100); // Status
-        sessionTable.getColumnModel().getColumn(6).setPreferredWidth(150); // Actions
-        sessionTable.getColumnModel().getColumn(6).setResizable(false);
+        TableActionManager actionManager = setupTableActions();
 
-        // Setup table actions
-        setupTableActions();
+        sessionTable = new GTable(
+            initialData,
+            columnNames,
+            columnTypes,
+            editableColumns,
+            columnWidths,
+            alignments,
+            false, // No checkbox column
+            actionManager
+        );
     }
 
-    private void setupTableActions() {
+    private TableActionManager setupTableActions() {
         TableActionManager actionManager = new TableActionManager();
         actionManager.addAction("View", (table, row) -> {
-            int sessionId = (int) table.getValueAt(row, 1);
+            int sessionId = (int) table.getValueAt(row, 0); // Adjusted to match new column structure
             FlatAnimatedLafChange.showSnapshot();
 
             try {
                 Sessions session = sessionsDAO.getSessionById(sessionId);
                 showSessionFullData(session);
                 backBtn.setVisible(true);
+                addSessionBtn.setVisible(false); // Hide Add Session button when viewing a session
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this, "Error retrieving session data: " + e.getMessage(), 
                     "Database Error", JOptionPane.ERROR_MESSAGE);
@@ -121,7 +129,7 @@ public class SessionRecords extends Form {
             FlatAnimatedLafChange.hideSnapshotWithAnimation();
         }, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
 
-        actionManager.applyTo(sessionTable, 6);
+        return actionManager;
     }
 
     private void showSessionFullData(Sessions session) {
@@ -167,7 +175,6 @@ public class SessionRecords extends Form {
         sessionsForm.setVisible(true);
     }
 
-
     private void loadSessionData() {
         try {
             List<Sessions> sessions = sessionsDAO.getSessionDataWithParticipantCount();
@@ -178,11 +185,12 @@ public class SessionRecords extends Form {
             for (Sessions session : sessions) {
                 model.addRow(new Object[] { 
                     rowNum++, 
-                    session.getSessionId(),
+                    session.getAppointmentType(),
                     session.getConsultationType(),
-                    session.getParticipantCount(),
                     session.getAppointmentDateTime(),
-                    session.getSessionStatus()
+                    session.getSessionStatus(),
+                    session.getParticipantCount(),
+                    null // Actions column handled by TableActionManager
                 });
             }
         } catch (SQLException e) {
@@ -191,21 +199,4 @@ public class SessionRecords extends Form {
             e.printStackTrace();
         }
     }
-
-    // public static void main(String[] args) {
-    //     SwingUtilities.invokeLater(() -> {
-    //         try {
-    //             JFrame frame = new JFrame("Session Records");
-    //             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    //             frame.getContentPane().add(new SessionRecords(DBConnection.getConnection()));
-    //             frame.setSize(800, 600);
-    //             frame.setLocationRelativeTo(null);
-    //             frame.setVisible(true);
-    //         } catch (SQLException e) {
-    //             e.printStackTrace();
-    //             JOptionPane.showMessageDialog(null, "Error connecting to database: " + e.getMessage(), 
-    //                 "Database Error", JOptionPane.ERROR_MESSAGE);
-    //         }
-    //     });
-    // }
 }

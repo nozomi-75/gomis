@@ -8,10 +8,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
@@ -27,13 +25,12 @@ import lyfjshs.gomis.Database.entity.Participants;
 import net.miginfocom.swing.MigLayout;
 
 public class AppointmentDayDetails extends JPanel {
-    private JButton closeButton_1;
     private Connection connection;
     private JPanel bodyPanel;
 
     public AppointmentDayDetails(Connection connection) {
         this.connection = connection;
-        setLayout(new MigLayout("fill, insets 10", "[grow]", "[grow][]"));
+        setLayout(new MigLayout("fill, insets 10", "[grow]", "[grow]"));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         initializeComponents();
     }
@@ -43,13 +40,7 @@ public class AppointmentDayDetails extends JPanel {
         JPanel headerPanel = new JPanel(new MigLayout("insets 0", "[grow][right]", "[]"));
         JLabel titleLabel = new JLabel("Appointment Details");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        JButton closeButton = new JButton("×");
-        closeButton.setFont(new Font("Arial", Font.BOLD, 16));
-        closeButton.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        closeButton.setPreferredSize(new java.awt.Dimension(30, 30));
-        closeButton.addActionListener(e -> SwingUtilities.getWindowAncestor(this).dispose());
         headerPanel.add(titleLabel, "align center");
-        headerPanel.add(closeButton, "align right");
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
         add(headerPanel, "north");
 
@@ -60,12 +51,6 @@ public class AppointmentDayDetails extends JPanel {
         JScrollPane scrollPane = new JScrollPane(bodyPanel);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, "cell 0 0, grow");
-        closeButton_1 = new JButton("Close");
-        add(closeButton_1, "cell 0 1,alignx right");
-        closeButton_1.setBackground(new Color(244, 67, 54));
-        closeButton_1.setForeground(Color.WHITE);
-        closeButton_1.setFocusPainted(false);
-        closeButton_1.addActionListener(e -> SwingUtilities.getWindowAncestor(this).dispose());
     }
 
     // Method to load appointments for a specific date

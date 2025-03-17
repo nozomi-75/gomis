@@ -131,11 +131,11 @@ public class Main {
 	public static void initFrame() {
 	    initializeLookAndFeel();
 	    initDB();
-	    jFrame = new GFrame(1280, 720, false, "GOMIS", null);
+	    jFrame = new GFrame(1380, 750, false, "GOMIS", null);
 	    jFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
 	    initiPanels();
 
-	    FormManager.install(jFrame);
+ 	    FormManager.install(jFrame);
 	    formManager = new FormManager();
 
 	    jFrame.refresh();

@@ -23,10 +23,14 @@ import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
+import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
+import lyfjshs.gomis.Database.DAO.SchoolFormDAO;
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
 import lyfjshs.gomis.Database.entity.Address;
 import lyfjshs.gomis.Database.entity.Contact;
 import lyfjshs.gomis.Database.entity.Guardian;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Parents;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
@@ -37,6 +41,8 @@ import lyfjshs.gomis.utils.PrintingReport;
 import net.miginfocom.swing.MigLayout;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
+import raven.modal.ModalDialog;
+import raven.modal.component.SimpleModalBorder;
 
 public class StudentFullData extends Form {
 	// Text fields for easy access and validation
@@ -54,7 +60,6 @@ public class StudentFullData extends Form {
 	private JTextField addressField;
 	private JPanel panel;
 	private final JButton printGMBtn;
-	private boolean violationResolve;
 	private FlatSVGIcon sagisagIcon, logoIcon;
 	private JTextField ipField;
 	private JTextField textField;
@@ -67,14 +72,12 @@ public class StudentFullData extends Form {
 	private JTextField motherFirstNameField;
 	private JTextField motherMiddleNameField;
 	private JTextField motherPhoneNumberField;
-	private JPanel violationPanel;
 	private JTextField parentNameField;
-	private JPanel violationTablePanel;
 	private JScrollPane scrollPane;
 	private JTable violationTable;
 	private Connection connect;
-	private JLabel lblNewLabel;
 	private JTextField fullAddField;
+	private JButton dropStudBtn;
 
 	public StudentFullData(Connection connection, Student studentData) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
@@ -97,13 +100,17 @@ public class StudentFullData extends Form {
 
 		add(scroll, "cell 1 0,grow");
 
-		panel = new JPanel(new MigLayout("", "[grow][][]", "[]"));
+		panel = new JPanel(new MigLayout("", "[grow][][][]", "[]"));
 		add(panel, "cell 1 1,growx");
 
 		printGMBtn = new JButton("Print Good Moral");
 		printGMBtn.addActionListener(e -> createGoodMoralReport()); // Attach event
 
-		panel.add(printGMBtn, "cell 1 0,grow");
+		dropStudBtn = new JButton("DROP Student");
+		dropStudBtn.addActionListener(e -> dropStudentModal()); // Attach event
+		panel.add(dropStudBtn, "cell 1 0");
+
+		panel.add(printGMBtn, "cell 2 0,grow");
 	}
 
 	private void initComponents() {
@@ -185,6 +192,7 @@ public class StudentFullData extends Form {
 
 		fullAddField = new JTextField();
 		fullAddField.setEditable(false);
+		
 	}
 
 	private void setStudentData(Student studentData) {
@@ -251,23 +259,18 @@ public class StudentFullData extends Form {
 		personalInfoPanel.add(new JLabel("First Name:"), "cell 0 2, leading");
 		personalInfoPanel.add(firstNameField, "cell 1 2, growx");
 
-		JLabel label = new JLabel("Mother Tongue");
-		personalInfoPanel.add(label, "cell 3 2,alignx leading");
+		personalInfoPanel.add(new JLabel("Mother Tongue"), "cell 3 2,alignx leading");
 
-		motherTongueField = new JTextField();
-		motherTongueField.setEditable(false);
+
 		personalInfoPanel.add(motherTongueField, "cell 4 2,growx");
 
 		personalInfoPanel.add(new JLabel("Middle Name:"), "cell 0 3, leading");
 		personalInfoPanel.add(middleNameField, "cell 1 3, growx");
 
-		lblNewLabel = new JLabel("Full Address:");
-		personalInfoPanel.add(lblNewLabel, "cell 3 3,alignx left");
+		personalInfoPanel.add(new JLabel("Full Address:"), "cell 3 3,alignx left");
 
-		fullAddField = new JTextField();
-		fullAddField.setEditable(false);
+
 		personalInfoPanel.add(fullAddField, "cell 4 3,growx");
-		fullAddField.setColumns(10);
 
 		personalInfoPanel.add(new JLabel("Sex:"), "cell 0 4, leading");
 		personalInfoPanel.add(sexComboBox, "cell 1 4, growx");
@@ -275,11 +278,7 @@ public class StudentFullData extends Form {
 		personalInfoPanel.add(new JLabel("Date of Birth:"), "cell 0 5, leading");
 		personalInfoPanel.add(dobField, "flowx,cell 1 5,growx");
 
-		JLabel label_1 = new JLabel("AGE as of 1st Friday June");
-		personalInfoPanel.add(label_1, "cell 1 5,alignx leading");
-
-		ageField = new JTextField();
-		ageField.setEditable(false);
+		personalInfoPanel.add(new JLabel("AGE "), "cell 1 5,alignx leading");
 		personalInfoPanel.add(ageField, "cell 1 5,alignx center");
 
 		return personalInfoPanel;
@@ -367,31 +366,36 @@ public class StudentFullData extends Form {
 			// Ensure violationTable is initialized
 			if (violationTable == null) {
 				violationTable = new JTable(new DefaultTableModel(
-						new String[] { "Violation Type", "Reinforcement", "Status", "Actions" }, 0));
+						new String[] { "Violation Type", "Description", "Reinforcement", "Status", "Actions" }, 0));
 			}
+
+			// Retrieve violations related to the student
 			List<ViolationRecord> violations = ViolationCRUD.getViolationsByStudentUID(connection, studentUID);
-			createViolationTable(violations);
+
+			// Populate the table with violation data
+			DefaultTableModel model = (DefaultTableModel) violationTable.getModel();
+			model.setRowCount(0); // Clear existing rows
+
+			for (ViolationRecord violation : violations) {
+				Object[] row = {
+					violation.getViolationType(),
+					violation.getViolationDescription(),
+					violation.getReinforcement(),
+					violation.getStatus(),
+					"" // Placeholder for actions
+				};
+				model.addRow(row);
+			}
+
+			// Add actions to the table
+			TableActionManager actionManager = new TableActionManager();
+			actionManager.addAction("View", (table, row) -> viewViolation(violations.get(row)), null, null)
+						 .addAction("Resolve", (table, row) -> resolveViolation(violations.get(row)), null, null);
+			actionManager.applyTo(violationTable, 4); // Assuming actions are in the 5th column
 		} catch (Exception e) {
 			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Failed to load violations.", "Error", JOptionPane.ERROR_MESSAGE);
 		}
-	}
-
-	private void createViolationTable(List<ViolationRecord> violations) {
-		DefaultTableModel model = (DefaultTableModel) violationTable.getModel();
-		model.setRowCount(0); // Clear existing rows
-
-		for (ViolationRecord violation : violations) {
-			Object[] row = { violation.getViolationType(), violation.getReinforcement(), violation.getStatus(), "" // Placeholder
-																													// for
-																													// actions
-			};
-			model.addRow(row);
-		}
-
-		TableActionManager actionManager = new TableActionManager();
-		actionManager.addAction("View", (table, row) -> viewViolation(violations.get(row)), null, null)
-				.addAction("Resolve", (table, row) -> resolveViolation(violations.get(row)), null, null);
-		actionManager.applyTo(violationTable, 3); // Assuming actions are in the 4th column
 	}
 
 	private void viewViolation(ViolationRecord violation) {
@@ -459,6 +463,46 @@ public class StudentFullData extends Form {
 			JOptionPane.showMessageDialog(FormManager.getFrame(),
 					"Failed to load or generate the report: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
+		}
+	}
+
+	private void dropStudentModal() {
+		try {
+			// Fetch student data
+			StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connect);
+			Student student = studentsDataDAO.getStudentDataByLrn(lrnField.getText());
+
+			// Fetch school form data
+			SchoolFormDAO schoolFormDAO = new SchoolFormDAO(connect);
+			String trackAndStrand = schoolFormDAO.getSchoolFormById(student.getStudentUid()).getSF_TRACK_AND_STRAND();
+
+			// Fetch guidance counselor data
+			GuidanceCounselorDAO guidanceCounselorDAO = new GuidanceCounselorDAO(connect);
+			GuidanceCounselor counselor = guidanceCounselorDAO.readGuidanceCounselor(1); // Assuming ID 1 for now
+
+			// Create a modal dialog for dropping a student
+			DroppingForm droppingForm = new DroppingForm(connect);
+			droppingForm.populateForm(student.getStudentFirstname() + " " + student.getStudentLastname(), 
+									  trackAndStrand, 
+									  counselor.getFirstName() + " " + counselor.getLastName());
+
+			ModalDialog.showModal(this, new SimpleModalBorder(droppingForm, "Drop Confirmation",
+					new SimpleModalBorder.Option[] 
+							{ new SimpleModalBorder.Option("Yes", SimpleModalBorder.YES_OPTION), 
+							  new SimpleModalBorder.Option("No", SimpleModalBorder.NO_OPTION) },
+					(controller, action) -> {
+						if (action == SimpleModalBorder.YES_OPTION) {
+							controller.consume();
+							// Perform the drop student operation
+						} else if (action == SimpleModalBorder.NO_OPTION || action == SimpleModalBorder.CLOSE_OPTION
+								|| action == SimpleModalBorder.CANCEL_OPTION) {
+							controller.close();
+						}
+					}), "dropStudentModal");
+			ModalDialog.getDefaultOption().getLayoutOption().setSize(800, 800);
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Failed to load student or counselor data.", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }
