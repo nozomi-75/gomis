@@ -1,9 +1,9 @@
-lyfjshs\gomis\view\appointment\AddAppointmentPanel.class
 lyfjshs\gomis\view\incident\IncidentFillUpForm$2.class
 lyfjshs\gomis\components\GFrame$2.class
 lyfjshs\gomis\view\violation\ViolationTableModel.class
 lyfjshs\gomis\Database\SQLExceptionPane.class
 lyfjshs\gomis\Database\entity\Student.class
+lyfjshs\gomis\view\appointment\add\AddAppointmentModal.class
 lyfjshs\gomis\view\sessions\SessionsForm.class
 lyfjshs\gomis\view\violation\ViolationFillUpForm$1.class
 lyfjshs\gomis\Database\entity\Guardian.class
@@ -51,6 +51,7 @@ lyfjshs\gomis\view\appointment\AppointmentDailyOverview$1.class
 lyfjshs\gomis\components\DrawerBuilder$2.class
 lyfjshs\gomis\view\loading\ProgressPanel.class
 lyfjshs\gomis\view\students\create\AddressPanel.class
+lyfjshs\gomis\view\appointment\add\AddAppointmentPanel.class
 lyfjshs\gomis\Database\DAO\AddressDAO.class
 lyfjshs\gomis\view\loading\LogoPanel.class
 lyfjshs\gomis\view\students\create\StudentPanel.class
@@ -58,7 +59,6 @@ lyfjshs\gomis\view\appointment\AppointmentCalendar$2.class
 lyfjshs\gomis\view\violation\ViewViolationDetails.class
 lyfjshs\gomis\view\appointment\AppointmentDailyOverview$5.class
 lyfjshs\gomis\view\appointment\AppointmentDailyOverview.class
-lyfjshs\gomis\view\appointment\AddAppointmentPanel$1.class
 lyfjshs\gomis\Database\entity\Appointment.class
 lyfjshs\gomis\Database\DAO\GuardianDAO.class
 lyfjshs\gomis\Database\entity\SessionParticipant.class

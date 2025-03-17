@@ -12,10 +12,10 @@ public class FlatWindows11Settings extends JFrame {
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new MigLayout("fillx, wrap", "[grow]", "[]10[]"));
+        getContentPane().setLayout(new MigLayout("fillx, wrap", "[grow]", "[]10[]"));
 
         // Title
-        JLabel titleLabel = new JLabel("Personalization");
+        JLabel titleLabel = new JLabel("Settings");
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
 
         // Create FlatClickablePanel objects
@@ -24,10 +24,10 @@ public class FlatWindows11Settings extends JFrame {
         FlatClickablePanel dynamicLightingPanel = new FlatClickablePanel("Dynamic Lighting", "Connected devices, effects", "icons/lighting.svg");
 
         // Add components
-        add(titleLabel, "cell 0 0, gapbottom 15");
-        add(colorsPanel, "cell 0 1, growx");
-        add(themesPanel, "cell 0 2, growx");
-        add(dynamicLightingPanel, "cell 0 3, growx");
+        getContentPane().add(titleLabel, "cell 0 0, gapbottom 15");
+        getContentPane().add(colorsPanel, "cell 0 1, growx");
+        getContentPane().add(themesPanel, "cell 0 2, growx");
+        getContentPane().add(dynamicLightingPanel, "cell 0 3, growx");
 
         setVisible(true);
     }

@@ -48,7 +48,8 @@ C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\SQLExceptionPane.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Main.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\utils\PrintingReport.java
-C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AddAppointmentPanel.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\add\AddAppointmentModal.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\add\AddAppointmentPanel.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentCalendar.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentDailyOverview.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\appointment\AppointmentDayDetails.java
