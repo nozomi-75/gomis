@@ -33,6 +33,9 @@ import lyfjshs.gomis.view.violation.Violation_Record;
  * the database connection, configuring the UI look and feel, and initializing
  * panels and the main frame.
  */
+/**
+ * 
+ */
 @SuppressWarnings("unused")
 public class Main {
 
