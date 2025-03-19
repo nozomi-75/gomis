@@ -1,3 +1,4 @@
+//magkasama na major and minor, nalagyan ng others pag di naka select mawawala, pag naka select lalabas si john cena.
 package lyfjshs.gomis.view.sessions;
 
 import java.awt.BorderLayout;
@@ -51,7 +52,7 @@ import raven.modal.option.Location;
 import raven.modal.option.Option;
 
 public class SessionsForm extends Form implements Printable {
-	private JComboBox<String> violationField, recordedByField;
+	private JComboBox<String> violationField;
 	private JFormattedTextField sessionDateTimeField, updatedATField;
 	private JTextArea sessionSummaryArea, notesArea;
 	private JButton saveButton, printButton, searchStudentButton;
@@ -72,6 +73,32 @@ public class SessionsForm extends Form implements Printable {
 	private JButton searchBtn;
 	private JFormattedTextField dateField; // Declare the missing dateField
 	private Runnable saveCallback;
+	private JTextField customViolationField; // Add this field for custom violations
+
+	// Violation type arrays
+	private String[] violations = {
+		"Absence/Late",
+		"Minor Property Damage",
+		"Threatening/Intimidating",
+		"Pornographic Materials",
+		"Gadget Use in Class",
+		"Cheating",
+		"Stealing",
+		"No Pass",
+		"Bullying",
+		"Sexual Abuse",
+		"Illegal Drugs",
+		"Alcohol",
+		"Smoking/Vaping",
+		"Gambling",
+		"Public Display of Affection",
+		"Fighting/Weapons",
+		"Severe Property Damage",
+		"Others"
+	};
+
+	private JLabel violationTypeLabel;
+	private JTextField recordedByField;
 
 	public SessionsForm(Connection conn) {
 		this.connect = conn;
@@ -84,6 +111,58 @@ public class SessionsForm extends Form implements Printable {
 		// Initialize the table model
 		participantTableModel = new DefaultTableModel(
 				new Object[] { "#", "Participant Name", "Participant Type", "Actions" }, 0);
+		
+		// Initialize violation type label
+		violationTypeLabel = new JLabel("");
+		violationTypeLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+		
+		// Initialize custom violation field
+		customViolationField = new JTextField(15);
+		customViolationField.setVisible(false);
+		
+		// Initialize violation field with combined offenses
+		violationField = new JComboBox<>();
+violationField.addItem("-- Select Violation --");
+for (String violation : violations) {
+    violationField.addItem(violation);
+}
+		
+		// Add listener to update violation type label and show/hide custom field
+		violationField.addActionListener(e -> {
+			String selected = (String) violationField.getSelectedItem();
+			if (selected == null || selected.equals("-- Select Violation --")) {
+				violationTypeLabel.setText("");
+				violationTypeLabel.setForeground(Color.BLACK);
+				customViolationField.setVisible(false);
+				customViolationField.setEnabled(false);
+				customViolationField.setText(""); // Clear the text when hidden
+			} else if (selected.equals("Others")) {
+				customViolationField.setVisible(true);
+				customViolationField.setEnabled(true);
+				violationTypeLabel.setText("Custom Violation");
+				violationTypeLabel.setForeground(new Color(128, 128, 128)); // Gray color for custom
+			} else {
+				customViolationField.setVisible(false);
+				customViolationField.setEnabled(false);
+				customViolationField.setText(""); // Clear the text when hidden
+				violationTypeLabel.setText("Selected Violation");
+				violationTypeLabel.setForeground(new Color(0, 100, 0)); // Dark green color
+			}
+		});
+				}
+				if (isMinor) {
+					violationTypeLabel.setText("Minor Violation");
+					violationTypeLabel.setForeground(new Color(255, 140, 0)); // Dark Orange
+				} else {
+					violationTypeLabel.setText("Major Violation");
+					violationTypeLabel.setForeground(new Color(178, 34, 34)); // Firebrick Red
+				}
+			}
+		});
+		
+		// Initialize recorded by field as JTextField
+		recordedByField = new JTextField();
+		recordedByField.setEditable(false); // Make it read-only
 	}
 
 	private void toggleSearchStudentButton() {
@@ -117,7 +196,11 @@ public class SessionsForm extends Form implements Printable {
 			String date = dateField.getText();
 			String participants = (String) participantsComboBox.getSelectedItem();
 			String violation = (String) violationField.getSelectedItem();
-			String recordedBy = (String) recordedByField.getSelectedItem();
+			// If "Others" is selected, use the custom violation text
+			if ("Others".equals(violation)) {
+				violation = customViolationField.getText();
+			}
+			String recordedBy = recordedByField.getText();
 			String notes = notesArea.getText();
 			String summary = sessionSummaryArea.getText();
 			String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
@@ -152,6 +235,7 @@ public class SessionsForm extends Form implements Printable {
 				saveCallback.run();
 			}
 			//after saving, clear the fields
+			clearFields();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
@@ -160,9 +244,27 @@ public class SessionsForm extends Form implements Printable {
 	}
 
 	private void clearFields(){
-		// Clear all fields after saving
-		
-		
+		// Clear text fields
+		firstNameField.setText("");
+		lastNameField.setText("");
+		contactNumberField.setText("");
+		notesArea.setText("");
+		sessionSummaryArea.setText("");
+		sessionDateTimeField.setText("");
+		updatedATField.setText("");
+		dateField.setText("");
+
+		// Reset combo boxes to first item
+		participantsComboBox.setSelectedIndex(0);
+		consultationTypeComboBox.setSelectedIndex(0);
+		appointmentTypeComboBox.setSelectedIndex(0);
+		sexCBox.setSelectedIndex(0);
+		violationField.setSelectedIndex(0);
+		violationTypeLabel.setText("");
+
+		// Clear participant table
+		participantTableModel.setRowCount(0);
+		participantDetails.clear();
 	}
 
 	private void addParticipant() {
@@ -254,23 +356,27 @@ public class SessionsForm extends Form implements Printable {
 		saveButton.setFocusPainted(false);
 		saveButton.addActionListener(e -> saveSession());
 
-		// Header
+		// Header with improved styling
 		JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		contentPanel.add(headerPanel, "cell 0 0,growx");
 		JLabel headerLabel = new JLabel("Session Documentation Form");
-		headerLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+		headerLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+		headerLabel.setForeground(Color.WHITE);
 		headerPanel.add(headerLabel);
 		headerPanel.setBackground(new Color(5, 117, 230));
-		headerPanel.setForeground(Color.WHITE);
+		headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
 		firstNameField = new JTextField(10);
 		lastNameField = new JTextField(10);
 
-		// Main Panel
+		// Main Panel with improved spacing
 		mainPanel = new JPanel(
-				new MigLayout("wrap, gap 10, hidemode 3", "[][grow][20px][][]", "[][][][][][fill][][grow][][]"));
+				new MigLayout("wrap, gap 15, hidemode 3, insets 20", "[][grow][20px][][]", "[][][][][][fill][][grow][][]"));
 		contentPanel.add(mainPanel, "cell 0 1,grow");
-		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		mainPanel.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createEmptyBorder(10, 10, 10, 10),
+			BorderFactory.createLineBorder(new Color(200, 200, 200))
+		));
 
 		separator = new JSeparator();
 		separator.setSize(new Dimension(20, 20));
@@ -337,9 +443,17 @@ public class SessionsForm extends Form implements Printable {
 		JLabel consultationTypeLabel = new JLabel("Consultation Type");
 		mainPanel.add(consultationTypeLabel, "flowx,cell 3 3,aligny top");
 
-		// Violation
+		// Violation type with label and custom field
 		JLabel violationLabel = new JLabel("Violation Type: ");
+		violationLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
 		mainPanel.add(violationLabel, "flowx,cell 1 4,aligny top");
+		
+		// Create a panel to hold both the combo box and custom field
+		JPanel violationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+		violationPanel.add(violationField);
+		violationPanel.add(customViolationField);
+		mainPanel.add(violationPanel, "cell 1 4,growx,aligny top");
+		mainPanel.add(violationTypeLabel, "cell 1 4,gapleft 10,aligny top");
 
 		// Participant Table
 		participantTable = new JTable(participantTableModel);
@@ -381,17 +495,16 @@ public class SessionsForm extends Form implements Printable {
 		printButton.setFocusPainted(false);
 		printButton.addActionListener(e -> printSessionDetails());
 
-		// Recorded By
-		JLabel recordedByLabel = new JLabel("Recorded By");
+		// Replace JComboBox with JTextField for Recorded By
+		mainPanel.remove(recordedByField);
+		JLabel recordedByLabel = new JLabel("Recorded By:");
+		recordedByLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
 		mainPanel.add(recordedByLabel, "flowx,cell 3 8");
+		mainPanel.add(recordedByField, "cell 3 8,growx");
 
 		// Buttons
 		mainPanel.add(printButton, "flowx,cell 4 8,growx");
 		mainPanel.add(saveButton, "cell 4 8,growx");
-		recordedByField = new JComboBox<>();
-		mainPanel.add(recordedByField, "cell 3 8,growx");
-		violationField = new JComboBox<>();
-		mainPanel.add(violationField, "cell 1 4,growx,aligny top");
 
 		consultationTypeComboBox = new JComboBox<>(new String[] { "Academic Consultation", "Career Guidance",
 				"Personal Consultation", "Behavioral Consultation", "Group Consultation" });
@@ -495,8 +608,7 @@ public class SessionsForm extends Form implements Printable {
 						+ Main.formManager.getCounselorObject().getMiddleName() + " "
 						+ Main.formManager.getCounselorObject().getLastName();
 				if (counselorName != null && !counselorName.isEmpty()) {
-					recordedByField.addItem(counselorName);
-					recordedByField.setSelectedItem(counselorName);
+					recordedByField.setText(counselorName);
 				}
 			} else {
 				System.out.println("No counselor logged in. Skipping population of 'Recorded By' field.");
@@ -641,7 +753,7 @@ public class SessionsForm extends Form implements Printable {
 			String violation = (String) violationField.getSelectedItem();
 			String notes = notesArea.getText();
 			String summary = sessionSummaryArea.getText();
-			String recordedBy = (String) recordedByField.getSelectedItem();
+			String recordedBy = recordedByField.getText();
 
 			int guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
 			int appointmentId = 0; // Default for Walk-in
