@@ -119,7 +119,7 @@ public class ViolationTablePanel extends JPanel {
                 refreshData();
                 return;
             }
-            loadViolations(violationCRUD.searchViolations(connect, searchTerm));
+            loadViolations(violationCRUD.searchViolations(searchTerm));
         } catch (Exception e) {
             showError("Error searching violations", e);
         }

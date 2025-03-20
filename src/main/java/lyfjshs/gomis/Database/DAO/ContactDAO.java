@@ -28,9 +28,9 @@ public class ContactDAO {
     }
 
      // CREATE: Insert a contact with an existing connection
-    public boolean insertContact(Connection conn, Contact contact) {
+    public boolean insertContact(Contact contact) {
         String query = "INSERT INTO CONTACT (CONTACT_NUMBER) VALUES (?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, contact.getContactNumber());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -40,10 +40,10 @@ public class ContactDAO {
     }
 
     // READ: Retrieve a contact by CONTACT_ID
-    public Contact getContactById(Connection conn, int CONTACT_ID) {
+    public Contact getContactById(int CONTACT_ID) {
         String query = "SELECT * FROM CONTACT WHERE CONTACT_ID = ?";
         try (
-                PreparedStatement stmt = conn.prepareStatement(query)) {
+                PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, CONTACT_ID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -76,9 +76,9 @@ public class ContactDAO {
     }
 
     // UPDATE: Modify an existing contact
-    public boolean updateContact(Connection conn,int CONTACT_ID, Contact newContact) {
+    public boolean updateContact(int CONTACT_ID, Contact newContact) {
         String query = "UPDATE CONTACT SET CONTACT_NUMBER = ? WHERE CONTACT_ID = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, newContact.getContactNumber());
             stmt.setInt(2, CONTACT_ID);
             return stmt.executeUpdate() > 0;
@@ -89,9 +89,9 @@ public class ContactDAO {
     }
 
     // DELETE: Remove a contact by CONTACT_ID
-    public boolean deleteContact(Connection conn, int CONTACT_ID) {
+    public boolean deleteContact(int CONTACT_ID) {
         String query = "DELETE FROM CONTACT WHERE CONTACT_ID = ?";
-        try ( PreparedStatement stmt = conn.prepareStatement(query)) {
+        try ( PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, CONTACT_ID);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {

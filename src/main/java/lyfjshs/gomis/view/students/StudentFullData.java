@@ -370,7 +370,8 @@ public class StudentFullData extends Form {
 			}
 
 			// Retrieve violations related to the student
-			List<ViolationRecord> violations = ViolationCRUD.getViolationsByStudentUID(connection, studentUID);
+			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
+			List<ViolationRecord> violations = violationCRUD.getViolationsByStudentUID(studentUID);
 
 			// Populate the table with violation data
 			DefaultTableModel model = (DefaultTableModel) violationTable.getModel();

@@ -20,9 +20,9 @@ public class ParentDAOTester {
             // ✅ Test Insert Parent
             System.out.println("Inserting Parent...");
             boolean insertSuccess = parentsDAO.insertParent(
-                connection, 
-                "Doe", "John", "C.", "123456789", // Father's details
-                "Doe", "Jane", "D", "1023456438"  // Mother's details
+
+                    "Doe", "John", "C.", "123456789", // Father's details
+                    "Doe", "Jane", "D", "1023456438" // Mother's details
             );
             System.out.println("Insert Success: " + insertSuccess);
 
@@ -34,16 +34,16 @@ public class ParentDAOTester {
             // ✅ Test Update Parent (assuming ID 1 exists)
             System.out.println("\nUpdating PARENT ID 1...");
             boolean updateSuccess = parentsDAO.updateParent(
-                connection, 
-                1, 
-                "Doe", "Johnny", "B.", "987654321", // Updated Father's details
-                "Doe", "Janet", "D", "1023456438"   // Updated Mother's details
+
+                    1,
+                    "Doe", "Johnny", "B.", "987654321", // Updated Father's details
+                    "Doe", "Janet", "D", "1023456438" // Updated Mother's details
             );
             System.out.println("Update Success: " + updateSuccess);
 
             // ✅ Test Delete Parent (assuming ID 1 exists)
             System.out.println("\nDeleting PARENT ID 1...");
-            boolean deleteSuccess = parentsDAO.deleteParent(connection, 1);
+            boolean deleteSuccess = parentsDAO.deleteParent(1);
             System.out.println("Delete Success: " + deleteSuccess);
 
             // ✅ Retrieve all parents after deletion

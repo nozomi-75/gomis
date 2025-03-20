@@ -52,7 +52,7 @@ public class ParentsDAO {
 
 
     // Inserts a new parent record into the database
-    public boolean insertParent(Connection connection, String fatherLastName, String fatherFirstName,
+    public boolean insertParent(String fatherLastName, String fatherFirstName,
                                 String fatherMiddleName, String fatherContactNumber, 
                                 String motherLastName, String motherFirstName, 
                                 String motherMiddleName, String motherContactNumber) { 
@@ -79,7 +79,7 @@ public class ParentsDAO {
     }
 
      // Updates an existing parent's details in the database
-    public boolean updateParent(Connection connection, int parentId, 
+    public boolean updateParent(int parentId, 
                                 String fatherLastName, String fatherFirstName, String fatherMiddleName, 
                                 String fatherContactNumber, 
                                 String motherLastName, String motherFirstName, String motherMiddleName,
@@ -107,7 +107,7 @@ public class ParentsDAO {
     }
 
     // Deletes a parent record by its ID
-    public boolean deleteParent(Connection connection, int parentId) {
+    public boolean deleteParent(int parentId) {
         String sql = "DELETE FROM PARENTS WHERE parent_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, parentId);

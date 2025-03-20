@@ -37,9 +37,9 @@ public class GuardianDAO {
     }
 
     // READ: Retrieves a guardian by their unique ID
-    public Guardian getGuardianById(Connection conn, int guardianId) {
+    public Guardian getGuardianById(int guardianId) {
         String query = "SELECT * FROM GUARDIAN WHERE GUARDIAN_ID = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, guardianId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -58,10 +58,10 @@ public class GuardianDAO {
     }
 
     // READ ALL: Retrieves all guardian records from the database
-    public List<Guardian> getAllGuardians(Connection conn) {
+    public List<Guardian> getAllGuardians() {
         List<Guardian> guardians = new ArrayList<>();
         String query = "SELECT * FROM GUARDIAN";
-        try (PreparedStatement stmt = conn.prepareStatement(query);
+        try (PreparedStatement stmt = connection.prepareStatement(query);
                 ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 guardians.add(new Guardian(
@@ -79,10 +79,10 @@ public class GuardianDAO {
     }
 
     // INSERT: Adds a new guardian to the database
-   public boolean insertGuardian(Connection conn, String lastName, String firstName,
+   public boolean insertGuardian(String lastName, String firstName,
         String middleName, String relationship, String contactNumber) {
     String query = "INSERT INTO GUARDIAN (GUARDIAN_LASTNAME, GUARDIAN_FIRST_NAME, GUARDIAN_MIDDLE_NAME, GUARDIAN_RELATIONSHIP, GUARDIAN_CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?)";
-    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+    try (PreparedStatement stmt = connection.prepareStatement(query)) {
         stmt.setString(1, lastName);
         stmt.setString(2, firstName);
 
@@ -110,10 +110,10 @@ public class GuardianDAO {
 }
 
 // UPDATE: Modifies an existing guardian's details
-public boolean updateGuardian(Connection conn, int guardianId, String lastName, String firstName,
+public boolean updateGuardian(int guardianId, String lastName, String firstName,
         String middleName, String relationship, String contactNumber) {
     String query = "UPDATE GUARDIAN SET GUARDIAN_LASTNAME = ?, GUARDIAN_FIRST_NAME = ?, GUARDIAN_MIDDLE_NAME = ?, GUARDIAN_RELATIONSHIP = ?, GUARDIAN_CONTACT_NUMBER = ? WHERE GUARDIAN_ID = ?";
-    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+    try (PreparedStatement stmt = connection.prepareStatement(query)) {
         stmt.setString(1, lastName);
         stmt.setString(2, firstName);
 
@@ -143,9 +143,9 @@ public boolean updateGuardian(Connection conn, int guardianId, String lastName, 
 
 
     // DELETE: Removes a guardian from the database
-    public boolean deleteGuardian(Connection conn, int guardianId) {
+    public boolean deleteGuardian(int guardianId) {
         String query = "DELETE FROM GUARDIAN WHERE GUARDIAN_ID = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, guardianId);
             return stmt.executeUpdate() > 0;    // Returns true if deletion is successful
         } catch (SQLException e) {

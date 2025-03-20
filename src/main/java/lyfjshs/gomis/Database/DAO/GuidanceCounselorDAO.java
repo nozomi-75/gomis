@@ -102,7 +102,6 @@ public class GuidanceCounselorDAO {
     // DELETE Method: Removes a guidance counselor record based on ID
     public boolean deleteGuidanceCounselor(int id) {
         String sql = "DELETE FROM GUIDANCE_COUNSELORS WHERE GUIDANCE_COUNSELOR_ID = ?";
-
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             int affectedRows = pstmt.executeUpdate();
@@ -114,7 +113,7 @@ public class GuidanceCounselorDAO {
             handleSQLException(e, "deleteGuidanceCounselor");
         }
         return false;
-    }
+        }
 
     // Error Handling Method
     private void handleSQLException(SQLException e, String operation) {

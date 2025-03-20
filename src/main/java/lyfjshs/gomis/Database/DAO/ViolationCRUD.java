@@ -14,8 +14,8 @@ public class ViolationCRUD {
 
     private final Connection connection;
 
-    public ViolationCRUD(Connection connection) {
-        this.connection = connection;
+    public ViolationCRUD(Connection connect) {
+        this.connection = connect;
     }
 
     // CREATE (Insert a new violation)
@@ -97,7 +97,7 @@ public class ViolationCRUD {
     }
 
     // READ (Retrieve a single violation by LRN)
-    public ViolationRecord getViolationByLRN(Connection connection, String lrn) throws SQLException {
+    public ViolationRecord getViolationByLRN(String lrn) throws SQLException {
         String sql = "SELECT vr.* FROM VIOLATION_RECORD vr " +
                      "JOIN PARTICIPANTS p ON vr.PARTICIPANT_ID = p.PARTICIPANT_ID " +
                      "JOIN STUDENT s ON p.STUDENT_UID = s.STUDENT_UID " +
@@ -137,7 +137,7 @@ public class ViolationCRUD {
     }
 
     // UPDATE (Modify the status of an existing violation)
-    public boolean updateViolationStatus(Connection connection, int violationId, String status) {
+    public boolean updateViolationStatus(int violationId, String status) {
     String sql = "UPDATE VIOLATION_RECORD SET STATUS = ? WHERE VIOLATION_ID = ?";
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
         stmt.setString(1, status);
@@ -178,10 +178,10 @@ public class ViolationCRUD {
     }
 
     // Search violations
-    public List<ViolationRecord> searchViolations(Connection conn, String searchTerm) throws SQLException {
+    public List<ViolationRecord> searchViolations(String searchTerm) throws SQLException {
     List<ViolationRecord> violations = new ArrayList<>();
     String query = "SELECT * FROM VIOLATION_RECORD WHERE VIOLATION_TYPE LIKE CONCAT('%', ?, '%') OR VIOLATION_DESCRIPTION LIKE CONCAT('%', ?, '%')";
-    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+    try (PreparedStatement stmt = connection.prepareStatement(query)) {
         stmt.setString(1, searchTerm);
         stmt.setString(2, searchTerm);
         try (ResultSet rs = stmt.executeQuery()) {
@@ -194,7 +194,7 @@ public class ViolationCRUD {
 }
 
     // New method to retrieve violations by student UID
-    public static List<ViolationRecord> getViolationsByStudentUID(Connection connection, int studentUID) throws Exception {
+    public List<ViolationRecord> getViolationsByStudentUID(int studentUID) throws Exception {
         List<ViolationRecord> violations = new ArrayList<>();
         String query = "SELECT vr.* FROM VIOLATION_RECORD vr " +
                        "JOIN PARTICIPANTS p ON vr.PARTICIPANT_ID = p.PARTICIPANT_ID " +

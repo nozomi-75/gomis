@@ -139,8 +139,8 @@ public class LoginView extends Form {
         }
 
         // If no spaces, proceed with login
-        LoginController loginew = new LoginController();
-        loginew.login(conn, unTField, psTField, FormManager.getFrame());
+        LoginController loginew = new LoginController(conn);
+        loginew.login(unTField, psTField, FormManager.getFrame());
         resetFields();
     }
 
