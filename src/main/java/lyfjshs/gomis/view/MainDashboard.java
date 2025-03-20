@@ -146,7 +146,7 @@ public class MainDashboard extends Form {
 		try {
 			// Get violation data
 			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
-			ViolationRecord violation = violationCRUD.getViolationByLRN(connection, lrn);
+			ViolationRecord violation = violationCRUD.getViolationByLRN(lrn);
 
 			if (violation != null) {
 				// Create and show violation details panel

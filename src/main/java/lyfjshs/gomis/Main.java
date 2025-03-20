@@ -60,7 +60,7 @@ public class Main {
 			}
 		});
 	}
-
+	
 	/**
 	 * Initializes the database connection by retrieving a connection instance from
 	 * the DBConnection class. If the connection fails, an error message is
@@ -69,15 +69,18 @@ public class Main {
 	public static void initDB() {
 		try {
 			conn = DBConnection.getConnection();
+
 			if (conn == null) {
 				throw new SQLException("Connection is null after initialization.");
 			}
+
+
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(null, "Error connecting to the database: " + e.getMessage(),
 					"Database Error: GMS-001", JOptionPane.ERROR_MESSAGE);
 		}
 	}
-
+	
 	/**
 	 * Sets up the application's look and feel using FlatLaf. Configures UI
 	 * properties such as button and component arc styles.
@@ -101,7 +104,7 @@ public class Main {
 	}
 
 	// instance of every Form Panel
-	private static LoginView loginPanel;
+	public static LoginView loginPanel;
 	private static IncidentFillUpForm incidentFillUp;
 	private static StudentMangementGUI studManagement;
 	private static Violation_Record vrList;
@@ -132,16 +135,16 @@ public class Main {
 	 * navigation system and form manager.
 	 */
 	public static void initFrame() {
-	    initializeLookAndFeel();
-	    initDB();
-	    jFrame = new GFrame(1380, 750, false, "GOMIS", null);
-	    jFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
-	    initiPanels();
+		initializeLookAndFeel();
+		initDB();
+		jFrame = new GFrame(1380, 750, false, "GOMIS", null);
+		jFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
+		initiPanels();
 
- 	    FormManager.install(jFrame);
-	    formManager = new FormManager();
+		FormManager.install(jFrame);
+		formManager = new FormManager();
 
-	    jFrame.refresh();
+		jFrame.refresh();
 	}
 
 }

@@ -25,9 +25,6 @@ public class ParticipantsDAO {
     private final Connection connection;
 
     public ParticipantsDAO(Connection connection) {
-            if (connection == null) {
-        throw new IllegalArgumentException("❌ Database connection is null. Ensure DBConnection.getConnection() is called properly.");
-    }
         this.connection = connection;
     }
 

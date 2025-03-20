@@ -17,7 +17,7 @@ public class Guardian_Test {
 
 			// Insert a new guardian
 			System.out.println("Inserting a new guardian...");
-			boolean insertSuccess = guardianDAO.insertGuardian(connection, "Doe", "John", "M", "Father","1234567");
+			boolean insertSuccess = guardianDAO.insertGuardian("Doe", "John", "M", "Father", "1234567");
 			System.out.println("Insert successful: " + insertSuccess);
 
 			if (!insertSuccess) {
@@ -26,7 +26,7 @@ public class Guardian_Test {
 			}
 
 			// Retrieve all guardians to get the latest inserted ID
-			List<Guardian> guardians = guardianDAO.getAllGuardians(connection);
+			List<Guardian> guardians = guardianDAO.getAllGuardians();
 			if (guardians.isEmpty()) {
 				System.out.println("No guardians found. Exiting test.");
 				return;
@@ -36,7 +36,7 @@ public class Guardian_Test {
 
 			// Retrieve a guardian by ID
 			System.out.println("Retrieving guardian with ID: " + lastGuardianId);
-			Guardian guardian = guardianDAO.getGuardianById(connection, lastGuardianId);
+			Guardian guardian = guardianDAO.getGuardianById(lastGuardianId);
 			if (guardian != null) {
 				System.out.println("Guardian found: " + guardian);
 			} else {
@@ -45,19 +45,20 @@ public class Guardian_Test {
 
 			// Update a guardian
 			System.out.println("Updating guardian with ID: " + lastGuardianId);
-			boolean updateSuccess = guardianDAO.updateGuardian(connection, lastGuardianId, "Doe", "Jonathan", "M", "Father", "12345678910");
+			boolean updateSuccess = guardianDAO.updateGuardian(lastGuardianId, "Doe", "Jonathan", "M", "Father",
+					"12345678910");
 			System.out.println("Update successful: " + updateSuccess);
 
 			// Retrieve all guardians
 			System.out.println("Retrieving all guardians...");
-			guardians = guardianDAO.getAllGuardians(connection);
+			guardians = guardianDAO.getAllGuardians();
 			for (Guardian g : guardians) {
 				System.out.println(g);
 			}
 
 			// Delete a guardian
 			System.out.println("Deleting guardian with ID: " + lastGuardianId);
-			boolean deleteSuccess = guardianDAO.deleteGuardian(connection, lastGuardianId);
+			boolean deleteSuccess = guardianDAO.deleteGuardian(lastGuardianId);
 			System.out.println("Delete successful: " + deleteSuccess);
 
 		} catch (SQLException e) {

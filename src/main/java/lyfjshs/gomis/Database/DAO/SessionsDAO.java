@@ -23,26 +23,37 @@ public class SessionsDAO {
 
     // Method to check if an appointment exists
     private boolean appointmentExists(int appointmentId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM APPOINTMENTS WHERE APPOINTMENT_ID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, appointmentId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
+    String sql = "SELECT 1 FROM APPOINTMENTS WHERE APPOINTMENT_ID = ?";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        stmt.setInt(1, appointmentId);
+        try (ResultSet rs = stmt.executeQuery()) {
+            return rs.next(); // Returns true if at least one row exists
         }
-        return false;
     }
+}
 
     // Method to add a session
     public int addSession(Sessions session) throws SQLException {
         String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, GUIDANCE_COUNSELOR_ID, PARTICIPANT_ID, VIOLATION_ID, APPOINTMENT_TYPE, CONSULTATION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, session.getAppointmentId());
+            // Handle null appointmentId for walk-in appointments
+            if (session.getAppointmentId() == 0 || !appointmentExists(session.getAppointmentId())) {
+                stmt.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(1, session.getAppointmentId());
+            }
+            
+            // Rest of the parameters
             stmt.setInt(2, session.getGuidanceCounselorId());
             stmt.setInt(3, session.getParticipantId());
-            stmt.setInt(4, session.getViolationId());
+            
+            // Handle null violationId
+            if (session.getViolationId() == null) {
+                stmt.setNull(4, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(4, session.getViolationId());
+            }
+            
             stmt.setString(5, session.getAppointmentType());
             stmt.setString(6, session.getConsultationType());
             stmt.setTimestamp(7, session.getSessionDateTime());
@@ -54,10 +65,10 @@ public class SessionsDAO {
             if (rowsAffected > 0) {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if (rs.next()) {
-                    return rs.getInt(1); // Return the generated SESSION_ID
+                    return rs.getInt(1);
                 }
             }
-            return 0; // Return 0 if no ID was generated
+            return 0;
         }
     }
 
@@ -205,6 +216,16 @@ public class SessionsDAO {
         }
         return null;
     }
+ public boolean participantExists(int participantId) throws SQLException {
+        String query = "SELECT COUNT(*) FROM PARTICIPANTS WHERE PARTICIPANT_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, participantId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
 
     public List<Participants> getParticipantsBySessionId(int sessionId) throws SQLException {
         List<Participants> participants = new ArrayList<>();

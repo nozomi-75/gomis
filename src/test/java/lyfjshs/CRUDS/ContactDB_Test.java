@@ -20,13 +20,13 @@ public class ContactDB_Test {
             // Test CREATE operation
             System.out.println("Testing CREATE operation:");
             Contact newContact = new Contact(4, "test@example.com"); // Assuming Contact has an ID
-            boolean createSuccess = contactDAO.insertContact(connection, newContact);
+            boolean createSuccess = contactDAO.insertContact( newContact);
             System.out.println("Create operation successful: " + createSuccess);
             System.out.println("------------------------");
 
             // Test READ operation - Get contact by ID
             System.out.println("Testing READ operation:");
-            Contact contact = contactDAO.getContactById(connection, 1);
+            Contact contact = contactDAO.getContactById( 1);
             if (contact != null) {
                 System.out.println("Found contact: " + contact.toString());
             } else {
@@ -38,9 +38,9 @@ public class ContactDB_Test {
             if (contact != null) {
                 System.out.println("Testing UPDATE operation:");
                 contact.setContactNumber("updated@example.com"); // Update email
-                boolean updateSuccess = contactDAO.updateContact(connection, 1,contact);
+                boolean updateSuccess = contactDAO.updateContact( 1,contact);
                 System.out.println("Update operation successful: " + updateSuccess);
-                Contact updatedContact = contactDAO.getContactById(connection, 1);
+                Contact updatedContact = contactDAO.getContactById( 1);
                 if (updatedContact != null) {
                     System.out.println("Updated contact: " + updatedContact.toString());
                 }
@@ -49,9 +49,9 @@ public class ContactDB_Test {
 
             // Test DELETE operation
             System.out.println("Testing DELETE operation:");
-            boolean deleteSuccess = contactDAO.deleteContact(connection, 1);
+            boolean deleteSuccess = contactDAO.deleteContact( 1);
             System.out.println("Delete operation successful: " + deleteSuccess);
-            Contact deletedContact = contactDAO.getContactById(connection, 1);
+            Contact deletedContact = contactDAO.getContactById( 1);
             System.out.println("Contact after deletion: " + (deletedContact == null ? "Not found" : deletedContact.toString()));
             System.out.println("------------------------");
 

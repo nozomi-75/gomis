@@ -13,7 +13,6 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import lyfjshs.gomis.Main;
-import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.FormManager.FormManager;
 
@@ -23,6 +22,14 @@ import lyfjshs.gomis.components.FormManager.FormManager;
  * (create, read, update, delete) for guidance counselors.
  */
 public class LoginController {
+
+    private Connection connection;
+
+    public LoginController(Connection connect) {
+        this.connection = connect;
+    
+    }
+
     /**
      * Hashes the given password using the SHA-256 algorithm.
      * This method converts the password into a hexadecimal string representation of the hash.
@@ -74,10 +81,10 @@ public class LoginController {
      * @return a PreparedStatement object to execute the query.
      * @throws SQLException if there is an error executing the SQL query.
      */
-    public PreparedStatement createUser(Connection connection, String username, String password,
+    public PreparedStatement createUser(String username, String password,
                                         Integer guidanceCounselorId) throws SQLException {
         // SQL query to insert a new user
-        String sql = "INSERT INTO users (u_name, u_pass, guidance_counselor_id) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO users (u_name, u_pass, guidance_counselor_id, CREATED_AT) VALUES (?, ?, ? NOW())";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setString(1, username);
         ps.setString(2, hashPassword(password));  // Store hashed password
@@ -99,12 +106,10 @@ public class LoginController {
      * @return true if the username exists and the password is correct, false otherwise.
      */
     public boolean isValidUser(String username, String password) {
-        Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            conn = DBConnection.getConnection();
-            ps = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE u_name = ? AND U_PASS = ?");
+            ps = connection.prepareStatement("SELECT COUNT(*) FROM users WHERE u_name = ? AND U_PASS = ?");
             ps.setString(1, username);
             ps.setString(2, password);
             rs = ps.executeQuery();
@@ -126,38 +131,6 @@ public class LoginController {
     }
 
     /**
-     * Retrieves the details of the guidance counselor associated with the user.
-     *
-     * @param connection the database connection to execute the query.
-     * @param userId     the ID of the user whose associated guidance counselor's data is needed.
-     */
-    public void getGuidanceCounselorDetails(Connection connection, int userId) {
-        // Retrieve the guidance counselor ID for the user
-        String sql = "SELECT guidance_counselor_id FROM users WHERE user_id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    int counselorId = rs.getInt("guidance_counselor_id");
-
-                    if (counselorId != 0) {
-                        // Now, use GuidanceCounselorCRUD to get details
-                        GuidanceCounselorDAO counselorDAO = new GuidanceCounselorDAO(connection);
-                        counselorDAO.readGuidanceCounselor(counselorId);
-                    } else {
-                        System.out.println("No guidance counselor associated with this user.");
-                    }
-                } else {
-                    System.out.println("User not found.");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    /**
      * Retrieves a user by their ID from the 'users' table.
      *
      * @param connection the database connection to execute the query.
@@ -165,7 +138,7 @@ public class LoginController {
      * @return a PreparedStatement object to execute the query.
      * @throws SQLException if there is an error executing the SQL query.
      */
-    public PreparedStatement getUserById(Connection connection, int userId) throws SQLException {
+    public PreparedStatement getUserById(int userId) throws SQLException {
         // SQL query to select a user by their user_id
         String sql = "SELECT * FROM users WHERE USER_ID = ?";
         PreparedStatement ps = connection.prepareStatement(sql);
@@ -185,7 +158,7 @@ public class LoginController {
      * @return a PreparedStatement object to execute the query.
      * @throws SQLException if there is an error executing the SQL query.
      */
-    public PreparedStatement updateUser(Connection connection, int userId, String username, String password,
+    public PreparedStatement updateUser(int userId, String username, String password,
                                          Integer guidanceCounselorId) throws SQLException {
         // SQL query to update the user's details
         String sql = "UPDATE users SET U_NAME = ?, U_PASS = ?, GUIDANCE_COUNSELOR_ID = ? WHERE user_id = ?";
@@ -209,7 +182,7 @@ public class LoginController {
      * @return a PreparedStatement object to execute the query.
      * @throws SQLException if there is an error executing the SQL query.
      */
-    public PreparedStatement deleteUser(Connection connection, int userId) throws SQLException {
+    public PreparedStatement deleteUser(int userId) throws SQLException {
         // SQL query to delete a user by their user_id
         String sql = "DELETE FROM users WHERE user_id = ?";
         PreparedStatement ps = connection.prepareStatement(sql);
@@ -217,20 +190,18 @@ public class LoginController {
         return ps;
     }
 
-    public void login(Connection conn, JTextField usernameTF, JPasswordField passwordTF, JFrame view) {
+    public void login(JTextField usernameTF, JPasswordField passwordTF, JFrame view) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            if (conn == null || conn.isClosed()) {
-                conn = DBConnection.getConnection();
-            }
+
             String username = usernameTF.getText();
             String password = String.valueOf(passwordTF.getPassword());
 
             boolean validUser = isValidUser(username, password);
 
             if (validUser) {
-                ps = conn.prepareStatement("SELECT user_id, guidance_counselor_id FROM USERS WHERE U_NAME = ?");
+                ps = connection.prepareStatement("SELECT user_id, guidance_counselor_id FROM USERS WHERE U_NAME = ?");
                 ps.setString(1, username);
                 rs = ps.executeQuery();
 
@@ -238,7 +209,7 @@ public class LoginController {
                     int guidanceCounselorId = rs.getInt("guidance_counselor_id");
 
                     if (guidanceCounselorId != 0) {
-                        PreparedStatement counselorPs = conn.prepareStatement(
+                        PreparedStatement counselorPs = connection.prepareStatement(
                             "SELECT * FROM GUIDANCE_COUNSELORS WHERE guidance_counselor_id = ?"
                         );
                         counselorPs.setInt(1, guidanceCounselorId);
@@ -270,7 +241,7 @@ public class LoginController {
                             System.out.println("Set in FormManager: " + Main.formManager.getCounselorFullName() + ", " + Main.formManager.getCounselorPosition());
                             
                             // Then call login() which will create the drawer with the updated details
-                            FormManager.login(conn);							
+                            FormManager.login(connection);							
                             // Close the counselor resources
                             counselorRs.close();
                             counselorPs.close();

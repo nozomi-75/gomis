@@ -24,7 +24,7 @@ public class GuidanceCounselorDB_Test {
             testReadGuidanceCounselor(dao);
 
             // Test Delete
-            // testDeleteGuidanceCounselor(dao);
+            testdeleteGuidanceCounselor(dao);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -47,7 +47,7 @@ public class GuidanceCounselorDB_Test {
         System.out.println(counselor != null ? "✔ testReadGuidanceCounselor Passed" : "❌ testReadGuidanceCounselor Failed");
     }
 
-    private static void testDeleteGuidanceCounselor(GuidanceCounselorDAO dao) {
+    private static void testdeleteGuidanceCounselor(GuidanceCounselorDAO dao) {
         int id = 4;
         boolean result = dao.deleteGuidanceCounselor(id);
         

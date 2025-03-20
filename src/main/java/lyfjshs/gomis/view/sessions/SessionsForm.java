@@ -148,17 +148,9 @@ for (String violation : violations) {
 				violationTypeLabel.setText("Selected Violation");
 				violationTypeLabel.setForeground(new Color(0, 100, 0)); // Dark green color
 			}
-		});
-				}
-				if (isMinor) {
-					violationTypeLabel.setText("Minor Violation");
-					violationTypeLabel.setForeground(new Color(255, 140, 0)); // Dark Orange
-				} else {
-					violationTypeLabel.setText("Major Violation");
-					violationTypeLabel.setForeground(new Color(178, 34, 34)); // Firebrick Red
-				}
-			}
-		});
+
+			});
+		
 		
 		// Initialize recorded by field as JTextField
 		recordedByField = new JTextField();
