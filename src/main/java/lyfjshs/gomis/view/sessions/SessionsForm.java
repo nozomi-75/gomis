@@ -97,8 +97,8 @@ public class SessionsForm extends Form implements Printable {
 		"Others"
 	};
 
-	private JLabel violationTypeLabel;
 	private JTextField recordedByField;
+	private JLabel otherViolationLabel;
 
 	public SessionsForm(Connection conn) {
 		this.connect = conn;
@@ -112,9 +112,7 @@ public class SessionsForm extends Form implements Printable {
 		participantTableModel = new DefaultTableModel(
 				new Object[] { "#", "Participant Name", "Participant Type", "Actions" }, 0);
 		
-		// Initialize violation type label
-		violationTypeLabel = new JLabel("");
-		violationTypeLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+
 		
 		// Initialize custom violation field
 		customViolationField = new JTextField(15);
@@ -131,22 +129,15 @@ for (String violation : violations) {
 		violationField.addActionListener(e -> {
 			String selected = (String) violationField.getSelectedItem();
 			if (selected == null || selected.equals("-- Select Violation --")) {
-				violationTypeLabel.setText("");
-				violationTypeLabel.setForeground(Color.BLACK);
-				customViolationField.setVisible(false);
 				customViolationField.setEnabled(false);
 				customViolationField.setText(""); // Clear the text when hidden
 			} else if (selected.equals("Others")) {
-				customViolationField.setVisible(true);
 				customViolationField.setEnabled(true);
-				violationTypeLabel.setText("Custom Violation");
-				violationTypeLabel.setForeground(new Color(128, 128, 128)); // Gray color for custom
+
 			} else {
-				customViolationField.setVisible(false);
 				customViolationField.setEnabled(false);
 				customViolationField.setText(""); // Clear the text when hidden
-				violationTypeLabel.setText("Selected Violation");
-				violationTypeLabel.setForeground(new Color(0, 100, 0)); // Dark green color
+
 			}
 
 			});
@@ -184,56 +175,65 @@ for (String violation : violations) {
 	}
 
 	private void saveSession() {
-		try {
-			String date = dateField.getText();
-			String participants = (String) participantsComboBox.getSelectedItem();
-			String violation = (String) violationField.getSelectedItem();
-			// If "Others" is selected, use the custom violation text
-			if ("Others".equals(violation)) {
-				violation = customViolationField.getText();
-			}
-			String recordedBy = recordedByField.getText();
-			String notes = notesArea.getText();
-			String summary = sessionSummaryArea.getText();
-			String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
+        try {
+            // First verify that we have a valid guidance counselor ID
+            int guidanceCounselorId;
+            if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
+                guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "No guidance counselor is currently logged in.", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-			int appointmentId = 0; // Default value for Walk-in
-			if (!"Walk-in".equals(appointmentType)) {
-				// Retrieve the actual appointment ID if not Walk-in
-				appointmentId = getAppointmentId();
-			}
+            String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
+            Integer appointmentId = null; // Default value for Walk-in
+            if (!"Walk-in".equals(appointmentType)) {
+                // Retrieve the actual appointment ID if not Walk-in
+                appointmentId = getAppointmentId();
+            }
 
-			// Create a new Session object using the constructor
-			Sessions session = new Sessions(0, appointmentId, // appointmentId
-					0, // counselorsId (not retrieved in the query)
-					participants.equals("Student") ? 1 : 0, // Use 1 for Student, 0 for Non-Student
-					0, // violationId (not retrieved in the query)
-					violation, // sessionType
-					appointmentType, 
-					new java.sql.Timestamp(System.currentTimeMillis()), // sessionDateTime (current time)
-					notes, // sessionNotes
-					"Active", // sessionStatus
-					new java.sql.Timestamp(System.currentTimeMillis()) // updatedAt
-			);
+            // Create a new Session object using the constructor
+            Sessions session = new Sessions(
+                    0, // Auto-incremented session ID
+                    appointmentId, // Appointment ID (null for walk-in)
+                    guidanceCounselorId, // Use the verified counselor ID
+                    participantTableModel.getRowCount() > 0 ? Integer.parseInt(participantTableModel.getValueAt(0, 0).toString()) : 0, // Use first participant's ID if available
+                    null, // Violation ID (optional)
+                    appointmentType,
+                    (String) consultationTypeComboBox.getSelectedItem(),
+                    new java.sql.Timestamp(System.currentTimeMillis()), // Current timestamp
+                    notesArea.getText(),
+                    "Scheduled", // Initial status
+                    new java.sql.Timestamp(System.currentTimeMillis())
+            );
 
-			// Use SessionsDAO to save the session
-			SessionsDAO sessionsDAO = new SessionsDAO(connect);
-			sessionsDAO.addSession(session); // Assuming you have an addSession method in SessionsDAO
+            // Use SessionsDAO to save the session
+            SessionsDAO sessionsDAO = new SessionsDAO(connect);
+            int result = sessionsDAO.addSession(session);
 
-			JOptionPane.showMessageDialog(this, "Session saved successfully!", "Success",
-					JOptionPane.INFORMATION_MESSAGE);
-			
-			if (saveCallback != null) {
-				saveCallback.run();
-			}
-			//after saving, clear the fields
-			clearFields();
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-		}
-	}
+            if (result > 0) {
+                JOptionPane.showMessageDialog(this, "Session saved successfully!", "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                if (saveCallback != null) {
+                    saveCallback.run();
+                }
+                clearFields();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to save session.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error saving session: " + e.getMessage(), 
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
 
 	private void clearFields(){
 		// Clear text fields
@@ -251,8 +251,7 @@ for (String violation : violations) {
 		consultationTypeComboBox.setSelectedIndex(0);
 		appointmentTypeComboBox.setSelectedIndex(0);
 		sexCBox.setSelectedIndex(0);
-		violationField.setSelectedIndex(0);
-		violationTypeLabel.setText("");
+		violationField.setSelectedIndex(1);
 
 		// Clear participant table
 		participantTableModel.setRowCount(0);
@@ -443,9 +442,11 @@ for (String violation : violations) {
 		// Create a panel to hold both the combo box and custom field
 		JPanel violationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
 		violationPanel.add(violationField);
+		
+		otherViolationLabel = new JLabel("Others");
+		violationPanel.add(otherViolationLabel);
 		violationPanel.add(customViolationField);
 		mainPanel.add(violationPanel, "cell 1 4,growx,aligny top");
-		mainPanel.add(violationTypeLabel, "cell 1 4,gapleft 10,aligny top");
 
 		// Participant Table
 		participantTable = new JTable(participantTableModel);
@@ -615,7 +616,7 @@ for (String violation : violations) {
 		JDialog dialog = new JDialog((JFrame) null, "Search Appointment", true);
 		dialog.setSize(600, 400);
 		dialog.setLocationRelativeTo(this);
-		dialog.setLayout(new BorderLayout());
+		dialog.getContentPane().setLayout(new BorderLayout());
 
 		JPanel searchPanel = new JPanel(new FlowLayout());
 		JTextField searchField = new JTextField(20);
@@ -650,9 +651,9 @@ for (String violation : violations) {
 			dialog.dispose();
 		});
 
-		dialog.add(searchPanel, BorderLayout.NORTH);
-		dialog.add(tableScrollPane, BorderLayout.CENTER);
-		dialog.add(selectButton, BorderLayout.SOUTH);
+		dialog.getContentPane().add(searchPanel, BorderLayout.NORTH);
+		dialog.getContentPane().add(tableScrollPane, BorderLayout.CENTER);
+		dialog.getContentPane().add(selectButton, BorderLayout.SOUTH);
 		dialog.setVisible(true);
 	}
 

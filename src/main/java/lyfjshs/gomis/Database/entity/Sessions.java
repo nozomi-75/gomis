@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 
 public class Sessions {
     private int sessionId;
-    private int appointmentId;
+    private Integer appointmentId;
     private int guidanceCounselorId;
     private int participantId;
     private Integer violationId; // Use Integer to handle potential null values
@@ -18,7 +18,7 @@ public class Sessions {
     private Timestamp appointmentDateTime; // To store related appointment date time
 
     // Full Constructor
-    public Sessions(int sessionId, int appointmentId, int guidanceCounselorId, int participantId, Integer violationId,
+    public Sessions(int sessionId, Integer appointmentId, int guidanceCounselorId, int participantId, Integer violationId,
                     String appointmentType, String consultationType, Timestamp sessionDateTime, String sessionNotes, String sessionStatus,
                     Timestamp updatedAt) {
         this.sessionId = sessionId;
@@ -46,11 +46,11 @@ public class Sessions {
         this.sessionId = sessionId;
     }
 
-    public int getAppointmentId() {
+    public Integer getAppointmentId() {
         return appointmentId;
     }
 
-    public void setAppointmentId(int appointmentId) {
+    public void setAppointmentId(Integer appointmentId) {
         this.appointmentId = appointmentId;
     }
 

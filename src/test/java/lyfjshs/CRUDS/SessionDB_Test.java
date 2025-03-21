@@ -76,23 +76,39 @@ public class SessionDB_Test {
             if (appointmentTypeChoice == 2) {
                 System.out.println("Enter appointment date and time (YYYY-MM-DD HH:MM:SS): ");
                 String appointmentDateTimeStr = scanner.nextLine();
-                Timestamp appointmentDateTime = Timestamp.valueOf(appointmentDateTimeStr);
-                List<Appointment> appointments = appointmentDAO
-                        .getAppointmentsForDate(appointmentDateTime.toLocalDateTime().toLocalDate());
+
+                Timestamp appointmentDateTime;
+                try {
+                    appointmentDateTime = Timestamp.valueOf(appointmentDateTimeStr);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("❌ Invalid date format! Please use YYYY-MM-DD HH:MM:SS.");
+                    return;
+                }
+
+                List<Appointment> appointments = appointmentDAO.getAppointmentsForDate(appointmentDateTime.toLocalDateTime().toLocalDate());
+
+                if (appointments.isEmpty()) {
+                    System.out.println("❌ No appointments found for this date.");
+                    return; // Prevents null pointer exception
+                }
+
                 for (Appointment appointment : appointments) {
                     if (appointment.getAppointmentDateTime().equals(appointmentDateTime)) {
                         appointmentId = appointment.getAppointmentId();
                         break;
                     }
                 }
+
                 if (appointmentId == null) {
-                    System.out.println("❌ Appointment not found.");
+                    System.out.println("❌ Exact appointment not found. Please check the date and time.");
                     return;
                 }
+
                 System.out.println("✔ Appointment found with ID: " + appointmentId);
             }
+            
 
-            int guidanceCounselorId = 1; // Example guidance counselor ID
+            int guidanceCounselorId = 1; // Example guida2nce counselor ID
             String appointmentType = appointmentTypeChoice == 1 ? "walk-in" : "scheduled";
             Sessions session = new Sessions(
                     0, // Auto-incremented session ID

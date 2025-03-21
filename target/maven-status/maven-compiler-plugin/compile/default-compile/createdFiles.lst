@@ -60,6 +60,7 @@ lyfjshs\gomis\view\violation\ViewViolationDetails.class
 lyfjshs\gomis\view\appointment\AppointmentDailyOverview$5.class
 lyfjshs\gomis\view\appointment\AppointmentDailyOverview.class
 lyfjshs\gomis\Database\entity\Appointment.class
+lyfjshs\gomis\view\sessions\SessionFullData$1.class
 lyfjshs\gomis\Database\DAO\GuardianDAO.class
 lyfjshs\gomis\Database\entity\SessionParticipant.class
 lyfjshs\gomis\utils\PrintingReport.class

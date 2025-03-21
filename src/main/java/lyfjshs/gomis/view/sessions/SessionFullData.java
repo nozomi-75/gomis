@@ -1,5 +1,6 @@
 package lyfjshs.gomis.view.sessions;
 
+import java.awt.Color;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -15,14 +16,14 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.components.FormManager.Form;
-import net.miginfocom.swing.MigLayout;
 import lyfjshs.gomis.components.table.TableActionManager;
-import com.formdev.flatlaf.extras.FlatSVGIcon;
-import java.awt.Color;
+import net.miginfocom.swing.MigLayout;
 
 public class SessionFullData extends Form {
 	// Fields for session details
@@ -116,37 +117,49 @@ public class SessionFullData extends Form {
 
 	private void setupParticipantsTable(List<Participants> participants) {
 		String[] columnNames = {"#", "Participant Name", "Participant Type", "Actions"};
-		DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+		DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return column == 3; // Only allow editing of Actions column
+			}
+		};
 
-		for (int i = 0; i < participants.size(); i++) {
-			Participants participant = participants.get(i);
-			Object[] rowData = {
+		if (participants != null && !participants.isEmpty()) {
+			for (int i = 0; i < participants.size(); i++) {
+				Participants participant = participants.get(i);
+				String fullName = participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
+				Object[] rowData = {
 					i + 1,
-					participant.getParticipantFirstName() + " " + participant.getParticipantLastName(),
+					fullName,
 					participant.getParticipantType(),
 					"Actions" // Placeholder for actions column
-			};
-			model.addRow(rowData);
+				};
+				model.addRow(rowData);
+			}
+		} else {
+			System.out.println("No participants found for this session");
 		}
 
 		participantsTable.setModel(model);
-
-		// Setup table actions
 		setupTableActions();
 	}
 
 	private void setupTableActions() {
 		TableActionManager actionManager = new TableActionManager();
 		actionManager.addAction("View", (table, row) -> {
-			Participants participant = (Participants) table.getValueAt(row, 1);
-			viewParticipantDetails(participant);
+			String fullName = (String) table.getValueAt(row, 1);
+			String type = (String) table.getValueAt(row, 2);
+			showParticipantDetailsDialog(fullName, type);
 		}, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
 
-		actionManager.applyTo(participantsTable, 3); // Apply actions to the "Actions" column
+		actionManager.applyTo(participantsTable, 3);
 	}
 
-	private void viewParticipantDetails(Participants participant) {
-		JOptionPane.showMessageDialog(this, "Viewing details for: " + participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
+	private void showParticipantDetailsDialog(String fullName, String type) {
+		JOptionPane.showMessageDialog(this,
+			"Participant Details:\nName: " + fullName + "\nType: " + type,
+			"Participant Information",
+			JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	private void printSessionReport() {

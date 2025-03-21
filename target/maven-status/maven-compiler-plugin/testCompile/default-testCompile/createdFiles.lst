@@ -40,7 +40,6 @@ lyfjshs\gomis\test\Modal\TestModal.class
 lyfjshs\gomis\CoolButtonComponent$Ripple.class
 lyfjshs\CRUDS\AppointmentsDB_Test$1.class
 lyfjshs\gomis\TestTable.class
-lyfjshs\gomis\FlatTest\ToggleSwitch\CustomSwitchTest.class
 lyfjshs\gomis\FlatTest\FlatClickablePanel.class
 lyfjshs\CRUDS\ContactDB_Test.class
 lyfjshs\gomis\FlatTest\loading\SwingLoadingAnimation.class
@@ -102,6 +101,7 @@ lyfjshs\gomis\CoolButtonComponent$1.class
 lyfjshs\gomis\SearchPanel.class
 lyfjshs\CRUDS\RemarksDB_Test.class
 lyfjshs\gomis\FlatTest\SVGPathDrawing.class
+lyfjshs\gomis\FlatTest\ToggleSwitch\FlatWindows11Settings.class
 lyfjshs\gomis\test\simple\SimpleMessageModal.class
 lyfjshs\gomis\CoolButtonComponent.class
 lyfjshs\gomis\SignUpTEST$1.class

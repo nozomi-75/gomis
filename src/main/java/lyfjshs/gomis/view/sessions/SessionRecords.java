@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -18,6 +19,7 @@ import javax.swing.table.DefaultTableModel;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
@@ -112,17 +114,27 @@ public class SessionRecords extends Form {
     private TableActionManager setupTableActions() {
         TableActionManager actionManager = new TableActionManager();
         actionManager.addAction("View", (table, row) -> {
-            int sessionId = (int) table.getValueAt(row, 0); // Adjusted to match new column structure
+            // Get the actual session ID from the first column
+            int sessionId = (int) table.getValueAt(row, 0);
             FlatAnimatedLafChange.showSnapshot();
 
             try {
                 Sessions session = sessionsDAO.getSessionById(sessionId);
-                showSessionFullData(session);
-                backBtn.setVisible(true);
-                addSessionBtn.setVisible(false); // Hide Add Session button when viewing a session
+                if (session != null) {
+                    showSessionFullData(session);
+                    backBtn.setVisible(true);
+                    addSessionBtn.setVisible(false);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "Session ID " + sessionId + " not found in database.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
             } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error retrieving session data: " + e.getMessage(), 
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                    "Error retrieving session data: " + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
                 e.printStackTrace();
             }
 
@@ -134,13 +146,31 @@ public class SessionRecords extends Form {
 
     private void showSessionFullData(Sessions session) {
         try {
-            GuidanceCounselor counselor = sessionsDAO.getCounselorById(session.getGuidanceCounselorId());
-            List<Participants> participants = sessionsDAO.getParticipantsBySessionId(session.getSessionId());
+            if (session == null) {
+                throw new IllegalArgumentException("Session cannot be null");
+            }
+
+            // Get counselor from FormManager instead of database
+            GuidanceCounselor counselor = Main.formManager.getCounselorObject();
+            if (counselor == null) {
+                throw new IllegalStateException("No counselor is currently logged in");
+            }
+
+            // Get participants for this session
+            List<Participants> participants = new ArrayList<>();
+            if (session.getSessionId() > 0) {
+                participants = sessionsDAO.getParticipantsBySessionId(session.getSessionId());
+            }
+
+            // Create session details panel
             sessionFullDataPanel = new SessionFullData(session, counselor, participants);
             slidePane.addSlide(sessionFullDataPanel, SlidePaneTransition.Type.FORWARD);
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error retrieving session details: " + e.getMessage(), 
-                "Database Error", JOptionPane.ERROR_MESSAGE);
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Error displaying session details: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
@@ -181,21 +211,22 @@ public class SessionRecords extends Form {
             DefaultTableModel model = (DefaultTableModel) sessionTable.getModel();
             model.setRowCount(0);
 
-            int rowNum = 1;
             for (Sessions session : sessions) {
                 model.addRow(new Object[] { 
-                    rowNum++, 
+                    session.getSessionId(), // Use actual session ID instead of row number
                     session.getAppointmentType(),
                     session.getConsultationType(),
-                    session.getAppointmentDateTime(),
+                    session.getSessionDateTime(),
                     session.getSessionStatus(),
                     session.getParticipantCount(),
                     null // Actions column handled by TableActionManager
                 });
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading session data: " + e.getMessage(), 
-                "Database Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                "Error loading session data: " + e.getMessage(), 
+                "Database Error", 
+                JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
