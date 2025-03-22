@@ -3,6 +3,7 @@ package lyfjshs.gomis.view.students;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -37,6 +38,8 @@ public class StudentSearchPanel extends Modal {
     private DatePicker datePicker;
     private Connection connection;
     private JPanel panelResult;
+    private Student selectedStudent; // Add this field to store selected student
+    private List<StudentResult> resultPanels = new ArrayList<>();
 
     public StudentSearchPanel(Connection connection) {
         this.connection = connection;
@@ -60,7 +63,7 @@ public class StudentSearchPanel extends Modal {
         add(btnNewButton, "cell 1 0");
         add(new JSeparator(), "cell 0 2 2 1,height 2!");
 
-        advancedPanel = new JPanel(new MigLayout("insets 5", "[100px][200px][][30px]", "[][][]"));
+        advancedPanel = new JPanel(new MigLayout("insets 5", "[100px][200px][][30px]", "[][][][]"));
         advancedPanel.setBorder(new TitledBorder(null, "Advanced Search", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         advancedPanel.add(new JLabel("First Name:"), "cell 0 0");
@@ -128,6 +131,11 @@ public class StudentSearchPanel extends Modal {
         });
     }
 
+    // Add getter method for selected student
+    public Student getSelectedStudent() {
+        return selectedStudent;
+    }
+
     private void checkAndSearchLRN(String lrn) {
         if (lrn.length() == 7) { // Trigger search when 7 digits are typed
             searchLRN(lrn);
@@ -141,60 +149,93 @@ public class StudentSearchPanel extends Modal {
     private void searchLRN(String lrn) {
         if (!lrn.isEmpty()) {
             StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-            List<Student> students = studentsDataDAO.getStudentsByLrnPrefix(lrn); // Use the new method
-            panelResult.removeAll(); // Clear previous results
-            if (students != null && !students.isEmpty()) {
-                for (Student student : students) {
-                    StudentResult resultPanel = new StudentResult(
+            try {
+                List<Student> students = studentsDataDAO.getStudentsByFilters(lrn, null, null, null);
+                panelResult.removeAll();
+                resultPanels.clear(); // Clear stored result panels
+
+                if (students != null && !students.isEmpty()) {
+                    for (Student student : students) {
+                        StudentResult resultPanel = new StudentResult(
                             student.getStudentFirstname() + " " + student.getStudentLastname(),
-                            student.getStudentLrn());
-                    resultPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-                        public void mouseClicked(java.awt.event.MouseEvent evt) {
-                            displayStudentFullData(student);
-                        }
-                    });
-                    panelResult.add(resultPanel);
+                            student.getStudentLrn()
+                        );
+                        setupResultPanel(student, resultPanel);
+                        panelResult.add(resultPanel);
+                    }
+                } else {
+                    showNoResultsMessage(lrn);
                 }
-            } else {
-                JOptionPane.showMessageDialog(StudentSearchPanel.this, "No students found with LRN prefix: " + lrn,
-                        "Info", JOptionPane.INFORMATION_MESSAGE);
+                panelResult.revalidate();
+                panelResult.repaint();
+            } catch (SQLException e) {
+                handleSearchError(e);
             }
-            panelResult.revalidate();
-            panelResult.repaint();
         }
     }
 
     private void searchByNameAndGender(String firstName, String middleName, String lastName, String sex) {
         StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
         try {
-            List<Student> students = studentsDataDAO.getStudentDataByNameAndSex(firstName, middleName, lastName, sex);
+            List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, sex);
             panelResult.removeAll();
+            resultPanels.clear(); // Clear stored result panels
+
             if (!students.isEmpty()) {
                 for (Student student : students) {
                     StudentResult resultPanel = new StudentResult(
-                            student.getStudentFirstname() + " " + student.getStudentLastname(),
-                            student.getStudentLrn());
-                    resultPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-                        public void mouseClicked(java.awt.event.MouseEvent evt) {
-                            displayStudentFullData(student);
-                        }
-                    });
+                        student.getStudentFirstname() + " " + student.getStudentLastname(),
+                        student.getStudentLrn()
+                    );
+                    setupResultPanel(student, resultPanel);
                     panelResult.add(resultPanel);
                 }
-                panelResult.revalidate();
-                panelResult.repaint();
             } else {
-                JOptionPane.showMessageDialog(StudentSearchPanel.this, "No students found", "Info",
-                        JOptionPane.INFORMATION_MESSAGE);
+                showNoResultsMessage("");
             }
-        } catch (SQLException e1) {
-            e1.printStackTrace();
-            JOptionPane.showMessageDialog(StudentSearchPanel.this, "Error retrieving student data", "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            panelResult.revalidate();
+            panelResult.repaint();
+        } catch (SQLException e) {
+            handleSearchError(e);
         }
     }
 
+    private void showNoResultsMessage(String searchTerm) {
+        String message = searchTerm.isEmpty() ? 
+            "No students found" : 
+            "No students found with LRN prefix: " + searchTerm;
+        JOptionPane.showMessageDialog(this, message, "Info", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void handleSearchError(SQLException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this,
+            "Error searching students: " + e.getMessage(),
+            "Error",
+            JOptionPane.ERROR_MESSAGE);
+    }
+
+    // Add this method to clear all selections
+    private void clearSelections() {
+        for (StudentResult panel : resultPanels) {
+            panel.setSelected(false);
+        }
+    }
+
+    private void setupResultPanel(Student student, StudentResult resultPanel) {
+        resultPanels.add(resultPanel);
+        resultPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                clearSelections();
+                resultPanel.setSelected(true);
+                selectedStudent = student;
+            }
+        });
+    }
+
+    // Remove or modify displayStudentFullData to not show the full data dialog
     private void displayStudentFullData(Student student) {
-        StudentFullData studentFullData = new StudentFullData(connection, student);
+        this.selectedStudent = student;
+        // Remove the StudentFullData dialog display since we just want to store the selection
     }
 }

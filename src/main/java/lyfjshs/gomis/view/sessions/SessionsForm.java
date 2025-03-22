@@ -1,4 +1,3 @@
-//magkasama na major and minor, nalagyan ng others pag di naka select mawawala, pag naka select lalabas si john cena.
 package lyfjshs.gomis.view.sessions;
 
 import java.awt.BorderLayout;
@@ -15,6 +14,7 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +42,13 @@ import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
-import lyfjshs.gomis.Database.entity.SessionParticipant;
 import lyfjshs.gomis.Database.entity.Sessions;
+import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
-import raven.modal.option.Location;
-import raven.modal.option.Option;
+import raven.modal.component.SimpleModalBorder;
 
 public class SessionsForm extends Form implements Printable {
 	private JComboBox<String> violationField;
@@ -153,14 +152,100 @@ for (String violation : violations) {
 	}
 
 	private void openStudentSearchUI() {
-		if (ModalDialog.isIdExist("search")) {
-            return;
-        }
-        Option option = ModalDialog.createOption();
-        option.setAnimationEnabled(true);
-        option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
-        ModalDialog.showModal(this, new StudentSearchPanel(connect), option, "search");
-	}
+    if (ModalDialog.isIdExist("search")) {
+        return;
+    }
+
+    try {
+        StudentSearchPanel searchPanel = new StudentSearchPanel(connect);
+        
+        // Set the default option properties before showing modal
+        ModalDialog.getDefaultOption()
+            .setOpacity(1f)  // Make fully opaque
+            .setAnimationOnClose(true)
+            .getBorderOption()
+                .setBorderWidth(1f)
+                .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+
+        // Create the modal dialog
+        ModalDialog.showModal(
+            this, 
+            new SimpleModalBorder(
+                searchPanel, 
+                "Search Student", 
+                new SimpleModalBorder.Option[] {
+                    new SimpleModalBorder.Option("Add Selected Student", SimpleModalBorder.YES_OPTION),
+                    new SimpleModalBorder.Option("Cancel", SimpleModalBorder.NO_OPTION)
+                },
+                (controller, action) -> {
+                    if (action == SimpleModalBorder.YES_OPTION) {
+                        Student selectedStudent = searchPanel.getSelectedStudent();
+                        if (selectedStudent != null) {
+                            try {
+                                // Create new participant from student
+                                Participants participant = new Participants();
+                                participant.setStudentUid(selectedStudent.getStudentUid());
+                                participant.setParticipantFirstName(selectedStudent.getStudentFirstname());
+                                participant.setParticipantLastName(selectedStudent.getStudentLastname());
+                                participant.setParticipantType("Student");
+
+                                // Save participant to database
+                                ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
+                                participantsDAO.createParticipant(participant);
+
+                                // Add to table
+                                String fullName = selectedStudent.getStudentFirstname() + " " + selectedStudent.getStudentLastname();
+                                participantTableModel.addRow(new Object[] {
+                                    participant.getParticipantId(),
+                                    fullName,
+                                    "Student",
+                                    "View | Remove"
+                                });
+
+                                // Store details for later use
+                                Map<String, String> details = new HashMap<>();
+                                details.put("firstName", selectedStudent.getStudentFirstname());
+                                details.put("lastName", selectedStudent.getStudentLastname());
+                                details.put("fullName", fullName);
+                                details.put("type", "Student");
+                                details.put("studentUid", String.valueOf(selectedStudent.getStudentUid()));
+                                participantDetails.put(participant.getParticipantId(), details);
+
+                                controller.close();
+                            } catch (Exception e) {
+                                JOptionPane.showMessageDialog(this,
+                                    "Error adding student as participant: " + e.getMessage(),
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                                e.printStackTrace();
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(this,
+                                "Please select a student first.",
+                                "Warning",
+                                JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else {
+                        controller.close();
+                    }
+                }
+            ),
+            "search"
+        );
+
+        // Configure layout after showing modal
+        ModalDialog.getDefaultOption().getLayoutOption()
+            .setSize(700, 500)
+            .setLocation(raven.modal.option.Location.CENTER, raven.modal.option.Location.TOP);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this,
+            "Error opening student search: " + e.getMessage(),
+            "Error",
+            JOptionPane.ERROR_MESSAGE);
+    }
+}
 
 	private int getAppointmentId() {
 		// Implement logic to retrieve the actual appointment ID
@@ -174,66 +259,104 @@ for (String violation : violations) {
 		this.saveCallback = saveCallback;
 	}
 
-	private void saveSession() {
-        try {
-            // First verify that we have a valid guidance counselor ID
-            int guidanceCounselorId;
-            if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
-                guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
-            } else {
-                JOptionPane.showMessageDialog(this, 
-                    "No guidance counselor is currently logged in.", 
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
-            Integer appointmentId = null; // Default value for Walk-in
-            if (!"Walk-in".equals(appointmentType)) {
-                // Retrieve the actual appointment ID if not Walk-in
-                appointmentId = getAppointmentId();
-            }
-
-            // Create a new Session object using the constructor
-            Sessions session = new Sessions(
-                    0, // Auto-incremented session ID
-                    appointmentId, // Appointment ID (null for walk-in)
-                    guidanceCounselorId, // Use the verified counselor ID
-                    participantTableModel.getRowCount() > 0 ? Integer.parseInt(participantTableModel.getValueAt(0, 0).toString()) : 0, // Use first participant's ID if available
-                    null, // Violation ID (optional)
-                    appointmentType,
-                    (String) consultationTypeComboBox.getSelectedItem(),
-                    new java.sql.Timestamp(System.currentTimeMillis()), // Current timestamp
-                    notesArea.getText(),
-                    "Scheduled", // Initial status
-                    new java.sql.Timestamp(System.currentTimeMillis())
-            );
-
-            // Use SessionsDAO to save the session
-            SessionsDAO sessionsDAO = new SessionsDAO(connect);
-            int result = sessionsDAO.addSession(session);
-
-            if (result > 0) {
-                JOptionPane.showMessageDialog(this, "Session saved successfully!", "Success",
-                        JOptionPane.INFORMATION_MESSAGE);
-                if (saveCallback != null) {
-                    saveCallback.run();
-                }
-                clearFields();
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to save session.", "Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-
-        } catch (Exception e) {
+private void saveSession() {
+    try {
+        // First verify that we have a valid guidance counselor ID
+        int guidanceCounselorId;
+        if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
+            guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
+        } else {
             JOptionPane.showMessageDialog(this, 
-                "Error saving session: " + e.getMessage(), 
-                "Error",
+                "No guidance counselor is currently logged in.", 
+                "Error", 
                 JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            return;
         }
+
+        String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
+        Integer appointmentId = null; // Default value for Walk-in
+        if (!"Walk-in".equals(appointmentType)) {
+            // Retrieve the actual appointment ID if not Walk-in
+            appointmentId = getAppointmentId();
+        }
+
+        // Validate if participants exist
+        if (participantTableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, 
+                "Please add at least one participant before saving the session.", 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Create a new Session object using the constructor
+        Sessions session = new Sessions(
+                0, // Auto-incremented session ID
+                appointmentId, // Appointment ID (null for walk-in)
+                guidanceCounselorId, // Verified counselor ID
+                null, // Violation ID (optional)
+                appointmentType,
+                (String) consultationTypeComboBox.getSelectedItem(),
+                new java.sql.Timestamp(System.currentTimeMillis()), // Current timestamp
+                notesArea.getText(),
+                "Scheduled", // Initial status
+                new java.sql.Timestamp(System.currentTimeMillis())
+        );
+
+        // Retrieve participants from the table
+        List<Participants> participants = new ArrayList<>();
+        for (int i = 0; i < participantTableModel.getRowCount(); i++) {
+            int participantId = Integer.parseInt(participantTableModel.getValueAt(i, 0).toString());
+            String participantName = participantTableModel.getValueAt(i, 1).toString();
+            String participantType = participantTableModel.getValueAt(i, 2).toString();
+
+            Participants participant = new Participants();
+            participant.setParticipantId(participantId);
+            participant.setParticipantFirstName(participantName.split(" ")[0]);
+            participant.setParticipantLastName(participantName.split(" ")[1]);
+            participant.setParticipantType(participantType);
+            participants.add(participant);
+        }
+
+        // Store the participants in the session object
+        session.setParticipants(participants);
+
+        // Use SessionsDAO to save the session
+        SessionsDAO sessionsDAO = new SessionsDAO(connect);
+        int sessionId = sessionsDAO.addSession(session);
+
+        if (sessionId > 0) {
+            // Store all participants in the SESSIONS_PARTICIPANTS table
+            for (Participants participant : participants) {
+                sessionsDAO.addParticipantToSession(sessionId, participant.getParticipantId());
+            }
+            
+            JOptionPane.showMessageDialog(this, 
+                "Session and participants saved successfully!", 
+                "Success", 
+                JOptionPane.INFORMATION_MESSAGE);
+            
+            if (saveCallback != null) {
+                saveCallback.run();
+            }
+            
+            clearFields();
+        } else {
+            JOptionPane.showMessageDialog(this, 
+                "Failed to save session.", 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, 
+            "Error saving session: " + e.getMessage(), 
+            "Error",
+            JOptionPane.ERROR_MESSAGE);
+        e.printStackTrace();
     }
+}
+
 
 	private void clearFields(){
 		// Clear text fields
@@ -739,72 +862,91 @@ for (String violation : violations) {
 	}
 
 	private void saveSessionToDatabase() {
-		try {
-			// Retrieve session details
-			String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
-			String consultationType = (String) consultationTypeComboBox.getSelectedItem();
-			String violation = (String) violationField.getSelectedItem();
-			String notes = notesArea.getText();
-			String summary = sessionSummaryArea.getText();
-			String recordedBy = recordedByField.getText();
+	    try {
+	        // Verify if a guidance counselor is logged in
+	        int guidanceCounselorId;
+	        if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
+	            guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
+	        } else {
+	            JOptionPane.showMessageDialog(this, "No guidance counselor is currently logged in.", 
+	                "Error", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
 
-			int guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
-			int appointmentId = 0; // Default for Walk-in
-			if (!"Walk-in".equals(appointmentType)) {
-				appointmentId = getAppointmentId(); // Retrieve appointment ID if not Walk-in
-			}
+	        // Validate if participants exist
+	        if (participantTableModel.getRowCount() == 0) {
+	            JOptionPane.showMessageDialog(this, "Please add at least one participant before saving the session.", 
+	                "Error", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
 
-			// Create a new session object
-			Sessions session = new Sessions(
-				0, // Auto-incremented SESSION_ID
-				appointmentId,
-				guidanceCounselorId,
-				0, // PARTICIPANT_ID (not applicable for the session itself)
-				0, // VIOLATION_ID (not retrieved in this form)
-				appointmentType,
-				consultationType,
-				new java.sql.Timestamp(System.currentTimeMillis()), // SESSION_DATE_TIME
-				notes,
-				"Active", // SESSION_STATUS
-				new java.sql.Timestamp(System.currentTimeMillis()) // UPDATED_AT
-			);
+	        // Retrieve session details
+	        String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
+	        String consultationType = (String) consultationTypeComboBox.getSelectedItem();
+	        String violation = (String) violationField.getSelectedItem();
+	        String notes = notesArea.getText();
 
-			// Save session to the database
-			SessionsDAO sessionsDAO = new SessionsDAO(connect);
-			int sessionId = sessionsDAO.addSession(session);
+	        // Handle appointment ID
+	        Integer appointmentId = null; // Default for Walk-in
+	        if (!"Walk-in".equals(appointmentType)) {
+	            appointmentId = getAppointmentId();
+	        }
 
-			// Save participants related to the session
-			for (int i = 0; i < participantTableModel.getRowCount(); i++) {
-				String participantName = (String) participantTableModel.getValueAt(i, 1);
-				String participantType = (String) participantTableModel.getValueAt(i, 2);
+	        // Handle violation
+	        String violationText = null;
+	        if (violation != null && violation.equals("Others")) {
+	            violationText = customViolationField.getText().trim();
+	        } else {
+	            violationText = violation;
+	        }
 
-				// Create a participant object
-				ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
-				Participants participant = new Participants();
-				participant.setParticipantFirstName(participantName.split(" ")[0]);
-				participant.setParticipantLastName(participantName.split(" ")[1]);
-				participant.setParticipantType(participantType);
+	        // Create a new Session object
+	        Sessions session = new Sessions(
+	            0, // Auto-incremented SESSION_ID
+	            appointmentId, // Appointment ID (null for Walk-in)
+	            guidanceCounselorId, // Verified counselor ID
+	            null, // Violation ID (linked separately)
+	            appointmentType,
+	            consultationType,
+	            new java.sql.Timestamp(System.currentTimeMillis()), // SESSION_DATE_TIME
+	            notes,
+	            "Active", // SESSION_STATUS
+	            new java.sql.Timestamp(System.currentTimeMillis()) // UPDATED_AT
+	        );
 
-				// Save participant to the database
-				participantsDAO.createParticipant(participant);
+	        // Save session to the database
+	        SessionsDAO sessionsDAO = new SessionsDAO(connect);
+	        int sessionId = sessionsDAO.addSession(session);
 
-				// Link participant to the session
-				sessionsDAO.addParticipantToSession(new SessionParticipant(sessionId, participant.getParticipantId()));
-			}
+	        if (sessionId > 0) {
+	            ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
+	            // Save participants related to the session
+	            for (int i = 0; i < participantTableModel.getRowCount(); i++) {
+	                int participantId = Integer.parseInt(participantTableModel.getValueAt(i, 0).toString());
 
-			JOptionPane.showMessageDialog(this, "Session and related data saved successfully!", "Success",
-					JOptionPane.INFORMATION_MESSAGE);
+	                // Link participant to the session
+	                sessionsDAO.addParticipantToSession(sessionId, participantId);
+	            }
 
-			if (saveCallback != null) {
-				saveCallback.run();
-			}
+	            JOptionPane.showMessageDialog(this, "Session and related data saved successfully!", 
+	                "Success", JOptionPane.INFORMATION_MESSAGE);
 
-			// Clear fields after saving
-			clearFields();
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-		}
+	            if (saveCallback != null) {
+	                saveCallback.run();
+	            }
+
+	            // Clear fields after saving
+	            clearFields();
+	        } else {
+	            JOptionPane.showMessageDialog(this, "Failed to save session.", 
+	                "Error", JOptionPane.ERROR_MESSAGE);
+	        }
+
+	    } catch (Exception e) {
+	        JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), 
+	            "Error", JOptionPane.ERROR_MESSAGE);
+	        e.printStackTrace();
+	    }
 	}
+
 }

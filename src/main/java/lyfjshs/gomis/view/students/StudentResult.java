@@ -1,24 +1,69 @@
 package lyfjshs.gomis.view.students;
 
+import java.awt.Color;
+import java.awt.Cursor;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
 
 import net.miginfocom.swing.MigLayout;
-import javax.swing.JLabel;
-import java.awt.Font;
 
 public class StudentResult extends JPanel {
+    private static final long serialVersionUID = 1L;
+    private JLabel nameLabel;
+    private JLabel lrnLabel;
+    private Border defaultBorder;
+    private Border selectedBorder;
+    private Border hoverBorder;
+    private boolean isSelected = false;
 
-	private static final long serialVersionUID = 1L;
+    public StudentResult(String name, String lrn) {
+        setLayout(new MigLayout("insets 10", "[][grow]", "[][]"));
+        nameLabel = new JLabel(name);
+        lrnLabel = new JLabel("LRN: " + lrn);
+        
+        add(nameLabel, "cell 0 0,alignx left");
+        add(lrnLabel, "cell 0 1,alignx left");
+        
+        // Create borders
+        defaultBorder = BorderFactory.createLineBorder(new Color(200, 200, 200), 1);
+        selectedBorder = BorderFactory.createLineBorder(new Color(0, 120, 212), 2);
+        hoverBorder = BorderFactory.createLineBorder(new Color(0, 120, 212), 1);
+        
+        // Set initial border and style
+        setBorder(defaultBorder);
+        setBackground(Color.WHITE);
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        setupHoverEffect();
+    }
 
-	public StudentResult(String studName, String studLRN) {
-		this.setLayout(new MigLayout("", "[grow]", "[][]"));
-		
-		JLabel studentName = new JLabel(studName);
-		studentName.setFont(new Font("Tahoma", Font.BOLD, 15));
-		add(studentName, "cell 0 0");
-		
-		JLabel studentLRN = new JLabel("LRN: " + studLRN);
-		add(studentLRN, "cell 0 1");
-	}
+    private void setupHoverEffect() {
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (!isSelected) {
+                    setBorder(hoverBorder);
+                    setBackground(new Color(245, 245, 245));
+                }
+            }
 
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                if (!isSelected) {
+                    setBorder(defaultBorder);
+                    setBackground(Color.WHITE);
+                }
+            }
+        });
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+        setBorder(selected ? selectedBorder : defaultBorder);
+        setBackground(selected ? new Color(240, 247, 255) : Color.WHITE);
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
 }

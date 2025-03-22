@@ -10,7 +10,6 @@ import java.util.List;
 
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
-import lyfjshs.gomis.Database.entity.SessionParticipant;
 import lyfjshs.gomis.Database.entity.Sessions;
 
 public class SessionsDAO {
@@ -23,43 +22,29 @@ public class SessionsDAO {
 
     // Method to check if an appointment exists
     private boolean appointmentExists(int appointmentId) throws SQLException {
-    String sql = "SELECT 1 FROM APPOINTMENTS WHERE APPOINTMENT_ID = ?";
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-        stmt.setInt(1, appointmentId);
-        try (ResultSet rs = stmt.executeQuery()) {
-            return rs.next(); // Returns true if at least one row exists
+        String sql = "SELECT 1 FROM APPOINTMENTS WHERE APPOINTMENT_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, appointmentId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // Returns true if at least one row exists
+            }
         }
     }
-}
 
-    // Method to add a session
+    // ✅ Add session without participantId (use SESSIONS_PARTICIPANTS instead)
     public int addSession(Sessions session) throws SQLException {
-        String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, GUIDANCE_COUNSELOR_ID, PARTICIPANT_ID, VIOLATION_ID, APPOINTMENT_TYPE, CONSULTATION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO SESSIONS (APPOINTMENT_ID, GUIDANCE_COUNSELOR_ID, VIOLATION_ID, " +
+                "APPOINTMENT_TYPE, CONSULTATION_TYPE, SESSION_DATE_TIME, SESSION_NOTES, SESSION_STATUS, UPDATED_AT) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            // Handle null appointmentId for walk-in appointments
-            if (session.getAppointmentId() == null || !appointmentExists(session.getAppointmentId())) {
-                stmt.setNull(1, java.sql.Types.INTEGER);
-            } else {
-                stmt.setObject(1, session.getAppointmentId());
-            }
-            
-            // Rest of the parameters
+            stmt.setObject(1, session.getAppointmentId());
             stmt.setInt(2, session.getGuidanceCounselorId());
-            stmt.setInt(3, session.getParticipantId());
-            
-            // Handle null violationId
-            if (session.getViolationId() == null) {
-                stmt.setNull(4, java.sql.Types.INTEGER);
-            } else {
-                stmt.setInt(4, session.getViolationId());
-            }
-            
-            stmt.setString(5, session.getAppointmentType());
-            stmt.setString(6, session.getConsultationType());
-            stmt.setTimestamp(7, session.getSessionDateTime());
-            stmt.setString(8, session.getSessionNotes());
-            stmt.setString(9, session.getSessionStatus());
-            stmt.setTimestamp(10, session.getUpdatedAt());
+            stmt.setObject(3, session.getViolationId());
+            stmt.setString(4, session.getAppointmentType());
+            stmt.setString(5, session.getConsultationType());
+            stmt.setTimestamp(6, session.getSessionDateTime());
+            stmt.setString(7, session.getSessionNotes());
+            stmt.setString(8, session.getSessionStatus());
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -99,24 +84,41 @@ public class SessionsDAO {
         return null; // Return null if no session is found with the given ID
     }
 
-    // Method to add a participant to a session
-    public void addParticipantToSession(SessionParticipant participant) throws SQLException {
+    // ✅ Get session with participants
+    public Sessions getSessionWithParticipants(int sessionId) throws SQLException {
+        Sessions session = null;
+        String sql = "SELECT * FROM SESSIONS WHERE SESSION_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, sessionId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    session = mapRowToSession(rs);
+                }
+            }
+        }
+        if (session != null) {
+            session.setParticipants(getParticipantsBySessionId(sessionId));
+        }
+        return session;
+    }
+
+    // ✅ Add participant to a session
+    public void addParticipantToSession(int sessionId, int participantId) throws SQLException {
         String sql = "INSERT INTO SESSIONS_PARTICIPANTS (SESSION_ID, PARTICIPANT_ID) VALUES (?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, participant.getSessionId());
-            stmt.setInt(2, participant.getParticipantId());
+            stmt.setInt(1, sessionId);
+            stmt.setInt(2, participantId);
             stmt.executeUpdate();
         }
     }
 
-    // Helper method to map ResultSet to Session object
+    // ✅ Map ResultSet to Session
     private Sessions mapRowToSession(ResultSet rs) throws SQLException {
         return new Sessions(
                 rs.getInt("SESSION_ID"),
-                rs.getInt("APPOINTMENT_ID"),
+                rs.getObject("APPOINTMENT_ID", Integer.class),
                 rs.getInt("GUIDANCE_COUNSELOR_ID"),
-                rs.getInt("PARTICIPANT_ID"),
-                rs.getInt("VIOLATION_ID"),
+                rs.getObject("VIOLATION_ID", Integer.class),
                 rs.getString("APPOINTMENT_TYPE"),
                 rs.getString("CONSULTATION_TYPE"),
                 rs.getTimestamp("SESSION_DATE_TIME"),
@@ -136,15 +138,14 @@ public class SessionsDAO {
             }
 
             stmt.setInt(2, session.getGuidanceCounselorId());
-            stmt.setInt(3, session.getParticipantId());
-            stmt.setInt(4, session.getViolationId());
-            stmt.setString(5, session.getAppointmentType());
-            stmt.setString(6, session.getConsultationType());
-            stmt.setTimestamp(7, session.getSessionDateTime());
-            stmt.setString(8, session.getSessionNotes());
-            stmt.setString(9, session.getSessionStatus());
-            stmt.setTimestamp(10, session.getUpdatedAt());
-            stmt.setInt(11, session.getSessionId()); // WHERE condition
+            stmt.setInt(3, session.getViolationId());
+            stmt.setString(4, session.getAppointmentType());
+            stmt.setString(5, session.getConsultationType());
+            stmt.setTimestamp(6, session.getSessionDateTime());
+            stmt.setString(7, session.getSessionNotes());
+            stmt.setString(8, session.getSessionStatus());
+            stmt.setTimestamp(9, session.getUpdatedAt());
+            stmt.setInt(10, session.getSessionId()); // WHERE condition
             stmt.executeUpdate();
         }
     }
@@ -162,12 +163,13 @@ public class SessionsDAO {
     public List<Sessions> getSessionDataWithParticipantCount() throws SQLException {
         List<Sessions> sessionDataList = new ArrayList<>();
         String sql = "SELECT s.*, " +
-                     "(SELECT COUNT(*) FROM SESSIONS_PARTICIPANTS sp WHERE sp.SESSION_ID = s.SESSION_ID) as participant_count " +
-                     "FROM SESSIONS s " +
-                     "ORDER BY s.SESSION_ID";
+                "(SELECT COUNT(*) FROM SESSIONS_PARTICIPANTS sp WHERE sp.SESSION_ID = s.SESSION_ID) as participant_count "
+                +
+                "FROM SESSIONS s " +
+                "ORDER BY s.SESSION_ID";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 Sessions sessionData = mapRowToSession(rs);
@@ -198,24 +200,24 @@ public class SessionsDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new GuidanceCounselor(
-                        rs.getInt("GUIDANCE_COUNSELOR_ID"),
-                        rs.getString("LAST_NAME"),
-                        rs.getString("FIRST_NAME"),
-                        rs.getString("MIDDLE_NAME"),
-                        rs.getString("SUFFIX"),
-                        rs.getString("GENDER"),
-                        rs.getString("SPECIALIZATION"),
-                        rs.getString("CONTACT_NUM"),
-                        rs.getString("EMAIL"),
-                        rs.getString("POSITION"),
-                        rs.getBytes("PROFILE_PICTURE")
-                    );
+                            rs.getInt("GUIDANCE_COUNSELOR_ID"),
+                            rs.getString("LAST_NAME"),
+                            rs.getString("FIRST_NAME"),
+                            rs.getString("MIDDLE_NAME"),
+                            rs.getString("SUFFIX"),
+                            rs.getString("GENDER"),
+                            rs.getString("SPECIALIZATION"),
+                            rs.getString("CONTACT_NUM"),
+                            rs.getString("EMAIL"),
+                            rs.getString("POSITION"),
+                            rs.getBytes("PROFILE_PICTURE"));
                 }
             }
         }
         return null;
     }
- public boolean participantExists(int participantId) throws SQLException {
+
+    public boolean participantExists(int participantId) throws SQLException {
         String query = "SELECT COUNT(*) FROM PARTICIPANTS WHERE PARTICIPANT_ID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, participantId);
@@ -225,7 +227,6 @@ public class SessionsDAO {
         }
     }
 
-
     public List<Participants> getParticipantsBySessionId(int sessionId) throws SQLException {
         List<Participants> participants = new ArrayList<>();
         String sql = "SELECT p.* FROM PARTICIPANTS p JOIN SESSIONS_PARTICIPANTS sp ON p.PARTICIPANT_ID = sp.PARTICIPANT_ID WHERE sp.SESSION_ID = ?";
@@ -234,14 +235,13 @@ public class SessionsDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     participants.add(new Participants(
-                        rs.getInt("PARTICIPANT_ID"),
-                        rs.getObject("STUDENT_UID", Integer.class), // Handle potential null values
-                        rs.getString("PARTICIPANT_TYPE"),
-                        rs.getString("PARTICIPANT_LASTNAME"),
-                        rs.getString("PARTICIPANT_FIRSTNAME"),
-                        rs.getString("EMAIL"),
-                        rs.getString("CONTACT_NUMBER")
-                    ));
+                            rs.getInt("PARTICIPANT_ID"),
+                            rs.getObject("STUDENT_UID", Integer.class), // Handle potential null values
+                            rs.getString("PARTICIPANT_TYPE"),
+                            rs.getString("PARTICIPANT_LASTNAME"),
+                            rs.getString("PARTICIPANT_FIRSTNAME"),
+                            rs.getString("EMAIL"),
+                            rs.getString("CONTACT_NUMBER")));
                 }
             }
         }

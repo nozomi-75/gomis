@@ -1,12 +1,12 @@
 package lyfjshs.gomis.Database.entity;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public class Sessions {
     private int sessionId;
     private Integer appointmentId;
     private int guidanceCounselorId;
-    private int participantId;
     private Integer violationId; // Use Integer to handle potential null values
     private String appointmentType;
     private String consultationType;
@@ -16,15 +16,15 @@ public class Sessions {
     private Timestamp updatedAt;
     private int participantCount; // To store participant count if needed
     private Timestamp appointmentDateTime; // To store related appointment date time
+    private List<Participants> participants; // ✅ Store multiple participants
 
     // Full Constructor
-    public Sessions(int sessionId, Integer appointmentId, int guidanceCounselorId, int participantId, Integer violationId,
+    public Sessions(int sessionId, Integer appointmentId, int guidanceCounselorId, Integer violationId,
                     String appointmentType, String consultationType, Timestamp sessionDateTime, String sessionNotes, String sessionStatus,
                     Timestamp updatedAt) {
         this.sessionId = sessionId;
         this.appointmentId = appointmentId;
         this.guidanceCounselorId = guidanceCounselorId;
-        this.participantId = participantId;
         this.violationId = violationId;
         this.appointmentType = appointmentType;
         this.consultationType = consultationType;
@@ -33,9 +33,6 @@ public class Sessions {
         this.sessionStatus = sessionStatus;
         this.updatedAt = updatedAt;
     }
-
-    // Default Constructor
-    public Sessions() {}
 
     // Getters and Setters
     public int getSessionId() {
@@ -60,14 +57,6 @@ public class Sessions {
 
     public void setGuidanceCounselorId(int guidanceCounselorId) {
         this.guidanceCounselorId = guidanceCounselorId;
-    }
-
-    public int getParticipantId() {
-        return participantId;
-    }
-
-    public void setParticipantId(int participantId) {
-        this.participantId = participantId;
     }
 
     public Integer getViolationId() {
@@ -142,13 +131,21 @@ public class Sessions {
         this.appointmentDateTime = appointmentDateTime;
     }
 
+    public List<Participants> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(List<Participants> participants) {
+        this.participants = participants;
+    }
+
+
     @Override
     public String toString() {
         return "Sessions{" +
                 "sessionId=" + sessionId +
                 ", appointmentId=" + appointmentId +
                 ", guidanceCounselorId=" + guidanceCounselorId +
-                ", participantId=" + participantId +
                 ", violationId=" + violationId +
                 ", appointmentType='" + appointmentType + '\'' +
                 ", consultationType='" + consultationType + '\'' +

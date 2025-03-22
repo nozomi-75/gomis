@@ -24,11 +24,9 @@ import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
-import lyfjshs.gomis.Database.DAO.ContactDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
-import lyfjshs.gomis.Database.entity.Contact;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 import net.miginfocom.swing.MigLayout;
@@ -37,7 +35,7 @@ import raven.datetime.TimePicker;
 
 public class AddAppointmentPanel extends JPanel {
     private JPanel participantsPanel;
-    private int participantCount; 
+    private int participantCount;
     private DatePicker datePicker;
     private TimePicker timePicker;
     private boolean confirmed;
@@ -337,7 +335,7 @@ public class AddAppointmentPanel extends JPanel {
 
         if (!firstName.isEmpty() && !lastName.isEmpty()) {
             try {
-                List<Student> students = studentsDataDAO.getStudentDataByNameAndSex(firstName, "", lastName, sex);
+                List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, sex);
                 if (!students.isEmpty()) {
                     student = students.get(0); // Take the first match
                     firstNameField.setText(student.getStudentFirstname());
@@ -357,54 +355,6 @@ public class AddAppointmentPanel extends JPanel {
         } else if (lrn.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter LRN or both first name and last name to search.",
                     "Search Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void searchStudentByNameAndSex(String firstName, String lastName, String sex, JTextField lrnField) {
-        if (firstName.trim().isEmpty() || lastName.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter both first and last name",
-                    "Search Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-        try {
-            List<Student> students = studentsDataDAO.getStudentDataByNameAndSex(firstName, "", lastName, sex);
-            if (!students.isEmpty()) {
-                Student student = students.get(0);
-                lrnField.setText(student.getStudentLrn());
-            } else {
-                JOptionPane.showMessageDialog(this, "Student not found",
-                        "Search Result", JOptionPane.INFORMATION_MESSAGE);
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error searching student",
-                    "Search Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void searchStudent(String firstName, String lastName, JTextField contactField) {
-        StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-        ContactDAO contactDAO = new ContactDAO(connection);
-        try {
-            Student student = studentsDataDAO.getStudentByFirstNLastName(firstName, lastName);
-            if (student != null) {
-                Contact contact = contactDAO.getContactByStudentId(student.getStudentUid());
-                if (contact != null) {
-                    contactField.setText(contact.getContactNumber());
-                } else {
-                    JOptionPane.showMessageDialog(this, "Contact not found for the student.", "Search Result",
-                            JOptionPane.INFORMATION_MESSAGE);
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Student not found.", "Search Result",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error occurred while searching for the student.", "Error",
-                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -537,7 +487,7 @@ public class AddAppointmentPanel extends JPanel {
                 }
             }
         }
-        //notes are not required
+        // notes are not required
 
         // Show errors if any
         if (errors.length() > 0) {
