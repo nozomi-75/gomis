@@ -8,6 +8,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
+import com.formdev.flatlaf.FlatClientProperties;
+
 import net.miginfocom.swing.MigLayout;
 
 public class StudentResult extends JPanel {
@@ -21,6 +23,8 @@ public class StudentResult extends JPanel {
 
     public StudentResult(String name, String lrn) {
         setLayout(new MigLayout("insets 10", "[][grow]", "[][]"));
+		putClientProperty(FlatClientProperties.STYLE, "arc:20; background:darken(@background,3%)");
+
         nameLabel = new JLabel(name);
         lrnLabel = new JLabel("LRN: " + lrn);
         
@@ -34,7 +38,6 @@ public class StudentResult extends JPanel {
         
         // Set initial border and style
         setBorder(defaultBorder);
-        setBackground(Color.WHITE);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         setupHoverEffect();
     }
@@ -44,18 +47,25 @@ public class StudentResult extends JPanel {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 if (!isSelected) {
                     setBorder(hoverBorder);
-                    setBackground(new Color(245, 245, 245));
+                    // Use darker color for dark mode, lighter color for light mode
+                    setBackground(com.formdev.flatlaf.FlatLaf.isLafDark() 
+                        ? new Color(45, 45, 45) 
+                        : new Color(245, 245, 245));
                 }
             }
 
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 if (!isSelected) {
                     setBorder(defaultBorder);
-                    setBackground(Color.WHITE);
+                    // Reset to default background based on theme
+                    setBackground(com.formdev.flatlaf.FlatLaf.isLafDark() 
+                        ? new Color(35, 35, 35) 
+                        : Color.WHITE);
                 }
             }
         });
     }
+
 
     public void setSelected(boolean selected) {
         isSelected = selected;

@@ -1,13 +1,12 @@
 package lyfjshs.gomis.view.students;
 
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
-import java.io.InputStream;
+import java.awt.Font;
+import java.awt.GridBagLayout;
 import java.sql.Connection;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -15,8 +14,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
@@ -35,12 +34,10 @@ import lyfjshs.gomis.Database.entity.Parents;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.FormManager.Form;
-import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
-import lyfjshs.gomis.utils.PrintingReport;
+import lyfjshs.gomis.utils.GoodMoralGenerator;
 import net.miginfocom.swing.MigLayout;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperReport;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
 
@@ -59,8 +56,7 @@ public class StudentFullData extends Form {
 	private JTextField guardianContactField;
 	private JTextField addressField;
 	private JPanel panel;
-	private final JButton printGMBtn;
-	private FlatSVGIcon sagisagIcon, logoIcon;
+	private JButton printGMBtn;
 	private JTextField ipField;
 	private JTextField textField;
 	private JTextField fatherLastNameField;
@@ -73,51 +69,41 @@ public class StudentFullData extends Form {
 	private JTextField motherMiddleNameField;
 	private JTextField motherPhoneNumberField;
 	private JTextField parentNameField;
-	private JScrollPane scrollPane;
-	private JTable violationTable;
+	private GTable violationTable;
 	private Connection connect;
 	private JTextField fullAddField;
 	private JButton dropStudBtn;
+	private FlatSVGIcon viewIcon = new FlatSVGIcon("icons/view.svg", 0.5f);
+	private FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.5f);
+	private JPanel noViolationPanel;
+	private JPanel containerPanel; // Add this field
 
 	public StudentFullData(Connection connection, Student studentData) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
-		initComponents();
 		this.connect = connection;
 
-		loadViolations(studentData.getStudentUid(), connect);
+		// Initialize all components first
+		initComponents();
 
-		// Set fields with student data
+		// Initialize the violation table before using it
+		initializeViolationTable();
+
+		// Create the panels before setting data
+		setupMainPanel(studentData);
+
+		// Set student data after all components are initialized
 		setStudentData(studentData);
 
-		// Add components to the panel
-		JPanel mainPanel = new JPanel(new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow,fill][]"));
-		JScrollPane scroll = new JScrollPane(mainPanel);
-
-		mainPanel.add(createPersonalInfoPanel(), "cell 0 0 2 1,grow");
-		mainPanel.add(createParentPanel(), "cell 0 1 2 1,grow");
-		mainPanel.add(createGuardianPanel(), "cell 0 2,grow");
-		mainPanel.add(createViolationTablePanel(), "cell 1 2,grow");
-
-		add(scroll, "cell 1 0,grow");
-
-		panel = new JPanel(new MigLayout("", "[grow][][][]", "[]"));
-		add(panel, "cell 1 1,growx");
-
-		printGMBtn = new JButton("Print Good Moral");
-		printGMBtn.addActionListener(e -> createGoodMoralReport()); // Attach event
-
-		dropStudBtn = new JButton("DROP Student");
-		dropStudBtn.addActionListener(e -> dropStudentModal()); // Attach event
-		panel.add(dropStudBtn, "cell 1 0");
-
-		panel.add(printGMBtn, "cell 2 0,grow");
+		// Now load violations
+		loadViolations(studentData.getStudentUid(), connect);
 	}
 
 	private void initComponents() {
-		// Initialize ALL components here
-		sagisagIcon = new FlatSVGIcon("DepEd_Sagisag.svg");
-		logoIcon = new FlatSVGIcon("DepEd_Logo.svg");
+		// Initialize sexComboBox first before using it
+		sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
+		sexComboBox.setEnabled(false);
 
+		// Initialize all text fields
 		lrnField = new JTextField();
 		lrnField.setEditable(false);
 
@@ -129,9 +115,6 @@ public class StudentFullData extends Form {
 
 		middleNameField = new JTextField();
 		middleNameField.setEditable(false);
-
-		sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
-		sexComboBox.setEnabled(false);
 
 		dobField = new JTextField();
 		dobField.setEditable(false);
@@ -192,50 +175,142 @@ public class StudentFullData extends Form {
 
 		fullAddField = new JTextField();
 		fullAddField.setEditable(false);
-		
+
+	}
+
+	private void initializeViolationTable() {
+		// Initialize GTable with proper configuration
+		String[] columnNames = { "Type", "Description", "Reinforcement", "Status", "Actions" };
+		Class<?>[] columnTypes = { String.class, String.class, String.class, String.class, Object.class };
+		boolean[] editableColumns = { false, false, false, false, true };
+		double[] columnWidths = { 0.2, 0.3, 0.2, 0.15, 0.15 };
+		int[] alignments = { SwingConstants.LEFT, // Type
+				SwingConstants.LEFT, // Description
+				SwingConstants.LEFT, // Reinforcement
+				SwingConstants.CENTER, // Status
+				SwingConstants.CENTER // Actions
+		};
+
+		// Create action manager
+		TableActionManager actionManager = new TableActionManager().addAction("View", (table, row) -> {
+			viewViolation(row);
+		}, new Color(0, 150, 136), viewIcon).addAction("Resolve", (table, row) -> {
+			ViolationRecord violation = (ViolationRecord) table.getValueAt(row, -1);
+			resolveViolation(violation);
+		}, new Color(255, 150, 136), resolveIcon);
+
+		violationTable = new GTable(new Object[0][5], columnNames, columnTypes, editableColumns, columnWidths,
+				alignments, false, // no checkbox
+				actionManager // actions configuration
+		);
 	}
 
 	private void setStudentData(Student studentData) {
-		lrnField.setText(studentData.getStudentLrn());
-		lastNameField.setText(studentData.getStudentLastname());
-		firstNameField.setText(studentData.getStudentFirstname());
-		middleNameField.setText(studentData.getStudentMiddlename());
-		sexComboBox.setSelectedItem(studentData.getStudentSex());
-		dobField.setText(studentData.getStudentBirthdate().toString());
-		ageField.setText(String.valueOf(studentData.getStudentAge()));
-		motherTongueField.setText(studentData.getStudentMothertongue());
-		ipField.setText(studentData.getStudentIpType());
-		textField.setText(studentData.getStudentReligion());
+		if (studentData == null) {
+			System.out.println("Warning: studentData is null");
+			return;
+		}
 
-		// Set address fields
-		Address address = studentData.getAddress();
-		System.out.println(address.getAddressHouseNumber() + " " + address.getAddressStreetSubdivision() + " "
-				+ address.getAddressBarangay() + " " + address.getAddressMunicipality() + " "
-				+ address.getAddressProvince() + " " + address.getAddressZipCode());
-		fullAddField.setText(address.getAddressHouseNumber() + " " + address.getAddressStreetSubdivision() + " "
-				+ address.getAddressBarangay() + " " + address.getAddressMunicipality() + " "
-				+ address.getAddressProvince() + " " + address.getAddressZipCode());
+		try {
+			// Debug prints to check data
+			System.out.println("Setting student data for: " + studentData.getStudentFirstname());
+			
+			// Basic info
+			lrnField.setText(studentData.getStudentLrn() != null ? studentData.getStudentLrn() : "");
+			lastNameField.setText(studentData.getStudentLastname() != null ? studentData.getStudentLastname() : "");
+			firstNameField.setText(studentData.getStudentFirstname() != null ? studentData.getStudentFirstname() : "");
+			middleNameField.setText(studentData.getStudentMiddlename() != null ? studentData.getStudentMiddlename() : "");
+			sexComboBox.setSelectedItem(studentData.getStudentSex() != null ? studentData.getStudentSex() : "");
+			dobField.setText(studentData.getStudentBirthdate() != null ? studentData.getStudentBirthdate().toString() : "");
+			ageField.setText(String.valueOf(studentData.getStudentAge()));
+			motherTongueField.setText(studentData.getStudentMothertongue() != null ? studentData.getStudentMothertongue() : "");
+			ipField.setText(studentData.getStudentIpType() != null ? studentData.getStudentIpType() : "");
+			textField.setText(studentData.getStudentReligion() != null ? studentData.getStudentReligion() : "");
 
-		// Set contact fields
-		Contact contact = studentData.getContact();
-		guardianContactField.setText(contact.getContactNumber());
+			// Address
+			Address address = studentData.getAddress();
+			if (address != null) {
+				String fullAddress = String.format("%s %s %s %s %s %s",
+					nullToEmpty(address.getAddressHouseNumber()),
+					nullToEmpty(address.getAddressStreetSubdivision()),
+					nullToEmpty(address.getAddressBarangay()),
+					nullToEmpty(address.getAddressMunicipality()),
+					nullToEmpty(address.getAddressProvince()),
+					nullToEmpty(address.getAddressZipCode())
+				).trim();
+				fullAddField.setText(fullAddress);
+			}
 
-		// Set PARENTS fields
-		Parents parent = studentData.getParents();
-		fatherLastNameField.setText(parent.getFatherLastname());
-		fatherFirstNameField.setText(parent.getFatherFirstname());
-		fatherMiddleNameField.setText(parent.getFatherMiddlename());
-		fatherPhoneNumberField.setText(parent.getFatherContactNumber());
-		motherLastNameField.setText(parent.getMotherLastname());
-		motherFirstNameField.setText(parent.getMotherFirstname());
-		motherMiddleNameField.setText(parent.getMotherMiddlename());
-		motherPhoneNumberField.setText(parent.getMotherContactNumber());
+			// Contact
+			Contact contact = studentData.getContact();
+			if (contact != null) {
+				guardianContactField.setText(contact.getContactNumber() != null ? contact.getContactNumber() : "");
+			}
 
-		// Set guardian fields
-		Guardian guardian = studentData.getGuardian();
-		guardianNameField.setText(guardian.getGuardianFirstname() + " " + guardian.getGuardianMiddlename() + " "
-				+ guardian.getGuardianLastname());
-		guardianEmailField.setText(guardian.getGuardianRelationship());
+			// Parents
+			Parents parent = studentData.getParents();
+			if (parent != null) {
+				fatherLastNameField.setText(nullToEmpty(parent.getFatherLastname()));
+				fatherFirstNameField.setText(nullToEmpty(parent.getFatherFirstname()));
+				fatherMiddleNameField.setText(nullToEmpty(parent.getFatherMiddlename()));
+				fatherPhoneNumberField.setText(nullToEmpty(parent.getFatherContactNumber()));
+				motherLastNameField.setText(nullToEmpty(parent.getMotherLastname()));
+				motherFirstNameField.setText(nullToEmpty(parent.getMotherFirstname()));
+				motherMiddleNameField.setText(nullToEmpty(parent.getMotherMiddlename()));
+				motherPhoneNumberField.setText(nullToEmpty(parent.getMotherContactNumber()));
+			}
+
+			// Guardian
+			Guardian guardian = studentData.getGuardian();
+			if (guardian != null) {
+				String guardianFullName = String.format("%s %s %s",
+					nullToEmpty(guardian.getGuardianFirstname()),
+					nullToEmpty(guardian.getGuardianMiddlename()),
+					nullToEmpty(guardian.getGuardianLastname())
+				).trim();
+				guardianNameField.setText(guardianFullName);
+				guardianEmailField.setText(nullToEmpty(guardian.getGuardianRelationship()));
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("Error setting student data: " + e.getMessage());
+		}
+	}
+
+	private String nullToEmpty(String value) {
+		return value != null ? value : "";
+	}
+
+	private void setupMainPanel(Student student) {
+		// Add components to the panel
+		JPanel mainPanel = new JPanel(
+				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow,fill][250px]"));
+		JScrollPane scroll = new JScrollPane(mainPanel);
+
+		mainPanel.add(createPersonalInfoPanel(), "cell 0 0 2 1,grow");
+		mainPanel.add(createParentPanel(), "cell 0 1 2 1,grow");
+		mainPanel.add(createGuardianPanel(), "cell 0 2,grow");
+		mainPanel.add(createViolationTablePanel(), "cell 1 2,grow");
+
+		add(scroll, "cell 1 0,grow");
+
+		panel = new JPanel(new MigLayout("", "[grow][][][]", "[]"));
+		add(panel, "cell 1 1,growx");
+
+		printGMBtn = new JButton("Print Good Moral");
+		printGMBtn.addActionListener(e -> createGoodMoralReport(student));
+
+		dropStudBtn = new JButton("DROP Student");
+		dropStudBtn.addActionListener(e -> dropStudentModal());
+		panel.add(dropStudBtn, "cell 1 0");
+		panel.add(printGMBtn, "cell 2 0,grow");
+	}
+
+	private void createGoodMoralReport(Student student) {
+		// Create a new report generator
+		GoodMoralGenerator generator = new GoodMoralGenerator(student);
+		generator.createGoodMoralReport(this);
 	}
 
 	private JPanel createPersonalInfoPanel() {
@@ -261,14 +336,12 @@ public class StudentFullData extends Form {
 
 		personalInfoPanel.add(new JLabel("Mother Tongue"), "cell 3 2,alignx leading");
 
-
 		personalInfoPanel.add(motherTongueField, "cell 4 2,growx");
 
 		personalInfoPanel.add(new JLabel("Middle Name:"), "cell 0 3, leading");
 		personalInfoPanel.add(middleNameField, "cell 1 3, growx");
 
 		personalInfoPanel.add(new JLabel("Full Address:"), "cell 3 3,alignx left");
-
 
 		personalInfoPanel.add(fullAddField, "cell 4 3,growx");
 
@@ -340,130 +413,107 @@ public class StudentFullData extends Form {
 	}
 
 	private JPanel createViolationTablePanel() {
-		JPanel violationTablePanel = new JPanel();
+		JPanel violationTablePanel = new JPanel(new BorderLayout());
 		violationTablePanel.setBorder(new TitledBorder(
 				new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
-				"Violation Table", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		violationTablePanel.setLayout(new MigLayout("", "[grow]", "[]"));
+				"Violation Records", TitledBorder.LEADING, TitledBorder.TOP, null));
 
-		// Initialize the violation table with an empty model
-		violationTable = new JTable(
-				new DefaultTableModel(new String[] { "Violation Type", "Reinforcement", "Status", "Actions" }, 0));
-		scrollPane = new JScrollPane(violationTable);
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); // Ensure vertical scroll bar is
-																						// always visible
-		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Add horizontal scroll
-																								// bar if needed
+		// Initialize the table first
+		initializeViolationTable();
 
-		// Constrain the height of the scroll pane to prevent it from growing too large
-		violationTablePanel.add(scrollPane, "cell 0 0,grow,h 150!"); // Set a maximum height for the scroll pane
+		// Create container panel to hold both table and message
+		containerPanel = new JPanel(new CardLayout());
 
+		// Create "No Violations" panel with centered message
+		noViolationPanel = new JPanel(new GridBagLayout());
+		JLabel noViolationLabel = new JLabel("No violation records found");
+		noViolationLabel.setFont(new Font("Arial", Font.BOLD, 14));
+		noViolationLabel.setForeground(new Color(128, 128, 128));
+		noViolationPanel.add(noViolationLabel);
+
+		// Add components to container
+		containerPanel.add(new JScrollPane(violationTable), "TABLE");
+		containerPanel.add(noViolationPanel, "NO_DATA");
+
+		violationTablePanel.add(containerPanel, BorderLayout.CENTER);
 		return violationTablePanel;
 	}
 
 	private void loadViolations(int studentUID, Connection connection) {
 		try {
-			// Ensure violationTable is initialized
-			if (violationTable == null) {
-				violationTable = new JTable(new DefaultTableModel(
-						new String[] { "Violation Type", "Description", "Reinforcement", "Status", "Actions" }, 0));
-			}
-
-			// Retrieve violations related to the student
 			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
 			List<ViolationRecord> violations = violationCRUD.getViolationsByStudentUID(studentUID);
+			CardLayout cardLayout = (CardLayout) containerPanel.getLayout();
 
-			// Populate the table with violation data
-			DefaultTableModel model = (DefaultTableModel) violationTable.getModel();
-			model.setRowCount(0); // Clear existing rows
+			if (violations == null || violations.isEmpty()) {
+				cardLayout.show(containerPanel, "NO_DATA");
+			} else {
+				cardLayout.show(containerPanel, "TABLE");
+				DefaultTableModel model = (DefaultTableModel) violationTable.getModel();
+				model.setRowCount(0);
 
-			for (ViolationRecord violation : violations) {
-				Object[] row = {
-					violation.getViolationType(),
-					violation.getViolationDescription(),
-					violation.getReinforcement(),
-					violation.getStatus(),
-					"" // Placeholder for actions
-				};
-				model.addRow(row);
+				for (int i = 0; i < violations.size(); i++) {
+					ViolationRecord violation = violations.get(i);
+					model.addRow(new Object[] {
+							violation.getViolationType(),
+							violation.getViolationDescription(),
+							violation.getReinforcement(),
+							violation.getStatus(),
+							"actions"  // This column will be handled by TableActionManager
+					});
+					// Store violation object directly in table
+					violationTable.putClientProperty("violation_" + i, violation);
+				}
 			}
-
-			// Add actions to the table
-			TableActionManager actionManager = new TableActionManager();
-			actionManager.addAction("View", (table, row) -> viewViolation(violations.get(row)), null, null)
-						 .addAction("Resolve", (table, row) -> resolveViolation(violations.get(row)), null, null);
-			actionManager.applyTo(violationTable, 4); // Assuming actions are in the 5th column
 		} catch (Exception e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Failed to load violations.", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Failed to load violations: " + e.getMessage());
 		}
 	}
 
-	private void viewViolation(ViolationRecord violation) {
-		// Implement view logic
+	private void viewViolation(int row) {
+		ViolationRecord violation = (ViolationRecord) violationTable.getClientProperty("violation_" + row);
+		if (violation != null) {
+			JPanel violationDetailsPanel = new JPanel(new MigLayout("wrap 2", "[][grow]", "[]10[]10[]10[]10[]"));
+			violationDetailsPanel.add(new JLabel("Violation Type:"), "");
+			violationDetailsPanel.add(new JLabel(violation.getViolationType()), "growx");
+			violationDetailsPanel.add(new JLabel("Description:"), "");
+			violationDetailsPanel.add(new JLabel(violation.getViolationDescription()), "growx");
+			violationDetailsPanel.add(new JLabel("Anecdotal Record:"), "");
+			violationDetailsPanel.add(new JLabel(violation.getAnecdotalRecord()), "growx");
+			violationDetailsPanel.add(new JLabel("Reinforcement:"), "");
+			violationDetailsPanel.add(new JLabel(violation.getReinforcement()), "growx");
+			violationDetailsPanel.add(new JLabel("Status:"), "");
+			violationDetailsPanel.add(new JLabel(violation.getStatus()), "growx");
+
+			ModalDialog.showModal(this,
+					new SimpleModalBorder(violationDetailsPanel, "Violation Details",
+							new SimpleModalBorder.Option[] {
+									new SimpleModalBorder.Option("Close", SimpleModalBorder.CANCEL_OPTION) },
+							(controller, action) -> controller.close()),
+					"violationDetails");
+		}
 	}
 
 	private void resolveViolation(ViolationRecord violation) {
-		// Implement resolve logic
-	}
-
-	/**
-	 * Loads and compiles the Good Moral Certificate JRXML template from the
-	 * resources folder.
-	 *
-	 * @return A compiled JasperReport object.
-	 * @throws Exception If the template file is not found or fails to compile.
-	 */
-	private JasperReport loadGoodMoralTemplate() throws Exception {
-		// Load the JRXML template from the resources folder
-		InputStream templateStream = getClass().getClassLoader()
-				.getResourceAsStream("templates/GoodMoral Template.jrxml");
-
-		if (templateStream == null) {
-			throw new IllegalArgumentException("Good Moral template not found in resources/templates/");
-		}
-
-		// Compile the JRXML template into a JasperReport object
-		return JasperCompileManager.compileReport(templateStream);
-	}
-
-	/**
-	 * Loads, compiles, and generates the Good Moral Certificate report.
-	 */
-	public void createGoodMoralReport() {
 		try {
-			// Load and compile the JRXML template
-			JasperReport compiledTemplate = loadGoodMoralTemplate();
+			ViolationCRUD violationCRUD = new ViolationCRUD(connect);
 
-			// Prepare parameters for the report
-			Map<String, Object> parameters = new HashMap<>();
+			int choice = JOptionPane.showConfirmDialog(this, "Do you want to mark this violation as resolved?",
+					"Resolve Violation", JOptionPane.YES_NO_OPTION);
 
-			// Generate full name
-			String fullName = firstNameField.getText() + " " + middleNameField.getText() + " "
-					+ lastNameField.getText();
-			parameters.put("fullName", fullName);
-
-			// Format the date
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d'th' 'day of' MMMM, yyyy");
-			String formattedDate = LocalDateTime.now().format(formatter);
-			parameters.put("dateTodayText", formattedDate);
-
-			// Principal's name
-			String principalName = "Testing"; // This can be dynamic
-			parameters.put("principalName", principalName);
-
-			// Convert icons
-			parameters.put("DepEdLogo", PrintingReport.convertSvgToBufferedImage(sagisagIcon));
-			parameters.put("DepEdSagisag", PrintingReport.convertSvgToBufferedImage(logoIcon));
-
-			// Generate the report
-			PrintingReport.generateReport(FormManager.getFrame(), compiledTemplate, parameters,
-					fullName + "_GoodMoral_Certificate", "GoodMoral Cert, Save as PDF");
-
+			if (choice == JOptionPane.YES_OPTION) {
+				if (violationCRUD.updateViolationStatus(violation.getViolationId(), "RESOLVED")) {
+					JOptionPane.showMessageDialog(this, "Violation resolved successfully", "Success",
+							JOptionPane.INFORMATION_MESSAGE);
+					// Reload violations to refresh the table
+					loadViolations(Integer.parseInt(lrnField.getText()), connect);
+				}
+			}
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(FormManager.getFrame(),
-					"Failed to load or generate the report: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Failed to resolve violation: " + e.getMessage(), "Error",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -482,28 +532,26 @@ public class StudentFullData extends Form {
 			GuidanceCounselor counselor = guidanceCounselorDAO.readGuidanceCounselor(1); // Assuming ID 1 for now
 
 			// Create a modal dialog for dropping a student
-			DroppingForm droppingForm = new DroppingForm(connect);
-			droppingForm.populateForm(student.getStudentFirstname() + " " + student.getStudentLastname(), 
-									  trackAndStrand, 
-									  counselor.getFirstName() + " " + counselor.getLastName());
+			DroppingForm droppingForm = new DroppingForm(connect, student, counselor);
 
 			ModalDialog.showModal(this, new SimpleModalBorder(droppingForm, "Drop Confirmation",
-					new SimpleModalBorder.Option[] 
-							{ new SimpleModalBorder.Option("Yes", SimpleModalBorder.YES_OPTION), 
-							  new SimpleModalBorder.Option("No", SimpleModalBorder.NO_OPTION) },
+					new SimpleModalBorder.Option[] { new SimpleModalBorder.Option("Yes", SimpleModalBorder.YES_OPTION),
+							new SimpleModalBorder.Option("No", SimpleModalBorder.NO_OPTION) },
 					(controller, action) -> {
 						if (action == SimpleModalBorder.YES_OPTION) {
 							controller.consume();
 							// Perform the drop student operation
+
 						} else if (action == SimpleModalBorder.NO_OPTION || action == SimpleModalBorder.CLOSE_OPTION
 								|| action == SimpleModalBorder.CANCEL_OPTION) {
 							controller.close();
 						}
 					}), "dropStudentModal");
-			ModalDialog.getDefaultOption().getLayoutOption().setSize(800, 800);
+			ModalDialog.getDefaultOption().getLayoutOption().setSize(950, this.getHeight() - 100);
 		} catch (Exception e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Failed to load student or counselor data.", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Failed to load student or counselor data.", "Error",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }

@@ -15,7 +15,6 @@ import java.time.LocalDate;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -24,12 +23,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 
 import lyfjshs.gomis.Database.DBConnection;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.ModalDialog;
+import raven.modal.component.SimpleModalBorder;
 
 public class AppointmentsListView extends JPanel {
     private JButton closeButton;
@@ -46,135 +48,223 @@ public class AppointmentsListView extends JPanel {
     private void initializeComponents() {
         // Header Panel
         JPanel headerPanel = new JPanel(new BorderLayout());
-        JLabel dateLabel = new JLabel("March 10, 2025"); // Static date for testing
+        JLabel dateLabel = new JLabel("March 10, 2025");
         dateLabel.setFont(new Font("Arial", Font.BOLD, 16));
         headerPanel.add(dateLabel, BorderLayout.WEST);
-        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+        
+        // Use theme-aware colors for borders
+        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, 
+            UIManager.getColor("Separator.foreground")));
         add(headerPanel, BorderLayout.NORTH);
 
         // Body Panel with MigLayout
         JPanel bodyPanel = new JPanel(new MigLayout("wrap 1", "[grow]", "[][][pref!][]"));
         bodyPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
-        // Static appointment count
         JLabel countLabel = new JLabel("2 appointments scheduled");
         countLabel.setFont(new Font("Arial", Font.ITALIC, 12));
-        countLabel.setForeground(Color.GRAY);
+        countLabel.setForeground(UIManager.getColor("Label.disabledText"));
         bodyPanel.add(countLabel, "align center");
 
-        // Static Appointment 1
-        JPanel appointmentPanel1 = new JPanel(new BorderLayout());
-        // Make Appointment Panel Clickable
-        appointmentPanel1.setBorder(BorderFactory.createLineBorder(new Color(208, 208, 208), 1, true));
-        appointmentPanel1.setBackground(new Color(245, 245, 245));
-        // Make Appointment Panel Clickable
-        appointmentPanel1.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        appointmentPanel1.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                appointmentPanel1.setBackground(new Color(220, 220, 220)); // Lighter shade on hover
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                appointmentPanel1.setBackground(new Color(245, 245, 245)); // Original color
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                showAppointmentDetails(LocalDate.of(2025, 3, 10)); // Replace with actual date
-            }
-        });
-
-        JPanel headerPanel1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel timeLabel1 = new JLabel("10:00");
-        timeLabel1.setFont(new Font("Arial", Font.BOLD, 12));
-        JLabel titleLabel1 = new JLabel("Team Meeting");
-        titleLabel1.setFont(new Font("Arial", Font.PLAIN, 13));
-        headerPanel1.add(timeLabel1);
-        headerPanel1.add(titleLabel1);
-        appointmentPanel1.add(headerPanel1, BorderLayout.NORTH);
-        JPanel detailsPanel1 = new JPanel();
-        detailsPanel1.setLayout(new BoxLayout(detailsPanel1, BoxLayout.Y_AXIS));
-        detailsPanel1.setBorder(BorderFactory.createEmptyBorder(0, 70, 0, 0));
-        JLabel appoNotesLabel = new JLabel("Weekly sync with project team");
-        appoNotesLabel.setForeground(Color.GRAY);
-        JLabel statusLabel1 = new JLabel("<html><b>Status:</b> Confirmed</html>");
-        statusLabel1.setForeground(Color.GRAY);
-
-        JLabel appoTypeLabel = new JLabel("Academic Consultation");
-        detailsPanel1.add(appoTypeLabel);
-        detailsPanel1.add(appoNotesLabel);
-        detailsPanel1.add(statusLabel1);
-        appointmentPanel1.add(detailsPanel1, BorderLayout.CENTER);
-        bodyPanel.add(appointmentPanel1, "growx");
-
-        // Separator
+        // Create appointment panels with theme-aware colors
+        createAppointmentPanel1(bodyPanel);
+        
+        // Separator with theme-aware color
         JSeparator separator1 = new JSeparator(SwingConstants.HORIZONTAL);
-        separator1.setForeground(Color.LIGHT_GRAY);
-        separator1.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
+        separator1.setForeground(UIManager.getColor("Separator.foreground"));
         bodyPanel.add(separator1, "growx");
 
-        // Static Appointment 2
-        JPanel appointmentPanel2 = new JPanel(new BorderLayout());
-        appointmentPanel2.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        appointmentPanel2.setBackground(new Color(249, 249, 249));
-        JPanel headerPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel timeLabel2 = new JLabel("14:00");
-        timeLabel2.setFont(new Font("Arial", Font.BOLD, 12));
-        JLabel titleLabel2 = new JLabel("Doctor Appointment");
-        titleLabel2.setFont(new Font("Arial", Font.PLAIN, 13));
-        headerPanel2.add(timeLabel2);
-        headerPanel2.add(titleLabel2);
-        appointmentPanel2.add(headerPanel2, BorderLayout.NORTH);
-        JPanel detailsPanel2 = new JPanel();
-        detailsPanel2.setLayout(new BoxLayout(detailsPanel2, BoxLayout.Y_AXIS));
-        detailsPanel2.setBorder(BorderFactory.createEmptyBorder(0, 70, 0, 0));
-        JLabel descriptionLabel2 = new JLabel("Annual check-up with Dr. Smith");
-        descriptionLabel2.setForeground(Color.GRAY);
-        JLabel statusLabel2 = new JLabel("<html><b>Status:</b> Scheduled</html>");
-        statusLabel2.setForeground(Color.GRAY);
-        detailsPanel2.add(descriptionLabel2);
-        detailsPanel2.add(statusLabel2);
-        appointmentPanel2.add(detailsPanel2, BorderLayout.CENTER);
-        bodyPanel.add(appointmentPanel2, "growx");
+        createAppointmentPanel2(bodyPanel);
 
         JScrollPane scrollPane = new JScrollPane(bodyPanel);
+        scrollPane.setBorder(null);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Footer Panel
+        // Footer with theme-aware colors
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        footerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, 
+            UIManager.getColor("Separator.foreground")));
+        
         closeButton = new JButton("Close");
-        closeButton.setBackground(new Color(244, 67, 54));
-        closeButton.setForeground(Color.WHITE);
-        closeButton.setFocusPainted(false);
-        closeButton.addActionListener(e -> SwingUtilities.getWindowAncestor(this).dispose());
-        footerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
+        closeButton.putClientProperty("JButton.buttonType", "roundRect");
+        closeButton.putClientProperty("JButton.buttonProperties", "color: #f44336"); // Material red color
         footerPanel.add(closeButton);
         add(footerPanel, BorderLayout.SOUTH);
     }
 
-    private void showAppointmentDetails(LocalDate date) {
-        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
-        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
-        try {
-            appointmentDetails.loadAppointmentsForDate(date);
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading appointment details: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
-        dialog.getContentPane().add(appointmentDetails);
-        dialog.setSize(600, 400);
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
+    private void createAppointmentPanel1(JPanel bodyPanel) {
+        JPanel appointmentPanel = new JPanel(new BorderLayout());
+        boolean isDarkTheme = UIManager.getBoolean("dark");
+        
+        // Theme-aware colors
+        Color bgColor = isDarkTheme ? new Color(50, 50, 50) : new Color(245, 245, 245);
+        Color hoverColor = isDarkTheme ? new Color(60, 60, 60) : new Color(235, 235, 235);
+        Color borderColor = isDarkTheme ? new Color(70, 70, 70) : new Color(208, 208, 208);
+        
+        appointmentPanel.setBorder(BorderFactory.createLineBorder(borderColor, 1, true));
+        appointmentPanel.setBackground(bgColor);
+        appointmentPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // Header
+        JPanel headerPanel = createHeaderPanel("10:00", "Team Meeting");
+        appointmentPanel.add(headerPanel, BorderLayout.NORTH);
+
+        // Details
+        JPanel detailsPanel = createDetailsPanel(
+            "Weekly sync with project team",
+            "Confirmed",
+            "Academic Consultation"
+        );
+        appointmentPanel.add(detailsPanel, BorderLayout.CENTER);
+
+        // Hover effect
+        appointmentPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                appointmentPanel.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                appointmentPanel.setBackground(bgColor);
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                showAppointmentDetails(LocalDate.of(2025, 3, 10));
+            }
+        });
+
+        bodyPanel.add(appointmentPanel, "growx");
     }
 
-    // Example usage in a JFrame
+    private void createAppointmentPanel2(JPanel bodyPanel) {
+        JPanel appointmentPanel2 = new JPanel(new BorderLayout());
+        boolean isDarkTheme = UIManager.getBoolean("dark");
+        
+        // Theme-aware colors
+        Color bgColor = isDarkTheme ? new Color(50, 50, 50) : new Color(245, 245, 245);
+        Color hoverColor = isDarkTheme ? new Color(60, 60, 60) : new Color(235, 235, 235);
+        Color borderColor = isDarkTheme ? new Color(70, 70, 70) : new Color(208, 208, 208);
+        
+        appointmentPanel2.setBorder(BorderFactory.createLineBorder(borderColor, 1, true));
+        appointmentPanel2.setBackground(bgColor);
+        appointmentPanel2.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // Header
+        JPanel headerPanel2 = createHeaderPanel("14:00", "Doctor Appointment");
+        appointmentPanel2.add(headerPanel2, BorderLayout.NORTH);
+
+        // Details
+        JPanel detailsPanel2 = createDetailsPanel(
+            "Annual check-up with Dr. Smith",
+            "Scheduled",
+            ""
+        );
+        appointmentPanel2.add(detailsPanel2, BorderLayout.CENTER);
+
+        // Hover effect
+        appointmentPanel2.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                appointmentPanel2.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                appointmentPanel2.setBackground(bgColor);
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                showAppointmentDetails(LocalDate.of(2025, 3, 10));
+            }
+        });
+
+        bodyPanel.add(appointmentPanel2, "growx");
+    }
+
+    private JPanel createHeaderPanel(String time, String title) {
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setOpaque(false);
+        
+        JLabel timeLabel = new JLabel(time);
+        timeLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Arial", Font.PLAIN, 13));
+        
+        headerPanel.add(timeLabel);
+        headerPanel.add(titleLabel);
+        return headerPanel;
+    }
+
+    private JPanel createDetailsPanel(String description, String status, String type) {
+        JPanel detailsPanel = new JPanel();
+        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
+        detailsPanel.setBorder(BorderFactory.createEmptyBorder(0, 70, 0, 0));
+        detailsPanel.setOpaque(false);
+
+        JLabel typeLabel = new JLabel(type);
+        typeLabel.setForeground(UIManager.getColor("Label.foreground"));
+        
+        JLabel descLabel = new JLabel(description);
+        descLabel.setForeground(UIManager.getColor("Label.disabledText"));
+        
+        JLabel statusLabel = new JLabel("<html><b>Status:</b> " + status + "</html>");
+        statusLabel.setForeground(UIManager.getColor("Label.disabledText"));
+
+        detailsPanel.add(typeLabel);
+        detailsPanel.add(descLabel);
+        detailsPanel.add(statusLabel);
+        
+        return detailsPanel;
+    }
+
+    private void showAppointmentDetails(LocalDate date) {
+        if (ModalDialog.isIdExist("appointment_details")) {
+            return;
+        }
+
+        try {
+            AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection, null, null); // Pass null since we don't need selection here
+            appointmentDetails.loadAppointmentsForDate(date);
+
+            // Configure default modal options
+            ModalDialog.getDefaultOption()
+                    .setOpacity(0f) // Transparent background
+                    .setAnimationOnClose(false) // No close animation
+                    .getBorderOption()
+                    .setBorderWidth(0.5f) // Thin border
+                    .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM); // Medium shadow
+
+            // Show the modal dialog
+            ModalDialog.showModal(this,
+                    new SimpleModalBorder(appointmentDetails, "Appointment Details",
+                            new SimpleModalBorder.Option[] {
+                                    new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+                            },
+                            (controller, action) -> {
+                                if (action == SimpleModalBorder.CLOSE_OPTION) {
+                                    controller.close();
+                                }
+                            }),
+                    "appointment_details");
+
+            // Set size
+            ModalDialog.getDefaultOption().getLayoutOption().setSize(600, 400);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error opening appointment details: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLaf.setup(new FlatLightLaf());
+            FlatLaf.setup(new FlatMacDarkLaf());
             JFrame frame = new JFrame("Appointment Dialog");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             Connection connection = null;

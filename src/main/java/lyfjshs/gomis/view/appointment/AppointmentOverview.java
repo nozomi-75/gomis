@@ -3,6 +3,8 @@ package lyfjshs.gomis.view.appointment;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -11,225 +13,249 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.border.LineBorder;
+import javax.swing.UIManager;
+
+import com.formdev.flatlaf.FlatLaf;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
-import lyfjshs.gomis.Database.entity.Participants;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
+import raven.modal.ModalDialog;
+import raven.modal.component.SimpleModalBorder;
 
 public class AppointmentOverview extends JPanel {
-	private final DatePicker datePicker;
-	private final JPanel appointmentsPanel;
-	private final List<Appointment> appointments;
-	private Connection connection;
-	private final AppointmentDAO appointmentDAO;
+    private final DatePicker datePicker;
+    private final JPanel appointmentsPanel;
+    private final List<Appointment> appointments;
+    private Connection connection;
+    private final AppointmentDAO appointmentDAO;
 
-	public AppointmentOverview(AppointmentDAO appointmentDAO, Connection conn) {
-		this.appointmentDAO = appointmentDAO;
-		this.connection = conn;
-		this.appointments = new ArrayList<>();
-		setLayout(new MigLayout("wrap 1", "[grow]", "[][grow]"));
+    public AppointmentOverview(AppointmentDAO appointmentDAO, Connection conn) {
+        this.appointmentDAO = appointmentDAO;
+        this.connection = conn;
+        this.appointments = new ArrayList<>();
+        
+        // Set panel to be opaque and use system background
+        setOpaque(true);
+        setBackground(UIManager.getColor("Panel.background"));
+        setLayout(new MigLayout("insets 0, gap 0", "[grow]", "[][grow]"));
 
-		appointmentsPanel = new JPanel(new MigLayout("wrap 1, fill, gap 10", "[grow]"));
+        // Date picker section with improved styling
+        JPanel datePickerPanel = new JPanel(new MigLayout("insets 5", "[grow]", "[]"));
+        datePickerPanel.setOpaque(true);
+        datePickerPanel.setBackground(UIManager.getColor("Panel.background"));
+        datePickerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, 
+            UIManager.getColor("Separator.foreground")));
+        
+        datePicker = createDatePicker();
+        datePicker.setPreferredSize(new Dimension(0, 35));
+        datePickerPanel.add(datePicker, "grow");
+        add(datePickerPanel, "growx, wrap");
 
-		// Setup UI components
-		datePicker = createDatePicker();
-		datePicker.setPreferredSize(new Dimension(datePicker.getPreferredSize().width, 200)); // Adjust height as needed
+        // Appointments list section with improved styling
+        appointmentsPanel = new JPanel(new MigLayout("insets 5, gap 5", "[grow]", "[]5[]"));
+        appointmentsPanel.setOpaque(true);
+        appointmentsPanel.setBackground(UIManager.getColor("Panel.background"));
 
-		this.add(datePicker, "cell 0 0, grow");
-		this.add(createAppointmentsView(), "cell 0 1, grow");
+        JScrollPane scrollPane = new JScrollPane(appointmentsPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setOpaque(true);
+        scrollPane.setBackground(UIManager.getColor("Panel.background"));
+        scrollPane.getViewport().setOpaque(true);
+        scrollPane.getViewport().setBackground(UIManager.getColor("Panel.background"));
+        
+        add(scrollPane, "grow");
 
-		// Load today's appointments
-		loadAppointments(LocalDate.now());
-	}
+        // Load today's appointments
+        loadAppointments(LocalDate.now());
+    }
 
-	private DatePicker createDatePicker() {
-		DatePicker picker = new DatePicker();
-		picker.addDateSelectionListener(dateEvent -> {
-			if (picker.getDateSelectionMode() == DatePicker.DateSelectionMode.SINGLE_DATE_SELECTED) {
-				LocalDate selectedDate = picker.getSelectedDate();
-				if (selectedDate != null) {
-					loadAppointments(selectedDate);
-				}
-			}
-		});
-		picker.now();
-		picker.setAnimationEnabled(true);
-		return picker;
-	}
+    private DatePicker createDatePicker() {
+        DatePicker picker = new DatePicker();
+        picker.setBackground(UIManager.getColor("Panel.background"));
+        picker.setForeground(UIManager.getColor("Label.foreground"));
+        picker.setOpaque(true);
+        picker.addDateSelectionListener(dateEvent -> {
+            if (picker.getDateSelectionMode() == DatePicker.DateSelectionMode.SINGLE_DATE_SELECTED) {
+                LocalDate selectedDate = picker.getSelectedDate();
+                if (selectedDate != null) {
+                    loadAppointments(selectedDate);
+                }
+            }
+        });
+        picker.now();
+        picker.setAnimationEnabled(true);
+        return picker;
+    }
 
-	private JScrollPane createAppointmentsView() {
-		appointmentsPanel.setBorder(BorderFactory.createTitledBorder("Appointments:"));
-		JScrollPane scrollPane = new JScrollPane(appointmentsPanel);
-		scrollPane.setBorder(null);
-		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // Disable horizontal scrolling
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); // Enable vertical scrolling
-		return scrollPane;
-	}
+    private JPanel createAppointmentCard(Appointment appt) {
+        JPanel card = new JPanel(new MigLayout("insets 8", "[grow]", "[]3[]3[]"));
+        boolean isDarkTheme = FlatLaf.isLafDark();
+        
+        // Theme-aware colors with improved contrast
+        Color bgColor = isDarkTheme ? new Color(45, 45, 45) : new Color(250, 250, 250);
+        Color borderColor = isDarkTheme ? new Color(60, 60, 60) : new Color(220, 220, 220);
+        Color accentColor = getTypeColor(appt.getConsultationType(), isDarkTheme);
+        
+        card.setOpaque(true);
+        card.setBackground(bgColor);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 3, 0, 0, accentColor),
+            BorderFactory.createLineBorder(borderColor, 1)));
 
-	private JPanel createAppointmentCard(Appointment appt) {
-		JPanel card = new JPanel(new MigLayout("insets 5, wrap 1, fill", "[grow]", "[][][][][]"));
-		card.setBorder(new LineBorder(Color.GRAY, 1, true));
-		card.setBackground(new Color(245, 245, 245)); // Light gray background for contrast
+        // Header with time and title
+        JPanel headerPanel = new JPanel(new MigLayout("insets 0", "[grow][]"));
+        headerPanel.setOpaque(false);
+        
+        String timeStr = appt.getAppointmentDateTime().toLocalDateTime()
+            .format(DateTimeFormatter.ofPattern("h:mm a"));
+        JLabel timeLabel = new JLabel(timeStr);
+        timeLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        timeLabel.setForeground(UIManager.getColor("Label.foreground"));
+        
+        JLabel titleLabel = new JLabel(appt.getAppointmentTitle());
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        titleLabel.setForeground(UIManager.getColor("Label.foreground"));
+        
+        headerPanel.add(timeLabel);
+        headerPanel.add(titleLabel, "growx");
+        card.add(headerPanel, "growx, wrap");
 
-		// Title Section
-		JPanel titlePanel = new JPanel(new MigLayout("insets 0", "[grow][]", ""));
-		titlePanel.setOpaque(false);
-		JTextArea nameLabel = new JTextArea(appt.getAppointmentTitle());
-		nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD, 14f));
-		nameLabel.setLineWrap(true); // Enable line wrapping
-		nameLabel.setWrapStyleWord(true); // Wrap at word boundaries
-		nameLabel.setOpaque(false); // Make it transparent
-		nameLabel.setEditable(false); // Make it non-editable
-		nameLabel.setBorder(null); // Remove border for better appearance
-		nameLabel.setPreferredSize(new Dimension(0, 40)); // Allow width to grow
-		nameLabel.setMaximumSize(new Dimension(300, Integer.MAX_VALUE)); // Set a maximum width
-		titlePanel.add(nameLabel, "cell 0 0, growx");
-		JButton viewButton = new JButton("View");
-		viewButton.setPreferredSize(new Dimension(60, 25));
-		viewButton.setBackground(new Color(33, 150, 243)); // Blue theme
-		viewButton.setForeground(Color.WHITE);
-		viewButton.setFocusPainted(false);
-		viewButton.addActionListener(e -> showAppointmentDetailsPopup(appt));
-		titlePanel.add(viewButton, "cell 0 0, align right");
-		card.add(titlePanel, "growx");
+        // Type and status
+        JLabel typeLabel = new JLabel(appt.getConsultationType());
+        typeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        typeLabel.setForeground(isDarkTheme ? new Color(200, 200, 200) : new Color(100, 100, 100));
+        card.add(typeLabel, "growx, wrap");
 
-		// Time Section
-		String timeStr = appt.getAppointmentDateTime().toLocalDateTime().format(DateTimeFormatter.ofPattern("h:mm a"));
-		JLabel timeLabel = new JLabel("Time: " + timeStr);
-		timeLabel.setFont(timeLabel.getFont().deriveFont(Font.PLAIN, 12f));
-		timeLabel.setForeground(Color.DARK_GRAY);
-		card.add(timeLabel, "growx");
+        // Participants count
+        int count = appt.getParticipants() != null ? appt.getParticipants().size() : 0;
+        JLabel participantsLabel = new JLabel(count + " participant(s)");
+        participantsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        participantsLabel.setForeground(isDarkTheme ? new Color(180, 180, 180) : new Color(120, 120, 120));
+        card.add(participantsLabel, "growx");
 
-		// Type Section
-		JLabel typeLabel = new JLabel(
-				"Type: " + (appt.getConsultationType() != null ? appt.getConsultationType() : "N/A"));
-		typeLabel.setFont(typeLabel.getFont().deriveFont(Font.ITALIC));
-		typeLabel.setForeground(new Color(139, 0, 139)); // Purple for type
-		card.add(typeLabel, "growx");
+        // Add hover and click effects
+        card.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                card.setBackground(isDarkTheme ? new Color(60, 60, 60) : new Color(235, 235, 235));
+            }
 
-		// Status Section
-		JLabel statusLabel = new JLabel(
-				"Status: " + (appt.getAppointmentStatus() != null ? appt.getAppointmentStatus() : "N/A"));
-		statusLabel.setFont(statusLabel.getFont().deriveFont(Font.PLAIN, 12f));
-		statusLabel.setForeground(Color.BLACK);
-		card.add(statusLabel, "growx");
+            @Override
+            public void mouseExited(MouseEvent e) {
+                card.setBackground(bgColor);
+            }
 
-		// Participants Summary Section
-		JPanel participantsPanel = new JPanel(new MigLayout("insets 0", "[grow][]", ""));
-		participantsPanel.setOpaque(false);
-		int participantCount = (appt.getParticipants() != null) ? appt.getParticipants().size() : 0;
-		String participantsSummary = "Participants: " + participantCount + " assigned";
-		JLabel participantsLabel = new JLabel(participantsSummary);
-		participantsLabel.setFont(participantsLabel.getFont().deriveFont(Font.PLAIN, 12f));
-		participantsLabel.setForeground(Color.BLUE);
-		participantsLabel.setToolTipText("Click to view participant details in the popup");
-		participantsPanel.add(participantsLabel, "cell 0 0, growx");
-		JButton deleteButton = new JButton("Delete");
-		deleteButton.setPreferredSize(new Dimension(80, 25));
-		deleteButton.setBackground(new Color(244, 67, 54)); // Red theme
-		deleteButton.setForeground(Color.WHITE);
-		deleteButton.setFocusPainted(false);
-		deleteButton.addActionListener(e -> {
-			int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this appointment?",
-					"Confirm Delete", JOptionPane.YES_NO_OPTION);
-			if (confirm == JOptionPane.YES_OPTION) {
-				try {
-					if (appointmentDAO.deleteAppointment(appt.getAppointmentId())) {
-						loadAppointments(appt.getAppointmentDateTime().toLocalDateTime().toLocalDate());
-						JOptionPane.showMessageDialog(this, "Appointment deleted successfully", "Success",
-								JOptionPane.INFORMATION_MESSAGE);
-					}
-				} catch (SQLException ex) {
-					JOptionPane.showMessageDialog(this, "Error deleting appointment: " + ex.getMessage(), "Error",
-							JOptionPane.ERROR_MESSAGE);
-					ex.printStackTrace();
-				}
-			}
-		});
-		participantsPanel.add(deleteButton, "cell 0 0, align right");
-		card.add(participantsPanel, "growx");
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                showAppointmentDetailsPopup(appt);
+            }
+        });
 
-		return card;
-	}
+        return card;
+    }
 
-	private void showAppointmentDetailsPopup(Appointment appt) {
-		StringBuilder details = new StringBuilder();
-		details.append("<html><body style='width: 300px;'>Appointment Details:<br>")
-				.append("ID: ").append(appt.getAppointmentId()).append("<br>")
-				.append("Counselor ID: ")
-				.append(appt.getGuidanceCounselorId() != null ? appt.getGuidanceCounselorId() : "Not assigned")
-				.append("<br>")
-				.append("Title: ").append(appt.getAppointmentTitle()).append("<br>")
-				.append("Type: ").append(appt.getConsultationType() != null ? appt.getConsultationType() : "N/A")
-				.append("<br>")
-				.append("Date/Time: ").append(appt.getAppointmentDateTime().toLocalDateTime()
-						.format(DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a")))
-				.append("<br>")
-				.append("Notes: ").append(appt.getAppointmentNotes() != null ? appt.getAppointmentNotes() : "N/A")
-				.append("<br>")
-				.append("Status: ").append(appt.getAppointmentStatus() != null ? appt.getAppointmentStatus() : "N/A")
-				.append("<br>")
-				.append("<b>Participants:</b><br>");
+    private Color getTypeColor(String type, boolean isDarkTheme) {
+        if (isDarkTheme) {
+            switch (type) {
+                case "Academic Consultation": return new Color(59, 130, 246);  // Bright blue
+                case "Career Guidance": return new Color(147, 51, 234);       // Purple
+                case "Personal Counseling": return new Color(16, 185, 129);   // Green
+                case "Behavioral Counseling": return new Color(202, 138, 4);  // Orange
+                case "Group Counseling": return new Color(239, 68, 68);       // Red
+                default: return new Color(156, 163, 175);                     // Gray
+            }
+        } else {
+            switch (type) {
+                case "Academic Consultation": return new Color(37, 99, 235);   // Slightly darker blue
+                case "Career Guidance": return new Color(126, 34, 206);       // Darker purple
+                case "Personal Counseling": return new Color(5, 150, 105);    // Darker green
+                case "Behavioral Counseling": return new Color(180, 120, 10); // Darker orange
+                case "Group Counseling": return new Color(220, 38, 38);       // Darker red
+                default: return new Color(107, 114, 128);                     // Darker gray
+            }
+        }
+    }
 
-		if (appt.getParticipants() != null && !appt.getParticipants().isEmpty()) {
-			for (Participants p : appt.getParticipants()) {
-				details.append("  - ").append(p.getParticipantFirstName()).append(" ")
-						.append(p.getParticipantLastName());
-				if (p.getStudentUid() != null)
-					details.append(" (Student UID: ").append(p.getStudentUid()).append(")");
-				if (p.getContactNumber() != null)
-					details.append(", Contact: ").append(p.getContactNumber());
-				if (p.getEmail() != null)
-					details.append(", Email: ").append(p.getEmail());
-				details.append("<br>");
-			}
-		} else {
-			details.append("  - No participants assigned<br>");
-		}
-		details.append("</body></html>");
+    private void showAppointmentDetailsPopup(Appointment appt) {
+        // Prevent multiple instances of the same modal
+        if (ModalDialog.isIdExist("appointment_details_" + appt.getAppointmentId())) {
+            return;
+        }
 
-		JOptionPane.showMessageDialog(this, details.toString(), "Appointment Details",
-				JOptionPane.INFORMATION_MESSAGE, null);
-	}
+        try {
+            // Create and load the appointment details panel
+            AppointmentDayDetails detailsPanel = new AppointmentDayDetails(connection, null, null); // Pass null since we don't need selection here
+            detailsPanel.loadAppointmentDetails(appt);
 
-	private void loadAppointments(LocalDate date) {
-		SwingUtilities.invokeLater(() -> {
-			appointmentsPanel.removeAll();
-			List<Appointment> loadedAppointments = null;
-			try {
-				loadedAppointments = appointmentDAO.getAppointmentsForDate(date);
-			} catch (SQLException e) {
-				JOptionPane.showMessageDialog(this, "Error fetching appointments: " + e.getMessage(),
-						"Error", JOptionPane.ERROR_MESSAGE);
-				e.printStackTrace();
-			}
-			appointments.clear();
-			if (loadedAppointments != null) {
-				appointments.addAll(loadedAppointments);
-			}
+            // Configure modal options to match the desired style
+            ModalDialog.getDefaultOption()
+                    .setOpacity(0f) // Transparent background
+                    .setAnimationOnClose(false) // No close animation
+                    .getBorderOption()
+                    .setBorderWidth(0.5f) // Thin border
+                    .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM); // Medium shadow
 
-			if (appointments.isEmpty()) {
-				JLabel noAppointmentsLabel = new JLabel("No appointments for this date", SwingConstants.CENTER);
-				appointmentsPanel.add(noAppointmentsLabel, "grow");
-			} else {
-				for (Appointment appt : appointments) {
-					appointmentsPanel.add(createAppointmentCard(appt), "grow");
-				}
-			}
+            // Show the modal dialog with a "Close" button
+            ModalDialog.showModal(this,
+                    new SimpleModalBorder(detailsPanel, "Appointment Details",
+                            new SimpleModalBorder.Option[] {
+                                    new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+                            },
+                            (controller, action) -> {
+                                if (action == SimpleModalBorder.CLOSE_OPTION) {
+                                    controller.close();
+                                }
+                            }),
+                    "appointment_details_" + appt.getAppointmentId());
 
-			appointmentsPanel.revalidate();
-			appointmentsPanel.repaint();
-		});
-	}
+            // Set a larger size to accommodate the detailed layout
+            ModalDialog.getDefaultOption().getLayoutOption().setSize(700, this.getHeight() - 50);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error opening appointment details: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void loadAppointments(LocalDate date) {
+        SwingUtilities.invokeLater(() -> {
+            appointmentsPanel.removeAll();
+            List<Appointment> loadedAppointments = null;
+            try {
+                loadedAppointments = appointmentDAO.getAppointmentsForDate(date);
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Error fetching appointments: " + e.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+            appointments.clear();
+            if (loadedAppointments != null) {
+                appointments.addAll(loadedAppointments);
+            }
+
+            if (appointments.isEmpty()) {
+                JLabel noAppointmentsLabel = new JLabel("No appointments for this date", SwingConstants.CENTER);
+                noAppointmentsLabel.setForeground(UIManager.getColor("Label.foreground"));
+                appointmentsPanel.add(noAppointmentsLabel, "grow");
+            } else {
+                for (Appointment appt : appointments) {
+                    appointmentsPanel.add(createAppointmentCard(appt), "grow");
+                }
+            }
+
+            appointmentsPanel.revalidate();
+            appointmentsPanel.repaint();
+        });
+    }
 }

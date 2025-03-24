@@ -3,15 +3,21 @@ package lyfjshs.gomis.view;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
@@ -29,7 +35,6 @@ import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
 import lyfjshs.gomis.view.appointment.AppointmentOverview;
-import lyfjshs.gomis.view.violation.ViolationFullData;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
@@ -44,9 +49,10 @@ public class MainDashboard extends Form {
 		this.connection = conn;
 		this.setLayout(new BorderLayout());
 
-		contentPanel = new JPanel(new MigLayout("fill", "[grow][290]", "[grow 70][grow]"));
-		this.add(contentPanel, BorderLayout.CENTER); // Center the content panel
+		contentPanel = new JPanel(new MigLayout("fill", "[grow][300]", "[grow][]"));
+		this.add(contentPanel, BorderLayout.CENTER);
 
+		// Left side with violations table
 		centralTablePanel = new JPanel(new MigLayout("", "[grow]", "[30px][grow]"));
 		contentPanel.add(centralTablePanel, "cell 0 0,grow");
 
@@ -61,16 +67,24 @@ public class MainDashboard extends Form {
 		JScrollPane tableScrollPane = createTablePanel();
 		centralTablePanel.add(tableScrollPane, "cell 0 1,grow");
 
-		JPanel sideRPanel = new JPanel(new MigLayout("", "[center]", "[][grow][]"));
+		// Right side with appointments overview
+		JPanel sideRPanel = new JPanel(new MigLayout("insets 0, gap 0", "[grow]", "[][grow]"));
+		sideRPanel.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, UIManager.getColor("Separator.foreground")));
 		contentPanel.add(sideRPanel, "cell 1 0 1 2,grow");
 
-		JLabel lblNewLabel_1 = new JLabel("Appointments overview");
-		lblNewLabel_1.putClientProperty("FlatLaf.styleClass", "large");
+		// Appointments header
+		JPanel headerPanel = new JPanel(new MigLayout("insets 10", "[grow]", "[]"));
+		JLabel appointmentsLabel = new JLabel("Appointments");
+		appointmentsLabel.putClientProperty("FlatLaf.styleClass", "h2");
+		headerPanel.add(appointmentsLabel, "grow");
+		sideRPanel.add(headerPanel, "growx, wrap");
 
-		sideRPanel.add(lblNewLabel_1, "cell 0 0");
+		// Appointments content
 		AppointmentDAO appointmentDAO = new AppointmentDAO(conn);
 		AppointmentOverview appointmentOverview = new AppointmentOverview(appointmentDAO, conn);
-		sideRPanel.add(appointmentOverview, "cell 0 1,grow");
+		JScrollPane scrollPane = new JScrollPane(appointmentOverview);
+		scrollPane.setBorder(null);
+		sideRPanel.add(scrollPane, "grow");
 
 		JPanel actionPanel = new JPanel(new MigLayout("fill", "[grow]", "[]"));
 		contentPanel.add(actionPanel, "cell 0 1,grow");
@@ -104,10 +118,10 @@ public class MainDashboard extends Form {
 			showViolationDetails(lrn);
 		}, new Color(0, 150, 136), viewIcon);
 
-//		actionsColumn.addAction("Resolve", (t, row) -> {
-//			String lrn = (String) t.getValueAt(row, 0);
-//			resolveViolation(lrn);
-//		}, new Color(0, 150, 136), resolveIcon);
+		actionsColumn.addAction("Resolve", (t, row) -> {
+			String lrn = (String) t.getValueAt(row, 0);
+			resolveViolation(lrn);
+		}, new Color(0, 150, 136), resolveIcon);
 
 		Object[][] initialData = new Object[0][columnNames.length];
 		GTable table = new GTable(initialData, columnNames, columnTypes, editableColumns, columnWidths, alignments,
@@ -122,15 +136,24 @@ public class MainDashboard extends Form {
 
 			List<ViolationRecord> violations = violationCRUD.getAllViolations();
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
+			
 			for (ViolationRecord violation : violations) {
 				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
-				if (participant.getStudentUid() != null) {
+				if (participant != null && participant.getStudentUid() != null) {
 					Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
-					String fullName = String.format("%s %s", student.getStudentFirstname(),
-							student.getStudentLastname());
-					model.addRow(new Object[] { student.getStudentLrn(), fullName, violation.getViolationType(),
-							violation.getStatus(), null // Actions column handled by TableActionManager
-					});
+					if (student != null) {
+						String fullName = String.format("%s %s",
+								student.getStudentFirstname() != null ? student.getStudentFirstname() : "",
+								student.getStudentLastname() != null ? student.getStudentLastname() : "").trim();
+
+						model.addRow(new Object[] { 
+							student.getStudentLrn(), 
+							fullName,
+							violation.getViolationType(),  // Changed from student.getStudentSex()
+							violation.getStatus(),         // Changed from student.getSchoolSection()
+							"actions"                      // This column will be handled by TableActionManager
+						});
+					}
 				}
 			}
 		} catch (SQLException e) {
@@ -144,38 +167,143 @@ public class MainDashboard extends Form {
 
 	private void showViolationDetails(String lrn) {
 		try {
-			// Get violation data
 			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
 			ViolationRecord violation = violationCRUD.getViolationByLRN(lrn);
 
 			if (violation != null) {
-				// Create and show violation details panel
-				JPanel violationDetailPanel = new ViolationFullData(violation, connection);
+				// Create panel with proper styling
+				JPanel detailPanel = new JPanel(new MigLayout("fillx, insets 20", "[30%][70%]", "[][][][][][][][]"));
+				detailPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+				// Fetch related data
+				ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
+				StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
+				Student student = participant != null && participant.getStudentUid() != null ? 
+					studentsDataDAO.getStudentById(participant.getStudentUid()) : null;
+
+				// Create header section
+				JLabel headerLabel = new JLabel("Violation Information");
+				headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+				detailPanel.add(headerLabel, "span, center, gapbottom 15");
+
+				// Add student information
+				if (student != null) {
+					createSection(detailPanel, "Student Information", new String[][] {
+						{"Student LRN:", student.getStudentLrn()},
+						{"Student Name:", student.getStudentFirstname() + " " + student.getStudentLastname()}
+					});
+				}
+
+				// Add violation information
+				createSection(detailPanel, "Violation Details", new String[][] {
+					{"Violation Type:", violation.getViolationType()},
+					{"Description:", violation.getViolationDescription()},
+					{"Status:", violation.getStatus()},
+					{"Date:", violation.getUpdatedAt().toString()}
+				});
+
+				// Add text areas with improved styling
+				createTextAreaField(detailPanel, "Anecdotal Record:", violation.getAnecdotalRecord(), 5);
+				createTextAreaField(detailPanel, "Reinforcement:", violation.getReinforcement(), 5);
+
+				// Configure modal options based on violation status
+				SimpleModalBorder.Option[] options;
+				if (!"Resolved".equals(violation.getStatus())) {
+					options = new SimpleModalBorder.Option[] {
+						new SimpleModalBorder.Option("Resolve", SimpleModalBorder.YES_OPTION),
+						new SimpleModalBorder.Option("Close", SimpleModalBorder.NO_OPTION)
+					};
+				} else {
+					options = new SimpleModalBorder.Option[] {
+						new SimpleModalBorder.Option("Close", SimpleModalBorder.NO_OPTION)
+					};
+				}
+
+				// Show modal with proper configuration
 				ModalDialog.showModal(this,
-						new SimpleModalBorder(violationDetailPanel, "Violation Details", new SimpleModalBorder.Option[] {
-							new SimpleModalBorder.Option("View in Violation Record", SimpleModalBorder.YES_OPTION),
-						}, (controller, action) -> {
+					new SimpleModalBorder(detailPanel, "Violation Details", options,
+						(controller, action) -> {
 							if (action == SimpleModalBorder.YES_OPTION) {
-								controller.consume();
-								// actions todo next after Confirm
-							} else if (action == SimpleModalBorder.NO_OPTION|| action == SimpleModalBorder.CLOSE_OPTION
-									|| action == SimpleModalBorder.CANCEL_OPTION) {
+								resolveViolation(lrn);
 								controller.close();
-								refreshTable();
-								// actions todo next after Close or Cancel
+							} else if (action == SimpleModalBorder.NO_OPTION || 
+									 action == SimpleModalBorder.CLOSE_OPTION) {
+								controller.close();
 							}
+							refreshTable();
 						}),
-						"ViolationDetails");
-					// set size of modal dialog to 800x800
-					ModalDialog.getDefaultOption().getLayoutOption().setSize(800, 800);
-			} else if (violation == null) {
-				JOptionPane.showMessageDialog(this, "Violation not found", "Error", JOptionPane.ERROR_MESSAGE);
+					"ViolationDetails");
+
+				// Configure modal appearance
+				ModalDialog.getDefaultOption().getLayoutOption()
+					.setSize(800, 600);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Error retrieving violation details: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Error retrieving violation details: " + e.getMessage());
+		}
+	}
+
+	private void createSection(JPanel panel, String title, String[][] fields) {
+		JLabel sectionLabel = new JLabel(title);
+		sectionLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+		panel.add(sectionLabel, "span, gaptop 10, gapbottom 5");
+
+		for (String[] field : fields) {
+			addDetailField(panel, field[0], field[1]);
+		}
+	}
+
+	private void createTextAreaField(JPanel panel, String label, String text, int rows) {
+		JLabel fieldLabel = new JLabel(label);
+		fieldLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+		panel.add(fieldLabel, "span, gaptop 10");
+
+		JTextArea textArea = new JTextArea(text);
+		textArea.setRows(rows);
+		textArea.setLineWrap(true);
+		textArea.setWrapStyleWord(true);
+		textArea.setEditable(false);
+		textArea.setBackground(new Color(245, 245, 245));
+		textArea.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createLineBorder(new Color(200, 200, 200)),
+			BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+
+		JScrollPane scrollPane = new JScrollPane(textArea);
+		scrollPane.setPreferredSize(new Dimension(0, rows * 20));
+		panel.add(scrollPane, "span, growx, gapbottom 10");
+	}
+
+	private void addDetailField(JPanel panel, String label, String value) {
+		panel.add(new JLabel(label), "cell 0 " + panel.getComponentCount()/2);
+		panel.add(new JLabel(value != null ? value : ""), "cell 1 " + panel.getComponentCount()/2);
+	}
+
+	private void resolveViolation(String lrn) {
+		try {
+			int option = JOptionPane.showConfirmDialog(this,
+				"Are you sure you want to resolve this violation?",
+				"Confirm Resolution",
+				JOptionPane.YES_NO_OPTION);
+				
+			if (option == JOptionPane.YES_OPTION) {
+				ViolationCRUD violationCRUD = new ViolationCRUD(connection);
+				ViolationRecord violation = violationCRUD.getViolationByLRN(lrn);
+				
+				if (violation != null) {
+					boolean success = violationCRUD.updateViolationStatus(violation.getViolationId(), "Resolved");
+					if (success) {
+						JOptionPane.showMessageDialog(this, "Violation has been resolved successfully!");
+						refreshTable();
+					} else {
+						JOptionPane.showMessageDialog(this, "Failed to resolve violation.", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Error resolving violation: " + e.getMessage());
 		}
 	}
 
@@ -198,43 +326,57 @@ public class MainDashboard extends Form {
 	}
 
 	private JPanel createActionPanel() {
-		JPanel panel = new JPanel(new MigLayout("", "[grow][][grow][][grow][][grow]", "[][][][][]"));
+		JPanel panel = new JPanel(new MigLayout("", "[grow][][grow][][grow][][grow][][grow]", "[][][][][][]"));
+
+		JLabel violationLabel = new JLabel("Session Form");
+		violationLabel.putClientProperty("FlatLaf.styleClass", "large");
 
 		JLabel titleLabel = new JLabel("Management");
 		titleLabel.putClientProperty("FlatLaf.styleClass", "h1");
-		panel.add(titleLabel, "cell 0 0 4 1,growx,aligny center");
+		panel.add(titleLabel, "cell 0 0 9 1,growx,aligny center");
 
-		JLabel violationLabel = new JLabel("Create a Session");
-		violationLabel.putClientProperty("FlatLaf.styleClass", "large");
-		panel.add(violationLabel, "cell 1 2,alignx center");
+		JLabel lblNewLabel_1 = new JLabel("Incident Forms");
+		panel.add(lblNewLabel_1, "cell 1 2,alignx center");
+		panel.add(violationLabel, "cell 3 2,alignx center");
 
 		JLabel appointmentLabel = new JLabel("Appointment");
 		appointmentLabel.putClientProperty("FlatLaf.styleClass", "large");
-		panel.add(appointmentLabel, "cell 3 2,alignx center");
+		panel.add(appointmentLabel, "cell 5 2,alignx center");
 
 		JLabel studentLabel = new JLabel("Student");
 		studentLabel.putClientProperty("FlatLaf.styleClass", "large");
-		panel.add(studentLabel, "cell 5 2,alignx center");
+		panel.add(studentLabel, "cell 7 2,alignx center");
+
+		FlatButton standardButton_1_1 = new FlatButton();
+		standardButton_1_1.setText("Print INITIAL Incident");
+		standardButton_1_1.setButtonType(ButtonType.none);
+		panel.add(standardButton_1_1, "flowx,cell 1 3,growx");
 
 		FlatButton standardButton_1 = new FlatButton();
-		standardButton_1.setText("Session Form");
+		standardButton_1.setText("Create a Session");
 		standardButton_1.setButtonType(ButtonType.none);
-		panel.add(standardButton_1, "cell 1 3");
+		panel.add(standardButton_1, "cell 3 3,growx");
 
 		FlatButton standardButton_2 = new FlatButton();
 		standardButton_2.setText("Set Appointment");
 		standardButton_2.setButtonType(ButtonType.none);
-		panel.add(standardButton_2, "flowx,cell 3 3");
-
-		FlatButton standardButton_3 = new FlatButton();
-		standardButton_3.setText("View Appointments");
-		standardButton_3.setButtonType(ButtonType.none);
-		panel.add(standardButton_3, "cell 3 3");
+		panel.add(standardButton_2, "flowx,cell 5 3,growx");
 
 		FlatButton standardButton_4 = new FlatButton();
 		standardButton_4.setText("View Students");
 		standardButton_4.setButtonType(ButtonType.none);
-		panel.add(standardButton_4, "cell 5 3");
+		panel.add(standardButton_4, "flowx,cell 7 3,growx");
+
+		JButton btnNewButton = new JButton("Create a Incident Record");
+		panel.add(btnNewButton, "cell 1 4");
+
+		FlatButton standardButton_3 = new FlatButton();
+		standardButton_3.setText("View Appointments");
+		standardButton_3.setButtonType(ButtonType.none);
+		panel.add(standardButton_3, "cell 5 4,growx");
+
+		JButton btnNewButton_1 = new JButton("Search Student");
+		panel.add(btnNewButton_1, "cell 7 4");
 		return panel;
 	}
 

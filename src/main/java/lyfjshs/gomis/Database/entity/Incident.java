@@ -14,6 +14,7 @@ public class Incident {
     private Timestamp updatedAt;
     private Student student;
     private Participants participants;
+    private String narrative;  // Add narrative field
     
     // Constructor
     public Incident(int incidentId, int participantId, Timestamp incidentDate, String incidentDescription,
@@ -26,6 +27,7 @@ public class Incident {
         this.recommendation = recommendation;
         this.status = status;
         this.updatedAt = updatedAt;
+        this.narrative = incidentDescription; // Initialize narrative with description
     }
 
     // Default constructor
@@ -96,6 +98,14 @@ public class Incident {
         this.updatedAt = updatedAt;
     }
 
+    public String getNarrative() {
+        return narrative;
+    }
+
+    public void setNarrative(String narrative) {
+        this.narrative = narrative;
+    }
+
     @Override
     public String toString() {
         return "Incident{" +
@@ -107,6 +117,7 @@ public class Incident {
                 ", recommendation='" + recommendation + '\'' +
                 ", status='" + status + '\'' +
                 ", updatedAt=" + updatedAt +
+                ", narrative='" + narrative + '\'' +
                 '}';
     }
 
@@ -115,12 +126,12 @@ public class Incident {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Incident incident = (Incident) o;
-        return incidentId == incident.incidentId && participantId == incident.participantId && Objects.equals(incidentDate, incident.incidentDate) && Objects.equals(incidentDescription, incident.incidentDescription) && Objects.equals(actionTaken, incident.actionTaken) && Objects.equals(recommendation, incident.recommendation) && Objects.equals(status, incident.status) && Objects.equals(updatedAt, incident.updatedAt);
+        return incidentId == incident.incidentId && participantId == incident.participantId && Objects.equals(incidentDate, incident.incidentDate) && Objects.equals(incidentDescription, incident.incidentDescription) && Objects.equals(actionTaken, incident.actionTaken) && Objects.equals(recommendation, incident.recommendation) && Objects.equals(status, incident.status) && Objects.equals(updatedAt, incident.updatedAt) && Objects.equals(narrative, incident.narrative);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(incidentId, participantId, incidentDate, incidentDescription, actionTaken, recommendation, status, updatedAt);
+        return Objects.hash(incidentId, participantId, incidentDate, incidentDescription, actionTaken, recommendation, status, updatedAt, narrative);
     }
 
 	/**

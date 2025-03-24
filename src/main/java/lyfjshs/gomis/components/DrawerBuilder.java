@@ -9,6 +9,7 @@ import javax.swing.UIManager;
 import com.formdev.flatlaf.FlatClientProperties;
 
 import lyfjshs.gomis.Main;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.FormManager.AllForms;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
@@ -75,7 +76,19 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 	 */
 	@Override
 	public SimpleHeaderData getSimpleHeaderData() {
-		AvatarIcon icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x.png"), 50, 50, 3.5f);
+		GuidanceCounselor counselor = Main.formManager.getCounselorObject();
+		
+		// Create avatar icon
+		AvatarIcon icon;
+		if (counselor != null && counselor.getProfilePicture() != null) {
+			 // Convert byte[] to ImageIcon first
+            javax.swing.ImageIcon imageIcon = new javax.swing.ImageIcon(counselor.getProfilePicture());
+            icon = new AvatarIcon(imageIcon, 50, 50, 3.5f);
+		} else {
+			// Use default logo if no profile picture
+			icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x.png"), 50, 50, 3.5f);
+		}
+		
 		icon.setType(AvatarIcon.Type.MASK_SQUIRCLE);
 		icon.setBorder(2, 2);
 		changeAvatarIconBorderColor(icon);
@@ -86,19 +99,16 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 			}
 		});
 
-		String fullName = Main.formManager.getCounselorFullName();
-		String position = Main.formManager.getCounselorPosition();
+		String fullName = counselor != null ? 
+			counselor.getFirstName() + " " + counselor.getMiddleName() + " " + counselor.getLastName() :
+			"Guest User";
+			
+		String position = counselor != null ? 
+			counselor.getPosition() :
+			"No Position";
 
 		// Debug: Print the details being set in the header
 		System.out.println("Drawer Header: " + fullName + ", " + position);
-
-		// Add null checks
-		if (fullName == null || fullName.trim().equals("null null")) {
-			fullName = "Test User";
-		}
-		if (position == null || position.trim().isEmpty()) {
-			position = "Test Position";
-		}
 
 		return new SimpleHeaderData()
 				.setIcon(icon)
@@ -251,4 +261,25 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 	private static String getDrawerBackgroundStyle() {
 		return "[light]background:tint($Panel.background,100%);" + "[dark]background:tint($Panel.background,5%);";
 	}
+
+	public static void switchToSessionsForm() {
+        Form[] forms = FormManager.getForms();
+        SessionsForm sessionsForm = null;
+        
+        // Try to find existing SessionsForm
+        for (Form form : forms) {
+            if (form instanceof SessionsForm) {
+                sessionsForm = (SessionsForm) form;
+                break;
+            }
+        }
+        
+        // If not found, create new one
+        if (sessionsForm == null) {
+            sessionsForm = (SessionsForm) AllForms.getForm(SessionsForm.class, conn);
+        }
+        
+        // Show the form
+        FormManager.showForm(sessionsForm);
+    }
 }

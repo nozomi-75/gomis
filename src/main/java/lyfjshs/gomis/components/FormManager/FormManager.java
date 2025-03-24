@@ -11,8 +11,8 @@ import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.DrawerBuilder;
-import lyfjshs.gomis.view.LoginView;
 import lyfjshs.gomis.view.MainDashboard;
+import lyfjshs.gomis.view.login.LoginView;
 import raven.modal.Drawer;
 
 /**
@@ -73,7 +73,7 @@ public class FormManager {
      * and displaying the navigation drawer.
      */
     public static void login(Connection conn) {
-        Drawer.installDrawer(Main.jFrame, new DrawerBuilder(conn));
+        Drawer.installDrawer(Main.gFrame, new DrawerBuilder(conn));
         Drawer.setVisible(true);
         frame.getContentPane().removeAll();
         frame.getContentPane().add(getMainForm());
@@ -143,10 +143,15 @@ public class FormManager {
     private GuidanceCounselor counselorObjedct;
 
     public void setCounselorDetails(GuidanceCounselor counselor) {
+        if (counselor == null) {
+            System.err.println("Warning: Attempting to set null counselor");
+            return;
+        }
         this.counselorObjedct = counselor;
         counselorFIRST_NAME = counselor.getFirstName();
         counselorLAST_NAME = counselor.getLastName();
         counselorPosition = counselor.getPosition();
+        counselorID = counselor.getGuidanceCounselorId();
         System.out.println(
                 "Counselor Details Set: " + counselorFIRST_NAME + " " + counselorLAST_NAME + ", " + counselorPosition); // Debug
                                                                                                                         // statement
@@ -157,7 +162,11 @@ public class FormManager {
     }
 
     public int getCounselorID() {
-        System.out.println("Getting Counselor ID: " + counselorID); // Debug statement
+        // Add null check and default value
+        if (counselorObjedct == null) {
+            System.err.println("Warning: Counselor object is null");
+            return 1; // Default ID
+        }
         return counselorObjedct.getGuidanceCounselorId();
     }
 
@@ -173,6 +182,28 @@ public class FormManager {
 
     public String getCounselorPosition() {
         return counselorPosition;
+    }
+
+    public static Form[] getForms() {
+        if (mainForm != null) {
+            return mainForm.getAllForms();
+        }
+        return new Form[0];
+    }
+
+    public static void refreshAllForms() {
+        if (mainForm != null) {
+            Form[] forms = mainForm.getAllForms();
+            for (Form form : forms) {
+                form.formRefresh();
+            }
+        }
+        Main.gFrame.refresh();
+        if (Drawer.isOpen()) {
+            // Update drawer by closing and re-showing it
+            Drawer.closeDrawer();
+            Drawer.showDrawer();
+        }
     }
 
 }

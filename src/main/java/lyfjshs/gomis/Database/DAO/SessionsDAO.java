@@ -229,19 +229,24 @@ public class SessionsDAO {
 
     public List<Participants> getParticipantsBySessionId(int sessionId) throws SQLException {
         List<Participants> participants = new ArrayList<>();
-        String sql = "SELECT p.* FROM PARTICIPANTS p JOIN SESSIONS_PARTICIPANTS sp ON p.PARTICIPANT_ID = sp.PARTICIPANT_ID WHERE sp.SESSION_ID = ?";
+        String sql = "SELECT p.* FROM PARTICIPANTS p " +
+                     "JOIN SESSIONS_PARTICIPANTS sp ON p.PARTICIPANT_ID = sp.PARTICIPANT_ID " +
+                     "WHERE sp.SESSION_ID = ?";
+                     
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, sessionId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    participants.add(new Participants(
-                            rs.getInt("PARTICIPANT_ID"),
-                            rs.getObject("STUDENT_UID", Integer.class), // Handle potential null values
-                            rs.getString("PARTICIPANT_TYPE"),
-                            rs.getString("PARTICIPANT_LASTNAME"),
-                            rs.getString("PARTICIPANT_FIRSTNAME"),
-                            rs.getString("EMAIL"),
-                            rs.getString("CONTACT_NUMBER")));
+                    Participants participant = new Participants(
+                        rs.getObject("STUDENT_UID", Integer.class),
+                        rs.getString("PARTICIPANT_TYPE"),
+                        rs.getString("PARTICIPANT_LASTNAME"),
+                        rs.getString("PARTICIPANT_FIRSTNAME"),
+                        rs.getString("PARTICIPANT_SEX"),
+                        rs.getString("CONTACT_NUMBER")
+                    );
+                    participant.setParticipantId(rs.getInt("PARTICIPANT_ID"));
+                    participants.add(participant);
                 }
             }
         }

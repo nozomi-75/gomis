@@ -11,7 +11,6 @@ import net.miginfocom.swing.MigLayout;
 public class ViolationRecordsDashboard extends JFrame {
 
     private JPanel contentPane;
-    private JTextField searchField;
     private List<JPanel> recordPanels = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -29,21 +28,6 @@ public class ViolationRecordsDashboard extends JFrame {
         contentPane = new JPanel(new MigLayout("fillx, wrap 1", "[grow]"));
         JScrollPane scrollPane = new JScrollPane(contentPane);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        // Search Bar
-        JPanel searchPanel = new JPanel(new MigLayout("fillx, insets 5", "[grow]"));
-        searchField = new JTextField();
-        searchField.setToolTipText("Search by name, LRN, or violation type...");
-        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { filterRecords(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { filterRecords(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { filterRecords(); }
-        });
-
-        searchPanel.add(new JLabel("🔍 Search:"), "split 2");
-        searchPanel.add(searchField, "growx");
-
-        contentPane.add(searchPanel, "growx");
 
         // Sample Violation Records
         addViolationRecord("Juan Carlos Dela Cruz", "136752180058", "10 - Einstein", 16, "Male",
@@ -141,24 +125,6 @@ public class ViolationRecordsDashboard extends JFrame {
         contentPane.add(panel, "growx");
     }
 
-    private void filterRecords() {
-        String searchText = searchField.getText().toLowerCase();
-        for (JPanel panel : recordPanels) {
-            Component[] components = panel.getComponents();
-            if (components.length > 0 && components[0] instanceof JPanel) {
-                JPanel headerPanel = (JPanel) components[0];
-                JLabel nameLabel = (JLabel) headerPanel.getComponent(0);
-                JLabel detailsLabel = (JLabel) headerPanel.getComponent(2);
-
-                boolean matches = nameLabel.getText().toLowerCase().contains(searchText)
-                        || detailsLabel.getText().toLowerCase().contains(searchText);
-
-                panel.setVisible(matches);
-            }
-        }
-        contentPane.revalidate();
-        contentPane.repaint();
-    }
 
     private Color getStatusColor(String status) {
         switch (status.toLowerCase()) {

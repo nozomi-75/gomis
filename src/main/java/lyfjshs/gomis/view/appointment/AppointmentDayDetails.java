@@ -5,18 +5,15 @@ import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 
-import com.formdev.flatlaf.themes.FlatMacLightLaf;
-
-import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
@@ -27,9 +24,15 @@ import net.miginfocom.swing.MigLayout;
 public class AppointmentDayDetails extends JPanel {
     private Connection connection;
     private JPanel bodyPanel;
+    private Consumer<Participants> onParticipantSelect;
+    private Consumer<Appointment> onRedirectToSession;
+    // Add field to store current appointment
+    private Appointment currentAppointment;
 
-    public AppointmentDayDetails(Connection connection) {
+    public AppointmentDayDetails(Connection connection, Consumer<Participants> onParticipantSelect, Consumer<Appointment> onRedirectToSession) {
         this.connection = connection;
+        this.onParticipantSelect = onParticipantSelect;
+        this.onRedirectToSession = onRedirectToSession;
         setLayout(new MigLayout("fill, insets 10", "[grow]", "[grow]"));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         initializeComponents();
@@ -72,10 +75,16 @@ public class AppointmentDayDetails extends JPanel {
 
     // Method to load a specific appointment
     public void loadAppointmentDetails(Appointment appointment) {
+        this.currentAppointment = appointment; // Store the current appointment
         bodyPanel.removeAll(); // Clear existing components
         displayAppointmentDetails(appointment);
         bodyPanel.revalidate();
         bodyPanel.repaint();
+    }
+
+    // Add getter for current appointment
+    public Appointment getCurrentAppointment() {
+        return currentAppointment;
     }
 
     // Method to display no appointments message
@@ -90,13 +99,17 @@ public class AppointmentDayDetails extends JPanel {
         // Appointment Information Section
         JPanel appointmentSection = new JPanel(new MigLayout("wrap 2, insets 10", "[grow][grow]", "[]"));
         appointmentSection.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Appointment Information"));
-        appointmentSection.setBackground(new Color(245, 245, 245));
+        
+        // Format date and time in 12-hour format
+        String dateTimeStr = appointment.getAppointmentDateTime().toLocalDateTime()
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a"));
+        
         appointmentSection.add(new JLabel("Title: "), "cell 0 0, alignx right");
         appointmentSection.add(new JLabel(appointment.getAppointmentTitle()), "cell 1 0");
         appointmentSection.add(new JLabel("Type: "), "cell 0 1, alignx right");
         appointmentSection.add(new JLabel(appointment.getConsultationType()), "cell 1 1");
         appointmentSection.add(new JLabel("Date & Time: "), "cell 0 2, alignx right");
-        appointmentSection.add(new JLabel(appointment.getAppointmentDateTime().toString()), "cell 1 2");
+        appointmentSection.add(new JLabel(dateTimeStr), "cell 1 2");
         appointmentSection.add(new JLabel("Status: "), "cell 0 3, alignx right");
         appointmentSection.add(new JLabel(appointment.getAppointmentStatus()), "cell 1 3");
         if (appointment.getAppointmentNotes() != null && !appointment.getAppointmentNotes().isEmpty()) {
@@ -110,7 +123,6 @@ public class AppointmentDayDetails extends JPanel {
         // Participants Section
         JPanel participantsSection = new JPanel(new MigLayout("wrap 1, insets 10", "[grow]", "[]"));
         participantsSection.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Participants"));
-        participantsSection.setBackground(new Color(245, 245, 245));
         if (appointment.getParticipants() != null && !appointment.getParticipants().isEmpty()) {
             for (Participants participant : appointment.getParticipants()) {
                 String participantInfo = "Name: " + participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
@@ -120,8 +132,8 @@ public class AppointmentDayDetails extends JPanel {
                 if (participant.getContactNumber() != null) {
                     participantInfo += ", Contact: " + participant.getContactNumber();
                 }
-                if (participant.getEmail() != null) {
-                    participantInfo += ", Email: " + participant.getEmail();
+                if (participant.getSex() != null) {
+                    participantInfo += ", Email: " + participant.getSex();
                 }
                 participantsSection.add(new JLabel(participantInfo), "growx");
             }
@@ -133,7 +145,6 @@ public class AppointmentDayDetails extends JPanel {
         // Guidance Counselor Section
         JPanel counselorSection = new JPanel(new MigLayout("wrap 2, insets 10", "[grow][grow]", "[]"));
         counselorSection.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Guidance Counselor Information"));
-        counselorSection.setBackground(new Color(245, 245, 245));
         GuidanceCounselorDAO counselorDAO = new GuidanceCounselorDAO(connection);
         GuidanceCounselor counselor = null;
         if (appointment.getGuidanceCounselorId() != null) {
@@ -158,32 +169,4 @@ public class AppointmentDayDetails extends JPanel {
         bodyPanel.add(counselorSection, "growx, wrap");
     }
 
-    // Example usage in a JFrame
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            // Set FlatLaf theme
-            FlatMacLightLaf.setup();
-
-            JFrame frame = new JFrame("Appointment Detailed View");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            Connection connection = null;
-            try {
-                connection = DBConnection.getConnection();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            AppointmentDayDetails panel = new AppointmentDayDetails(connection);
-            frame.getContentPane().add(panel);
-            frame.setSize(800, 600);
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-
-            // Load appointments for a specific date
-            try {
-                panel.loadAppointmentsForDate(LocalDate.now());
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
-    }
 }

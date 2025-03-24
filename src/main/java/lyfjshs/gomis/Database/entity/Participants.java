@@ -6,37 +6,21 @@ public class Participants {
     private String participantType;
     private String participantLastName;
     private String participantFirstName;
-    private String email;
+    private String sex;
     private String contactNumber;
     private Student student;
 
-    public Participants(
-            Integer studentUid, 
-            String participantType,
-            String participantLastName, 
-            String participantFirstName,
-            String email, String contactNumber) {
-        this.studentUid = studentUid;
-        this.participantType = participantType;
-        this.participantLastName = participantLastName;
-        this.participantFirstName = participantFirstName;
-        this.email = email;
-        this.contactNumber = contactNumber;
-    }
-
-    // Default Constructor
     public Participants() {
     }
-    
-    // Full Constructor
-    public Participants(int participantId, Integer studentUid, String participantType, String participantLastName,
-            String participantFirstName, String email, String contactNumber) {
-        this.participantId = participantId;
+
+    // Constructor with fields
+    public Participants(Integer studentUid, String participantType, String participantLastName,
+            String participantFirstName, String sex, String contactNumber) {
         this.studentUid = studentUid;
         this.participantType = participantType;
         this.participantLastName = participantLastName;
         this.participantFirstName = participantFirstName;
-        this.email = email;
+        this.sex = sex;
         this.contactNumber = contactNumber;
     }
 
@@ -81,12 +65,12 @@ public class Participants {
         this.participantFirstName = participantFirstName;
     }
 
-    public String getEmail() {
-        return email;
+    public String getSex() {
+        return sex;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setSex(String sex) {
+        this.sex = sex;
     }
 
     public String getContactNumber() {
@@ -114,7 +98,7 @@ public class Participants {
                 ", participantType='" + participantType + '\'' +
                 ", participantLastName='" + participantLastName + '\'' +
                 ", participantFirstName='" + participantFirstName + '\'' +
-                ", email='" + email + '\'' +
+                ", sex='" + sex + '\'' +
                 ", contactNumber='" + contactNumber + '\'' +
                 '}';
     }

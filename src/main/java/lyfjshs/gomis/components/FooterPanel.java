@@ -31,12 +31,12 @@ public class FooterPanel extends SimpleFooter {
 		LYFJ = new JLabel("Luis Y. Ferrer Jr.");
 		LYFJ.setFont(new Font("Tahom", Font.BOLD, 17));
 
-		this.add(LYFJ, "cell 1 2,alignx center");
+		this.add(LYFJ, "cell 1 2,alignx left");
 
-		SHS = new JLabel(" Senior High School");
+		SHS = new JLabel("Senior High School");
 		SHS.setFont(new Font("Tahom", Font.BOLD, 17));
 
-		this.add(SHS, "cell 1 3,alignx center");
+		this.add(SHS, "cell 1 3,alignx left");
 
 		sfd.setTitle(LYFJ.getText() + SHS.getText());
 		System.out.println(sfd.getTitle());

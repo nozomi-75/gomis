@@ -1,8 +1,17 @@
 package lyfjshs.gomis.view.incident;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -14,9 +23,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
+import lyfjshs.gomis.Database.DAO.IncidentsDAO;
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
+import lyfjshs.gomis.Database.entity.Incident;
+import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
@@ -26,283 +41,495 @@ import raven.modal.option.Option;
 
 public class IncidentFillUpForm extends Form {
 
-    private static final long serialVersionUID = 1L;
-    private JTextField nameField;
-    private JTextField addressField;
-    private JTextField dateTimeField;
-    private JTextField DateField;
-    private JTextArea narrativeReportField;
-    private JTextArea actionsTakenField;
-    private JTextArea recommendationsField;
-    private JTextField reportedByField;
-    private JTextField TimeField;
-    private JTextField guardianNumberField;
-    private JTextField GradeSectionField;
-    private JTextField ageField;
-    private JTextField sexField;
-    private Connection conn;
-    private JTable table;
+	private static final long serialVersionUID = 1L;
+	private JTextField DateField;
+	private JTextArea narrativeReportField;
+	private JTextArea actionsTakenField;
+	private JTextArea recommendationsField;
+	private JTextField reportedByField;
+	private JTextField TimeField;
+	private JTextField GradeSectionField;
+	private Connection conn;
+	private JTable table;
+	private JPanel detailsPanel;
 
-    public IncidentFillUpForm(Connection connectDB) {
-        this.conn = connectDB;
-        setLayout(new MigLayout("", "[grow][grow]", "[38px][][200px][200px][200px][pref]"));
+	// Add these fields at the class level
+	private JTextField firstNameField, lastNameField, contactNumberField;
+	private JComboBox<String> sexCBox, participantsComboBox;
+	private DefaultTableModel participantTableModel;
+	private Map<Integer, Map<String, String>> participantDetails = new HashMap<>();
+	private ParticipantsDAO participantsDAO;
+	private Student reporterStudent; // Add this field to store reporter info
 
-        // Header
-        JPanel headerPanel = new JPanel(new MigLayout("", "[grow]", "[]"));
-        JLabel lblTitle = new JLabel("INCIDENT Fill-Up Form");
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 20));
-        headerPanel.add(lblTitle, "grow");
-        add(headerPanel, "cell 0 0 2 1,grow");
+	public IncidentFillUpForm(Connection connectDB) {
+		this.conn = connectDB;
+		setLayout(new MigLayout("", "[grow][grow]", "[38px][][200px][200px][170px][pref]"));
 
-        // Incident Details Panel
-        JPanel detailsPanel = new JPanel(new MigLayout("", "[][grow][][][][grow][]", "[][]"));
-        detailsPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(100, 149, 177)),
-                "INCIDENT DETAILS",
-                TitledBorder.DEFAULT_JUSTIFICATION,
-                TitledBorder.DEFAULT_POSITION,
-                new Font("Arial", Font.BOLD, 12),
-                new Color(100, 149, 177)));
-        
-                JLabel label_1 = new JLabel("Reported By:");
-                detailsPanel.add(label_1, "cell 0 0,alignx left");
-        detailsPanel.add(reportedByField = new JTextField(), "cell 1 0,growx");
-        
-                JLabel label_2 = new JLabel("Date: ");
-                detailsPanel.add(label_2, "cell 4 0");
-        detailsPanel.add(DateField = new JTextField(), "grow");
+		// Header
+		JPanel headerPanel = new JPanel(new MigLayout("", "[grow]", "[]"));
+		JLabel lblTitle = new JLabel("INCIDENT Fill-Up Form");
+		lblTitle.setFont(new Font("Arial", Font.BOLD, 20));
+		headerPanel.add(lblTitle, "grow");
+		add(headerPanel, "cell 0 0 2 1,grow");
 
-        detailsPanel.add(new JLabel("Grade & Section: "), "cell 0 1,alignx left");
-        detailsPanel.add(GradeSectionField = new JTextField(), "cell 1 1,growx");
+		detailsPanel = new JPanel(new MigLayout("", "[][grow 80][][][][grow]", "[][][]"));
+		detailsPanel
+				.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(100, 149, 177)),
+						"INCIDENT DETAILS", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
+						new Font("Arial", Font.BOLD, 12), new Color(100, 149, 177)));
 
-        detailsPanel.add(new JLabel("Time: "), "cell 4 1,alignx left");
-        detailsPanel.add(TimeField = new JTextField(), "cell 5 1,growx");
+		JLabel label_1 = new JLabel("Reported By:");
+		detailsPanel.add(label_1, "cell 0 0,alignx left");
+		detailsPanel.add(reportedByField = new JTextField(), "cell 1 0,growx");
 
-        add(detailsPanel, "cell 0 1 2 1,grow");
+		JLabel label_2 = new JLabel("Date: ");
+		detailsPanel.add(label_2, "cell 4 0");
+		detailsPanel.add(DateField = new JTextField(), "grow");
 
-        // Narrative Report Panel
-        JPanel narrativePanel = new JPanel(new MigLayout("", "[grow]", "[][grow]"));
-        narrativePanel.add(new JLabel("Narrative Report"), "cell 0 0");
-        narrativeReportField = new JTextArea();
-        narrativeReportField.setLineWrap(true);
-        narrativeReportField.setWrapStyleWord(true);
-        JScrollPane narrativeScrollPane = new JScrollPane(narrativeReportField);
-        narrativeScrollPane.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(100, 149, 177)),
-                "Narrative Report:",
-                TitledBorder.DEFAULT_JUSTIFICATION,
-                TitledBorder.DEFAULT_POSITION,
-                new Font("Tahoma", Font.BOLD, 17),
-                new Color(0, 0, 0)));
-        add(narrativeScrollPane, "cell 0 2 2 1,grow");
+		detailsPanel.add(new JLabel("Grade & Section: "), "cell 0 1,alignx left");
+		detailsPanel.add(GradeSectionField = new JTextField(), "cell 1 1,growx");
 
-        // Actions Taken Panel
-        JPanel actionsPanel = new JPanel(new MigLayout("", "[grow]", "[][grow]"));
-        actionsPanel.add(new JLabel("Action Taken"), "cell 0 0");
-        actionsTakenField = new JTextArea();
-        actionsTakenField.setLineWrap(true);
-        actionsTakenField.setWrapStyleWord(true);
-        JScrollPane actionsScrollPane = new JScrollPane(actionsTakenField);
-        actionsScrollPane.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(100, 149, 177)),
-                "Action Taken:",
-                TitledBorder.DEFAULT_JUSTIFICATION,
-                TitledBorder.DEFAULT_POSITION,
-                new Font("Tahoma", Font.BOLD, 17),
-                new Color(0, 0, 0)));
-        add(actionsScrollPane, "cell 0 3,grow");
+		detailsPanel.add(new JLabel("Time: "), "cell 4 1,alignx left");
+		detailsPanel.add(TimeField = new JTextField(), "cell 5 1,growx");
 
-        // Recommendations Panel
-        JPanel recommendationsPanel = new JPanel(new MigLayout("", "[grow]", "[][grow]"));
-        recommendationsPanel.add(new JLabel("Recommendation"), "cell 0 0");
-        recommendationsField = new JTextArea();
-        recommendationsField.setLineWrap(true);
-        recommendationsField.setWrapStyleWord(true);
-        JScrollPane recommendationsScrollPane = new JScrollPane(recommendationsField);
-        recommendationsScrollPane.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(100, 149, 177)),
-                "Recommendation:",
-                TitledBorder.DEFAULT_JUSTIFICATION,
-                TitledBorder.DEFAULT_POSITION,
-                new Font("Tahoma", Font.BOLD, 17),
-                new Color(0, 0, 0)));
-        add(recommendationsScrollPane, "cell 1 3,grow");
+		add(detailsPanel, "cell 0 1 2 1,grow");
 
-        // Add Participant Panel
-        JPanel addParticipantPanel = new JPanel();
-        addParticipantPanel.setBorder(new TitledBorder(null, " Add Participant: ", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        add(addParticipantPanel, "cell 0 4,grow");
-        addParticipantPanel.setLayout(new MigLayout("", "[][grow]", "[][][][][]"));
-        
-                JComboBox<String> violationComboBox = new JComboBox<>();
-                violationComboBox.addItem("Minor");
-                violationComboBox.addItem("Major");
-                violationComboBox.addItem("Academic Dishonesty");
-                violationComboBox.addItem("Bullying");
-                violationComboBox.addItem("Dress Code");
-                violationComboBox.addItem("Tardiness");
-                violationComboBox.addItem("Cutting Classes");
-                violationComboBox.addItem("Vandalism");
-                
-                JLabel ViolationLabel = new JLabel("Violation: ");
-                addParticipantPanel.add(ViolationLabel, "cell 0 0,alignx left");
-                addParticipantPanel.add(violationComboBox, "cell 1 0,growx");
-                String violation = (String) violationComboBox.getSelectedItem();
-                
-                JComboBox<String> ParticipantcomboBox = new JComboBox<>();
-                ParticipantcomboBox.addItem("Student");
-                ParticipantcomboBox.addItem("non-Student");
-               
-                JLabel ParticipantLabel = new JLabel("Participant:");
-                addParticipantPanel.add(ParticipantLabel, "cell 0 1,alignx left");
-                addParticipantPanel.add(ParticipantcomboBox, "cell 1 1,growx");
-                String Participant = (String) ParticipantcomboBox.getSelectedItem();
-        
-                JLabel label = new JLabel("Name: ");
-                addParticipantPanel.add(label, "flowx,cell 0 2");
-        JTextField participantNameField = new JTextField();
-        addParticipantPanel.add(participantNameField, "cell 1 2,growx");
-        participantNameField.setColumns(10);
-        String name = participantNameField.getText().trim();
-        
-                    // Clear the name field after adding
-                    participantNameField.setText("");
-        
-                JButton searchButton = new JButton("Search by LRN");
-                addParticipantPanel.add(searchButton, "cell 0 3");
-                
-                        // Add action listeners
-                        searchButton.addActionListener(event -> {
-                            JTextField lrnField = new JTextField();
-                            Object[] message = {
-                                "Enter Student LRN:", lrnField
-                            };
-                
-                            int option = JOptionPane.showConfirmDialog(this, message, "Search Student", JOptionPane.OK_CANCEL_OPTION);
-                            if (option == JOptionPane.OK_OPTION) {
-                                String lrn = lrnField.getText().trim();
-                                if (lrn.isEmpty()) {
-                                    JOptionPane.showMessageDialog(this, "Please enter an LRN", "Error", JOptionPane.ERROR_MESSAGE);
-                                    return;
-                                }
-                
-                                // TODO: Implement LRN search functionality
-                                // This should open a dialog to search by LRN and populate the participantNameField
-                            }
-                        });
+		// Narrative Report Panel
+		JPanel narrativePanel = new JPanel(new MigLayout("", "[grow]", "[][grow]"));
+		narrativePanel.add(new JLabel("Narrative Report"), "cell 0 0");
+		narrativeReportField = new JTextArea();
+		narrativeReportField.setLineWrap(true);
+		narrativeReportField.setWrapStyleWord(true);
+		JScrollPane narrativeScrollPane = new JScrollPane(narrativeReportField);
+		narrativeScrollPane.setBorder(BorderFactory.createTitledBorder(
+				BorderFactory.createLineBorder(new Color(100, 149, 177)), "Narrative Report:",
+				TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Tahoma", Font.BOLD, 17)));
+		add(narrativeScrollPane, "cell 0 2 2 1,grow");
 
-        JButton addButton = new JButton("Add");
-        addParticipantPanel.add(addButton, "cell 0 4");
+		// Actions Taken Panel
+		JPanel actionsPanel = new JPanel(new MigLayout("", "[grow]", "[][grow]"));
+		actionsPanel.add(new JLabel("Action Taken"), "cell 0 0");
+		actionsTakenField = new JTextArea();
+		actionsTakenField.setLineWrap(true);
+		actionsTakenField.setWrapStyleWord(true);
+		JScrollPane actionsScrollPane = new JScrollPane(actionsTakenField);
+		actionsScrollPane.setBorder(BorderFactory.createTitledBorder(
+				BorderFactory.createLineBorder(new Color(100, 149, 177)), "Action Taken:",
+				TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Tahoma", Font.BOLD, 17)));
+		add(actionsScrollPane, "cell 0 3,grow");
 
-        addButton.addActionListener(e -> {
+		// Recommendations Panel
+		JPanel recommendationsPanel = new JPanel(new MigLayout("", "[grow]", "[][grow]"));
+		recommendationsPanel.add(new JLabel("Recommendation"), "cell 0 0");
+		recommendationsField = new JTextArea();
+		recommendationsField.setLineWrap(true);
+		recommendationsField.setWrapStyleWord(true);
+		JScrollPane recommendationsScrollPane = new JScrollPane(recommendationsField);
+		recommendationsScrollPane.setBorder(BorderFactory.createTitledBorder(
+				BorderFactory.createLineBorder(new Color(100, 149, 177)), "Recommendation:",
+				TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Tahoma", Font.BOLD, 17)));
+		add(recommendationsScrollPane, "cell 1 3,grow");
 
-            if (name.isEmpty()) {
-                javax.swing.JOptionPane.showMessageDialog(this,
-                    "Please enter a name",
-                    "Error",
-                    javax.swing.JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+		initializeComponents();
+		setupParticipantPanel();
+		setupDetailsPanel();
 
-            DefaultTableModel model = (DefaultTableModel) table.getModel();
-            int rowCount = model.getRowCount() + 1;
-            model.addRow(new Object[]{rowCount, name, violation});
-        });
+		// Footer Panel
+		JPanel footPanel = new JPanel(new MigLayout("", "[grow,fill][center]", "[]"));
+		add(footPanel, "cell 0 5 2 1,grow");
 
-        // List of Participants Panel
-        JPanel listOfParticipantsPanel = new JPanel();
-        listOfParticipantsPanel.setBorder(new TitledBorder(null, " List of Participant: ", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        add(listOfParticipantsPanel, "cell 1 4,grow");
-        listOfParticipantsPanel.setLayout(new MigLayout("", "[grow]", "[grow]"));
+		JButton submitButton = new JButton("Submit");
+		submitButton.addActionListener(e -> saveIncidentReport());
+		footPanel.add(submitButton, "cell 1 0");
 
-        // Create table model with columns
-        String[] columnNames = {"#", "Name", "Violation", "Action"};
-        Object[][] data = {};
-        table = new JTable(new DefaultTableModel(data, columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return column == 3; // Only allow editing of the Action column
-            }
-        });
+		JButton btnNewButton = new JButton("Print INTIAL Report");
+		detailsPanel.add(btnNewButton, "cell 0 2");
 
-        // Add custom renderer for the Action column
-        table.getColumnModel().getColumn(3).setCellRenderer(new javax.swing.table.DefaultTableCellRenderer() {
-            @Override
-            public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                JPanel panel = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 0));
-                JButton viewButton = new JButton("View");
-                JButton removeButton = new JButton("Remove");
-                panel.add(viewButton);
-                panel.add(removeButton);
-                return panel;
-            }
-        });
+	}
 
-        listOfParticipantsPanel.add(new JScrollPane(table), "cell 0 0,grow");
+	private void initializeComponents() {
+		// Initialize the table model with proper columns
+		participantTableModel = new DefaultTableModel(
+				new Object[] { "#", "Participant Name", "Participant Type", "Actions" }, 0);
 
-        // Add table button action listeners
-        table.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                int column = table.getColumnModel().getColumnIndexAtX(evt.getX());
-                int row = evt.getY() / table.getRowHeight();
+		participantsDAO = new ParticipantsDAO(conn);
 
-                if (row < table.getRowCount() && row >= 0) {
-                    if (column == 3) { // Action column
-                        int modelColumn = table.convertColumnIndexToModel(column);
-                        int modelRow = table.convertRowIndexToModel(row);
+		// ...existing initialization code...
+	}
 
-                        // Calculate if click was on View or Remove button
-                        int buttonWidth = 60; // Approximate width of each button
-                        int x = evt.getX();
+	private void setupParticipantPanel() {
+		// Create participant panel with proper styling
+		JPanel participantPanel = new JPanel(new MigLayout("gap 10", "[][grow][][grow]", "[][][][]"));
+		participantPanel.setBorder(BorderFactory.createTitledBorder(
+				BorderFactory.createLineBorder(UIManager.getColor("Component.borderColor")), "Add Participant",
+				TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Segoe UI", Font.BOLD, 12),
+				UIManager.getColor("Label.foreground")));
 
-                        if (x < buttonWidth) {
-                            // View button clicked
-                            String name = (String) table.getValueAt(row, 1);
-                            String violation = (String) table.getValueAt(row, 2);
-                            javax.swing.JOptionPane.showMessageDialog(IncidentFillUpForm.this,
-                                "Name: " + name + "\nViolation: " + violation,
-                                "View Details",
-                                javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                        } else if (x < buttonWidth * 2) {
-                            // Remove button clicked
-                            int confirm = javax.swing.JOptionPane.showConfirmDialog(IncidentFillUpForm.this,
-                                "Are you sure you want to remove this entry?",
-                                "Confirm Removal",
-                                javax.swing.JOptionPane.YES_NO_OPTION);
+		// Participant Type Selector
+		JLabel participantLabel = new JLabel("Participant Type: ");
+		participantPanel.add(participantLabel, "cell 0 0");
+		participantsComboBox = new JComboBox<>(new String[] { "SELECT PARTICIPANT", "Student", "Non-Student" });
+		participantPanel.add(participantsComboBox, "cell 1 0,growx");
 
-                            if (confirm == javax.swing.JOptionPane.YES_OPTION) {
-                                ((DefaultTableModel) table.getModel()).removeRow(row);
-                            }
-                        }
-                    }
-                }
-            }
-        });
+		// Student Search Button for participants
+		JButton studentParticipantSearchButton = new JButton("Search Student Participant");
+		studentParticipantSearchButton.setEnabled(false);
+		participantPanel.add(studentParticipantSearchButton, "cell 2 0 2 1");
 
-        // Footer Panel
-        JPanel footPanel = new JPanel(new MigLayout("", "[grow,fill][center]", "[]"));
-        add(footPanel, "cell 0 5 2 1,grow");
+		// Add action listener to the Student Participant Search button
+		studentParticipantSearchButton.addActionListener(e -> openStudentParticipantSearchUI());
 
-        JButton submitButton = new JButton("Submit");
-        footPanel.add(submitButton, "cell 1 0");
+		// Name Fields
+		participantPanel.add(new JLabel("First Name"), "cell 0 1");
+		firstNameField = new JTextField();
+		participantPanel.add(firstNameField, "cell 1 1,growx");
 
-        // Add Student Search Button
-        JButton studentSearchButton = new JButton("Student Search");
-        detailsPanel.add(studentSearchButton, "cell 6 0");
+		participantPanel.add(new JLabel("Last Name"), "cell 2 1");
+		lastNameField = new JTextField();
+		participantPanel.add(lastNameField, "cell 3 1,growx");
 
-        // Add action listener to the Student Search button
-        studentSearchButton.addActionListener(e -> openStudentSearchUI());
-    }
+		// Sex and Contact Fields
+		participantPanel.add(new JLabel("Sex: "), "cell 0 2");
+		sexCBox = new JComboBox<>(new String[] { "Male", "Female" });
+		participantPanel.add(sexCBox, "cell 1 2,growx");
 
-    private void openStudentSearchUI() {
-       if (ModalDialog.isIdExist("search")) {
-            return;
-        }
-        Option option = ModalDialog.createOption();
-        option.setAnimationEnabled(true);
-        option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
-        ModalDialog.showModal(this, new StudentSearchPanel(conn), option, "search");
-    }
+		participantPanel.add(new JLabel("Contact Number"), "cell 2 2");
+		contactNumberField = new JTextField();
+		participantPanel.add(contactNumberField, "cell 3 2,growx");
+
+		// Add Participant Button
+		JButton addButton = new JButton("Add Participant");
+		addButton.addActionListener(e -> addParticipant());
+		participantPanel.add(addButton, "cell 3 3,alignx center");
+
+		// Add listener for participant type selection
+		participantsComboBox.addActionListener(e -> {
+
+			studentParticipantSearchButton.setEnabled("Student".equals(participantsComboBox.getSelectedItem()));
+		});
+
+		// Replace existing participant panel
+		add(participantPanel, "cell 0 4,grow");
+
+		// Setup participant table
+		setupParticipantTable();
+	}
+
+	private void setupParticipantTable() {
+		JPanel listPanel = new JPanel(new MigLayout("", "[grow]", "[grow]"));
+		listPanel.setBorder(BorderFactory.createTitledBorder("List of Participants"));
+
+		table = new JTable(participantTableModel);
+		table.setPreferredScrollableViewportSize(new Dimension(400, 100));
+
+		JScrollPane scrollPane = new JScrollPane(table);
+		listPanel.add(scrollPane, "grow");
+
+		// Add mouse listener for actions
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int row = table.rowAtPoint(e.getPoint());
+				int col = table.columnAtPoint(e.getPoint());
+
+				if (col == 3 && row >= 0) { // Actions column
+					handleTableAction(row, e.getX() - table.getCellRect(row, col, false).x);
+				}
+			}
+		});
+
+		add(listPanel, "cell 1 4,grow");
+	}
+
+	private void handleTableAction(int row, int xOffset) {
+		int viewWidth = 60; // Approximate width of "View" button
+		int participantId = (int) table.getValueAt(row, 0);
+
+		if (xOffset <= viewWidth) {
+			showParticipantDetails(participantId);
+		} else {
+			removeParticipant(row, participantId);
+		}
+	}
+
+	private void addParticipant() {
+		String firstName = firstNameField.getText().trim();
+		String lastName = lastNameField.getText().trim();
+		String contact = contactNumberField.getText().trim();
+		String sex = (String) sexCBox.getSelectedItem();
+		String participantType = (String) participantsComboBox.getSelectedItem();
+
+		// Validate required fields
+		if (firstName.isEmpty() || lastName.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Please enter at least first and last name", "Missing Information",
+					JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		try {
+			// Create new participant
+			Participants participant = new Participants();
+			participant.setStudentUid(null); // For non-student participant
+			participant.setParticipantType(participantType);
+			participant.setParticipantLastName(lastName);
+			participant.setParticipantFirstName(firstName);
+			participant.setSex(sex); // Using email field to store sex temporarily
+			participant.setContactNumber(contact);
+
+			// Save to database
+			participantsDAO.createParticipant(participant);
+
+			// Store participant details
+			Map<String, String> details = new HashMap<>();
+			details.put("firstName", firstName);
+			details.put("lastName", lastName);
+			details.put("fullName", firstName + " " + lastName);
+			details.put("sex", sex);
+			details.put("contact", contact);
+			details.put("type", participantType);
+			participantDetails.put(participant.getParticipantId(), details);
+
+			// Add to table
+			participantTableModel.addRow(new Object[] { participant.getParticipantId(), details.get("fullName"),
+					participantType, "View | Remove" });
+
+			// Clear input fields
+			clearParticipantFields();
+
+		} catch (SQLException ex) {
+			JOptionPane.showMessageDialog(this, "Error adding participant: " + ex.getMessage(), "Database Error",
+					JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private void removeParticipant(int row, int participantId) {
+		int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove this participant?",
+				"Confirm Remove", JOptionPane.YES_NO_OPTION);
+
+		if (confirm == JOptionPane.YES_OPTION) {
+			participantTableModel.removeRow(row);
+			participantDetails.remove(participantId);
+		}
+	}
+
+	private void clearParticipantFields() {
+		firstNameField.setText("");
+		lastNameField.setText("");
+		contactNumberField.setText("");
+		sexCBox.setSelectedIndex(0);
+		participantsComboBox.setSelectedIndex(0);
+	}
+
+	private void saveIncidentReport() {
+		// Validate required fields
+		if (!validateFields()) {
+			return;
+		}
+
+		try {
+			IncidentsDAO incidentsDAO = new IncidentsDAO(conn);
+
+			// Create new incident
+			Incident incident = new Incident();
+			incident.setParticipantId(getOrCreateParticipant());
+			incident.setIncidentDate(parseDateTime(DateField.getText(), TimeField.getText()));
+			incident.setIncidentDescription(narrativeReportField.getText());
+			incident.setActionTaken(actionsTakenField.getText());
+			incident.setRecommendation(recommendationsField.getText());
+			incident.setStatus("Pending");
+			incident.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+
+			// Save to database
+			int incidentId = incidentsDAO.createIncident(incident);
+			if (incidentId != -1) {
+				JOptionPane.showMessageDialog(this, "Incident report saved successfully!", "Success",
+						JOptionPane.INFORMATION_MESSAGE);
+				clearForm();
+			}
+
+		} catch (SQLException ex) {
+			JOptionPane.showMessageDialog(this, "Error saving incident: " + ex.getMessage(), "Database Error",
+					JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private boolean validateFields() {
+		// Check reporter info
+		if (reportedByField.getText().trim().isEmpty()) {
+			showError("Please select a reporter");
+			return false;
+		}
+
+		// Check date and time
+		if (DateField.getText().trim().isEmpty() || TimeField.getText().trim().isEmpty()) {
+			showError("Please enter date and time of the incident");
+			return false;
+		}
+
+		// Check narrative
+		if (narrativeReportField.getText().trim().isEmpty()) {
+			showError("Please enter narrative report");
+			return false;
+		}
+
+		// Check actions taken
+		if (actionsTakenField.getText().trim().isEmpty()) {
+			showError("Please enter actions taken");
+			return false;
+		}
+
+		return true;
+	}
+
+	private void showError(String message) {
+		JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
+	}
+
+	private int getOrCreateParticipant() throws SQLException {
+		ParticipantsDAO participantsDAO = new ParticipantsDAO(conn);
+
+		// Create participant from reporter student
+		Participants participant = new Participants();
+		participant.setStudentUid(reporterStudent.getStudentUid());
+		participant.setParticipantType("Reporter");
+		participant.setParticipantLastName(reporterStudent.getStudentLastname());
+		participant.setParticipantFirstName(reporterStudent.getStudentFirstname());
+		participant.setSex(reporterStudent.getStudentSex());
+		participant.setContactNumber(reporterStudent.getContact().getContactNumber()); // Can be updated if needed
+
+		return participantsDAO.createParticipant(participant);
+	}
+
+	private java.sql.Timestamp parseDateTime(String date, String time) {
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+			Date parsedDate = sdf.parse(date + " " + time);
+			return new java.sql.Timestamp(parsedDate.getTime());
+		} catch (ParseException e) {
+			return new java.sql.Timestamp(System.currentTimeMillis());
+		}
+	}
+
+	private void clearForm() {
+		reportedByField.setText("");
+		DateField.setText("");
+		TimeField.setText("");
+		GradeSectionField.setText("");
+		narrativeReportField.setText("");
+		actionsTakenField.setText("");
+		recommendationsField.setText("");
+		reporterStudent = null;
+	}
+
+	private void populateReporterFields(Student student) {
+		String fullName = String.format("%s %s %s", student.getStudentFirstname(), student.getStudentMiddlename(),
+				student.getStudentLastname());
+		reportedByField.setText(fullName);
+		GradeSectionField.setText(student.getSchoolForm().getSF_SECTION());
+	}
+
+	// Update showParticipantDetails to include LRN for students
+	private void showParticipantDetails(int participantId) {
+		Map<String, String> details = participantDetails.get(participantId);
+		if (details == null) {
+			JOptionPane.showMessageDialog(this, "Participant details not found", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		StringBuilder detailsText = new StringBuilder();
+		detailsText.append("<html><body style='width: 300px; padding: 10px;'>");
+		detailsText.append("<h2>Participant Details</h2>");
+		detailsText.append("<p><b>Name:</b> ").append(details.get("fullName")).append("</p>");
+		detailsText.append("<p><b>Type:</b> ").append(details.get("type")).append("</p>");
+		detailsText.append("<p><b>Sex:</b> ").append(details.get("sex")).append("</p>");
+
+		// Add LRN for student participants
+		if ("Student".equals(details.get("type")) && details.get("lrn") != null) {
+			detailsText.append("<p><b>LRN:</b> ").append(details.get("lrn")).append("</p>");
+		}
+
+		if (details.get("contact") != null && !details.get("contact").isEmpty()) {
+			detailsText.append("<p><b>Contact:</b> ").append(details.get("contact")).append("</p>");
+		}
+		detailsText.append("</body></html>");
+
+		JOptionPane.showMessageDialog(this, detailsText.toString(), "Participant Details",
+				JOptionPane.INFORMATION_MESSAGE);
+	}
+
+	private void setupDetailsPanel() {
+		// ...existing setup code...
+
+		// Add Student Search Button for reporter
+		JButton studentReporterBtn = new JButton("Search Reporter Student");
+		detailsPanel.add(studentReporterBtn, "cell 1 0 3 1");
+
+		// Add action listener to the Student Search button
+		studentReporterBtn.addActionListener(e -> openStudentReporterSearchUI());
+	}
+
+	private void openStudentReporterSearchUI() {
+		if (ModalDialog.isIdExist("reporterSearch")) {
+			return;
+		}
+
+		StudentSearchPanel searchPanel = new StudentSearchPanel(conn, student -> {
+			reporterStudent = student; // Store the selected student
+			populateReporterFields(student);
+			ModalDialog.closeModal("reporterSearch");
+		});
+
+		Option option = ModalDialog.createOption();
+		option.setAnimationEnabled(true);
+		option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
+		ModalDialog.showModal(this, searchPanel, option, "reporterSearch");
+	}
+
+	// New method for searching student participants
+	private void openStudentParticipantSearchUI() {
+		if (ModalDialog.isIdExist("participantSearch")) {
+			return;
+		}
+
+		StudentSearchPanel searchPanel = new StudentSearchPanel(conn, student -> {
+			// Create participant from selected student
+			Participants participant = new Participants();
+			participant.setStudentUid(student.getStudentUid());
+			participant.setParticipantType("Student");
+			participant.setParticipantLastName(student.getStudentLastname());
+			participant.setParticipantFirstName(student.getStudentFirstname());
+			participant.setSex(student.getStudentSex());
+			participant.setContactNumber(""); // Can be updated if needed
+
+			// Save participant to database
+			try {
+				participantsDAO.createParticipant(participant);
+				// Store participant details for later use
+				Map<String, String> details = new HashMap<>();
+				details.put("firstName", student.getStudentFirstname());
+				details.put("lastName", student.getStudentLastname());
+				details.put("fullName", student.getStudentFirstname() + " " + student.getStudentLastname());
+				details.put("sex", student.getStudentSex());
+				details.put("type", "Student");
+				details.put("lrn", student.getStudentLrn());
+				participantDetails.put(participant.getParticipantId(), details);
+
+				// Add to participants table
+				participantTableModel.addRow(new Object[] { participant.getParticipantId(), details.get("fullName"),
+						"Student", "View | Remove" });
+
+				// Close the modal
+				ModalDialog.closeModal("participantSearch");
+
+			} catch (SQLException ex) {
+				JOptionPane.showMessageDialog(this, "Error adding student as participant: " + ex.getMessage(),
+						"Database Error", JOptionPane.ERROR_MESSAGE);
+			}
+		});
+
+		Option option = ModalDialog.createOption();
+		option.setAnimationEnabled(true);
+		option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
+		ModalDialog.showModal(this, searchPanel, option, "participantSearch");
+	}
 }

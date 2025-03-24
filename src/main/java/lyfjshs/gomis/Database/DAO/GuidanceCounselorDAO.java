@@ -16,31 +16,40 @@ public class GuidanceCounselorDAO {
         this.connection = conn;
     }
 
-    // CREATE Method: Inserts a new guidance counselor into the database
-    public boolean createGuidanceCounselor(GuidanceCounselor counselor) {
-        String sql = "INSERT INTO GUIDANCE_COUNSELORS (GUIDANCE_COUNSELOR_ID, LAST_NAME, FIRST_NAME, MIDDLE_NAME, SUFFIX, " +
-                     "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    // Modified CREATE Method to return the generated ID
+    public int createGuidanceCounselor(GuidanceCounselor counselor) {
+        String sql = "INSERT INTO GUIDANCE_COUNSELORS (LAST_NAME, FIRST_NAME, MIDDLE_NAME, SUFFIX, " +
+                     "GENDER, SPECIALIZATION, CONTACT_NUM, EMAIL, POSITION, PROFILE_PICTURE) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, counselor.getGuidanceCounselorId());
-            pstmt.setString(2, counselor.getLastName());
-            pstmt.setString(3, counselor.getFirstName());
-            pstmt.setString(4, counselor.getMiddleName()); // Updated method call
-            pstmt.setString(5, counselor.getSuffix());
-            pstmt.setString(6, counselor.getGender());
-            pstmt.setString(7, counselor.getSpecialization());
-            pstmt.setString(8, counselor.getContactNum());
-            pstmt.setString(9, counselor.getEmail());
-            pstmt.setString(10, counselor.getPosition());
-            pstmt.setBytes(11, counselor.getProfilePicture());
+        try (PreparedStatement pstmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, counselor.getLastName());
+            pstmt.setString(2, counselor.getFirstName());
+            pstmt.setString(3, counselor.getMiddleName());
+            pstmt.setString(4, counselor.getSuffix());
+            pstmt.setString(5, counselor.getGender());
+            pstmt.setString(6, counselor.getSpecialization());
+            pstmt.setString(7, counselor.getContactNum());
+            pstmt.setString(8, counselor.getEmail());
+            pstmt.setString(9, counselor.getPosition());
+            pstmt.setBytes(10, counselor.getProfilePicture());
 
-            pstmt.executeUpdate();
-            System.out.println("Guidance counselor added successfully.");
-            return true;
+            int affectedRows = pstmt.executeUpdate();
+            
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int generatedId = generatedKeys.getInt(1);
+                        counselor.setGuidanceCounselorId(generatedId); // Update the counselor object
+                        System.out.println("Guidance counselor added successfully with ID: " + generatedId);
+                        return generatedId;
+                    }
+                }
+            }
         } catch (SQLException e) {
             handleSQLException(e, "createGuidanceCounselor");
         }
-        return false;
+        return -1;
     }
 
     // READ Method: Retrieves a guidance counselor's details by ID

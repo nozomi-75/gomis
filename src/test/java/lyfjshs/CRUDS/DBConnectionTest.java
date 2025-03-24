@@ -163,7 +163,7 @@ public class DBConnectionTest {
                 "PARTICIPANT_TYPE VARCHAR(50), " +
                 "PARTICIPANT_LASTNAME VARCHAR(100), " +
                 "PARTICIPANT_FIRSTNAME VARCHAR(100), " +
-                "EMAIL VARCHAR(100), " +
+                "PARTICIPANT_SEX VARCHAR(100), " +
                 "CONTACT_NUMBER VARCHAR(20), " +
                 "FOREIGN KEY (STUDENT_UID) REFERENCES STUDENT (STUDENT_UID));",
 

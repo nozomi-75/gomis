@@ -1,5 +1,6 @@
 package lyfjshs.gomis.view.appointment;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
@@ -15,17 +16,21 @@ import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
+import lyfjshs.gomis.components.DrawerBuilder;
+import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.view.sessions.SessionsForm;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.ModalDialog;
+import raven.modal.component.SimpleModalBorder;
+import raven.modal.option.BorderOption;
 
 public class AppointmentCalendar extends JPanel {
     private AppointmentDAO appointmentDao;
@@ -113,13 +118,59 @@ public class AppointmentCalendar extends JPanel {
 
     private JPanel createDayPanel(LocalDate date) {
         JPanel dayPanel = new JPanel(new MigLayout("wrap 1, insets 2", "[grow,fill]", "[][grow]"));
-        dayPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        dayPanel.setBackground(new Color(230, 240, 250));
+        dayPanel.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
         dayPanel.setPreferredSize(new Dimension(DAY_SIZE, DAY_SIZE));
 
+        // Create and style the day label
         JLabel dayLabel = new JLabel(String.valueOf(date.getDayOfMonth()));
         dayLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        dayPanel.add(dayLabel, "align right");
+        
+        // Enhanced current day highlighting
+        if (date.equals(LocalDate.now())) {
+            // Create a circular background for current date
+            JPanel dateHighlight = new JPanel() {
+                @Override
+                protected void paintComponent(java.awt.Graphics g) {
+                    super.paintComponent(g);
+                    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, 
+                                      java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    
+                    // Use theme-aware colors
+                    boolean isDarkTheme = dayPanel.getBackground() != null && 
+                                        dayPanel.getBackground().getRed() < 128;
+                    
+                    if (isDarkTheme) {
+                        g2.setColor(new Color(65, 105, 225)); // Royal Blue for dark theme
+                    } else {
+                        g2.setColor(new Color(30, 144, 255)); // Dodger Blue for light theme
+                    }
+                    
+                    int size = Math.min(getWidth(), getHeight()) - 4;
+                    int x = (getWidth() - size) / 2;
+                    int y = (getHeight() - size) / 2;
+                    g2.fillOval(x, y, size, size);
+                    g2.dispose();
+                }
+            };
+            dateHighlight.setOpaque(false);
+            dateHighlight.setPreferredSize(new Dimension(24, 24));
+            
+            // Style the day label for current date
+            dayLabel.setForeground(Color.WHITE);
+            dayLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            
+            // Add the highlight panel with the label
+            JPanel highlightWrapper = new JPanel(new BorderLayout());
+            highlightWrapper.setOpaque(false);
+            highlightWrapper.add(dateHighlight, BorderLayout.CENTER);
+            dayLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            dateHighlight.add(dayLabel);
+            dayPanel.add(highlightWrapper, "align right");
+        } else {
+            // Regular day styling
+            dayPanel.add(dayLabel, "align right");
+        }
 
         List<Appointment> appointments = null;
         try {
@@ -127,32 +178,53 @@ public class AppointmentCalendar extends JPanel {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        if (!appointments.isEmpty()) {
+        if (appointments != null && !appointments.isEmpty()) {
             JPanel appointmentsContainer = new JPanel(new MigLayout("wrap 1, insets 0, gap 2", "[grow,fill]"));
             appointmentsContainer.setOpaque(false);
-            dayPanel.add(new JScrollPane(appointmentsContainer), "grow");
+            dayPanel.add(new JScrollPane(appointmentsContainer) {
+                {
+                    setBorder(null);
+                    getViewport().setOpaque(false);
+                    setOpaque(false);
+                }
+            }, "grow");
 
-            Map<String, Color> appointmentColors = new HashMap<>();
-            appointmentColors.put("Academic Consultation", new Color(59, 130, 246));
-            appointmentColors.put("Career Guidance", new Color(147, 51, 234));
-            appointmentColors.put("Personal Counseling", new Color(16, 185, 129));
-            appointmentColors.put("Behavioral Counseling", new Color(202, 138, 4));
-            appointmentColors.put("Group Counseling", new Color(239, 68, 68));
+            // Updated color scheme for better visibility in dark theme
+            Map<String, Color[]> appointmentColors = new HashMap<>();
+            // Each array contains [background color, text color]
+            appointmentColors.put("Academic Consultation", new Color[]{new Color(25, 95, 210), Color.WHITE});
+            appointmentColors.put("Career Guidance", new Color[]{new Color(120, 40, 190), Color.WHITE});
+            appointmentColors.put("Personal Counseling", new Color[]{new Color(15, 145, 100), Color.WHITE});
+            appointmentColors.put("Behavioral Counseling", new Color[]{new Color(180, 120, 10), Color.WHITE});
+            appointmentColors.put("Group Counseling", new Color[]{new Color(190, 45, 45), Color.WHITE});
 
             for (Appointment appt : appointments) {
                 JPanel appointmentPanel = new JPanel(new MigLayout("fill, insets 2", "[grow][]"));
-                Color bgColor = appointmentColors.getOrDefault(appt.getConsultationType(), Color.GRAY);
-                appointmentPanel.setBackground(bgColor);
+                Color[] colors = appointmentColors.getOrDefault(appt.getConsultationType(), 
+                    new Color[]{new Color(100, 100, 100), Color.WHITE});
+                
+                appointmentPanel.setBackground(colors[0]);
+                appointmentPanel.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60), 1));
 
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
                 String timeDisplay = appt.getAppointmentDateTime().toLocalDateTime().format(timeFormatter);
 
                 JLabel appLabel = new JLabel(timeDisplay + " - " + appt.getAppointmentTitle());
-                appLabel.setForeground(Color.BLACK);
+                appLabel.setForeground(colors[1]);
                 appointmentPanel.add(appLabel, "grow");
 
-                // Make the appointment panel clickable
+                // Add hover effect
                 appointmentPanel.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        appointmentPanel.setBackground(colors[0].brighter());
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        appointmentPanel.setBackground(colors[0]);
+                    }
+
                     @Override
                     public void mouseClicked(MouseEvent e) {
                         showAppointmentDetailsPopup(appt);
@@ -163,7 +235,26 @@ public class AppointmentCalendar extends JPanel {
             }
         }
 
+        // Add hover effect for the entire day panel
         dayPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (!date.equals(LocalDate.now())) {
+                    boolean isDarkTheme = dayPanel.getBackground() != null && 
+                                        dayPanel.getBackground().getRed() < 128;
+                    dayPanel.setBackground(isDarkTheme ? 
+                        new Color(50, 50, 50) : 
+                        new Color(240, 240, 240));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (!date.equals(LocalDate.now())) {
+                    dayPanel.setBackground(null);
+                }
+            }
+
             @Override
             public void mouseClicked(MouseEvent e) {
                 showAppointmentDetailsPopup(date);
@@ -174,26 +265,75 @@ public class AppointmentCalendar extends JPanel {
     }
 
     private void showAppointmentDetailsPopup(Appointment appointment) {
-        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
-        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
+        if (ModalDialog.isIdExist("appointment_details_" + appointment.getAppointmentId())) {
+            return;
+        }
+
+        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection, null, null); // Pass null since we don't need selection here
         appointmentDetails.loadAppointmentDetails(appointment);
-        dialog.getContentPane().add(appointmentDetails);
-        dialog.setSize(600, 400);
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
+        createAndShowModalDialog(appointmentDetails, "appointment_details_" + appointment.getAppointmentId());
     }
 
     private void showAppointmentDetailsPopup(LocalDate selectedDate) {
-        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
-        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
+        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection, null, null); // Pass null since we don't need selection here
         try {
             appointmentDetails.loadAppointmentsForDate(selectedDate);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        dialog.getContentPane().add(appointmentDetails);
-        dialog.setSize(600, 400);
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
+        createAndShowModalDialog(appointmentDetails, "appointment_details_date_" + selectedDate.toString());
+    }
+
+    private void createAndShowModalDialog(AppointmentDayDetails detailsPanel, String modalId) {
+        if (ModalDialog.isIdExist(modalId)) {
+            return; // Prevent multiple instances of the same modal
+        }
+
+        try {
+            // Configure modal options
+            ModalDialog.getDefaultOption()
+                    .setOpacity(0f) // Transparent background
+                    .setAnimationOnClose(false) // No close animation
+                    .getBorderOption()
+                    .setBorderWidth(0.5f) // Thin border
+                    .setShadow(BorderOption.Shadow.MEDIUM); // Medium shadow
+
+            // Show modal with additional "Set a Session" button
+            ModalDialog.showModal(this,
+                    new SimpleModalBorder(detailsPanel, "Appointment Details",
+                            new SimpleModalBorder.Option[] {
+                                    new SimpleModalBorder.Option("Set a Session", SimpleModalBorder.YES_OPTION),
+                                    new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+                            },
+                            (controller, action) -> {
+                                if (action == SimpleModalBorder.YES_OPTION) {
+                                    // Switch to SessionsForm and populate data
+                                    DrawerBuilder.switchToSessionsForm();
+                                    
+                                    // Find and populate the SessionsForm
+                                    Form[] forms = FormManager.getForms();
+                                    for (Form form : forms) {
+                                        if (form instanceof SessionsForm) {
+                                            SessionsForm sessionsForm = (SessionsForm) form;
+                                            sessionsForm.populateFromAppointment(detailsPanel.getCurrentAppointment());
+                                            break;
+                                        }
+                                    }
+                                    controller.close();
+                                } else if (action == SimpleModalBorder.CLOSE_OPTION) {
+                                    controller.close();
+                                }
+                            }),
+                    modalId);
+
+            // Set the size to match the original dialog
+            ModalDialog.getDefaultOption().getLayoutOption().setSize(600, 400);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Optionally, display an error message to the user
+            javax.swing.JOptionPane.showMessageDialog(this, "Error opening appointment details: " + e.getMessage(),
+                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

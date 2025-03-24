@@ -83,15 +83,16 @@ public class LoginController {
      */
     public PreparedStatement createUser(String username, String password,
                                         Integer guidanceCounselorId) throws SQLException {
-        // SQL query to insert a new user
-        String sql = "INSERT INTO users (u_name, u_pass, guidance_counselor_id, CREATED_AT) VALUES (?, ?, ? NOW())";
-        PreparedStatement ps = connection.prepareStatement(sql);
+        // Remove USER_ID from the insert statement since it's now auto-increment
+        String sql = "INSERT INTO users (u_name, u_pass, guidance_counselor_id, CREATED_AT) " +
+                     "VALUES (?, ?, ?, (NOW()))";
+        PreparedStatement ps = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
         ps.setString(1, username);
-        ps.setString(2, hashPassword(password));  // Store hashed password
+        ps.setString(2, hashPassword(password));
         if (guidanceCounselorId != null) {
-            ps.setInt(3, guidanceCounselorId);  // Set the guidance counselor ID
+            ps.setInt(3, guidanceCounselorId);
         } else {
-            ps.setNull(3, java.sql.Types.INTEGER);  // Set null if no counselor ID provided
+            ps.setNull(3, java.sql.Types.INTEGER);
         }
         return ps;
     }
@@ -109,12 +110,16 @@ public class LoginController {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            ps = connection.prepareStatement("SELECT COUNT(*) FROM users WHERE u_name = ? AND U_PASS = ?");
+            // First get the stored hashed password
+            ps = connection.prepareStatement("SELECT U_PASS FROM users WHERE u_name = ?");
             ps.setString(1, username);
-            ps.setString(2, password);
             rs = ps.executeQuery();
+            
             if (rs.next()) {
-                return rs.getInt(1) > 0;
+                String storedHash = rs.getString("U_PASS");
+                // Compare the hashed version of input password with stored hash
+                String hashedInput = hashPassword(password);
+                return hashedInput.equals(storedHash);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -122,7 +127,6 @@ public class LoginController {
             try {
                 if (rs != null) rs.close();
                 if (ps != null) ps.close();
-                // Do not close the connection here if it's shared
             } catch (SQLException e) {
                 e.printStackTrace();
             }

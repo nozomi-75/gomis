@@ -36,8 +36,8 @@ public class GuidanceCounselorDB_Test {
                 "Psychology", "1234567890", "johndoe@example.com", "Senior Counselor", null);
 
         
-        boolean result = dao.createGuidanceCounselor(counselor);
-        System.out.println(result ? "✔ testCreateGuidanceCounselor Passed" : "❌ testCreateGuidanceCounselor Failed");
+        int result = dao.createGuidanceCounselor(counselor);
+        System.out.println(result > 0 ? "✔ testCreateGuidanceCounselor Passed" : "❌ testCreateGuidanceCounselor Failed");
     }
 
     private static void testReadGuidanceCounselor(GuidanceCounselorDAO dao) {

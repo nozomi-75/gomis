@@ -54,7 +54,7 @@ public class AddAppointmentPanel extends JPanel {
     private JTextField nonStudentFirstNameField;
     private JTextField nonStudentLastNameField;
     private JTextField nonStudentContactField;
-    private JTextField nonStudentEmailField;
+    private JTextField nonStudentSexField;
 
     // Fields for appointment details
     private JTextField titleField;
@@ -296,11 +296,11 @@ public class AddAppointmentPanel extends JPanel {
         panel.add(contactLabel);
         panel.add(nonStudentContactField, "growx, wrap");
 
-        // Email
-        JLabel emailLabel = new JLabel("Email:");
-        nonStudentEmailField = new JTextField();
-        panel.add(emailLabel);
-        panel.add(nonStudentEmailField, "growx");
+        // sex
+        JLabel sexLabel = new JLabel("Sex:");
+        nonStudentSexField = new JTextField();
+        panel.add(sexLabel);
+        panel.add(nonStudentSexField, "growx");
 
         return panel;
     }
@@ -415,8 +415,8 @@ public class AddAppointmentPanel extends JPanel {
                             case "Contact Number:":
                                 participant.setContactNumber(text);
                                 break;
-                            case "Email:":
-                                participant.setEmail(text);
+                            case "Sex:":
+                                participant.setSex(text);
                                 break;
                         }
                     } else if (nextComponent instanceof JComboBox) {

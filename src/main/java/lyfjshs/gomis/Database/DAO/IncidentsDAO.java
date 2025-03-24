@@ -18,18 +18,17 @@ import lyfjshs.gomis.Database.entity.SchoolForm;
 import lyfjshs.gomis.Database.entity.Student;
 
 public class IncidentsDAO {
-    private final Connection connection; // Database connection instance
+    private final Connection connection;
 
-    // Constructor to initialize DAO with a database connection
     public IncidentsDAO(Connection connection) {
         this.connection = connection;
     }
 
-    // ✅ Insert a new incident into the database and return the generated ID
+    // ✅ Insert a new incident and return the generated ID
     public int createIncident(Incident incident) throws SQLException {
         String sql = "INSERT INTO INCIDENTS (PARTICIPANT_ID, INCIDENT_DATE, INCIDENT_DESCRIPTION, " +
-                "ACTION_TAKEN, RECOMMENDATION, STATUS, UPDATED_AT) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                     "ACTION_TAKEN, RECOMMENDATION, STATUS, UPDATED_AT) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, NOW())";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, incident.getParticipantId());
@@ -38,24 +37,22 @@ public class IncidentsDAO {
             stmt.setString(4, incident.getActionTaken());
             stmt.setString(5, incident.getRecommendation());
             stmt.setString(6, incident.getStatus());
-            stmt.setTimestamp(7, incident.getUpdatedAt());
 
-            stmt.executeUpdate();
-
-            // Retrieve the generated ID of the inserted incident
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
                 }
             }
         }
-        return -1; // Returns -1 if insertion failed
+        return -1;
     }
 
-    // ✅ Retrieve an incident by its ID
+    // ✅ Retrieve an incident by ID
     public Incident getIncidentById(int incidentId) throws SQLException {
         String sql = "SELECT * FROM INCIDENTS WHERE INCIDENT_ID = ?";
-
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, incidentId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -64,14 +61,13 @@ public class IncidentsDAO {
                 }
             }
         }
-        return null; // Return null if no incident is found
+        return null;
     }
 
-    // ✅ Update an existing incident in the database
+    // ✅ Update an existing incident
     public boolean updateIncident(Incident incident) throws SQLException {
         String sql = "UPDATE INCIDENTS SET PARTICIPANT_ID = ?, INCIDENT_DATE = ?, INCIDENT_DESCRIPTION = ?, " +
-                "ACTION_TAKEN = ?, RECOMMENDATION = ?, STATUS = ?, UPDATED_AT = ? WHERE INCIDENT_ID = ?";
-
+                     "ACTION_TAKEN = ?, RECOMMENDATION = ?, STATUS = ?, UPDATED_AT = NOW() WHERE INCIDENT_ID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, incident.getParticipantId());
             stmt.setTimestamp(2, incident.getIncidentDate());
@@ -79,42 +75,41 @@ public class IncidentsDAO {
             stmt.setString(4, incident.getActionTaken());
             stmt.setString(5, incident.getRecommendation());
             stmt.setString(6, incident.getStatus());
-            stmt.setTimestamp(7, incident.getUpdatedAt());
-            stmt.setInt(8, incident.getIncidentId());
-
+            stmt.setInt(7, incident.getIncidentId());
             return stmt.executeUpdate() > 0;
         }
     }
 
-    // ✅ Delete an incident by its ID
+    // ✅ Delete an incident
     public boolean deleteIncident(int incidentId) throws SQLException {
         String sql = "DELETE FROM INCIDENTS WHERE INCIDENT_ID = ?";
-
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, incidentId);
             return stmt.executeUpdate() > 0;
         }
     }
 
-    // ✅ Retrieve all incidents from the database
+    // ✅ Retrieve all incidents with participant details
     public List<Incident> getAllIncidents() throws SQLException {
         List<Incident> incidents = new ArrayList<>();
-        String sql = "SELECT * FROM INCIDENTS ORDER BY INCIDENT_DATE DESC";
-
+        String sql = "SELECT i.*, p.* FROM INCIDENTS i " +
+                     "LEFT JOIN PARTICIPANTS p ON i.PARTICIPANT_ID = p.PARTICIPANT_ID " +
+                     "ORDER BY i.INCIDENT_DATE DESC";
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                incidents.add(mapResultSetToIncident(rs));
+                Incident incident = mapResultSetToIncident(rs);
+                incident.setParticipants(mapResultSetToParticipant(rs));
+                incidents.add(incident);
             }
         }
         return incidents;
     }
 
-    // ✅ Retrieve incidents based on participant ID
+    // ✅ Retrieve incidents by participant ID
     public List<Incident> getIncidentsByParticipant(int participantId) throws SQLException {
         List<Incident> incidents = new ArrayList<>();
         String sql = "SELECT * FROM INCIDENTS WHERE PARTICIPANT_ID = ? ORDER BY INCIDENT_DATE DESC";
-
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, participantId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -126,62 +121,43 @@ public class IncidentsDAO {
         return incidents;
     }
 
-    // ✅ Retrieve a complete incident with related participant and student details
+    // ✅ Retrieve a complete incident with participant and student details
     public Incident getCompleteIncidentDetails(int incidentId) throws SQLException {
-        Incident incident = getIncidentById(incidentId);
-        if (incident == null) {
-            return null;
-        }
+        String sql = "SELECT i.*, p.*, " +
+                    "s.*, a.*, c.*, par.*, g.*, sf.* " +
+                    "FROM INCIDENTS i " +
+                    "LEFT JOIN PARTICIPANTS p ON i.PARTICIPANT_ID = p.PARTICIPANT_ID " +
+                    "LEFT JOIN STUDENT s ON p.STUDENT_UID = s.STUDENT_UID " +
+                    "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
+                    "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
+                    "LEFT JOIN PARENTS par ON s.PARENT_ID = par.PARENT_ID " +
+                    "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
+                    "LEFT JOIN SCHOOL_FORM sf ON s.SF_SECTION = sf.SF_SECTION " +
+                    "WHERE i.INCIDENT_ID = ?";
 
-        // Fetch participant details
-        Participants participant = getParticipantById(incident.getParticipantId());
-        incident.setParticipants(participant);
-
-        // If the participant is a student, retrieve student details
-        if (participant.getStudentUid() != null) {
-            Student student = getStudentById(participant.getStudentUid());
-            incident.setStudent(student);
-        }
-
-        return incident;
-    }
-
-    // ✅ Retrieve participant by ID
-    private Participants getParticipantById(int participantId) throws SQLException {
-        String sql = "SELECT * FROM PARTICIPANTS WHERE PARTICIPANT_ID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, participantId);
+            stmt.setInt(1, incidentId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return mapResultSetToParticipant(rs);
+                    Incident incident = mapResultSetToIncident(rs);
+                    Participants participant = mapResultSetToParticipant(rs);
+                    
+                    // Only set student data if participant is a student
+                    if (rs.getObject("STUDENT_UID") != null) {
+                        StudentsDataDAO studentDAO = new StudentsDataDAO(connection);
+                        Student student = studentDAO.getStudentById(rs.getInt("STUDENT_UID"));
+                        participant.setStudent(student);
+                    }
+                    
+                    incident.setParticipants(participant);
+                    return incident;
                 }
             }
         }
         return null;
     }
 
-    // ✅ Retrieve a student by ID (updated for new schema)
-    private Student getStudentById(int studentUid) throws SQLException {
-        String sql = "SELECT s.*, a.*, c.*, p.*, g.*, sf.* FROM STUDENT s " +
-                "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
-                "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
-                "LEFT JOIN PARENTS p ON s.Parent_ID = p.PARENT_ID " +
-                "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
-                "LEFT JOIN SCHOOL_FORM sf ON s.SF_SECTION = sf.SF_SECTION " +
-                "WHERE s.STUDENT_UID = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, studentUid);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToStudent(rs);
-                }
-            }
-        }
-        return null;
-    }
-
-    // ✅ Convert a ResultSet to an Incident object
+    // ✅ Map ResultSet to an Incident object
     private Incident mapResultSetToIncident(ResultSet rs) throws SQLException {
         return new Incident(
                 rs.getInt("INCIDENT_ID"),
@@ -191,27 +167,25 @@ public class IncidentsDAO {
                 rs.getString("ACTION_TAKEN"),
                 rs.getString("RECOMMENDATION"),
                 rs.getString("STATUS"),
-                rs.getTimestamp("UPDATED_AT")
-        );
+                rs.getTimestamp("UPDATED_AT"));
     }
 
-    // ✅ Convert a ResultSet to a Participant object
+    // ✅ Map ResultSet to a Participants object
     private Participants mapResultSetToParticipant(ResultSet rs) throws SQLException {
-        return new Participants(
-                rs.getInt("PARTICIPANT_ID"),
-                rs.getInt("STUDENT_UID"),
+        Participants participant = new Participants(
+                rs.getObject("STUDENT_UID", Integer.class),
                 rs.getString("PARTICIPANT_TYPE"),
                 rs.getString("PARTICIPANT_LASTNAME"),
                 rs.getString("PARTICIPANT_FIRSTNAME"),
-                rs.getString("EMAIL"),
-                rs.getString("CONTACT_NUMBER")
-        );
+                rs.getString("PARTICIPANT_SEX"),
+                rs.getString("CONTACT_NUMBER"));
+        participant.setParticipantId(rs.getInt("PARTICIPANT_ID"));
+        return participant;
     }
 
-    // ✅ Convert a ResultSet to a Student object (updated for School Section)
-  // ✅ Convert a ResultSet to a Student object (updated for full entity mapping)
-private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
-    Address address = new Address(
+    // ✅ Map ResultSet to a Student object
+    private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
+        Address address = new Address(
             rs.getInt("ADDRESS_ID"),
             rs.getString("ADDRESS_HOUSE_NUMBER"),
             rs.getString("ADDRESS_STREET_SUBDIVISION"),
@@ -220,14 +194,14 @@ private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
             rs.getString("ADDRESS_MUNICIPALITY"),
             rs.getString("ADDRESS_BARANGAY"),
             rs.getString("ADDRESS_ZIP_CODE")
-    );
+        );
 
-    Contact contact = new Contact(
+        Contact contact = new Contact(
             rs.getInt("CONTACT_ID"),
             rs.getString("CONTACT_NUMBER")
-    );
+        );
 
-    Parents parents = new Parents(
+        Parents parents = new Parents(
             rs.getInt("PARENT_ID"),
             rs.getString("FATHER_LASTNAME"),
             rs.getString("FATHER_FIRSTNAME"),
@@ -237,19 +211,19 @@ private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
             rs.getString("MOTHER_FIRSTNAME"),
             rs.getString("MOTHER_MIDDLE_NAME"),
             rs.getString("MOTHER_CONTACT_NUMBER")
-    );
+        );
 
-    Guardian guardian = new Guardian(
+        Guardian guardian = new Guardian(
             rs.getInt("GUARDIAN_ID"),
             rs.getString("GUARDIAN_LASTNAME"),
             rs.getString("GUARDIAN_FIRST_NAME"),
             rs.getString("GUARDIAN_MIDDLE_NAME"),
             rs.getString("GUARDIAN_RELATIONSHIP"),
             rs.getString("GUARDIAN_CONTACT_NUMBER")
-    );
+        );
 
-    SchoolForm schoolForm = new SchoolForm(
-            rs.getInt("SF_ID"), 
+        SchoolForm schoolForm = new SchoolForm(
+            rs.getInt("SF_ID"),
             rs.getString("SF_SCHOOL_NAME"),
             rs.getString("SF_SCHOOL_ID"),
             rs.getString("SF_DISTRICT"),
@@ -258,18 +232,18 @@ private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
             rs.getString("SF_SEMESTER"),
             rs.getString("SF_SCHOOL_YEAR"),
             rs.getString("SF_GRADE_LEVEL"),
-            rs.getString("SF_SECTION"), // ✅ Ensure SF_SECTION is mapped
+            rs.getString("SF_SECTION"),
             rs.getString("SF_TRACK_AND_STRAND"),
             rs.getString("SF_COURSE")
-    );
+        );
 
-    return new Student(
+        return new Student(
             rs.getInt("STUDENT_UID"),
             rs.getInt("PARENT_ID"),
             rs.getInt("GUARDIAN_ID"),
             rs.getInt("ADDRESS_ID"),
             rs.getInt("CONTACT_ID"),
-            rs.getString("SF_SECTION"), // ✅ Reference school section
+            rs.getString("SF_SECTION"),
             rs.getString("STUDENT_LRN"),
             rs.getString("STUDENT_LASTNAME"),
             rs.getString("STUDENT_FIRSTNAME"),
@@ -280,12 +254,11 @@ private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
             rs.getInt("STUDENT_AGE"),
             rs.getString("STUDENT_IP_TYPE"),
             rs.getString("STUDENT_RELIGION"),
-            address, // ✅ Address entity
-            contact, // ✅ Contact entity
-            parents, // ✅ Parents entity
-            guardian, // ✅ Guardian entity
-            schoolForm // ✅ SchoolForm entity
-    );
-}
-
+            address,
+            contact,
+            parents,
+            guardian,
+            schoolForm
+        );
+    }
 }

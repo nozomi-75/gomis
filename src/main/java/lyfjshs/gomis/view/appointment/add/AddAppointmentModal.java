@@ -22,7 +22,7 @@ public class AddAppointmentModal {
         return instance;
     }
 
-    public void showModal(JPanel parent, AddAppointmentPanel addAppointPanel, AppointmentDAO appointmentDAO) {
+    public void showModal(JPanel parent, AddAppointmentPanel addAppointPanel, AppointmentDAO appointmentDAO, Number width, Number height) {
         Option[] modalBorder = new SimpleModalBorder.Option[] {
                 new SimpleModalBorder.Option("Add Appointment", SimpleModalBorder.YES_OPTION),
                 new SimpleModalBorder.Option("Cancel", SimpleModalBorder.NO_OPTION) };
@@ -66,7 +66,7 @@ public class AddAppointmentModal {
                             controller.close();
                         }
                     }
-                }), "input");
-        ModalDialog.getDefaultOption().getLayoutOption().setSize(700, 700);
+                }), "add_appointment_modal");
+        ModalDialog.getDefaultOption().getLayoutOption().setSize(width, height);
     }
 }

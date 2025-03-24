@@ -17,7 +17,7 @@ import lyfjshs.gomis.Database.entity.Student;
     PARTICIPANT_TYPE VARCHAR(50),
     PARTICIPANT_LASTNAME VARCHAR(100),
     PARTICIPANT_FIRSTNAME VARCHAR(100),
-    EMAIL VARCHAR(100),
+    PARTICIPANT_SEX VARCHAR(100),
     CONTACT_NUMBER VARCHAR(20),
     FOREIGN KEY (STUDENT_UID) REFERENCES STUDENT (STUDENT_UID)
 ); */
@@ -28,34 +28,35 @@ public class ParticipantsDAO {
         this.connection = connection;
     }
 
-    
     // Create a new participant
-    public void createParticipant(Participants participant) throws SQLException {
-    String sql = "INSERT INTO PARTICIPANTS (STUDENT_UID, PARTICIPANT_TYPE, PARTICIPANT_LASTNAME, " +
-            "PARTICIPANT_FIRSTNAME, EMAIL, CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?, ?)";
+    public int createParticipant(Participants participant) throws SQLException {
+        String sql = "INSERT INTO PARTICIPANTS (STUDENT_UID, PARTICIPANT_TYPE, PARTICIPANT_LASTNAME, " +
+                "PARTICIPANT_FIRSTNAME, PARTICIPANT_SEX, CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?, ?)";
 
-    try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-        stmt.setObject(1, participant.getStudentUid());
-        stmt.setString(2, participant.getParticipantType());
-        stmt.setString(3, participant.getParticipantLastName());
-        stmt.setString(4, participant.getParticipantFirstName());
-        stmt.setString(5, participant.getEmail());
-        stmt.setString(6, participant.getContactNumber());
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setObject(1, participant.getStudentUid());
+            stmt.setString(2, participant.getParticipantType());
+            stmt.setString(3, participant.getParticipantLastName());
+            stmt.setString(4, participant.getParticipantFirstName());
+            stmt.setString(5, participant.getSex());
+            stmt.setString(6, participant.getContactNumber());
 
-        int affectedRows = stmt.executeUpdate();
+            int affectedRows = stmt.executeUpdate();
 
-        if (affectedRows > 0) {
-            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    participant.setParticipantId(generatedKeys.getInt(1));
-                    System.out.println("✔ Participant created with ID: " + participant.getParticipantId());
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        participant.setParticipantId(generatedKeys.getInt(1));
+                        System.out.println("✔ Participant created with ID: " + participant.getParticipantId());
+                    }
                 }
+            } else {
+                System.err.println("❌ Creating participant failed, no rows affected.");
             }
-        } else {
-            System.err.println("❌ Creating participant failed, no rows affected.");
         }
+        return participant.getParticipantId();
+
     }
-}
 
     // Retrieve a participant by ID
     public Participants getParticipantById(int participantId) {
@@ -80,14 +81,14 @@ public class ParticipantsDAO {
     // Update an existing participant
     public void updateParticipant(Participants participant) throws SQLException {
         String sql = "UPDATE PARTICIPANTS SET STUDENT_UID = ?, PARTICIPANT_TYPE = ?, PARTICIPANT_LASTNAME = ?, " +
-                "PARTICIPANT_FIRSTNAME = ?, EMAIL = ?, CONTACT_NUMBER = ? WHERE PARTICIPANT_ID = ?";
+                "PARTICIPANT_FIRSTNAME = ?, PARTICIPANT_SEX = ?, CONTACT_NUMBER = ? WHERE PARTICIPANT_ID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, participant.getStudentUid());
             stmt.setString(2, participant.getParticipantType());
             stmt.setString(3, participant.getParticipantLastName());
             stmt.setString(4, participant.getParticipantFirstName());
-            stmt.setString(5, participant.getEmail());
+            stmt.setString(5, participant.getSex());
             stmt.setString(6, participant.getContactNumber());
             stmt.setInt(7, participant.getParticipantId());
             stmt.executeUpdate();
@@ -110,7 +111,7 @@ public class ParticipantsDAO {
         String sql = "SELECT * FROM PARTICIPANTS";
 
         try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+                ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 participants.add(mapResultSetToParticipant(rs));
             }
@@ -126,7 +127,7 @@ public class ParticipantsDAO {
         participant.setParticipantType(rs.getString("PARTICIPANT_TYPE"));
         participant.setParticipantLastName(rs.getString("PARTICIPANT_LASTNAME"));
         participant.setParticipantFirstName(rs.getString("PARTICIPANT_FIRSTNAME"));
-        participant.setEmail(rs.getString("EMAIL"));
+        participant.setSex(rs.getString("PARTICIPANT_SEX"));
         participant.setContactNumber(rs.getString("CONTACT_NUMBER"));
         return participant;
     }

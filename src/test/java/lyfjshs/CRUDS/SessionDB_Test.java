@@ -104,7 +104,7 @@ public class SessionDB_Test {
                 } else if (isDuplicateParticipant(participants, participantId)) {
                     System.out.println("Error: Participant ID " + participantId + " is already added.");
                 } else {
-                    participants.add(new Participants(participantId, null, null, null, null, null, null));
+                    participants.add(new Participants(participantId, null, null, null, null, null));
                 }
             }
     
@@ -183,7 +183,7 @@ public class SessionDB_Test {
                     " | Name: " + p.getParticipantFirstName() + " " + p.getParticipantLastName() +
                     " | Type: " + p.getParticipantType() +
                     " | Category: " + category +
-                    " | Email: " + p.getEmail() +
+                    " | Sex: " + p.getSex() +
                     " | Contact: " + p.getContactNumber());
         }
         System.out.println("===============================================");

@@ -1,0 +1,273 @@
+<!-- Created with Jaspersoft Studio version 7.0.1.final using JasperReports Library version 7.0.1-573496633c2b4074e32f433154b543003f7d2498  -->
+<jasperReport name="DroppingForm" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="4a9abc88-06eb-480a-8dbe-fd141b278985">
+	<parameter name="Date" class="java.lang.String"/>
+	<parameter name="NameofStudent" class="java.lang.String"/>
+	<parameter name="Adviser" class="java.lang.String"/>
+	<parameter name="Trank/Strand Specialization" class="java.lang.String"/>
+	<parameter name="Grade/Section" class="java.lang.String"/>
+	<parameter name="InclusiveDateofAbsences" class="java.lang.String"/>
+	<parameter name="ActionTaken" class="java.lang.String"/>
+	<parameter name="ReasonforDropping" class="java.lang.String"/>
+	<parameter name="EffectiveDate" class="java.lang.String"/>
+	<background splitType="Stretch"/>
+	<title height="150" splitType="Stretch">
+		<element kind="image" uuid="2969f73a-90eb-4ba9-a2f2-6c03d61d5887" x="251" y="4" width="60" height="60">
+			<expression><![CDATA["images/DepEd_Seal.png"]]></expression>
+		</element>
+		<element kind="staticText" uuid="61351ad8-d78b-47c0-a7d5-78f3dd5ce4ce" x="0" y="73" width="555" height="14" fontName="Old English Text MT" fontSize="12.0" hTextAlign="Center">
+			<text><![CDATA[Republic of the Philippines]]></text>
+		</element>
+		<element kind="staticText" uuid="3d9943d8-88d7-4704-a834-b9d3284f5313" x="0" y="89" width="555" height="16" fontName="Old English Text MT" fontSize="14.0" bold="true" hTextAlign="Center">
+			<text><![CDATA[Department of Education]]></text>
+		</element>
+		<element kind="staticText" uuid="dcf262b9-d598-4047-9f23-5defc1552863" x="0" y="107" width="555" height="40" fontName="Baskerville Old Face" bold="true" hTextAlign="Center">
+			<text><![CDATA[Region IV-A CALABARZON
+SCHOOLS DIVISION OFFICE OF GENERAL TRIAS CITY
+LUIS Y. FERRER JR. SENIOR HIGH SCHOOL
+SOUTH SQUARE VILLAGE, PASONG KAWAYAN II, GEN. TRIAS CITY, CAVITE]]></text>
+		</element>
+		<element kind="line" uuid="b8eca633-144b-4190-bab1-08b461b9b3f0" x="60" y="147" width="440" height="1"/>
+	</title>
+	<detail>
+		<band height="524" splitType="Stretch">
+			<element kind="image" uuid="a8a62886-5a31-4355-8337-343939d0ef8e" x="6" y="428" width="545" height="90">
+				<expression><![CDATA["images/Dropping_Signatures.png"]]></expression>
+			</element>
+			<element kind="image" uuid="391aba80-2c2d-4783-b911-dffaf6d639f5" x="205" y="12" width="151" height="34">
+				<expression><![CDATA["images/SY.png"]]></expression>
+			</element>
+			<element kind="textField" uuid="e485560f-2044-48f7-b06a-374d3df9ffff" x="119" y="62" width="122" height="14">
+				<expression><![CDATA[$P{Date}]]></expression>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="textField" uuid="c492b731-644e-496a-9660-85bfc9897190" x="119" y="77" width="122" height="27">
+				<expression><![CDATA[$P{NameofStudent}]]></expression>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="textField" uuid="f1bd6ac4-c06b-4a4d-b2fc-86d493896261" x="365" y="77" width="122" height="27">
+				<expression><![CDATA[$P{Trank/Strand Specialization}]]></expression>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="textField" uuid="013f0926-df60-4828-9da7-64071039b2c4" x="119" y="105" width="122" height="15">
+				<expression><![CDATA[$P{Adviser}]]></expression>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="textField" uuid="0a39b504-2acb-4e10-a39b-e301c2116dea" x="365" y="105" width="122" height="15" fontSize="9.0">
+				<expression><![CDATA[$P{Grade/Section}]]></expression>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="textField" uuid="5239fb4f-de8e-4ea1-9571-54e876891b97" x="119" y="136" width="368" height="62" hTextAlign="Left" vTextAlign="Top">
+				<expression><![CDATA[$P{InclusiveDateofAbsences}]]></expression>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="textField" uuid="07e5fb73-4bb4-4841-bdc7-ccceac76ea45" x="119" y="199" width="368" height="38">
+				<expression><![CDATA[$P{ActionTaken}]]></expression>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="textField" uuid="a1506838-07f3-4f71-9c3e-6e26f879c4c9" x="119" y="238" width="368" height="80">
+				<expression><![CDATA[$P{ReasonforDropping}]]></expression>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="textField" uuid="86c02f9f-4384-4c30-b3dd-412ce73471f2" x="119" y="319" width="368" height="74">
+				<expression><![CDATA[$P{EffectiveDate}]]></expression>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="e6ffe101-3c34-41b2-919a-192d387f6e7c" x="47" y="62" width="71" height="14" fontName="Times New Roman" bold="true">
+				<text><![CDATA[Date:]]></text>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="288c4825-f707-4859-bf23-cd5846ec1af3" x="47" y="77" width="71" height="27" fontName="Times New Roman" bold="true">
+				<text><![CDATA[Name of Student:]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="076b0e38-945a-47ff-a703-c6d85c30f6e4" x="47" y="105" width="71" height="15" fontName="Times New Roman" bold="true">
+				<text><![CDATA[Adviser:]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="169cbe4e-f606-4fd8-b13b-d15ea4911d01" x="242" y="62" width="122" height="14">
+				<text><![CDATA[ ]]></text>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="40eacd5b-de7d-4131-a8dc-5e85a588a971" x="242" y="77" width="122" height="27" fontName="Times New Roman" bold="true">
+				<text><![CDATA[TRACK/STRAND-
+SPECIALIZATION]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="4f816d9a-e23e-4dcb-b65a-be6e82fe1eea" x="242" y="105" width="122" height="15" fontName="Times New Roman" bold="true">
+				<text><![CDATA[GRADE/SECTION]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="54346ecc-d9d8-48ef-8d33-27e55fee0452" x="366" y="62" width="121" height="14">
+				<text><![CDATA[ ]]></text>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="c6d40ef4-cc61-42c9-9c3e-2cd0e0a54e7a" x="242" y="121" width="122" height="14">
+				<text><![CDATA[ ]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="047fc2ff-803d-4929-a38c-1d433880ae62" x="365" y="121" width="122" height="14">
+				<text><![CDATA[ ]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="8d357d4c-8167-439e-89b7-7d44e233bec1" x="119" y="121" width="122" height="14">
+				<text><![CDATA[ ]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="96bfacf8-b120-4a33-9d50-531de0d1be6f" x="47" y="121" width="71" height="14">
+				<text><![CDATA[ ]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="5cc2afff-2623-4ffe-9afc-ec54f2954207" x="47" y="136" width="71" height="62" fontName="Times New Roman" bold="true">
+				<text><![CDATA[INCLUSIVE DATE OF ABSENCES:]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="591d686b-3979-4862-94f1-a398fba783b4" x="47" y="199" width="71" height="38" fontName="Times New Roman" bold="true">
+				<text><![CDATA[ACTION TAKEN:]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="e1575b78-a728-4ecd-bab9-40877f060874" x="47" y="238" width="71" height="80" fontName="Times New Roman" bold="true">
+				<text><![CDATA[REASON FOR DROPPING:]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="c97beef1-45d3-4a31-8160-016c357f7215" x="47" y="319" width="71" height="74" fontName="Times New Roman" bold="true">
+				<text><![CDATA[REASON FOR DROPPING:]]></text>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+			</element>
+		</band>
+	</detail>
+	<pageFooter height="89" splitType="Stretch">
+		<element kind="line" uuid="402044a5-7458-415f-b025-d38d3cad3d02" x="9" y="1" width="531" height="1"/>
+		<element kind="image" uuid="4d3eea09-13b4-453e-920d-827b6d0ab048" x="11" y="4" width="125" height="63">
+			<expression><![CDATA["images/DepEd-MATATAG_BagongPilipinas.png"]]></expression>
+		</element>
+		<element kind="image" uuid="7b64e541-5496-4f45-80f9-1a7bbc107dbb" x="137" y="6" width="59" height="57">
+			<expression><![CDATA["images/LYFJSHS.png"]]></expression>
+		</element>
+		<element kind="staticText" uuid="15f4ec38-1d34-4651-b8c3-3fcd58e51858" x="10" y="72" width="161" height="12" fontSize="8.0">
+			<text><![CDATA[Generated Document using: GOMIS V1]]></text>
+		</element>
+		<element kind="image" uuid="b69214ae-661b-40c7-a635-e79b2a92e70e" x="197" y="6" width="343" height="65">
+			<expression><![CDATA["images/Footer_Text.png"]]></expression>
+		</element>
+	</pageFooter>
+</jasperReport>

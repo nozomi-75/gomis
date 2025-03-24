@@ -1,12 +1,13 @@
 package lyfjshs.gomis.components.FormManager;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.SwingUtilities;
+
+import lyfjshs.gomis.view.MainDashboard;
 
 /**
  * The {@code AllForms} class is responsible for managing instances of form objects.
@@ -47,18 +48,26 @@ public class AllForms {
      * @return An instance of the requested form.
      * @throws RuntimeException If an error occurs during form instantiation.
      */
-    public static Form getForm(Class<? extends Form> cls, Connection conn) {
-        if (getInstance().formsMap.containsKey(cls)) {
-            return getInstance().formsMap.get(cls);
-        }
+    public static Form getForm(Class<?> clazz, Connection conn) {
         try {
-            Constructor<? extends Form> constructor = cls.getDeclaredConstructor(Connection.class); // Get the constructor with Connection parameter
-            Form form = constructor.newInstance(conn); // Instantiate the form with the connection
-            getInstance().formsMap.put(cls, form); // Store the form instance for future use
-            formInit(form);
-            return form;
-        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException("Failed to create an instance of " + cls.getName(), e);
+            if (clazz == null) {
+                throw new IllegalArgumentException("Class cannot be null");
+            }
+
+            // Check for MainDashboard specifically
+            if (clazz.equals(MainDashboard.class)) {
+                if (conn == null) {
+                    throw new IllegalStateException("Database connection is null");
+                }
+                return new MainDashboard(conn);
+            }
+
+            // For other forms that need connection
+            Constructor<?> constructor = clazz.getConstructor(Connection.class);
+            return (Form) constructor.newInstance(conn);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create an instance of " + clazz.getName() + ": " + e.getMessage(), e);
         }
     }
 

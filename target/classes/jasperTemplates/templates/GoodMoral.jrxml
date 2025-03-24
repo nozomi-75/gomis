@@ -1,0 +1,74 @@
+<!-- Created with Jaspersoft Studio version 7.0.1.final using JasperReports Library version 7.0.1-573496633c2b4074e32f433154b543003f7d2498  -->
+<jasperReport name="Blank_A4" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d00992ef-772c-4c43-97b1-946f3d9453d3">
+	<parameter name="Name" class="java.lang.String"/>
+	<parameter name="SchoolYear" class="java.lang.String"/>
+	<parameter name="Strand" class="java.lang.String"/>
+	<parameter name="TrackAndSpecialization" class="java.lang.String"/>
+	<parameter name="DateGiven" class="java.lang.String"/>
+	<parameter name="purpose" class="java.lang.String"/>
+	<parameter name="nameToSign" class="java.lang.String"/>
+	<parameter name="workPosition" class="java.lang.String"/>
+	<background splitType="Stretch"/>
+	<columnHeader height="163">
+		<element kind="image" uuid="0089d24a-da9a-4afc-a0b5-0eece41627e7" x="251" y="10" width="60" height="60">
+			<expression><![CDATA["images/DepEd_Seal.png"]]></expression>
+		</element>
+		<element kind="staticText" uuid="f1370bc1-0d00-4c11-bc7d-8b20a011b62a" x="0" y="86" width="555" height="14" fontName="Old English Text MT" fontSize="12.0" hTextAlign="Center">
+			<text><![CDATA[Republic of the Philippines]]></text>
+		</element>
+		<element kind="staticText" uuid="e6766b2f-cc94-4979-8d01-e21570e02ea3" x="0" y="102" width="555" height="16" fontName="Old English Text MT" fontSize="14.0" bold="true" hTextAlign="Center">
+			<text><![CDATA[Department of Education]]></text>
+		</element>
+		<element kind="staticText" uuid="74035889-9ca2-4d7b-94ee-354a526cf3bb" x="0" y="120" width="555" height="40" fontName="Baskerville Old Face" bold="true" hTextAlign="Center">
+			<text><![CDATA[Region IV-A CALABARZON
+SCHOOLS DIVISION OFFICE OF GENERAL TRIAS CITY
+LUIS Y. FERRER JR. SENIOR HIGH SCHOOL
+SOUTH SQUARE VILLAGE, PASONG KAWAYAN II, GEN. TRIAS CITY, CAVITE]]></text>
+		</element>
+		<element kind="line" uuid="931eb4d1-860c-4fd5-a1ad-bda58832a284" x="60" y="160" width="440" height="1"/>
+	</columnHeader>
+	<detail>
+		<band height="342" splitType="Stretch">
+			<element kind="staticText" uuid="c3ade116-1156-4b61-9e57-b951635fa0df" x="170" y="31" width="220" height="29" fontName="Calibri" fontSize="19.0" bold="true" hTextAlign="Center">
+				<text><![CDATA[C E R T I F I C A T I O N]]></text>
+			</element>
+			<element kind="staticText" uuid="57888469-2007-4228-8dfe-fc8f7e8c8824" x="60" y="93" width="180" height="20" fontName="Calibri" bold="true" hTextAlign="Left">
+				<text><![CDATA[TO WHOM IT MAY CONCERN:]]></text>
+			</element>
+			<element kind="textField" uuid="31906f6b-b548-4fb7-a4ce-b15ca571c1ee" x="60" y="114" width="439" height="136" fontName="Calibri" fontSize="11.0" bold="false" hTextAlign="Justified">
+				<expression><![CDATA[
+    "    This is to certify that " + $P{Name} + " is currently enrolled for the school year " + $P{SchoolYear} + 
+    " in this learning institution, as per records on file in this office under " + $P{Strand} + " - " + $P{TrackAndSpecialization} + ".\n\n" +
+    
+    "    This further certifies that he/she was a person of good character, and he/she has not violated any of the school rules and regulation. " +
+    "He/she was also cleared of all property responsibility and can get along well with others.\n\n" +
+    
+    "    This certification is being issued upon the request of above-mentioned student for " + $P{purpose} + ".\n\n" +
+
+    "    Given this " + $P{DateGiven} + " at Luis Y. Ferrer Jr Senior High School." 
+    ]]></expression>
+			</element>
+			<element kind="textField" uuid="97a5ac32-125b-4d90-a0df-15fe0c7abcc2" x="358" y="287" width="196" height="20" fontName="Calibri" fontSize="14.0" bold="true">
+				<expression><![CDATA[$P{nameToSign}]]></expression>
+			</element>
+			<element kind="textField" uuid="a6519bcc-13d5-458d-bb67-c23ff81a8eb3" x="358" y="307" width="150" height="20" fontName="Calibri" fontSize="11.0" bold="false">
+				<expression><![CDATA[$P{workPosition}]]></expression>
+			</element>
+		</band>
+	</detail>
+	<pageFooter height="111" splitType="Stretch">
+		<element kind="line" uuid="402044a5-7458-415f-b025-d38d3cad3d02" x="9" y="2" width="542" height="1"/>
+		<element kind="image" uuid="4d3eea09-13b4-453e-920d-827b6d0ab048" x="11" y="4" width="125" height="63">
+			<expression><![CDATA["images/DepEd-MATATAG_BagongPilipinas.png"]]></expression>
+		</element>
+		<element kind="image" uuid="7b64e541-5496-4f45-80f9-1a7bbc107dbb" x="137" y="6" width="59" height="57">
+			<expression><![CDATA["images/LYFJSHS.png"]]></expression>
+		</element>
+		<element kind="staticText" uuid="15f4ec38-1d34-4651-b8c3-3fcd58e51858" x="10" y="72" width="161" height="12" fontSize="8.0">
+			<text><![CDATA[Generated Document using: GOMIS V1]]></text>
+		</element>
+		<element kind="image" uuid="b69214ae-661b-40c7-a635-e79b2a92e70e" x="197" y="6" width="357" height="65">
+			<expression><![CDATA["images/Footer_Text.png"]]></expression>
+		</element>
+	</pageFooter>
+</jasperReport>

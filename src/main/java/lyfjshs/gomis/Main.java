@@ -16,11 +16,12 @@ import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.components.GFrame;
 import lyfjshs.gomis.components.FormManager.FormManager;
-import lyfjshs.gomis.view.LoginView;
+import lyfjshs.gomis.components.settings.SettingsManager;
 import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import lyfjshs.gomis.view.incident.IncidentList;
 import lyfjshs.gomis.view.loading.SplashScreenFrame;
+import lyfjshs.gomis.view.login.LoginView;
 import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
@@ -43,7 +44,7 @@ public class Main {
 	private static Connection conn;
 
 	/** The main application frame */
-	public static GFrame jFrame;
+	public static GFrame gFrame;
 
 	/**
 	 * The entry point of the application. Initializes database connection, sets up
@@ -60,7 +61,7 @@ public class Main {
 			}
 		});
 	}
-	
+
 	/**
 	 * Initializes the database connection by retrieving a connection instance from
 	 * the DBConnection class. If the connection fails, an error message is
@@ -74,33 +75,38 @@ public class Main {
 				throw new SQLException("Connection is null after initialization.");
 			}
 
-
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(null, "Error connecting to the database: " + e.getMessage(),
 					"Database Error: GMS-001", JOptionPane.ERROR_MESSAGE);
 		}
 	}
-	
+
+	public static SettingsManager settings;
+
 	/**
 	 * Sets up the application's look and feel using FlatLaf. Configures UI
 	 * properties such as button and component arc styles.
 	 */
 	public static void initializeLookAndFeel() {
 		try {
-			FlatLightLaf.setup();
-			// Setup FlatLaf theme
+			
 			FlatRobotoFont.install();
-			FlatLaf.registerCustomDefaultsSource("themes"); // Loads properties from "themes" package
+			FlatLaf.registerCustomDefaultsSource("lyfjshs.themes"); 
+			FlatLightLaf.setup();
 			UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
-			// FlatDarkLaf.setup();
+			UIManager.put("Button.arc", 80);
+			UIManager.put("Component.arc", 50);
+			UIManager.put("TextComponent.arc", 50);
+
+			settings = new SettingsManager(conn);
+			settings.initializeAppSettings();
+
+		
+
 		} catch (Exception ex) {
 			JOptionPane.showMessageDialog(null, "Error initializing Look and Feel: " + ex.getMessage(),
 					"API Error: GMS-003", JOptionPane.ERROR_MESSAGE);
 		}
-		FlatLaf.registerCustomDefaultsSource("kotlin.themes");
-		UIManager.put("Button.arc", 80);
-		UIManager.put("Component.arc", 50);
-		UIManager.put("TextComponent.arc", 50);
 	}
 
 	// instance of every Form Panel
@@ -117,15 +123,15 @@ public class Main {
 
 	public static void initiPanels() {
 		loginPanel = new LoginView(conn);
-		incidentFillUp = new IncidentFillUpForm(conn);
-		studManagement = new StudentMangementGUI(conn);
-		vrList = new Violation_Record(conn);
-		violationFillUp = new ViolationFillUpForm(conn);
-		incidentList = new IncidentList(conn);
 		appointmentCalendar = new AppointmentManagement(conn);
 		sessionFillUp = new SessionsForm(conn);
+		vrList = new Violation_Record(conn);
+		violationFillUp = new ViolationFillUpForm(conn);
 		sessionRecords = new SessionRecords(conn);
 		createStudent = new StudentInfoFullForm(conn);
+		incidentFillUp = new IncidentFillUpForm(conn);
+		incidentList = new IncidentList(conn);
+		studManagement = new StudentMangementGUI(conn);
 	}
 
 	public static FormManager formManager;
@@ -137,14 +143,14 @@ public class Main {
 	public static void initFrame() {
 		initializeLookAndFeel();
 		initDB();
-		jFrame = new GFrame(1380, 750, false, "GOMIS", null);
-		jFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
+		gFrame = new GFrame(1380, 750, false, "GOMIS", null);
+		gFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
 		initiPanels();
 
-		FormManager.install(jFrame);
+		FormManager.install(gFrame);
 		formManager = new FormManager();
 
-		jFrame.refresh();
+		gFrame.refresh();
 	}
 
 }

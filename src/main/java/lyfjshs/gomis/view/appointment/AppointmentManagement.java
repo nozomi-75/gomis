@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
@@ -43,7 +44,8 @@ public class AppointmentManagement extends Form {
 		addAppointBtn.addActionListener(e -> createAppointment());
 		headerPanel.add(addAppointBtn, "cell 0 0");
 
-		JLabel titleLabel = new JLabel("Appointments");
+		JLabel titleLabel = new JLabel("Appointments", SwingConstants.CENTER);
+        titleLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 24));
 		titleLabel.setHorizontalAlignment(JLabel.CENTER);
 		headerPanel.add(titleLabel, "cell 1 0, growx");
 
@@ -85,6 +87,14 @@ public class AppointmentManagement extends Form {
 		}
 	}
 
+	private void reloadAppointments() {
+		if (slidePane.getSlideComponent() instanceof AppointmentCalendar) {
+			((AppointmentCalendar) slidePane.getSlideComponent()).updateCalendar();
+		} else if (slidePane.getSlideComponent() instanceof AppointmentDailyOverview) {
+			((AppointmentDailyOverview) slidePane.getSlideComponent()).updateAppointmentsDisplay();
+		}
+	}
+
 	private void createAppointment() {
 		Appointment newAppointment = new Appointment();
 		newAppointment.setAppointmentDateTime(Timestamp.valueOf(LocalDateTime.now())); // Set default date and time
@@ -95,13 +105,9 @@ public class AppointmentManagement extends Form {
 		AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
 
 		// Use AddAppointmentModal to show the dialog
-		AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO);
+		AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO, 700,650);
 
 		// Update the current view after the modal is closed
-		if (slidePane.getSlideComponent() instanceof AppointmentCalendar) {
-			((AppointmentCalendar) slidePane.getSlideComponent()).updateCalendar();
-		} else if (slidePane.getSlideComponent() instanceof AppointmentDailyOverview) {
-			((AppointmentDailyOverview) slidePane.getSlideComponent()).updateAppointmentsDisplay();
-		}
+		reloadAppointments();
 	}
 }

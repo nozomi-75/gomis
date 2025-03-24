@@ -1,0 +1,14 @@
+<jasperreports>
+    <fontFamilies>
+        <fontFamily name="Old English Text MT">
+            <normal><![CDATA[fonts/oldenglish.ttf]]></normal>
+            <pdfEncoding>Identity-H</pdfEncoding>
+            <pdfEmbedded>true</pdfEmbedded>
+        </fontFamily>
+        <fontFamily name="Baskerville Old Face">
+            <normal><![CDATA[fonts/baskerville.ttf]]></normal>
+            <pdfEncoding>Identity-H</pdfEncoding>
+            <pdfEmbedded>true</pdfEmbedded>
+        </fontFamily>
+    </fontFamilies>
+</jasperreports>

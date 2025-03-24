@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Frame;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -15,13 +14,11 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import com.toedter.calendar.JDateChooser;
@@ -33,6 +30,8 @@ import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentModal;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentPanel;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.ModalDialog;
+import raven.modal.component.SimpleModalBorder;
 
 public class AppointmentDailyOverview extends JPanel {
     private LocalDate selectedDate;
@@ -124,10 +123,16 @@ public class AppointmentDailyOverview extends JPanel {
 
     private JPanel createAppointmentCard(Appointment app) {
         JPanel card = new JPanel(new MigLayout("wrap 2", "[grow][]", ""));
+        
+        // Detect if we're in dark mode
+        boolean isDarkTheme = card.getBackground() != null && 
+                            card.getBackground().getRed() < 128;
+
+        // Set border and background based on theme
         card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 4, 0, 0, getTypeColor(app.getConsultationType())),
+                BorderFactory.createMatteBorder(0, 4, 0, 0, getTypeColor(app.getConsultationType(), isDarkTheme)),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        card.setBackground(getTypeBackground(app.getConsultationType()));
+        card.setBackground(getTypeBackground(app.getConsultationType(), isDarkTheme));
 
         JLabel title = new JLabel(app.getAppointmentTitle());
         title.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -191,20 +196,48 @@ public class AppointmentDailyOverview extends JPanel {
         return card;
     }
 
-    private void showAppointmentDetailsPopup(Appointment appointment) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Appointment Details", true);
-        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection);
-        try {
-            appointmentDetails
-                    .loadAppointmentsForDate(appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        dialog.getContentPane().add(appointmentDetails);
-        dialog.setSize(600, 400);
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
+private void showAppointmentDetailsPopup(Appointment appointment) {
+    // Prevent multiple instances of the same modal
+    if (ModalDialog.isIdExist("appointment_details")) {
+        return;
     }
+
+    try {
+        // Create and load the appointment details panel
+        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection, null, null); // Pass null since we don't need selection here
+        LocalDate appointmentDate = appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate();
+        appointmentDetails.loadAppointmentsForDate(appointmentDate);
+
+        // Configure modal options to match the desired style
+        ModalDialog.getDefaultOption()
+                .setOpacity(0f) // Transparent background
+                .setAnimationOnClose(false) // No close animation
+                .getBorderOption()
+                .setBorderWidth(0.5f) // Thin border
+                .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM); // Medium shadow
+
+        // Show the modal dialog with a "Close" button
+        ModalDialog.showModal(this,
+                new SimpleModalBorder(appointmentDetails, "Appointment Details",
+                        new SimpleModalBorder.Option[] {
+                                new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+                        },
+                        (controller, action) -> {
+                            if (action == SimpleModalBorder.CLOSE_OPTION) {
+                                controller.close();
+                            }
+                        }),
+                "appointment_details");
+
+        // Set the size to match the original dialog
+        ModalDialog.getDefaultOption().getLayoutOption().setSize(600, 400);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Error opening appointment details: " + e.getMessage(), "Error",
+                JOptionPane.ERROR_MESSAGE);
+    }
+}
 
     private void createAppointment() {
         try {
@@ -222,7 +255,7 @@ public class AppointmentDailyOverview extends JPanel {
             AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
 
             // Use AddAppointmentModal to show the dialog
-            AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO);
+            AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO, 750, 800);
 
             // Update the current view after the modal is closed
             updateAppointmentsDisplay();
@@ -232,37 +265,72 @@ public class AppointmentDailyOverview extends JPanel {
         }
     }
 
-    private Color getTypeColor(String type) {
-        switch (type) {
-            case "Academic Consultation":
-                return new Color(59, 130, 246);
-            case "Career Guidance":
-                return new Color(147, 51, 234);
-            case "Personal Counseling":
-                return new Color(16, 185, 129);
-            case "Behavioral Counseling":
-                return new Color(202, 138, 4);
-            case "Group Counseling":
-                return new Color(239, 68, 68);
-            default:
-                return Color.GRAY;
+    private Color getTypeColor(String type, boolean isDarkTheme) {
+        if (isDarkTheme) {
+            switch (type) {
+                case "Academic Consultation":
+                    return new Color(59, 130, 246);
+                case "Career Guidance":
+                    return new Color(147, 51, 234);
+                case "Personal Counseling":
+                    return new Color(16, 185, 129);
+                case "Behavioral Counseling":
+                    return new Color(202, 138, 4);
+                case "Group Counseling":
+                    return new Color(239, 68, 68);
+                default:
+                    return new Color(156, 163, 175);
+            }
+        } else {
+            switch (type) {
+                case "Academic Consultation":
+                    return new Color(37, 99, 235);
+                case "Career Guidance":
+                    return new Color(126, 34, 206);
+                case "Personal Counseling":
+                    return new Color(5, 150, 105);
+                case "Behavioral Counseling":
+                    return new Color(180, 120, 10);
+                case "Group Counseling":
+                    return new Color(220, 38, 38);
+                default:
+                    return Color.GRAY;
+            }
         }
     }
 
-    private Color getTypeBackground(String type) {
-        switch (type) {
-            case "Academic Consultation":
-                return new Color(219, 234, 254);
-            case "Career Guidance":
-                return new Color(233, 213, 255);
-            case "Personal Counseling":
-                return new Color(209, 250, 229);
-            case "Behavioral Counseling":
-                return new Color(254, 243, 199);
-            case "Group Counseling":
-                return new Color(254, 226, 226);
-            default:
-                return new Color(243, 244, 246);
+    private Color getTypeBackground(String type, boolean isDarkTheme) {
+        if (isDarkTheme) {
+            switch (type) {
+                case "Academic Consultation":
+                    return new Color(30, 58, 138, 100);
+                case "Career Guidance":
+                    return new Color(91, 33, 182, 100);
+                case "Personal Counseling":
+                    return new Color(6, 95, 70, 100);
+                case "Behavioral Counseling":
+                    return new Color(146, 64, 14, 100);
+                case "Group Counseling":
+                    return new Color(153, 27, 27, 100);
+                default:
+                    return new Color(55, 65, 81, 100);
+            }
+        } else {
+            // Keep existing light theme colors
+            switch (type) {
+                case "Academic Consultation":
+                    return new Color(219, 234, 254);
+                case "Career Guidance":
+                    return new Color(233, 213, 255);
+                case "Personal Counseling":
+                    return new Color(209, 250, 229);
+                case "Behavioral Counseling":
+                    return new Color(254, 243, 199);
+                case "Group Counseling":
+                    return new Color(254, 226, 226);
+                default:
+                    return new Color(243, 244, 246);
+            }
         }
     }
 }

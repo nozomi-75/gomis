@@ -21,6 +21,8 @@ import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
+
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.components.ModelColor;
 import lyfjshs.gomis.components.PanelGradient;
@@ -40,6 +42,7 @@ public class SplashScreenFrame extends JFrame {
     private int dotState = 0;
     
     public SplashScreenFrame() {
+    	FlatMacLightLaf.setup();
         setTitle("Loading...");
         setSize(WIDTH, HEIGHT);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -147,11 +150,11 @@ public class SplashScreenFrame extends JFrame {
             protected void done() {
                 try {
                     dispose(); // Close the splash screen
-                    if (Main.jFrame == null) {
+                    if (Main.gFrame == null) {
                         System.err.println("Error: Main.jFrame is null. Ensure initFrame() is called before accessing Main.jFrame.");
                         System.exit(1); // Exit with error code
                     } else {
-                        Main.jFrame.setVisible(true); // Make the main frame visible
+                        Main.gFrame.setVisible(true); // Make the main frame visible
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

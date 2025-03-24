@@ -1,295 +1,155 @@
 package lyfjshs.gomis.view;
 
-import java.awt.BorderLayout;
+
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.ActionListener;
 import java.sql.Connection;
-import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.JButton;
+import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.MatteBorder;
 
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.extras.components.FlatToggleButton;
-
+import lyfjshs.gomis.Main;
+import lyfjshs.gomis.components.FlatToggleSwitch;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.settings.SettingsManager;
+import lyfjshs.gomis.components.settings.SettingsState;
 import net.miginfocom.swing.MigLayout;
 
-/**
- * A reusable settings panel component that can be embedded in any Swing application
- */
+@SuppressWarnings({ "unused", "serial" })
 public class SettingsPanel extends Form {
-    private Map<String, Object> settings;
-    private ActionListener saveListener;
-    private ActionListener cancelListener;
-    private Connection connection;
-    
-    public SettingsPanel(Connection conn) {
-        // Initialize settings
-        settings = new HashMap<>();
-        settings.put("notifications", true);
-        settings.put("darkMode", false);
-        settings.put("fontSize", "medium");
-        settings.put("autoSave", true);
-        settings.put("language", "english");
-        settings.put("privacyLevel", "standard");
+	private final FlatToggleSwitch notificationsToggle;
+	private final JComboBox<Integer> fontSizeComboBox;
+	private final JComboBox<String> fontComboBox;
+	private final JComboBox<String> themeComboBox;
+	private final Map<String, String> themeMap = Map.of("Dark Theme", "FlatDarkLaf", "Light Theme", "FlatLightLaf",
+			"Mac Dark Theme", "FlatMacDarkLaf", "Mac Light Theme", "FlatMacLightLaf", "Darcula Theme", "FlatDarculaLaf",
+			"IntelliJ Theme", "FlatIntelliJLaf");
+	private final Map<String, String> themeIdToDisplayName = Map.of("FlatDarkLaf", "Dark Theme", "FlatLightLaf",
+			"Light Theme", "FlatMacDarkLaf", "Mac Dark Theme", "FlatMacLightLaf", "Mac Light Theme", "FlatDarculaLaf",
+			"Darcula Theme", "FlatIntelliJLaf", "IntelliJ Theme");
 
-        // Configure panel
-        setLayout(new BorderLayout());
-        
-        // Create main panel with MigLayout
-        JPanel mainPanel = new JPanel(new MigLayout("insets 20, fillx, wrap", "[grow]", "[]"));
-        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        mainPanel.setBackground(Color.WHITE);
-        
-        // Add title
-        JLabel titleLabel = new JLabel("Settings");
-        titleLabel.setFont(new Font("Dialog", Font.BOLD, 24));
-        mainPanel.add(titleLabel, "gapleft 5, gapbottom 15");
+	public SettingsPanel(Connection conn) {
+		this.setLayout(new MigLayout("fill", "[grow]", "[grow]"));
 
-        // Notifications Section
-        JPanel notificationsPanel = createSectionPanel("Notifications");
-        
-        // Add toggle for notifications
-        JPanel notificationTogglePanel = new JPanel(new MigLayout("insets 0, fillx", "[grow][]"));
-        notificationTogglePanel.setOpaque(false);
-        JLabel notificationLabel = new JLabel("Notifications");
-        notificationLabel.setFont(new Font("Dialog", Font.PLAIN, 16));
-        notificationTogglePanel.add(notificationLabel, "cell 0 0");
-        
-        FlatToggleButton notificationToggle = createToggleSwitch();
-        notificationToggle.setSelected((Boolean) settings.get("notifications"));
-        notificationToggle.addActionListener(e -> {
-            settings.put("notifications", notificationToggle.isSelected());
-            System.out.println("Notifications: " + notificationToggle.isSelected());
-        });
-        notificationTogglePanel.add(notificationToggle, "cell 1 0");
-        
-        notificationsPanel.add(notificationTogglePanel, "growx, wrap");
-        
-        JLabel notificationDescription = new JLabel("Enable or disable push notifications");
-        notificationDescription.setForeground(Color.GRAY);
-        notificationDescription.setFont(new Font("Dialog", Font.PLAIN, 14));
-        notificationsPanel.add(notificationDescription, "gapleft 5, gapbottom 10, wrap");
-        
-        mainPanel.add(notificationsPanel, "growx, gapbottom 15");
+		// Main Panel
+		JPanel panel = new JPanel(new MigLayout("", "[grow]", "[][][][][]"));
+		panel.setBorder(BorderFactory.createTitledBorder("Theme & Appearance"));
+		this.add(panel, "cell 0 0,grow");
 
-        // Appearance Section
-        JPanel appearancePanel = createSectionPanel("Appearance");
-        
-        // Dark Mode Toggle
-        JPanel darkModePanel = new JPanel(new MigLayout("insets 0, fillx", "[grow][]"));
-        darkModePanel.setOpaque(false);
-        JLabel darkModeLabel = new JLabel("Dark Mode");
-        darkModeLabel.setFont(new Font("Dialog", Font.PLAIN, 16));
-        darkModePanel.add(darkModeLabel, "cell 0 0");
-        
-        FlatToggleButton darkModeToggle = createToggleSwitch();
-        darkModeToggle.setSelected((Boolean) settings.get("darkMode"));
-        darkModeToggle.addActionListener(e -> {
-            settings.put("darkMode", darkModeToggle.isSelected());
-            System.out.println("Dark Mode: " + darkModeToggle.isSelected());
-        });
-        darkModePanel.add(darkModeToggle, "cell 1 0");
-        
-        appearancePanel.add(darkModePanel, "growx, wrap");
-        
-        // Font Size Dropdown
-        JPanel fontSizePanel = new JPanel(new MigLayout("insets 0, fillx", "[grow]"));
-        fontSizePanel.setOpaque(false);
-        JLabel fontSizeLabel = new JLabel("Font Size");
-        fontSizeLabel.setFont(new Font("Dialog", Font.PLAIN, 16));
-        fontSizePanel.add(fontSizeLabel, "wrap");
-        
-        String[] fontSizes = {"small", "medium", "large"};
-        JComboBox<String> fontSizeComboBox = new JComboBox<>(fontSizes);
-        fontSizeComboBox.setSelectedItem(settings.get("fontSize"));
-        fontSizeComboBox.addActionListener(e -> {
-            settings.put("fontSize", fontSizeComboBox.getSelectedItem());
-            System.out.println("Font Size: " + fontSizeComboBox.getSelectedItem());
-        });
-        fontSizePanel.add(fontSizeComboBox, "growx");
-        
-        appearancePanel.add(fontSizePanel, "growx, gapbottom 10, wrap");
-        
-        mainPanel.add(appearancePanel, "growx, gapbottom 15");
+		// Dark Mode Panel
+		JPanel darkModePanel = new JPanel(new MigLayout("fill", "[grow][]", "[][]"));
+		darkModePanel.putClientProperty("FlatLaf.style",
+				"arc:20; [light]background:shade($Panel.background,10%); [dark]background:tint($Panel.background,10%)");
+		panel.add(darkModePanel, "cell 0 0,grow");
 
-        // Advanced Section
-        JPanel advancedPanel = createSectionPanel("Advanced");
-        
-        // Auto Save Toggle
-        JPanel autoSavePanel = new JPanel(new MigLayout("insets 0, fillx", "[grow][]"));
-        autoSavePanel.setOpaque(false);
-        JLabel autoSaveLabel = new JLabel("Auto Save");
-        autoSaveLabel.setFont(new Font("Dialog", Font.PLAIN, 16));
-        autoSavePanel.add(autoSaveLabel, "cell 0 0");
-        
-        FlatToggleButton autoSaveToggle = createToggleSwitch();
-        autoSaveToggle.setSelected((Boolean) settings.get("autoSave"));
-        autoSaveToggle.addActionListener(e -> {
-            settings.put("autoSave", autoSaveToggle.isSelected());
-            System.out.println("Auto Save: " + autoSaveToggle.isSelected());
-        });
-        autoSavePanel.add(autoSaveToggle, "cell 1 0");
-        
-        advancedPanel.add(autoSavePanel, "growx, wrap");
-        
-        // Language Dropdown
-        JPanel languagePanel = new JPanel(new MigLayout("insets 0, fillx", "[grow]"));
-        languagePanel.setOpaque(false);
-        JLabel languageLabel = new JLabel("Language");
-        languageLabel.setFont(new Font("Dialog", Font.PLAIN, 16));
-        languagePanel.add(languageLabel, "wrap");
-        
-        String[] languages = {"english", "spanish", "french", "german"};
-        JComboBox<String> languageComboBox = new JComboBox<>(languages);
-        languageComboBox.setSelectedItem(settings.get("language"));
-        languageComboBox.addActionListener(e -> {
-            settings.put("language", languageComboBox.getSelectedItem());
-            System.out.println("Language: " + languageComboBox.getSelectedItem());
-        });
-        languagePanel.add(languageComboBox, "growx");
-        
-        advancedPanel.add(languagePanel, "growx, gapbottom 10, wrap");
-        
-        // Privacy Level Dropdown
-        JPanel privacyPanel = new JPanel(new MigLayout("insets 0, fillx", "[grow]"));
-        privacyPanel.setOpaque(false);
-        JLabel privacyLabel = new JLabel("Privacy Level");
-        privacyLabel.setFont(new Font("Dialog", Font.PLAIN, 16));
-        privacyPanel.add(privacyLabel, "wrap");
-        
-        String[] privacyLevels = {"basic", "standard", "strict"};
-        JComboBox<String> privacyComboBox = new JComboBox<>(privacyLevels);
-        privacyComboBox.setSelectedItem(settings.get("privacyLevel"));
-        privacyComboBox.addActionListener(e -> {
-            settings.put("privacyLevel", privacyComboBox.getSelectedItem());
-            System.out.println("Privacy Level: " + privacyComboBox.getSelectedItem());
-        });
-        privacyPanel.add(privacyComboBox, "growx");
-        
-        advancedPanel.add(privacyPanel, "growx, gapbottom 10, wrap");
-        
-        mainPanel.add(advancedPanel, "growx, gapbottom 15");
+		JLabel lblNotifications = new JLabel("Notifications");
+		lblNotifications.setFont(new Font("SansSerif", Font.BOLD, 14));
+		darkModePanel.add(lblNotifications, "cell 0 0");
 
-        // Action Buttons
-        JPanel buttonPanel = new JPanel(new MigLayout("insets 0, fillx", "[grow][]"));
-        buttonPanel.setOpaque(false);
-        
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.putClientProperty("JButton.buttonType", "roundRect");
-        cancelButton.addActionListener(e -> {
-            if (cancelListener != null) {
-                cancelListener.actionPerformed(e);
-            } else {
-                System.out.println("Cancel clicked");
-            }
-        });
-        buttonPanel.add(cancelButton, "cell 0 0, alignx right");
-        
-        JButton saveButton = new JButton("Save Changes");
-        saveButton.putClientProperty("JButton.buttonType", "roundRect");
-        saveButton.putClientProperty("JButton.buttonType", "primary");
-        saveButton.addActionListener(e -> {
-            if (saveListener != null) {
-                saveListener.actionPerformed(e);
-            } else {
-                System.out.println("Save Changes clicked");
-            }
-        });
-        buttonPanel.add(saveButton, "cell 1 0");
-        
-        mainPanel.add(buttonPanel, "growx, gaptop 15");
+		JPanel panel_1 = new JPanel(new MigLayout("insets 0", "[][]", "[grow]"));
+		panel_1.setOpaque(false);
+		darkModePanel.add(panel_1, "cell 1 0 1 2,grow");
 
-        // Add the main panel to a scroll pane
-        JScrollPane scrollPane = new JScrollPane(mainPanel);
-        scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        
-        add(scrollPane, BorderLayout.CENTER);
-    }
+		JLabel lblOnOff = new JLabel("Off");
+		panel_1.add(lblOnOff, "cell 0 0,growx,aligny center");
 
-    /**
-     * Creates a toggle switch using FlatLaf's FlatToggleButton
-     * @return A configured toggle switch button
-     */
-    private FlatToggleButton createToggleSwitch() {
-        FlatToggleButton toggleButton = new FlatToggleButton();
-        toggleButton.putClientProperty("JButton.buttonType", "toggleButton");
-        toggleButton.putClientProperty("JToggleButton.style", "switch");
-        toggleButton.setFocusable(false);
-        return toggleButton;
-    }
+		// Create our custom toggle
+		notificationsToggle = new FlatToggleSwitch();
+        // If you want to override the color just for this one instance:
+        // toggleSwitch.setTrackOnColor(new Color(76, 175, 80)); // green
+        // toggleSwitch.setAnimationDuration(200);               // e.g. 200ms
+		panel_1.add(notificationsToggle, "cell 1 0,growx,aligny center");
 
-    private JPanel createSectionPanel(String title) {
-        JPanel panel = new JPanel(new MigLayout("insets 0, fillx, wrap", "[grow]"));
-        panel.setOpaque(false);
-        panel.setBorder(new MatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
-        
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Dialog", Font.BOLD, 18));
-        panel.add(titleLabel, "gapleft 5, gapbottom 10");
-        
-        return panel;
-    }
-    
-    public Map<String, Object> getSettings() {
-        return new HashMap<>(settings);
-    }
-    
-    public void setSettings(Map<String, Object> newSettings) {
-        this.settings.putAll(newSettings);
-        // TODO: Update UI components to reflect new settings
-    }
-    
-    public void setSaveListener(ActionListener listener) {
-        this.saveListener = listener;
-    }
-    
-    public void setCancelListener(ActionListener listener) {
-        this.cancelListener = listener;
-    }
+		JLabel lblDarkModeDesc = new JLabel("Turn on or off Notifications");
+		darkModePanel.add(lblDarkModeDesc, "cell 0 1");
 
-    // Sample main method to demonstrate usage
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                // Install FlatLaf theme
-                FlatLightLaf.setup();
-                UIManager.setLookAndFeel(new FlatLightLaf());
-                
-                // Configure FlatLaf globals
-                UIManager.put("ToggleButton.arc", 999);
-                UIManager.put("Component.arrowType", "chevron");
-                UIManager.put("Component.focusWidth", 1);
-                UIManager.put("ScrollBar.thumbArc", 999);
-                UIManager.put("ScrollBar.thumbInsets", new java.awt.Insets(2, 2, 2, 2));
-            } catch (Exception ex) {
-                System.err.println("Failed to initialize FlatLaf");
-                ex.printStackTrace();
-            }
-            
-            JFrame frame = new JFrame("Settings Demo");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(600, 700);
-            
-            SettingsPanel settingsPanel = new SettingsPanel(null);
-            settingsPanel.setSaveListener(e -> JOptionPane.showMessageDialog(frame, "Settings saved!"));
-            
-            frame.getContentPane().add(settingsPanel);
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-        });
-    }
+		// Theme Selection Panel
+		JPanel themePanel = new JPanel(new MigLayout("fill", "[grow]", "[][]"));
+		themePanel.putClientProperty("FlatLaf.style",
+				"arc:20; [light]background:shade($Panel.background,10%); [dark]background:tint($Panel.background,10%)");
+		panel.add(themePanel, "cell 0 1,growx");
+
+		JLabel lblThemeTitle = new JLabel("Select Theme");
+		lblThemeTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+		themePanel.add(lblThemeTitle, "cell 0 0");
+
+		JLabel lblSelectTheme = new JLabel("Choose a theme:");
+		themePanel.add(lblSelectTheme, "cell 0 1");
+
+		themeComboBox = new JComboBox<>(new String[] { "Dark Theme", "Light Theme", "Mac Dark Theme", "Mac Light Theme",
+				"Darcula Theme", "IntelliJ Theme" });
+		themePanel.add(themeComboBox, "cell 1 0 1 2,alignx right,aligny center");
+
+		// Text Size Panel
+		JPanel textSizePanel = new JPanel(new MigLayout("fill", "[grow][]", "[][][]"));
+		textSizePanel.putClientProperty("FlatLaf.style",
+				"arc:20; [light]background:shade($Panel.background,10%); [dark]background:tint($Panel.background,10%)");
+		panel.add(textSizePanel, "cell 0 2,growx");
+
+		JLabel lblTextSize = new JLabel("Text Size");
+		lblTextSize.setFont(new Font("SansSerif", Font.BOLD, 14));
+		textSizePanel.add(lblTextSize, "cell 0 0");
+
+		fontSizeComboBox = new JComboBox<>(new Integer[] { 10, 12, 14, 16, 18, 20, 24 });
+		textSizePanel.add(fontSizeComboBox, "cell 1 0 1 3,alignx right,aligny center");
+
+		JLabel lblNewLabel = new JLabel("Select a Font Size");
+		textSizePanel.add(lblNewLabel, "cell 0 1");
+
+		// Font Selection Panel
+		JPanel fontPanel = new JPanel(new MigLayout("fill", "[grow]", "[][]"));
+		fontPanel.putClientProperty("FlatLaf.style",
+				"arc:20; [light]background:shade($Panel.background,10%); [dark]background:tint($Panel.background,10%)");
+		panel.add(fontPanel, "cell 0 3,growx");
+
+		JLabel lblFontTitle = new JLabel("Font Selection");
+		lblFontTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+		fontPanel.add(lblFontTitle, "cell 0 0");
+
+		JLabel lblFontDesc = new JLabel("Choose a font:");
+		fontPanel.add(lblFontDesc, "cell 0 1");
+
+		fontComboBox = new JComboBox<>(new String[] { "SansSerif", "Serif", "Monospaced" });
+		fontPanel.add(fontComboBox, "cell 1 0 1 2,alignx right,aligny center");
+
+		// Initialize UI with current settings
+		initializeSettings();
+
+		// Add listeners to update settings
+		themeComboBox.addActionListener(e -> applySelectedTheme());
+		fontSizeComboBox.addActionListener(
+				e -> updateSettings("font_size", String.valueOf(fontSizeComboBox.getSelectedItem())));
+		fontComboBox.addActionListener(e -> updateSettings("font_style", (String) fontComboBox.getSelectedItem()));
+	}
+
+	private void applySelectedTheme() {
+		String selectedName = (String) themeComboBox.getSelectedItem();
+		String themeId = themeMap.get(selectedName);
+		updateSettings("theme", themeId); // Persist the theme via SettingsManager
+	}
+
+	private void initializeSettings() {
+		SettingsState state = Main.settings.getSettingsState();
+		String displayName = themeIdToDisplayName.getOrDefault(state.theme, "Light Theme");
+		themeComboBox.setSelectedItem(displayName);
+		fontSizeComboBox.setSelectedItem(state.fontSize);
+		fontComboBox.setSelectedItem(state.fontStyle);
+	}
+
+	private void updateSettings(String key, String value) {
+		SettingsState state = Main.settings.updateSetting(key, value);
+		if ("theme".equals(key)) {
+			String displayName = themeIdToDisplayName.getOrDefault(state.theme, "Light Theme");
+			themeComboBox.setSelectedItem(displayName);
+		} else if ("font_size".equals(key)) {
+			fontSizeComboBox.setSelectedItem(state.fontSize);
+		} else if ("font_style".equals(key)) {
+			fontComboBox.setSelectedItem(state.fontStyle);
+		} else if ("notifications".equals(key)) {
+			notificationsToggle.setSelected(state.notifications);
+		}
+	}
 }
