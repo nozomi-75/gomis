@@ -18,6 +18,7 @@ import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import lyfjshs.gomis.Database.entity.Sessions;
 
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
@@ -76,10 +77,30 @@ public class SessionRecords extends Form {
         // Initialize add session button
         addSessionBtn = new JButton("Add Session");
         addSessionBtn.addActionListener(e -> openAddSessionForm());
-
-        // Add the main panel as the first slide
+        
         slidePane.addSlide(mainPanel, SlidePaneTransition.Type.FORWARD);
     }
+    private void openAddSessionForm() {
+        try {
+            SessionsForm sessionsForm = new SessionsForm(connection);
+            sessionsForm.setSaveCallback(this::loadSessionData);
+            
+            // Configure the form as a dialog
+            sessionsForm.setSize(800, 600);
+            sessionsForm.setLocationRelativeTo(this);
+            sessionsForm.setTitle("New Session");
+            sessionsForm.setVisible(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, 
+                "Error opening session form: " + e.getMessage(), 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+        
+        // Add the main panel as the first slide
+       
 
     private void setupTable() {
         Object[][] initialData = new Object[0][7]; // Adjusted for new column structure
@@ -199,11 +220,7 @@ public class SessionRecords extends Form {
         return panel;
     }
 
-    private void openAddSessionForm() {
-        SessionsForm sessionsForm = new SessionsForm(connection);
-        sessionsForm.setSaveCallback(this::loadSessionData);
-        sessionsForm.setVisible(true);
-    }
+   
 
     private void loadSessionData() {
         try {

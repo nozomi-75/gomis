@@ -38,6 +38,9 @@ import lyfjshs.gomis.view.appointment.AppointmentOverview;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
+import lyfjshs.gomis.view.sessions.SessionsForm;
+import lyfjshs.gomis.Main;
+import lyfjshs.gomis.view.appointment.AppointmentCalendar;
 
 public class MainDashboard extends Form {
 
@@ -352,27 +355,29 @@ public class MainDashboard extends Form {
 		printINITIAL.setButtonType(ButtonType.none);
 		panel.add(printINITIAL, "flowx,cell 1 3,growx");
 
-		FlatButton createSession = new FlatButton();
-		createSession.setText("Create a Session");
-		createSession.setButtonType(ButtonType.none);
-		panel.add(createSession, "cell 3 3,growx");
-
+		FlatButton standardButton_1 = new FlatButton();
+		standardButton_1.setText("Create a Session");
+		standardButton_1.setButtonType(ButtonType.none);
+		standardButton_1.addActionListener(e -> SessionForm());
+		panel.add(standardButton_1, "cell 3 3,growx");
+		
 		FlatButton setAppointment = new FlatButton();
 		setAppointment.setText("Set Appointment");
 		setAppointment.setButtonType(ButtonType.none);
 		panel.add(setAppointment, "flowx,cell 5 3,growx");
-
+		
 		FlatButton viewStudents = new FlatButton();
 		viewStudents.setText("View Students");
 		viewStudents.setButtonType(ButtonType.none);
 		panel.add(viewStudents, "flowx,cell 7 3,growx");
-
+		
 		JButton createIncident = new JButton("Create a Incident Record");
 		panel.add(createIncident, "cell 1 4");
-
+		
 		FlatButton viewAppointments = new FlatButton();
 		viewAppointments.setText("View Appointments");
 		viewAppointments.setButtonType(ButtonType.none);
+		viewAppointments.addActionListener(e -> viewAppointments());
 		panel.add(viewAppointments, "cell 5 4,growx");
 
 		JButton searchStudent = new JButton("Search Student");
@@ -380,4 +385,42 @@ public class MainDashboard extends Form {
 		return panel;
 	}
 
+	private void SessionForm() {
+		try {
+			SessionsForm sessionsForm = new SessionsForm(connection);
+			if (Main.formManager != null) {
+				Main.formManager.showForm(sessionsForm);
+			} else {
+				JOptionPane.showMessageDialog(this, 
+					"Unable to open Sessions form: FormManager not available", 
+					"Error", JOptionPane.ERROR_MESSAGE);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, 
+				"Error opening Sessions form: " + e.getMessage(), 
+				"Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+	
+	private void viewAppointments() {
+		try {
+			AppointmentCalendar appointmentCalendar = new AppointmentCalendar(new AppointmentDAO(connection), connection);
+			if (Main.formManager != null) {
+				Form appointmentForm = new Form();
+				appointmentForm.setLayout(new BorderLayout());
+				appointmentForm.add(appointmentCalendar, BorderLayout.CENTER);
+				Main.formManager.showForm(appointmentForm);
+			} else {
+				JOptionPane.showMessageDialog(this, 
+					"Unable to open Appointments view: FormManager not available", 
+					"Error", JOptionPane.ERROR_MESSAGE);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, 
+				"Error opening Appointments view: " + e.getMessage(), 
+				"Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
 }
