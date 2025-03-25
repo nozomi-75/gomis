@@ -18,8 +18,21 @@ set "__MVNW_ERROR__="
 set "__MVNW_PSMODULEP_SAVE__=%PSModulePath%"
 set "PSModulePath="
 
-for /f "usebackq tokens=1* delims==" %%A in (`powershell -noprofile -command "& { $scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; try { icm -ScriptBlock ([Scriptblock]::Create((Get-Content -Raw '%~f0'))) -NoNewScope } catch { Write-Error $_.Exception.Message; exit 1 } }"`) do (
-    if "%%A"=="MVN_CMD" (set "__MVNW_CMD__=%%B") else if "%%B"=="" (echo %%A) else (echo %%A=%%B)
+REM Detect if we're running in PowerShell or pwsh
+set "POWERSHELL_DETECTED="
+for /f "tokens=*" %%i in ('powershell -Command "$PSVersionTable.PSVersion.Major" 2^>nul') do set "POWERSHELL_DETECTED=%%i"
+if not defined POWERSHELL_DETECTED (
+    for /f "tokens=*" %%i in ('pwsh -Command "$PSVersionTable.PSVersion.Major" 2^>nul') do set "POWERSHELL_DETECTED=%%i"
+)
+
+if defined POWERSHELL_DETECTED (
+    REM We're in PowerShell or pwsh, use direct execution
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "& { $scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; try { $content = Get-Content -Raw '%~f0'; $marker = ': end batch / begin powershell #>'; $startIndex = $content.IndexOf($marker) + $marker.Length; $psContent = $content.Substring($startIndex).TrimStart(); icm -ScriptBlock ([Scriptblock]::Create($psContent)) -NoNewScope } catch { Write-Error $_.Exception.Message; exit 1 } }"
+) else (
+    REM We're in CMD, use the original method
+    for /f "usebackq tokens=1* delims==" %%A in (`powershell -noprofile -command "& { $scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; try { $content = Get-Content -Raw '%~f0'; $marker = ': end batch / begin powershell #>'; $startIndex = $content.IndexOf($marker) + $marker.Length; $psContent = $content.Substring($startIndex).TrimStart(); icm -ScriptBlock ([Scriptblock]::Create($psContent)) -NoNewScope } catch { Write-Error $_.Exception.Message; exit 1 } }"`) do (
+        if "%%A"=="MVN_CMD" (set "__MVNW_CMD__=%%B") else if "%%B"=="" (echo %%A) else (echo %%A=%%B)
+    )
 )
 
 set "PSModulePath=%__MVNW_PSMODULEP_SAVE__%"
@@ -35,7 +48,6 @@ if not "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %*) else (
 goto :EOF
 
 : end batch / begin powershell #>
-
 $ErrorActionPreference = "Stop"
 if ($env:MVNW_VERBOSE -eq "true") {
     $VerbosePreference = "Continue"
