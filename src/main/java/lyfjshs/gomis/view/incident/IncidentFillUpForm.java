@@ -33,6 +33,7 @@ import lyfjshs.gomis.Database.entity.Incident;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.utils.IncidentReportGenerator;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
@@ -142,8 +143,9 @@ public class IncidentFillUpForm extends Form {
 		submitButton.addActionListener(e -> saveIncidentReport());
 		footPanel.add(submitButton, "cell 1 0");
 
-		JButton btnNewButton = new JButton("Print INTIAL Report");
-		detailsPanel.add(btnNewButton, "cell 0 2");
+		JButton printBtn = new JButton("Print INTIAL Report");
+		printBtn.addActionListener( e -> IncidentReportGenerator. createINITIALIncidentReport(this));
+		detailsPanel.add(printBtn, "cell 0 2");
 
 	}
 
@@ -361,7 +363,7 @@ public class IncidentFillUpForm extends Form {
 		}
 
 		// Check date and time
-		if (DateField.getText().trim().isEmpty() || TimeField.getText().trim().isEmpty()) {
+		if (DateField.getText().trim().isEmpty() || TimeField.getText().isEmpty()) {
 			showError("Please enter date and time of the incident");
 			return false;
 		}
@@ -473,11 +475,14 @@ public class IncidentFillUpForm extends Form {
 			return;
 		}
 
-		StudentSearchPanel searchPanel = new StudentSearchPanel(conn, student -> {
-			reporterStudent = student; // Store the selected student
-			populateReporterFields(student);
-			ModalDialog.closeModal("reporterSearch");
-		});
+		StudentSearchPanel searchPanel = new StudentSearchPanel(conn) {
+			@Override
+			protected void onStudentSelected(Student student) {
+				reporterStudent = student;
+				populateReporterFields(student);
+				ModalDialog.closeModal("reporterSearch");
+			}
+		};
 
 		Option option = ModalDialog.createOption();
 		option.setAnimationEnabled(true);
@@ -485,51 +490,61 @@ public class IncidentFillUpForm extends Form {
 		ModalDialog.showModal(this, searchPanel, option, "reporterSearch");
 	}
 
-	// New method for searching student participants
 	private void openStudentParticipantSearchUI() {
 		if (ModalDialog.isIdExist("participantSearch")) {
 			return;
 		}
 
-		StudentSearchPanel searchPanel = new StudentSearchPanel(conn, student -> {
-			// Create participant from selected student
-			Participants participant = new Participants();
-			participant.setStudentUid(student.getStudentUid());
-			participant.setParticipantType("Student");
-			participant.setParticipantLastName(student.getStudentLastname());
-			participant.setParticipantFirstName(student.getStudentFirstname());
-			participant.setSex(student.getStudentSex());
-			participant.setContactNumber(""); // Can be updated if needed
-
-			// Save participant to database
-			try {
-				participantsDAO.createParticipant(participant);
-				// Store participant details for later use
-				Map<String, String> details = new HashMap<>();
-				details.put("firstName", student.getStudentFirstname());
-				details.put("lastName", student.getStudentLastname());
-				details.put("fullName", student.getStudentFirstname() + " " + student.getStudentLastname());
-				details.put("sex", student.getStudentSex());
-				details.put("type", "Student");
-				details.put("lrn", student.getStudentLrn());
-				participantDetails.put(participant.getParticipantId(), details);
-
-				// Add to participants table
-				participantTableModel.addRow(new Object[] { participant.getParticipantId(), details.get("fullName"),
-						"Student", "View | Remove" });
-
-				// Close the modal
-				ModalDialog.closeModal("participantSearch");
-
-			} catch (SQLException ex) {
-				JOptionPane.showMessageDialog(this, "Error adding student as participant: " + ex.getMessage(),
-						"Database Error", JOptionPane.ERROR_MESSAGE);
+		StudentSearchPanel searchPanel = new StudentSearchPanel(conn) {
+			@Override
+			protected void onStudentSelected(Student student) {
+				try {
+					addStudentParticipant(student);
+					ModalDialog.closeModal("participantSearch");
+				} catch (SQLException ex) {
+					JOptionPane.showMessageDialog(IncidentFillUpForm.this, 
+						"Error adding student as participant: " + ex.getMessage(),
+						"Database Error", 
+						JOptionPane.ERROR_MESSAGE);
+				}
 			}
-		});
+		};
 
 		Option option = ModalDialog.createOption();
 		option.setAnimationEnabled(true);
 		option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
 		ModalDialog.showModal(this, searchPanel, option, "participantSearch");
+	}
+
+	// Add this helper method to handle student participant creation
+	private void addStudentParticipant(Student student) throws SQLException {
+		Participants participant = new Participants();
+		participant.setStudentUid(student.getStudentUid());
+		participant.setParticipantType("Student");
+		participant.setParticipantLastName(student.getStudentLastname());
+		participant.setParticipantFirstName(student.getStudentFirstname());
+		participant.setSex(student.getStudentSex());
+		participant.setContactNumber(student.getContact() != null ? student.getContact().getContactNumber() : "");
+
+		// Save participant to database
+		participantsDAO.createParticipant(participant);
+
+		// Store participant details
+		Map<String, String> details = new HashMap<>();
+		details.put("firstName", student.getStudentFirstname());
+		details.put("lastName", student.getStudentLastname());
+		details.put("fullName", student.getStudentFirstname() + " " + student.getStudentLastname());
+		details.put("sex", student.getStudentSex());
+		details.put("type", "Student");
+		details.put("lrn", student.getStudentLrn());
+		participantDetails.put(participant.getParticipantId(), details);
+
+		// Add to participants table
+		participantTableModel.addRow(new Object[] { 
+			participant.getParticipantId(), 
+			details.get("fullName"),
+			"Student", 
+			"View | Remove" 
+		});
 	}
 }

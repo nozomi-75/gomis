@@ -27,16 +27,17 @@ import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Student;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
+import raven.modal.ModalDialog;
 import raven.modal.component.Modal;
 
-public class StudentSearchPanel extends Modal {
+public abstract class StudentSearchPanel extends Modal {
     private JPanel advancedPanel;
     private JTextField firstNameField = new JTextField(20);
     private JTextField middleNameField = new JTextField(20);
     private JTextField lastNameField = new JTextField(20);
     private JFormattedTextField dobField;
     private DatePicker datePicker;
-    private Connection connection;
+    protected final Connection connection;
     private JPanel panelResult;
     private Student selectedStudent; // Add this field to store selected student
     private List<StudentResult> resultPanels = new ArrayList<>();
@@ -238,11 +239,12 @@ public class StudentSearchPanel extends Modal {
                 clearSelections();
                 resultPanel.setSelected(true);
                 selectedStudent = student;
-                
-                // Call the callback if it exists
                 if (callback != null) {
                     callback.onStudentSelected(student);
+                } else {
+                    onStudentSelected(student);
                 }
+                ModalDialog.closeModal("search");
             }
         });
     }
@@ -251,5 +253,15 @@ public class StudentSearchPanel extends Modal {
     private void displayStudentFullData(Student student) {
         this.selectedStudent = student;
         // Remove the StudentFullData dialog display since we just want to store the selection
+    }
+
+    // This method will be called when a student is selected from search results
+    protected void onStudentSelected(Student student) {
+        // Default empty implementation
+    }
+
+    // Add this interface inside the StudentSearchPanel class
+    public interface StudentSelectionCallback {
+        void onStudentSelected(Student student);
     }
 }

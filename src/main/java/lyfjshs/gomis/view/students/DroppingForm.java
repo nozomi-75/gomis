@@ -36,7 +36,6 @@ public class DroppingForm extends JPanel {
 
 	private Connection connection;
 	private JLabel lblNewLabel;
-	private JScrollPane scrollPane_1;
 	private JTextArea actionTextArea;
 
 	public DroppingForm(Connection conn, Student studee, GuidanceCounselor counselor) {
@@ -60,6 +59,9 @@ public class DroppingForm extends JPanel {
 		reasonTextArea = new JTextArea(5, 40);
 		reasonTextArea.setLineWrap(true);
 		reasonTextArea.setWrapStyleWord(true);
+		actionTextArea = new JTextArea(5, 40);
+		actionTextArea.setLineWrap(true);
+		actionTextArea.setWrapStyleWord(true);
 		trackField = new JTextField();
 		dateChooser = new DatePicker();
 		dateChooser.setEditor(dateField);
@@ -67,49 +69,42 @@ public class DroppingForm extends JPanel {
 	}
 
 	private void setupLayout() {
-		setLayout(new MigLayout("wrap 4, insets 20", "[150]10[250]10[]10[150]10[250]", "[][][][][][][187.00,grow][]"));
+		setLayout(new MigLayout("wrap 4, insets 20", "[150]10[250]10[]10[150]10[250]", "[][][][][][187.00,grow][]"));
 
-		JLabel headerLabel = new JLabel("Drop-Out Fill-Up Form", JLabel.CENTER);
-		headerLabel.setFont(new Font("Arial", Font.BOLD, 24));
-		headerLabel.setForeground(Color.WHITE);
-		headerLabel.setOpaque(true);
-		headerLabel.setBackground(new Color(0, 83, 156));
-		headerLabel.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
-		this.add(headerLabel, "cell 0 0 5 1,growx");
+		this.add(new JLabel("Date:"), "cell 0 0");
+		this.add(dateField, "cell 1 0,growx");
+		this.add(new JLabel("LRN:"), "cell 3 0");
+		this.add(lrnField, "cell 4 0,growx");
 
-		this.add(new JLabel("Date:"), "cell 0 1");
-		this.add(dateField, "cell 1 1, growx");
-		this.add(new JLabel("LRN:"), "cell 3 1");
-		this.add(lrnField, "cell 4 1,growx");
+		this.add(new JLabel("Name of Student:"), "cell 0 1");
+		this.add(nameField, "cell 1 1,growx");
+		this.add(new JLabel("Track/Strand-Specialization:"), "cell 3 1");
+		this.add(trackField, "cell 4 1,growx");
 
-		this.add(new JLabel("Name of Student:"), "cell 0 2");
-		this.add(nameField, "cell 1 2, growx");
-		this.add(new JLabel("Track/Strand-Specialization:"), "cell 3 2");
-		this.add(trackField, "cell 4 2,growx");
+		this.add(new JLabel("Adviser:"), "cell 0 2");
+		this.add(adviserField, "cell 1 2,growx");
+		this.add(new JLabel("Grade & Section:"), "cell 3 2");
+		this.add(gradeSecField, "cell 4 2,growx");
 
-		this.add(new JLabel("Adviser:"), "cell 0 3");
-		this.add(adviserField, "cell 1 3, growx");
-		this.add(new JLabel("Grade & Section:"), "cell 3 3");
-		this.add(gradeSecField, "cell 4 3,growx");
-
-		this.add(new JLabel("Inclusive date of absences:"), "cell 0 4");
-		this.add(absencesField, "cell 1 4, growx");
+		this.add(new JLabel("Inclusive date of absences:"), "cell 0 3");
+		this.add(absencesField, "cell 1 3,growx");
 
 		JLabel label_1 = new JLabel("Effective Date:");
-		this.add(label_1, "cell 3 4");
+		this.add(label_1, "cell 3 3");
 		effectiveDateField = new JFormattedTextField();
 		effectiveDateChooser.setEditor(effectiveDateField);
-		this.add(effectiveDateField, "cell 4 4,grow");
+		this.add(effectiveDateField, "cell 4 3,grow");
 
 		lblNewLabel = new JLabel("Action Taken");
-		this.add(lblNewLabel, "cell 0 5");
+		this.add(lblNewLabel, "cell 0 4");
 
 		JLabel label = new JLabel("Reason for dropping:");
-		this.add(label, "cell 3 5");
+		this.add(label, "cell 3 4");
 
-		this.add(new JScrollPane(actionTextArea), "cell 0 6 2 1,grow");
-
-		this.add(new JScrollPane(reasonTextArea), "cell 3 6 2 1,grow");
+		
+		this.add(new JScrollPane(actionTextArea), "cell 0 5 2 1,grow");
+		
+		this.add(new JScrollPane(reasonTextArea), "cell 3 5 2 1,grow");
 	}
 
 	public void resetForm() {
@@ -121,6 +116,7 @@ public class DroppingForm extends JPanel {
 		gradeSecField.setText("");
 		effectiveDateField.setText("");
 		reasonTextArea.setText("");
+		actionTextArea.setText("");
 		trackField.setText("");
 	}
 

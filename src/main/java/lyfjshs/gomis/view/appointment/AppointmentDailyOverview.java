@@ -230,7 +230,7 @@ private void showAppointmentDetailsPopup(Appointment appointment) {
                 "appointment_details");
 
         // Set the size to match the original dialog
-        ModalDialog.getDefaultOption().getLayoutOption().setSize(600, 400);
+        ModalDialog.getDefaultOption().getLayoutOption().setSize(700, 700);
 
     } catch (Exception e) {
         e.printStackTrace();

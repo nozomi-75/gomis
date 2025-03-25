@@ -4,9 +4,20 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.time.format.DateTimeFormatter;
 
+import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+
+import net.miginfocom.swing.MigLayout;
+import raven.datetime.DatePicker;
+import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
 
 public class JFrameSizeTest extends JFrame {
 
@@ -26,7 +37,7 @@ public class JFrameSizeTest extends JFrame {
 
         // setMinimumSize(minSize); // Set the minimum size
 
-        setSize(new Dimension(1366, 720)); // Initial size, within bounds
+        setSize(new Dimension(425, 720)); // Initial size, within bounds
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Center the frame
 
@@ -42,6 +53,37 @@ public class JFrameSizeTest extends JFrame {
                 printFrameSize();
             }
         });
+        
+        // Create the panel for input fields
+        JPanel panel = new JPanel(new MigLayout("fillx, insets 10", "[right]10[grow,fill]", "[100][][][]"));
+        JFormattedTextField dateGivenField = new JFormattedTextField();
+        JComboBox<String> signerComboBox = new JComboBox<>(
+                new String[] { "SALLY P. GENUINO, Principal II", "RACQUEL D. COMANDANTE, Guidance Designate" });
+        DatePicker datePicker = new DatePicker();
+        datePicker.setEditor(dateGivenField);
+        datePicker.setSelectedDate(java.time.LocalDate.now());
+
+        // Add fields to the panel
+        panel.add(new JLabel("Purpose:"), "cell 0 0");
+        
+        JScrollPane scrollPane = new JScrollPane();
+        panel.add(scrollPane, "cell 1 0,grow");
+        
+                // Input fields
+                JTextArea purposeField = new JTextArea();
+                scrollPane.setViewportView(purposeField);
+                purposeField.setColumns(1);
+                purposeField.setRows(5);
+        panel.add(new JLabel("Date Given:"), "cell 0 1");
+        panel.add(dateGivenField, "cell 1 1");
+        //get the selected date and format this in this format example: "27th day of April, 2019" 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d'th day of' MMMM, yyyy");
+        String formatDateSelected = datePicker.getSelectedDate().format(formatter);
+        panel.add(new JLabel(formatDateSelected), "cell 0 2 2 1,alignx center");
+        panel.add(new JLabel("Signer and Position:"), "cell 0 3");
+        panel.add(signerComboBox, "cell 1 3");
+
+        getContentPane().add(panel);
     }
 
     private void printFrameSize() {

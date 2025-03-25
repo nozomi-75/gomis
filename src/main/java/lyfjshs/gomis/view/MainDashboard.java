@@ -347,36 +347,36 @@ public class MainDashboard extends Form {
 		studentLabel.putClientProperty("FlatLaf.styleClass", "large");
 		panel.add(studentLabel, "cell 7 2,alignx center");
 
-		FlatButton standardButton_1_1 = new FlatButton();
-		standardButton_1_1.setText("Print INITIAL Incident");
-		standardButton_1_1.setButtonType(ButtonType.none);
-		panel.add(standardButton_1_1, "flowx,cell 1 3,growx");
+		FlatButton printINITIAL = new FlatButton();
+		printINITIAL.setText("Print INITIAL Incident");
+		printINITIAL.setButtonType(ButtonType.none);
+		panel.add(printINITIAL, "flowx,cell 1 3,growx");
 
-		FlatButton standardButton_1 = new FlatButton();
-		standardButton_1.setText("Create a Session");
-		standardButton_1.setButtonType(ButtonType.none);
-		panel.add(standardButton_1, "cell 3 3,growx");
+		FlatButton createSession = new FlatButton();
+		createSession.setText("Create a Session");
+		createSession.setButtonType(ButtonType.none);
+		panel.add(createSession, "cell 3 3,growx");
 
-		FlatButton standardButton_2 = new FlatButton();
-		standardButton_2.setText("Set Appointment");
-		standardButton_2.setButtonType(ButtonType.none);
-		panel.add(standardButton_2, "flowx,cell 5 3,growx");
+		FlatButton setAppointment = new FlatButton();
+		setAppointment.setText("Set Appointment");
+		setAppointment.setButtonType(ButtonType.none);
+		panel.add(setAppointment, "flowx,cell 5 3,growx");
 
-		FlatButton standardButton_4 = new FlatButton();
-		standardButton_4.setText("View Students");
-		standardButton_4.setButtonType(ButtonType.none);
-		panel.add(standardButton_4, "flowx,cell 7 3,growx");
+		FlatButton viewStudents = new FlatButton();
+		viewStudents.setText("View Students");
+		viewStudents.setButtonType(ButtonType.none);
+		panel.add(viewStudents, "flowx,cell 7 3,growx");
 
-		JButton btnNewButton = new JButton("Create a Incident Record");
-		panel.add(btnNewButton, "cell 1 4");
+		JButton createIncident = new JButton("Create a Incident Record");
+		panel.add(createIncident, "cell 1 4");
 
-		FlatButton standardButton_3 = new FlatButton();
-		standardButton_3.setText("View Appointments");
-		standardButton_3.setButtonType(ButtonType.none);
-		panel.add(standardButton_3, "cell 5 4,growx");
+		FlatButton viewAppointments = new FlatButton();
+		viewAppointments.setText("View Appointments");
+		viewAppointments.setButtonType(ButtonType.none);
+		panel.add(viewAppointments, "cell 5 4,growx");
 
-		JButton btnNewButton_1 = new JButton("Search Student");
-		panel.add(btnNewButton_1, "cell 7 4");
+		JButton searchStudent = new JButton("Search Student");
+		panel.add(searchStudent, "cell 7 4");
 		return panel;
 	}
 

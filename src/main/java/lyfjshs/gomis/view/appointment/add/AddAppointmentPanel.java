@@ -59,7 +59,7 @@ public class AddAppointmentPanel extends JPanel {
     // Fields for appointment details
     private JTextField titleField;
     private JComboBox<String> typeComboBox;
-    private JTextField statusField;
+    private JComboBox<String> statusComboBox; // Changed from JTextField to JComboBox
     private JTextArea notesArea;
 
     public AddAppointmentPanel(Appointment appointment, AppointmentDAO appointmentDao, Connection connection) {
@@ -120,11 +120,13 @@ public class AddAppointmentPanel extends JPanel {
 
         bodyPanel.add(counselorDetailsField, "cell 0 6 2 1,growx");
 
-        // Status Field
+        // Status Field (replace the existing status field code with this)
         JLabel statusLabel = new JLabel("Status:");
         bodyPanel.add(statusLabel, "cell 0 7,alignx label");
-        statusField = new JTextField(appointment.getAppointmentStatus());
-        bodyPanel.add(statusField, "cell 0 8 2 1,growx");
+        String[] statusOptions = {"On-going", "Completed", "Cancelled", "Rescheduled", "Pending"};
+        statusComboBox = new JComboBox<>(statusOptions);
+        statusComboBox.setSelectedItem("On-going"); // Set default value
+        bodyPanel.add(statusComboBox, "cell 0 8 2 1,growx");
 
         // Participants Section
         participantsPanel = new JPanel(new MigLayout("wrap 1", "[grow]", "[]"));
@@ -522,7 +524,7 @@ public class AddAppointmentPanel extends JPanel {
             appointment.setConsultationType((String) typeComboBox.getSelectedItem());
             appointment.setAppointmentDateTime(Timestamp.valueOf(
                     datePicker.getSelectedDate().atTime(timePicker.getSelectedTime())));
-            appointment.setAppointmentStatus(statusField.getText().trim());
+            appointment.setAppointmentStatus((String) statusComboBox.getSelectedItem());
             appointment.setAppointmentNotes(notesArea.getText().trim());
 
             // Debugging: Print appointment details

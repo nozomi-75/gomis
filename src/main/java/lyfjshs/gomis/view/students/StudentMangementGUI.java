@@ -181,7 +181,31 @@ public class StudentMangementGUI extends Form {
         Option option = ModalDialog.createOption();
         option.setAnimationEnabled(true);
         option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
-        ModalDialog.showModal(this, new StudentSearchPanel(connection), option, "search");
+
+        // Create StudentSearchPanel with a callback to handle selected student
+        StudentSearchPanel searchPanel = new StudentSearchPanel(connection) {
+            @Override
+            protected void onStudentSelected(Student student) {
+                ModalDialog.closeModal("search"); // Close the search panel
+                showStudentDetails(student); // Show the student details
+            }
+        };
+        
+        ModalDialog.showModal(this, searchPanel, option, "search");
+    }
+
+    public void showStudentDetails(Student studentData) {
+        FlatAnimatedLafChange.showSnapshot();
+        if (studentData != null) {
+            currentDetailPanel = new StudentFullData(connection, studentData);
+            slidePane.addSlide(currentDetailPanel, SlidePaneTransition.Type.FORWARD);
+            backBtn.setVisible(true);
+            headerSearchPanel.setVisible(false);
+        } else {
+            JOptionPane.showMessageDialog(this, "Student data not found", "Data Not Found",
+                JOptionPane.WARNING_MESSAGE);
+        }
+        FlatAnimatedLafChange.hideSnapshotWithAnimation();
     }
 
     private JPanel createStudentTablePanel() {

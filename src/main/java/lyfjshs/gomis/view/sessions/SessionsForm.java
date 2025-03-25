@@ -45,6 +45,7 @@ import lyfjshs.gomis.Database.DAO.ViolationCRUD;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
+import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.view.appointment.AppointmentSearchPanel;
@@ -100,6 +101,7 @@ public class SessionsForm extends Form implements Printable {
 		populateRecordedByField(); // Call the method to populate the recordedByField
 	}
 
+
 	private void initializeComponents() {
 		// Initialize the table model
 		participantTableModel = new DefaultTableModel(
@@ -152,41 +154,61 @@ public class SessionsForm extends Form implements Printable {
 			return;
 		}
 
-		StudentSearchPanel searchPanel = new StudentSearchPanel(connect, student -> {
-			// Create new participant
-			Participants participant = new Participants();
-			participant.setStudentUid(student.getStudentUid());
-			participant.setParticipantType("Student");
-			participant.setParticipantLastName(student.getStudentLastname());
-			participant.setParticipantFirstName(student.getStudentFirstname());
-			participant.setSex(student.getStudentSex());
-			participant.setContactNumber(student.getContact().getContactNumber());
+		StudentSearchPanel searchPanel = new StudentSearchPanel(connect) {
+			@Override
+			protected void onStudentSelected(Student student) {
+				if (student != null) {
+					// Create new participant from student data
+					Participants participant = new Participants();
+					participant.setStudentUid(student.getStudentUid());
+					participant.setParticipantType("Student");
+					participant.setParticipantLastName(student.getStudentLastname());
+					participant.setParticipantFirstName(student.getStudentFirstname());
+					participant.setSex(student.getStudentSex());
 
-			// Generate temporary ID
-			int tempId = tempIdCounter--;
+					// Set contact number if available
+					if (student.getContact() != null) {
+						participant.setContactNumber(student.getContact().getContactNumber());
+					}
 
-			// Store in pendingParticipants
-			pendingParticipants.put(tempId, participant);
+					// Generate temporary ID
+					int tempId = tempIdCounter--;
 
-			// Store participant details
-			Map<String, String> details = new HashMap<>();
-			details.put("firstName", participant.getParticipantFirstName());
-			details.put("lastName", participant.getParticipantLastName());
-			details.put("fullName", participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
-			details.put("type", "Student");
-			participantDetails.put(tempId, details);
+					// Store in pendingParticipants
+					pendingParticipants.put(tempId, participant);
 
-			// Add to table with row number and hidden tempId
-			int rowNumber = participantTableModel.getRowCount() + 1;
-			participantTableModel
-					.addRow(new Object[] { rowNumber, details.get("fullName"), "Student", "View | Remove", tempId });
+					// Store participant details
+					Map<String, String> details = new HashMap<>();
+					details.put("firstName", participant.getParticipantFirstName());
+					details.put("lastName", participant.getParticipantLastName());
+					details.put("fullName",
+							participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
+					details.put("type", "Student");
+					details.put("contact", participant.getContactNumber());
+					participantDetails.put(tempId, details);
 
-			// Close the modal
-			ModalDialog.closeModal("search");
-		});
+					// Add to table with row number and hidden tempId
+					int rowNumber = participantTableModel.getRowCount() + 1;
+					participantTableModel.addRow(new Object[] {
+							rowNumber,
+							details.get("fullName"),
+							"Student",
+							"View | Remove",
+							tempId
+					});
+				}
 
-		// Configure modal options (unchanged)
-		ModalDialog.getDefaultOption().setOpacity(0f).setAnimationOnClose(false).getBorderOption().setBorderWidth(0.5f)
+				// Close the search dialog
+				ModalDialog.closeModal("search");
+			}
+		};
+
+		// Configure modal options
+		ModalDialog.getDefaultOption()
+				.setOpacity(0f)
+				.setAnimationOnClose(false)
+				.getBorderOption()
+				.setBorderWidth(0.5f)
 				.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
 
 		ModalDialog.showModal(this, searchPanel, "search");
@@ -327,7 +349,7 @@ public class SessionsForm extends Form implements Printable {
 		JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		contentPanel.add(headerPanel, "cell 0 0,growx");
 		JLabel headerLabel = new JLabel("Session Documentation Form");
-		headerLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+		headerLabel.setFont(new Font("  SansSerif", Font.BOLD, 24));
 		headerLabel.setForeground(Color.WHITE);
 		headerPanel.add(headerLabel);
 		headerPanel.setBackground(new Color(5, 117, 230));
@@ -439,7 +461,7 @@ public class SessionsForm extends Form implements Printable {
 		// Participant Table
 		participantTable = new JTable(participantTableModel);
 		participantTable.setPreferredScrollableViewportSize(new Dimension(400, 100));
-		participantTable.getColumnModel().removeColumn(participantTable.getColumnModel().getColumn(4)); 
+		participantTable.getColumnModel().removeColumn(participantTable.getColumnModel().getColumn(4));
 		JScrollPane tableScrollPane = new JScrollPane(participantTable);
 		tableScrollPane.setBorder(BorderFactory.createTitledBorder("Participant Table")); // pane
 
@@ -678,24 +700,23 @@ public class SessionsForm extends Form implements Printable {
 			String selectedViolation = (String) violationField.getSelectedItem();
 			if (selectedViolation != null && !selectedViolation.equals("-- Select Violation --")) {
 				ViolationCRUD violationCRUD = new ViolationCRUD(connect);
-				
+
 				// For each participant, create a violation record
 				for (int i = 0; i < participantTableModel.getRowCount(); i++) {
 					int participantId = (int) participantTableModel.getValueAt(i, 4);
-					
-					String violationDescription = selectedViolation.equals("Others") ? 
-						customViolationField.getText() : selectedViolation;
-					
+
+					String violationDescription = selectedViolation.equals("Others") ? customViolationField.getText()
+							: selectedViolation;
+
 					// Create violation record
 					boolean success = violationCRUD.addViolation(
-						participantId,
-						selectedViolation,
-						violationDescription,
-						sessionSummaryArea.getText(), // Use session summary as anecdotal record
-						notesArea.getText(), // Use notes as reinforcement
-						"Active",
-						new java.sql.Timestamp(System.currentTimeMillis())
-					);
+							participantId,
+							selectedViolation,
+							violationDescription,
+							sessionSummaryArea.getText(), // Use session summary as anecdotal record
+							notesArea.getText(), // Use notes as reinforcement
+							"Active",
+							new java.sql.Timestamp(System.currentTimeMillis()));
 
 					if (!success) {
 						throw new Exception("Failed to save violation record for participant ID: " + participantId);
@@ -806,5 +827,4 @@ public class SessionsForm extends Form implements Printable {
 		// Add participants 
 		// ...rest of existing participants code...
 	}
-
 }

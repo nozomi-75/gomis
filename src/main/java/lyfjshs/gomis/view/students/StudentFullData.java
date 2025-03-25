@@ -547,7 +547,7 @@ public class StudentFullData extends Form {
 							controller.close();
 						}
 					}), "dropStudentModal");
-			ModalDialog.getDefaultOption().getLayoutOption().setSize(950, this.getHeight() - 100);
+			ModalDialog.getDefaultOption().getLayoutOption().setSize(950, 600);
 		} catch (Exception e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this, "Failed to load student or counselor data.", "Error",
