@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -31,6 +32,7 @@ import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
+import lyfjshs.gomis.components.DrawerBuilder;
 
 public class SessionRecords extends Form {
 
@@ -82,14 +84,7 @@ public class SessionRecords extends Form {
     }
     private void openAddSessionForm() {
         try {
-            SessionsForm sessionsForm = new SessionsForm(connection);
-            sessionsForm.setSaveCallback(this::loadSessionData);
-            
-            // Configure the form as a dialog
-            sessionsForm.setSize(800, 600);
-            sessionsForm.setLocationRelativeTo(this);
-            sessionsForm.setTitle("New Session");
-            sessionsForm.setVisible(true);
+            DrawerBuilder.switchToSessionsForm();
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, 

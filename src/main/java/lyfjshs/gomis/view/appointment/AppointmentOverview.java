@@ -228,34 +228,47 @@ public class AppointmentOverview extends JPanel {
         }
     }
 
-    private void loadAppointments(LocalDate date) {
-        SwingUtilities.invokeLater(() -> {
-            appointmentsPanel.removeAll();
-            List<Appointment> loadedAppointments = null;
-            try {
-                loadedAppointments = appointmentDAO.getAppointmentsForDate(date);
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error fetching appointments: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-            }
-            appointments.clear();
-            if (loadedAppointments != null) {
-                appointments.addAll(loadedAppointments);
-            }
+    
+private void loadAppointments(LocalDate date) {
+    SwingUtilities.invokeLater(() -> {
+        appointmentsPanel.removeAll();
+        List<Appointment> loadedAppointments = null;
+        try {
+            loadedAppointments = appointmentDAO.getAppointmentsForDate(date);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error fetching appointments: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+        appointments.clear();
+        if (loadedAppointments != null) {
+            appointments.addAll(loadedAppointments);
+        }
 
-            if (appointments.isEmpty()) {
-                JLabel noAppointmentsLabel = new JLabel("No appointments for this date", SwingConstants.CENTER);
-                noAppointmentsLabel.setForeground(UIManager.getColor("Label.foreground"));
-                appointmentsPanel.add(noAppointmentsLabel, "grow");
-            } else {
-                for (Appointment appt : appointments) {
-                    appointmentsPanel.add(createAppointmentCard(appt), "grow");
-                }
-            }
+        // Add a header for the date
+        JLabel dateHeaderLabel = new JLabel(date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")));
+        dateHeaderLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        appointmentsPanel.add(dateHeaderLabel, "growx, gapbottom 10, wrap");
 
-            appointmentsPanel.revalidate();
-            appointmentsPanel.repaint();
-        });
-    }
+        if (appointments.isEmpty()) {
+            JLabel noAppointmentsLabel = new JLabel("No appointments for this date", SwingConstants.CENTER);
+            noAppointmentsLabel.setForeground(UIManager.getColor("Label.foreground"));
+            appointmentsPanel.add(noAppointmentsLabel, "growx, gaptop 10");
+        } else {
+            // Sort appointments by time
+            appointments.sort((a, b) -> a.getAppointmentDateTime().compareTo(b.getAppointmentDateTime()));
+            
+            // Add each appointment card with proper spacing to ensure full visibility
+            for (Appointment appt : appointments) {
+                JPanel card = createAppointmentCard(appt);
+                appointmentsPanel.add(card, "growx, gapbottom 10, wrap");
+            }
+        }
+
+        appointmentsPanel.revalidate();
+        appointmentsPanel.repaint();
+    });
 }
+
+
+    }
