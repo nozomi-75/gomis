@@ -1,0 +1,34 @@
+
+
+Version:	3.50
+CmdLine:	C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\GOMIS.exe --l4j-debug
+JNI:		No
+WOW64:		Yes
+Create mutex:	gomis_instance
+Working dir:	C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\.
+Requires JDK:	No
+Requires 64-Bit: Yes
+Java min ver:	
+Java max ver:	
+JRE paths:	jre
+Check launcher:	C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\jre\bin\javaw.exe (not found)
+Error msg:	This application requires a Java Runtime Environment.
+
+
+Version:	3.50
+CmdLine:	C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\GOMIS.exe --l4j-debug
+JNI:		No
+WOW64:		Yes
+Create mutex:	gomis_instance
+Working dir:	C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\.
+Requires JDK:	No
+Requires 64-Bit: Yes
+Java min ver:	
+Java max ver:	
+JRE paths:	jre
+Check launcher:	C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\jre\bin\javaw.exe (OK)
+Version string: 1.023.000_002 / 64-Bit (OK)
+Launcher:	C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\jre\bin\javaw.exe
+Launcher args:	-jar "C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\GOMIS.exe"
+Args length:	85/32768 chars
+Exit code:	0

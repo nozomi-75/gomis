@@ -27,10 +27,10 @@ if not defined POWERSHELL_DETECTED (
 
 if defined POWERSHELL_DETECTED (
     REM We're in PowerShell or pwsh, use direct execution
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "& { $scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; try { $content = Get-Content -Raw '%~f0'; $marker = ': end batch / begin powershell #>'; $startIndex = $content.IndexOf($marker) + $marker.Length; $psContent = $content.Substring($startIndex).TrimStart(); icm -ScriptBlock ([Scriptblock]::Create($psContent)) -NoNewScope } catch { Write-Error $_.Exception.Message; exit 1 } }"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "& { $scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; try { $content = Get-Content -Raw '%~f0'; $marker = ': end batch / begin powershell #>'; $startIndex = $content.IndexOf($marker) + $marker.Length; $psContent = $content.Substring($startIndex).TrimStart(); $psContent = $psContent -replace '^.*?: end batch / begin powershell #>\r?\n',''; $psContent = $psContent -replace '^.*?goto :EOF\r?\n',''; icm -ScriptBlock ([Scriptblock]::Create($psContent)) -NoNewScope } catch { Write-Error $_.Exception.Message; exit 1 } }"
 ) else (
     REM We're in CMD, use the original method
-    for /f "usebackq tokens=1* delims==" %%A in (`powershell -noprofile -command "& { $scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; try { $content = Get-Content -Raw '%~f0'; $marker = ': end batch / begin powershell #>'; $startIndex = $content.IndexOf($marker) + $marker.Length; $psContent = $content.Substring($startIndex).TrimStart(); icm -ScriptBlock ([Scriptblock]::Create($psContent)) -NoNewScope } catch { Write-Error $_.Exception.Message; exit 1 } }"`) do (
+    for /f "usebackq tokens=1* delims==" %%A in (`powershell -noprofile -command "& { $scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; try { $content = Get-Content -Raw '%~f0'; $marker = ': end batch / begin powershell #>'; $startIndex = $content.IndexOf($marker) + $marker.Length; $psContent = $content.Substring($startIndex).TrimStart(); $psContent = $psContent -replace '^.*?: end batch / begin powershell #>\r?\n',''; $psContent = $psContent -replace '^.*?goto :EOF\r?\n',''; icm -ScriptBlock ([Scriptblock]::Create($psContent)) -NoNewScope } catch { Write-Error $_.Exception.Message; exit 1 } }"`) do (
         if "%%A"=="MVN_CMD" (set "__MVNW_CMD__=%%B") else if "%%B"=="" (echo %%A) else (echo %%A=%%B)
     )
 )
