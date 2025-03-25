@@ -8,8 +8,6 @@ import java.sql.SQLException;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
-import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
@@ -91,8 +89,10 @@ public class Main {
 		try {
 			
 			FlatRobotoFont.install();
-			FlatLaf.registerCustomDefaultsSource("lyfjshs.themes"); 
 			FlatLightLaf.setup();
+
+//			FlatLaf.registerCustomDefaultsSource("lyfjshs.themes"); 
+
 			UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
 			UIManager.put("Button.arc", 80);
 			UIManager.put("Component.arc", 50);
@@ -143,8 +143,7 @@ public class Main {
 	public static void initFrame() {
 		initializeLookAndFeel();
 		initDB();
-		gFrame = new GFrame(1380, 750, false, "GOMIS", null);
-		gFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
+		gFrame = new GFrame(1380, 750, false, "GOMIS", null, conn);
 		initiPanels();
 
 		FormManager.install(gFrame);

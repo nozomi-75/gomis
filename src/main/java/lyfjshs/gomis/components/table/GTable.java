@@ -2,10 +2,11 @@ package lyfjshs.gomis.components.table;
 
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JCheckBox;
-import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -16,8 +17,10 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.extras.components.FlatTable;
+import com.formdev.flatlaf.extras.components.FlatTableHeader;
 
-public class GTable extends JTable {    
+public class GTable extends FlatTable {
     private static final long serialVersionUID = 1L;
     private double[] columnProportions;
     private int[] columnAlignments;
@@ -27,7 +30,8 @@ public class GTable extends JTable {
     public GTable(Object[][] data, String[] columnNames, Class<?>[] columnTypes, 
                   boolean[] editableColumns, double[] columnWidths, int[] alignments, 
                   boolean includeCheckbox, TableActionManager actionManager) {
-        super(new DefaultTableModel(data, columnNames) {
+                
+        DefaultTableModel defaultTableModel =new DefaultTableModel(data, columnNames) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 return columnTypes[columnIndex];
@@ -37,7 +41,9 @@ public class GTable extends JTable {
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return editableColumns[columnIndex];
             }
-        });
+        };
+        
+        this.setModel(defaultTableModel);
         
         this.hasCheckbox = includeCheckbox;
         this.columnProportions = columnWidths.clone();
@@ -47,14 +53,22 @@ public class GTable extends JTable {
         configureTable();
         applyColumnWidths();
         applyColumnAlignments();
+
+        // Add listener to update column widths on parent resize
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                applyColumnWidths();
+            }
+        });
     }
 
     @Override
     public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
         Component c = super.prepareRenderer(renderer, row, column);
         if (isRowSelected(row)) {
-            c.setBackground(UIManager.getColor("TableHeader.hoverBackground"));
-            c.setForeground(UIManager.getColor("Table.foreground"));
+            c.setBackground(UIManager.getColor("Table.selectionBackground"));
+            c.setForeground(UIManager.getColor("Table.selectionForeground"));
         } else {
             c.setBackground(UIManager.getColor("Table.background"));
             c.setForeground(UIManager.getColor("Table.foreground"));
@@ -67,21 +81,27 @@ public class GTable extends JTable {
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         setRowHeight(35);
         setFont(new Font("Tahoma", Font.PLAIN, 12));
-        getTableHeader().setFont(new Font("Tahoma", Font.BOLD, 12));
-        
+
+        // Use FlatTableHeader for a modern header
+        FlatTableHeader header = new FlatTableHeader();
+        header.setColumnModel(getColumnModel());
+
+        header.setFont(new Font("Tahoma", Font.BOLD, 12));
+        setTableHeader(header);
+
         putClientProperty(FlatClientProperties.STYLE,
                 "showHorizontalLines:true;" +
-                "intercellSpacing:0,1;" +
-                "cellFocusColor:$TableHeader.hoverBackground;" +
-                "selectionBackground:$TableHeader.hoverBackground;" +
-                "selectionForeground:$Table.foreground");
+                        "intercellSpacing:0,1;" +
+                        "cellFocusColor:$TableHeader.hoverBackground;" +
+                        "selectionBackground:$Table.selectionBackground;" +
+                        "selectionForeground:$Table.selectionForeground");
 
         getTableHeader().putClientProperty(FlatClientProperties.STYLE,
                 "height:30;" +
-                "hoverBackground:null;" +
-                "pressedBackground:null;" +
-                "separatorColor:$TableHeader.background;" +
-                "font:bold");
+                        "hoverBackground:$TableHeader.hoverBackground;" +
+                        "pressedBackground:$TableHeader.pressedBackground;" +
+                        "separatorColor:$TableHeader.separatorColor;" +
+                        "font:bold");
 
         if (hasCheckbox) {
             JCheckBox checkBox = new JCheckBox();
@@ -107,17 +127,34 @@ public class GTable extends JTable {
 
     private void applyColumnWidths() {
         int totalWidth = getParent() != null ? getParent().getWidth() : 800;
-        if (totalWidth <= 0) totalWidth = 800;
-        
+        if (totalWidth <= 0)
+            totalWidth = 800;
+
         TableColumnModel columnModel = getColumnModel();
         for (int i = 0; i < columnModel.getColumnCount(); i++) {
-            if (hasCheckbox && i == 0) continue;
+            TableColumn column = columnModel.getColumn(i);
+            String columnName = getColumnName(i);
+            
+            // Handle special columns
+            if (hasCheckbox && i == 0) {
+                continue;
+            }
+            
+            if (columnName.equals("Actions")) {
+                // Set fixed width for ACTIONS column to fit 2 buttons
+                column.setMinWidth(270);
+                column.setMaxWidth(270);
+                column.setPreferredWidth(310);
+                column.setResizable(false);
+                continue;
+            }
+            
+            // Normal columns
             if (actionManager != null && i == getColumnCount() - 1) {
-                // Skip width adjustment for Actions column to respect actionManager's width
                 continue;
             }
             int width = (int) (totalWidth * columnProportions[i]);
-            columnModel.getColumn(i).setPreferredWidth(width);
+            column.setPreferredWidth(width);
         }
     }
 
@@ -132,7 +169,7 @@ public class GTable extends JTable {
     private void applyColumnAlignments() {
         TableColumnModel columnModel = getColumnModel();
         int startIndex = hasCheckbox ? 1 : 0;
-        int endIndex = actionManager != null ? getColumnCount() - 2 : getColumnCount() - 1; // Skip Actions column
+        int endIndex = actionManager != null ? getColumnCount() - 2 : getColumnCount() - 1;
         for (int i = startIndex; i <= endIndex; i++) {
             DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
             renderer.setHorizontalAlignment(columnAlignments[i]);

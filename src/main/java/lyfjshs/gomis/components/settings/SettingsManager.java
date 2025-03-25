@@ -16,9 +16,7 @@ import javax.swing.UIManager;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
@@ -118,6 +116,7 @@ public class SettingsManager {
         // Update all UI components immediately
         SwingUtilities.invokeLater(() -> {
             for (Window window : Window.getWindows()) {
+                // Main.gFrame.FULL_WINDOW_CONTENT(true);
                 SwingUtilities.updateComponentTreeUI(window);
             }
         });
