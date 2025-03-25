@@ -38,6 +38,7 @@ import com.formdev.flatlaf.extras.components.FlatSeparator;
 import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
 import lyfjshs.gomis.Database.DAO.LoginController;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
+import lyfjshs.gomis.components.settings.SettingsManager;
 import net.miginfocom.swing.MigLayout;
 
 public class SignUpPanel extends JPanel {
@@ -65,6 +66,24 @@ public class SignUpPanel extends JPanel {
 		setLayout(new MigLayout("wrap,fillx,insets 5", "[500,grow,fill]", "[center][][grow][][][][][][][][][][][][][][][grow]"));
 		this.setOpaque(false);
 		putClientProperty(FlatClientProperties.STYLE, "arc:20; background:darken(@background,3%)");
+        
+        // Add visibility listener to update UI when panel becomes visible
+        addAncestorListener(new javax.swing.event.AncestorListener() {
+            @Override
+            public void ancestorAdded(javax.swing.event.AncestorEvent event) {
+                SettingsManager.applySettings();
+            }
+
+            @Override
+            public void ancestorRemoved(javax.swing.event.AncestorEvent event) {
+                // Not needed
+            }
+
+            @Override
+            public void ancestorMoved(javax.swing.event.AncestorEvent event) {
+                // Not needed
+            }
+        });
 
 		groupGender = new ButtonGroup();
 		txtUsername = new JTextField();
@@ -329,5 +348,15 @@ public class SignUpPanel extends JPanel {
 				: password.matches(".*[A-Z].*") && password.matches(".*[!@#$%^&*].*") ? 3 : 2;
 		passwordStrengthLabel.setText(strength == 1 ? "Weak" : strength == 2 ? "Medium" : "Strong");
 		passwordStrengthLabel.setForeground(strength == 1 ? Color.RED : strength == 2 ? Color.ORANGE : Color.GREEN);
+	}
+
+	/**
+	 * Override the addNotify method to reset fields when the panel becomes visible
+	 */
+	@Override
+	public void addNotify() {
+		super.addNotify();
+		clearFields();
+		
 	}
 }

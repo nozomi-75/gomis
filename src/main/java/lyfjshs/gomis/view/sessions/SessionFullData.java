@@ -35,6 +35,7 @@ public class SessionFullData extends Form {
 	private JTextField counselorNameField;
 	private JButton printSessionReportBtn;
 	private JTable participantsTable;
+	private JTextField customViolationField;
 
 	public SessionFullData(Sessions sessionData, GuidanceCounselor counselor, List<Participants> participants) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
@@ -80,6 +81,9 @@ public class SessionFullData extends Form {
 		updatedAtField = new JTextField();
 		appointmentTypeField = new JTextField();
 		counselorNameField = new JTextField();
+		customViolationField = new JTextField(15);
+		customViolationField.setVisible(false);
+		customViolationField.setEnabled(false);
 	}
 
 	private JPanel createSessionInfoPanel() {

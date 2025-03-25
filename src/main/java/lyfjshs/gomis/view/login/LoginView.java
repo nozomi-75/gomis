@@ -1,6 +1,5 @@
 package lyfjshs.gomis.view.login;
 
-import java.awt.CardLayout;
 import java.awt.Color;
 import java.sql.Connection;
 
@@ -43,6 +42,7 @@ public class LoginView extends Form {
 
 		loginPanel = new LoginPanel(conn, this);
 		signUpPanel = new SignUpPanel(conn, this);
+
 
 		mainPanel.add(loginPanel, "grow");
 		panelGradient.add(mainPanel, "align center");

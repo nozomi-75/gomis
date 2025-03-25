@@ -20,7 +20,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.components.DrawerBuilder;
@@ -45,7 +47,12 @@ public class AppointmentCalendar extends JPanel {
         this.appointmentDao = appointDAO;
         this.connection = conn;
         currentDate = LocalDate.now();
-
+        
+        // Ensure panel is opaque and has background color
+        setOpaque(true);
+        setBackground(UIManager.getColor("Panel.background"));
+        
+        // Use proper layout constraints
         setLayout(new MigLayout("wrap 1, fill, insets 5", "[grow]", "[pref!][pref!][grow]"));
 
         // Navigation panel
@@ -269,7 +276,18 @@ public class AppointmentCalendar extends JPanel {
             return;
         }
 
-        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection, null, null); // Pass null since we don't need selection here
+        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(
+            connection, 
+            null, 
+            null,
+            // Add refresh callback
+            refreshedAppointment -> {
+                updateCalendar();
+                if (getParent() instanceof AppointmentManagement) {
+                    ((AppointmentManagement) getParent()).refreshViews();
+                }
+            }
+        );
         appointmentDetails.loadAppointmentDetails(appointment);
         createAndShowModalDialog(appointmentDetails, "appointment_details_" + appointment.getAppointmentId());
     }
@@ -290,7 +308,13 @@ public class AppointmentCalendar extends JPanel {
         }
 
         try {
-            // Configure modal options
+            // Find the proper parent window
+            java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
+            if (parentWindow == null) {
+                parentWindow = Main.gFrame;
+            }
+
+            // Configure modal with proper parent
             ModalDialog.getDefaultOption()
                     .setOpacity(0f) // Transparent background
                     .setAnimationOnClose(false) // No close animation
@@ -322,6 +346,11 @@ public class AppointmentCalendar extends JPanel {
                                     controller.close();
                                 } else if (action == SimpleModalBorder.CLOSE_OPTION) {
                                     controller.close();
+                                }
+                                // Add refresh after modal closes
+                                updateCalendar();
+                                if (getParent() instanceof AppointmentManagement) {
+                                    ((AppointmentManagement) getParent()).refreshViews();
                                 }
                             }),
                     modalId);

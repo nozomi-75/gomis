@@ -15,25 +15,24 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
-
-import org.jdesktop.core.animation.timing.KeyFrames.Frame;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import lyfjshs.gomis.Database.entity.Sessions;
+
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.Database.entity.Sessions;
+import lyfjshs.gomis.components.DrawerBuilder;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
-import lyfjshs.gomis.components.DrawerBuilder;
 
 public class SessionRecords extends Form {
 
@@ -50,42 +49,73 @@ public class SessionRecords extends Form {
 
     public SessionRecords(Connection conn) {
         this.connection = conn;
-        sessionsDAO = new SessionsDAO(conn);
+        this.sessionsDAO = new SessionsDAO(conn);
+        
+        // Set layout first
+        setLayout(new BorderLayout());
+        
+        // Initialize components in order
         initializeComponents();
-        setupLayout();
-        loadSessionData();
-    }
-
-    private void initializeComponents() {
-        setupTable(); // Initialize GTable
-
-        // Initialize SlidePane
-        slidePane = new SlidePane();
-        slidePane.setOpaque(true);
-
-        // Create main panel that will contain the table
-        mainPanel = createSessionTablePanel();
-
-        // Initialize back button
+        
+        // Create header panel
+        JPanel headerPanel = new JPanel(new MigLayout("", "[][grow][][]", "[grow]"));
+        JLabel headerLabel = new JLabel("SESSION RECORDS");
+        headerLabel.setFont(new Font("Tahoma", Font.BOLD, 16));
+        
+        // Initialize buttons
+        addSessionBtn = new JButton("Add Session");
+        addSessionBtn.addActionListener(e -> openAddSessionForm());
+        
+        searchSessionBtn = new JButton("Search Session");
+        searchSessionBtn.addActionListener(e -> openSearchSessionDialog());
+        
         backBtn = new JButton("Back");
         backBtn.setVisible(false);
+        
+        // Add components to header
+        headerPanel.add(headerLabel, "cell 1 0,alignx center,growy");
+        headerPanel.add(addSessionBtn, "cell 2 0");
+        headerPanel.add(searchSessionBtn, "cell 3 0");
+        headerPanel.add(backBtn, "cell 4 0");
+        
+        // Create main content panel
+        mainPanel = createSessionTablePanel();
+        
+        // Initialize and setup SlidePane
+        slidePane = new SlidePane();
+        slidePane.setOpaque(true);
+        slidePane.addSlide(mainPanel, SlidePaneTransition.Type.FORWARD);
+        
+        // Add components to main panel
+        add(headerPanel, BorderLayout.NORTH);
+        add(slidePane, BorderLayout.CENTER);
+        
+        // Setup back button action
         backBtn.addActionListener(e -> {
             FlatAnimatedLafChange.showSnapshot();
             slidePane.addSlide(mainPanel, SlidePaneTransition.Type.BACK);
             backBtn.setVisible(false);
-            addSessionBtn.setVisible(true); // Show Add Session button when returning
+            addSessionBtn.setVisible(true);
             FlatAnimatedLafChange.hideSnapshotWithAnimation();
         });
+        
+        // Load initial data
+        loadSessionData();
+    }
 
-        // Initialize add session button
-        addSessionBtn = new JButton("Add Session");
-        addSessionBtn.addActionListener(e -> openAddSessionForm());
+    private void initializeComponents() {
+        // Initialize table first
+        setupTable();
         
-        // Initialize search session button
-        searchSessionBtn = new JButton("Search Session");
-        searchSessionBtn.addActionListener(e -> openSearchSessionDialog()); // Add action listener for search button
+        // Initialize panels with proper parent relationships
+        sessionFullDataPanel = new JPanel(new BorderLayout());
+        mainPanel = new JPanel(new MigLayout("", "[grow]", "[grow]"));
         
-        slidePane.addSlide(mainPanel, SlidePaneTransition.Type.FORWARD);
+        // Set proper background colors and opacity
+        mainPanel.setOpaque(true);
+        mainPanel.setBackground(UIManager.getColor("Panel.background"));
+        sessionFullDataPanel.setOpaque(true);
+        sessionFullDataPanel.setBackground(UIManager.getColor("Panel.background"));
     }
 
     private void openAddSessionForm() {
@@ -97,26 +127,6 @@ public class SessionRecords extends Form {
                 "Error opening session form: " + e.getMessage(), 
                 "Error", 
                 JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void openSearchSessionDialog() {
-        try {
-            // Create a new dialog for the session search panel
-            JDialog searchDialog = new JDialog();
-            searchDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            searchDialog.setSize(400, 300); // Set the size of the dialog
-            searchDialog.setLocationRelativeTo(this); // Center the dialog relative to the parent
-
-            // Create an instance of SessionSearchPanel
-            SessionSearchPanel searchPanel = new SessionSearchPanel();
-            searchDialog.add(searchPanel); // Add the search panel to the dialog
-
-            // Make the dialog visible
-            searchDialog.setVisible(true);
-        } catch (Exception e) {
-            e.printStackTrace(); // Print the stack trace for debugging
-            JOptionPane.showMessageDialog(this, "Error opening search dialog: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -214,27 +224,15 @@ public class SessionRecords extends Form {
         }
     }
 
-    private void setupLayout() {
-        setLayout(new BorderLayout());
-
-        // Create header panel
-        JPanel headerPanel = new JPanel(new MigLayout("", "[][grow][][]", "[grow]"));
-        JLabel headerLabel = new JLabel("SESSION RECORDS");
-        headerLabel.setFont(new Font("Tahoma", Font.BOLD, 16));
-
-        headerPanel.add(headerLabel, "flowx,cell 1 0,alignx center,growy");
-        headerPanel.add(addSessionBtn, "cell 2 0");
-        headerPanel.add(searchSessionBtn, "cell 3 0");
-        headerPanel.add(backBtn, "cell 4 0");
-
-        // Add components to main frame
-        add(headerPanel, BorderLayout.NORTH);
-        add(slidePane, BorderLayout.CENTER);
-    }
-
     private JPanel createSessionTablePanel() {
+        if (sessionTable == null) {
+            setupTable(); // Ensure table is initialized
+        }
+        
         JScrollPane scrollPane = new JScrollPane(sessionTable);
         JPanel panel = new JPanel(new MigLayout("", "[grow]", "[grow]"));
+        panel.setOpaque(true);
+        panel.setBackground(UIManager.getColor("Panel.background"));
         panel.add(scrollPane, "cell 0 0,grow");
         return panel;
     }
@@ -262,6 +260,26 @@ public class SessionRecords extends Form {
                 "Database Error", 
                 JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
+        }
+    }
+
+    private void openSearchSessionDialog() {
+        try {
+            // Create a new dialog for the session search panel
+            JDialog searchDialog = new JDialog();
+            searchDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            searchDialog.setSize(400, 300); // Set the size of the dialog
+            searchDialog.setLocationRelativeTo(this); // Center the dialog relative to the parent
+
+            // Create an instance of SessionSearchPanel
+            SessionSearchPanel searchPanel = new SessionSearchPanel();
+            searchDialog.add(searchPanel); // Add the search panel to the dialog
+
+            // Make the dialog visible
+            searchDialog.setVisible(true);
+        } catch (Exception e) {
+            e.printStackTrace(); // Print the stack trace for debugging
+            JOptionPane.showMessageDialog(this, "Error opening search dialog: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

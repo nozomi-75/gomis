@@ -1,7 +1,6 @@
 package lyfjshs.gomis.view;
 
 
-import java.awt.Color;
 import java.awt.Font;
 import java.sql.Connection;
 import java.util.Map;
@@ -10,6 +9,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.components.FlatToggleSwitch;
@@ -115,14 +115,20 @@ public class SettingsPanel extends Form {
 		fontComboBox = new JComboBox<>(new String[] { "SansSerif", "Serif", "Monospaced" });
 		fontPanel.add(fontComboBox, "cell 1 0 1 2,alignx right,aligny center");
 
-		// Initialize UI with current settings
-		initializeSettings();
-
-		// Add listeners to update settings
-		themeComboBox.addActionListener(e -> applySelectedTheme());
-		fontSizeComboBox.addActionListener(
-				e -> updateSettings("font_size", String.valueOf(fontSizeComboBox.getSelectedItem())));
-		fontComboBox.addActionListener(e -> updateSettings("font_style", (String) fontComboBox.getSelectedItem()));
+		// Initialize with current settings before adding listeners
+        SettingsState currentState = Main.settings.getSettingsState();
+        
+        // Remove temporary listeners if any
+        removeAllListeners();
+        
+        // Update UI with current state
+        updateUIComponents(currentState);
+        
+        // Add settings listener for future changes
+        SettingsManager.addSettingsListener(this::updateUIComponents);
+        
+        // Add component listeners
+        addComponentListeners();
 	}
 
 	private void applySelectedTheme() {
@@ -131,25 +137,100 @@ public class SettingsPanel extends Form {
 		updateSettings("theme", themeId); // Persist the theme via SettingsManager
 	}
 
-	private void initializeSettings() {
-		SettingsState state = Main.settings.getSettingsState();
-		String displayName = themeIdToDisplayName.getOrDefault(state.theme, "Light Theme");
-		themeComboBox.setSelectedItem(displayName);
-		fontSizeComboBox.setSelectedItem(state.fontSize);
-		fontComboBox.setSelectedItem(state.fontStyle);
+	private void updateSettings(String key, String value) {
+	    SettingsState state = SettingsManager.updateSetting(key, value); 
+	    if ("theme".equals(key)) {
+	        String displayName = themeIdToDisplayName.getOrDefault(state.theme, "Light Theme");
+	        themeComboBox.setSelectedItem(displayName);
+	    } else if ("font_size".equals(key)) {
+	        fontSizeComboBox.setSelectedItem(state.fontSize);
+	    } else if ("font_style".equals(key)) {
+	        fontComboBox.setSelectedItem(state.fontStyle);
+	    } else if ("notifications".equals(key)) {
+	        notificationsToggle.setSelected(state.notifications);
+	    }
 	}
 
-	private void updateSettings(String key, String value) {
-		SettingsState state = Main.settings.updateSetting(key, value);
-		if ("theme".equals(key)) {
-			String displayName = themeIdToDisplayName.getOrDefault(state.theme, "Light Theme");
-			themeComboBox.setSelectedItem(displayName);
-		} else if ("font_size".equals(key)) {
-			fontSizeComboBox.setSelectedItem(state.fontSize);
-		} else if ("font_style".equals(key)) {
-			fontComboBox.setSelectedItem(state.fontStyle);
-		} else if ("notifications".equals(key)) {
-			notificationsToggle.setSelected(state.notifications);
-		}
-	}
+	private void updateUIComponents(SettingsState state) {
+        if (state == null) return;
+        
+        SwingUtilities.invokeLater(() -> {
+            // Remove listeners temporarily
+            removeAllListeners();
+            
+            // Update UI components
+            String displayName = themeIdToDisplayName.getOrDefault(state.theme, "Light Theme");
+            themeComboBox.setSelectedItem(displayName);
+            fontSizeComboBox.setSelectedItem(state.fontSize);
+            fontComboBox.setSelectedItem(state.fontStyle);
+            notificationsToggle.setSelected(state.notifications);
+            
+            // Re-add listeners
+            addComponentListeners();
+            
+            // Force immediate UI update
+            revalidate();
+            repaint();
+        });
+    }
+
+    private void removeAllListeners() {
+        for (java.awt.event.ActionListener al : themeComboBox.getActionListeners()) {
+            themeComboBox.removeActionListener(al);
+        }
+        for (java.awt.event.ActionListener al : fontSizeComboBox.getActionListeners()) {
+            fontSizeComboBox.removeActionListener(al);
+        }
+        for (java.awt.event.ActionListener al : fontComboBox.getActionListeners()) {
+            fontComboBox.removeActionListener(al);
+        }
+        for (java.awt.event.ActionListener al : notificationsToggle.getActionListeners()) {
+            notificationsToggle.removeActionListener(al);
+        }
+    }
+    
+    @Override
+    public void formOpen() {
+        super.formOpen();
+        // Reload settings when form opens
+        SettingsState currentState = SettingsManager.getCurrentState();
+        if (currentState != null) {
+            updateUIComponents(currentState);
+        }
+    }
+
+    private void addComponentListeners() {
+        themeComboBox.addActionListener(e -> {
+            if (e.getSource() == themeComboBox) {
+                String selectedName = (String) themeComboBox.getSelectedItem();
+                String themeId = themeMap.get(selectedName);
+                if (themeId != null) {
+                    SettingsManager.updateSetting("theme", themeId);
+                }
+            }
+        });
+
+        fontSizeComboBox.addActionListener(e -> {
+            if (e.getSource() == fontSizeComboBox) {
+                Object selected = fontSizeComboBox.getSelectedItem();
+                if (selected != null) {
+                    SettingsManager.updateSetting("font_size", selected.toString());
+                }
+            }
+        });
+
+        fontComboBox.addActionListener(e -> {
+            if (e.getSource() == fontComboBox) {
+                String selected = (String) fontComboBox.getSelectedItem();
+                if (selected != null) {
+                    SettingsManager.updateSetting("font_style", selected);
+                }
+            }
+        });
+
+        notificationsToggle.addActionListener(e -> {
+            SettingsManager.updateSetting("notifications", 
+                String.valueOf(notificationsToggle.isSelected()));
+        });
+    }
 }

@@ -8,16 +8,13 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Rectangle;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.sql.Connection;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +56,7 @@ import raven.modal.component.SimpleModalBorder;
 
 public class SessionsForm extends Form implements Printable {
 	private JComboBox<String> violationField;
-	private JFormattedTextField timeField;
+	private JFormattedTextField timeField, dateField; // Declare the missing dateField
 	private JTextArea sessionSummaryArea, notesArea;
 	private JButton saveButton, printButton, searchStudentButton;
 	private JComboBox<String> participantsComboBox;
@@ -79,10 +76,11 @@ public class SessionsForm extends Form implements Printable {
 	private Map<Integer, Participants> pendingParticipants = new HashMap<>();
 	private int tempIdCounter = -1;
 	private JButton searchBtn;
-	private JFormattedTextField dateField; // Declare the missing dateField
 	private Runnable saveCallback;
-	private JTextField customViolationField; // Add this field for custom violations
+	private JTextField customViolationField; 
 	private Integer selectedAppointmentId = null;
+	private DatePicker sessionDatePicker;
+	private TimePicker sessionTimePicker;
 
 	// Violation type arrays
 	private String[] violations = { "Absence/Late", "Minor Property Damage", "Threatening/Intimidating",
@@ -91,7 +89,6 @@ public class SessionsForm extends Form implements Printable {
 			"Fighting/Weapons", "Severe Property Damage", "Others" };
 
 	private JTextField recordedByField;
-	private JLabel otherViolationLabel;
 	private JLabel lblSessionTime;
 
 	public SessionsForm(Connection conn) {
@@ -111,9 +108,13 @@ public class SessionsForm extends Form implements Printable {
 			}
 		};
 
+		sessionTimePicker = new TimePicker();
+		sessionDatePicker = new DatePicker();
+
 		// Initialize custom violation field
 		customViolationField = new JTextField(15);
 		customViolationField.setVisible(false);
+		customViolationField.setEnabled(false);
 
 		// Initialize violation field with combined offenses
 		violationField = new JComboBox<>();
@@ -127,16 +128,16 @@ public class SessionsForm extends Form implements Printable {
 			String selected = (String) violationField.getSelectedItem();
 			if (selected == null || selected.equals("-- Select Violation --")) {
 				customViolationField.setEnabled(false);
+				customViolationField.setVisible(false);
 				customViolationField.setText(""); // Clear the text when hidden
 			} else if (selected.equals("Others")) {
 				customViolationField.setEnabled(true);
-
+				customViolationField.setVisible(true);
 			} else {
 				customViolationField.setEnabled(false);
+				customViolationField.setVisible(false);
 				customViolationField.setText(""); // Clear the text when hidden
-
 			}
-
 		});
 
 		// Initialize recorded by field as JTextField
@@ -149,7 +150,8 @@ public class SessionsForm extends Form implements Printable {
 	}
 
 	private void openStudentSearchUI() {
-		if (ModalDialog.isIdExist("search")) {
+		String modalId = "session_student_search"; // Use unique modal ID
+		if (ModalDialog.isIdExist(modalId)) {
 			return;
 		}
 
@@ -170,14 +172,13 @@ public class SessionsForm extends Form implements Printable {
 			// Store in pendingParticipants
 			pendingParticipants.put(tempId, participant);
 
-			// Store participant details
 			Map<String, String> details = new HashMap<>();
 			details.put("firstName", participant.getParticipantFirstName());
 			details.put("lastName", participant.getParticipantLastName());
 			details.put("fullName", participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
 			details.put("type", "Student");
-			details.put("contact", participant.getContactNumber()); // Add contact information
-			details.put("sex", participant.getSex()); // Add sex information
+			details.put("contact", participant.getContactNumber());
+			details.put("sex", participant.getSex());
 			participantDetails.put(tempId, details);
 
 			// Add to table with row number and hidden tempId
@@ -185,21 +186,25 @@ public class SessionsForm extends Form implements Printable {
 			participantTableModel
 					.addRow(new Object[] { rowNumber, details.get("fullName"), "Student", "View | Remove", tempId });
 
-			// Close the modal
-			ModalDialog.closeModal("search");
+			// Close the modal using the correct ID
+			ModalDialog.closeModal(modalId);
 		}) {
-			// Override required abstract methods if any
 			@Override
 			protected void onStudentSelected(Student student) {
 				// This is already handled by the callback
 			}
 		};
 
-		// Configure modal options (unchanged)
-		ModalDialog.getDefaultOption().setOpacity(0f).setAnimationOnClose(false).getBorderOption().setBorderWidth(0.5f)
+		// Configure modal options
+		ModalDialog.getDefaultOption()
+				.setOpacity(0f)
+				.setAnimationOnClose(false)
+				.getBorderOption()
+				.setBorderWidth(0.5f)
 				.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
 
-		ModalDialog.showModal(this, searchPanel, "search");
+		// Show modal with the correct ID
+		ModalDialog.showModal(this, searchPanel, modalId);
 		ModalDialog.getDefaultOption().getLayoutOption().setSize(700, 500);
 	}
 
@@ -355,7 +360,6 @@ public class SessionsForm extends Form implements Printable {
 
 		separator = new JSeparator();
 		separator.setSize(new Dimension(20, 20));
-		separator.setBounds(new Rectangle(0, 0, 5, 5));
 		separator.setBackground(Color.GRAY);
 		separator.setForeground(Color.DARK_GRAY);
 		separator.setOrientation(SwingConstants.VERTICAL);
@@ -405,7 +409,6 @@ public class SessionsForm extends Form implements Printable {
 
 		// Initialize the dateField
 		dateField = new JFormattedTextField();
-		DatePicker sessionDatePicker = new DatePicker();
 		sessionDatePicker.setSelectedDate(LocalDate.now());
 		sessionDatePicker.setEditor(dateField);
 		dateField.setColumns(10);
@@ -415,7 +418,6 @@ public class SessionsForm extends Form implements Printable {
 		mainPanel.add(lblSessionTime, "flowx,cell 3 2");
 
 		timeField = new JFormattedTextField();
-		TimePicker sessionTimePicker = new TimePicker();
 		sessionTimePicker.setSelectedTime(LocalTime.now());
 		sessionTimePicker.setEditor(timeField);
 		timeField.setColumns(10);
@@ -435,21 +437,39 @@ public class SessionsForm extends Form implements Printable {
 		// Violation type with label and custom field
 		JLabel violationLabel = new JLabel("Violation Type: ");
 		violationLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-		mainPanel.add(violationLabel, "flowx,cell 1 5,aligny top");
+		mainPanel.add(violationLabel, "cell 1 5");
 
-		// Create a panel to hold both the combo box and custom field
-		JPanel violationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-		violationPanel.add(violationField);
+		// Create a panel to hold both the combo box and custom field with proper layout
+		JPanel violationPanel = new JPanel(new MigLayout("insets 0", "[][grow]", "[]"));
+		violationPanel.add(violationField, "cell 0 0");
 
-		otherViolationLabel = new JLabel("Others");
-		violationPanel.add(otherViolationLabel);
-		violationPanel.add(customViolationField);
-		mainPanel.add(violationPanel, "cell 1 5,growx,aligny top");
+		// Add custom violation field with label
+		JLabel otherLabel = new JLabel("Other:");
+		otherLabel.setVisible(false);
+		violationPanel.add(otherLabel, "cell 1 0");
+
+		// Setup custom violation field
+		customViolationField = new JTextField(20);
+		customViolationField.setVisible(false);
+		violationPanel.add(customViolationField, "cell 1 0, growx");
+
+		// Add listener to show/hide the "Other:" label and field
+		violationField.addActionListener(e -> {
+			String selected = (String) violationField.getSelectedItem();
+			boolean isOthers = "Others".equals(selected);
+			otherLabel.setVisible(isOthers);
+			customViolationField.setVisible(isOthers);
+			customViolationField.setEnabled(isOthers);
+			violationPanel.revalidate();
+			violationPanel.repaint();
+		});
+
+		mainPanel.add(violationPanel, "cell 1 5 2 1, growx");
 
 		// Participant Table
 		participantTable = new JTable(participantTableModel);
 		participantTable.setPreferredScrollableViewportSize(new Dimension(400, 100));
-		participantTable.getColumnModel().removeColumn(participantTable.getColumnModel().getColumn(4)); 
+		participantTable.getColumnModel().removeColumn(participantTable.getColumnModel().getColumn(4));
 		JScrollPane tableScrollPane = new JScrollPane(participantTable);
 		tableScrollPane.setBorder(BorderFactory.createTitledBorder("Participant Table")); // pane
 
@@ -693,6 +713,15 @@ public class SessionsForm extends Form implements Printable {
 
 			String violationText = "Others".equals(violation) ? customViolationField.getText().trim() : violation;
 
+			// Validate custom violation text
+			if ("Others".equals(violation) && (violationText == null || violationText.trim().isEmpty())) {
+				JOptionPane.showMessageDialog(this,
+						"Please enter a custom violation type.",
+						"Missing Information",
+						JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+
 			Sessions session = new Sessions(0, appointmentId, guidanceCounselorId, null, appointmentType,
 					consultationType, new java.sql.Timestamp(System.currentTimeMillis()), notes, "Active",
 					new java.sql.Timestamp(System.currentTimeMillis()));
@@ -722,31 +751,29 @@ public class SessionsForm extends Form implements Printable {
 					}
 				}
 
-				// NOW create violation records if there's a violation, using real participant IDs
+				// NOW create violation records if there's a violation, using real participant
+				// IDs
 				if (violation != null && !violation.equals("-- Select Violation --")) {
 					ViolationCRUD violationCRUD = new ViolationCRUD(connect);
-					
+
 					// For each participant, create a violation record using real IDs
 					for (int i = 0; i < participantTableModel.getRowCount(); i++) {
 						int tempId = (int) participantTableModel.getValueAt(i, 4);
 						int realParticipantId = idMapping.get(tempId); // Get the real ID from our mapping
-						
-						String violationDescription = violation.equals("Others") ? 
-							violationText : violation;
-						
+
 						// Create violation record with real participant ID
 						boolean success = violationCRUD.addViolation(
-							realParticipantId,
-							violation,
-							violationDescription,
-							sessionSummaryArea.getText(), // Use session summary as anecdotal record
-							notesArea.getText(), // Use notes as reinforcement
-							"Active",
-							new java.sql.Timestamp(System.currentTimeMillis())
-						);
+								realParticipantId,
+								violationText, // Use custom text if "Others" is selected
+								violationText, // Use custom text as description
+								sessionSummaryArea.getText(), // Use session summary as anecdotal record
+								notesArea.getText(), // Use notes as reinforcement
+								"Active",
+								new java.sql.Timestamp(System.currentTimeMillis()));
 
 						if (!success) {
-							throw new Exception("Failed to save violation record for participant ID: " + realParticipantId);
+							throw new Exception(
+									"Failed to save violation record for participant ID: " + realParticipantId);
 						}
 					}
 				}
@@ -784,40 +811,29 @@ public class SessionsForm extends Form implements Printable {
 		}
 	}
 
-	private Integer getAppointmentId() {
-		if ("Walk-in".equals(appointmentTypeComboBox.getSelectedItem())) {
-			return null;
-		}
-		return selectedAppointmentId;
-	}
-
-	private String formatTimeFor12Hour(LocalDateTime dateTime) {
-		return dateTime.format(DateTimeFormatter.ofPattern("hh:mm a"));
-	}
-
 	public void populateFromAppointment(Appointment appointment) {
-		if (appointment == null) return;
-		
-		// Set appointment type and ID
-		appointmentTypeComboBox.setSelectedItem("From Appointment");
-		selectedAppointmentId = appointment.getAppointmentId();
-		
-		// Set consultation type
-		consultationTypeComboBox.setSelectedItem(appointment.getConsultationType());
-		
-		// Set appointment date and time in correct format
-		if (appointment.getAppointmentDateTime() != null) {
-			LocalDateTime appointmentDateTime = appointment.getAppointmentDateTime().toLocalDateTime();
-			dateField.setText(appointmentDateTime.toLocalDate().toString());
-			timeField.setText(formatTimeFor12Hour(appointmentDateTime)); // Use 12-hour format
-		}
-		
-		// Set notes and summary
-		notesArea.setText(appointment.getAppointmentNotes());
-		sessionSummaryArea.setText("Session created from appointment: " + appointment.getAppointmentTitle());
-		
-		// Add participants 
-		// ...rest of existing participants code...
-	}
+		if (appointment != null) {
+			// Set appointment type and ID
+			appointmentTypeComboBox.setSelectedItem("Scheduled");
+			selectedAppointmentId = appointment.getAppointmentId();
 
+			// Set consultation type
+			consultationTypeComboBox.setSelectedItem(appointment.getConsultationType());
+
+			// Populate participants
+			populateParticipantsFromAppointment(appointment.getAppointmentId());
+
+			// Set date and time if available
+			if (appointment.getAppointmentDateTime() != null) {
+				java.time.LocalDateTime dateTime = appointment.getAppointmentDateTime().toLocalDateTime();
+				sessionDatePicker.setSelectedDate(dateTime.toLocalDate());
+				sessionTimePicker.setSelectedTime(dateTime.toLocalTime());
+			}
+
+			// If there are notes, populate them
+			if (appointment.getAppointmentNotes() != null) {
+				notesArea.setText(appointment.getAppointmentNotes());
+			}
+		}
+	}
 }

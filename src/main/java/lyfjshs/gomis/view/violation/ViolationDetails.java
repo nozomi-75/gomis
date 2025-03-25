@@ -171,7 +171,6 @@ public class ViolationDetails extends JDialog {
         
         // Set dialog properties
         setSize(800, 600);
-        setResizable(false);
     }
     
     private void setFieldsEditable(boolean editable) {

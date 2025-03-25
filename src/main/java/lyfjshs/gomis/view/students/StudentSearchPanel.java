@@ -249,12 +249,6 @@ public abstract class StudentSearchPanel extends Modal {
         });
     }
 
-    // Remove or modify displayStudentFullData to not show the full data dialog
-    private void displayStudentFullData(Student student) {
-        this.selectedStudent = student;
-        // Remove the StudentFullData dialog display since we just want to store the selection
-    }
-
     // This method will be called when a student is selected from search results
     protected void onStudentSelected(Student student) {
         // Default empty implementation

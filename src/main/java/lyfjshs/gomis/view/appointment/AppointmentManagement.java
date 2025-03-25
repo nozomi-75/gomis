@@ -27,7 +27,7 @@ public class AppointmentManagement extends Form {
 	private SlidePane slidePane;
 	private AppointmentDailyOverview appointmentDaily;
 	private AppointmentCalendar appointmentCalendar;
-	private AppointmentDAO appointmentDAO;
+	public AppointmentDAO appointmentDAO;
 
 	public AppointmentManagement(Connection connection) {
 		this.connection = connection;
@@ -88,10 +88,11 @@ public class AppointmentManagement extends Form {
 	}
 
 	private void reloadAppointments() {
-		if (slidePane.getSlideComponent() instanceof AppointmentCalendar) {
-			((AppointmentCalendar) slidePane.getSlideComponent()).updateCalendar();
-		} else if (slidePane.getSlideComponent() instanceof AppointmentDailyOverview) {
-			((AppointmentDailyOverview) slidePane.getSlideComponent()).updateAppointmentsDisplay();
+		if (appointmentCalendar != null) {
+			appointmentCalendar.updateCalendar();
+		}
+		if (appointmentDaily != null) {
+			appointmentDaily.updateAppointmentsDisplay();
 		}
 	}
 
@@ -107,7 +108,11 @@ public class AppointmentManagement extends Form {
 		// Use AddAppointmentModal to show the dialog
 		AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO, 700,650);
 
-		// Update the current view after the modal is closed
+		// Add refresh after modal closes
+		reloadAppointments();
+	}
+
+	public void refreshViews() {
 		reloadAppointments();
 	}
 }

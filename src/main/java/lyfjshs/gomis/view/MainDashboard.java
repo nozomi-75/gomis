@@ -7,10 +7,11 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -24,23 +25,32 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.components.FlatButton;
 import com.formdev.flatlaf.extras.components.FlatButton.ButtonType;
 
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
+import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.utils.IncidentReportGenerator;
+import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.appointment.AppointmentOverview;
+import lyfjshs.gomis.view.appointment.add.AddAppointmentModal;
+import lyfjshs.gomis.view.appointment.add.AddAppointmentPanel;
+import lyfjshs.gomis.view.incident.IncidentFillUpForm;
+import lyfjshs.gomis.view.sessions.SessionsForm;
+import lyfjshs.gomis.view.students.StudentFullData;
+import lyfjshs.gomis.view.students.StudentMangementGUI;
+import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
-import lyfjshs.gomis.view.sessions.SessionsForm;
-import lyfjshs.gomis.Main;
-import lyfjshs.gomis.view.appointment.AppointmentCalendar;
 
 public class MainDashboard extends Form {
 
@@ -139,7 +149,7 @@ public class MainDashboard extends Form {
 
 			List<ViolationRecord> violations = violationCRUD.getAllViolations();
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
-			
+
 			for (ViolationRecord violation : violations) {
 				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
 				if (participant != null && participant.getStudentUid() != null) {
@@ -149,12 +159,12 @@ public class MainDashboard extends Form {
 								student.getStudentFirstname() != null ? student.getStudentFirstname() : "",
 								student.getStudentLastname() != null ? student.getStudentLastname() : "").trim();
 
-						model.addRow(new Object[] { 
-							student.getStudentLrn(), 
-							fullName,
-							violation.getViolationType(),  // Changed from student.getStudentSex()
-							violation.getStatus(),         // Changed from student.getSchoolSection()
-							"actions"                      // This column will be handled by TableActionManager
+						model.addRow(new Object[] {
+								student.getStudentLrn(),
+								fullName,
+								violation.getViolationType(), // Changed from student.getStudentSex()
+								violation.getStatus(), // Changed from student.getSchoolSection()
+								"actions" // This column will be handled by TableActionManager
 						});
 					}
 				}
@@ -182,8 +192,9 @@ public class MainDashboard extends Form {
 				ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
 				StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
 				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
-				Student student = participant != null && participant.getStudentUid() != null ? 
-					studentsDataDAO.getStudentById(participant.getStudentUid()) : null;
+				Student student = participant != null && participant.getStudentUid() != null
+						? studentsDataDAO.getStudentById(participant.getStudentUid())
+						: null;
 
 				// Create header section
 				JLabel headerLabel = new JLabel("Violation Information");
@@ -193,54 +204,63 @@ public class MainDashboard extends Form {
 				// Add student information
 				if (student != null) {
 					createSection(detailPanel, "Student Information", new String[][] {
-						{"Student LRN:", student.getStudentLrn()},
-						{"Student Name:", student.getStudentFirstname() + " " + student.getStudentLastname()}
+							{ "Student LRN:", student.getStudentLrn() },
+							{ "Student Name:", student.getStudentFirstname() + " " + student.getStudentLastname() }
 					});
 				}
 
 				// Add violation information
 				createSection(detailPanel, "Violation Details", new String[][] {
-					{"Violation Type:", violation.getViolationType()},
-					{"Description:", violation.getViolationDescription()},
-					{"Status:", violation.getStatus()},
-					{"Date:", violation.getUpdatedAt().toString()}
+						{ "Violation Type:", violation.getViolationType() },
+						{ "Description:", violation.getViolationDescription() },
+						{ "Status:", violation.getStatus() },
+						{ "Date:", violation.getUpdatedAt().toString() }
 				});
 
 				// Add text areas with improved styling
 				createTextAreaField(detailPanel, "Anecdotal Record:", violation.getAnecdotalRecord(), 5);
 				createTextAreaField(detailPanel, "Reinforcement:", violation.getReinforcement(), 5);
 
+				// Add resolution status message if resolved
+				if ("Resolved".equals(violation.getStatus())) {
+					JLabel resolutionLabel = new JLabel("This violation has been resolved.");
+					resolutionLabel.setForeground(new Color(0, 150, 136)); // Green color
+					resolutionLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+					detailPanel.add(resolutionLabel, "span, gaptop 10, gapbottom 5");
+				}
+
+
 				// Configure modal options based on violation status
 				SimpleModalBorder.Option[] options;
 				if (!"Resolved".equals(violation.getStatus())) {
 					options = new SimpleModalBorder.Option[] {
-						new SimpleModalBorder.Option("Resolve", SimpleModalBorder.YES_OPTION),
-						new SimpleModalBorder.Option("Close", SimpleModalBorder.NO_OPTION)
+							new SimpleModalBorder.Option("Resolve", SimpleModalBorder.YES_OPTION),
+							new SimpleModalBorder.Option("Close", SimpleModalBorder.NO_OPTION)
 					};
 				} else {
 					options = new SimpleModalBorder.Option[] {
-						new SimpleModalBorder.Option("Close", SimpleModalBorder.NO_OPTION)
+							new SimpleModalBorder.Option("Close", SimpleModalBorder.NO_OPTION)
 					};
 				}
 
 				// Show modal with proper configuration
 				ModalDialog.showModal(this,
-					new SimpleModalBorder(detailPanel, "Violation Details", options,
-						(controller, action) -> {
-							if (action == SimpleModalBorder.YES_OPTION) {
-								resolveViolation(lrn);
-								controller.close();
-							} else if (action == SimpleModalBorder.NO_OPTION || 
-									 action == SimpleModalBorder.CLOSE_OPTION) {
-								controller.close();
-							}
-							refreshTable();
-						}),
-					"ViolationDetails");
+						new SimpleModalBorder(detailPanel, "Violation Details", options,
+								(controller, action) -> {
+									if (action == SimpleModalBorder.YES_OPTION) {
+										resolveViolation(lrn);
+										controller.close();
+									} else if (action == SimpleModalBorder.NO_OPTION ||
+											action == SimpleModalBorder.CLOSE_OPTION) {
+										controller.close();
+									}
+									refreshTable();
+								}),
+						"ViolationDetails");
 
 				// Configure modal appearance
 				ModalDialog.getDefaultOption().getLayoutOption()
-					.setSize(800, 600);
+						.setSize(800, 600);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -270,8 +290,8 @@ public class MainDashboard extends Form {
 		textArea.setEditable(false);
 		textArea.setBackground(new Color(245, 245, 245));
 		textArea.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(new Color(200, 200, 200)),
-			BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+				BorderFactory.createLineBorder(new Color(200, 200, 200)),
+				BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 
 		JScrollPane scrollPane = new JScrollPane(textArea);
 		scrollPane.setPreferredSize(new Dimension(0, rows * 20));
@@ -279,34 +299,57 @@ public class MainDashboard extends Form {
 	}
 
 	private void addDetailField(JPanel panel, String label, String value) {
-		panel.add(new JLabel(label), "cell 0 " + panel.getComponentCount()/2);
-		panel.add(new JLabel(value != null ? value : ""), "cell 1 " + panel.getComponentCount()/2);
+		panel.add(new JLabel(label), "cell 0 " + panel.getComponentCount() / 2);
+		panel.add(new JLabel(value != null ? value : ""), "cell 1 " + panel.getComponentCount() / 2);
 	}
 
 	private void resolveViolation(String lrn) {
 		try {
-			int option = JOptionPane.showConfirmDialog(this,
-				"Are you sure you want to resolve this violation?",
-				"Confirm Resolution",
-				JOptionPane.YES_NO_OPTION);
-				
-			if (option == JOptionPane.YES_OPTION) {
-				ViolationCRUD violationCRUD = new ViolationCRUD(connection);
-				ViolationRecord violation = violationCRUD.getViolationByLRN(lrn);
-				
-				if (violation != null) {
+			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
+			ViolationRecord violation = violationCRUD.getViolationByLRN(lrn);
+
+			if (violation != null) {
+				// Check if violation is already resolved
+				if ("Resolved".equals(violation.getStatus())) {
+					JOptionPane.showMessageDialog(this,
+							"This violation has already been resolved.",
+							"Already Resolved",
+							JOptionPane.INFORMATION_MESSAGE);
+					return;
+				}
+
+				int option = JOptionPane.showConfirmDialog(this,
+						"Are you sure you want to resolve this violation?",
+						"Confirm Resolution",
+						JOptionPane.YES_NO_OPTION);
+
+				if (option == JOptionPane.YES_OPTION) {
 					boolean success = violationCRUD.updateViolationStatus(violation.getViolationId(), "Resolved");
 					if (success) {
-						JOptionPane.showMessageDialog(this, "Violation has been resolved successfully!");
+						JOptionPane.showMessageDialog(this, 
+							"Violation has been resolved successfully!",
+							"Success",
+							JOptionPane.INFORMATION_MESSAGE);
 						refreshTable();
 					} else {
-						JOptionPane.showMessageDialog(this, "Failed to resolve violation.", "Error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(this, 
+							"Failed to resolve violation.", 
+							"Error",
+							JOptionPane.ERROR_MESSAGE);
 					}
 				}
+			} else {
+				JOptionPane.showMessageDialog(this,
+					"Violation not found.",
+					"Error",
+					JOptionPane.ERROR_MESSAGE);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Error resolving violation: " + e.getMessage());
+			JOptionPane.showMessageDialog(this, 
+				"Error resolving violation: " + e.getMessage(),
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -353,34 +396,68 @@ public class MainDashboard extends Form {
 		FlatButton printINITIAL = new FlatButton();
 		printINITIAL.setText("Print INITIAL Incident");
 		printINITIAL.setButtonType(ButtonType.none);
+		printINITIAL.addActionListener(e -> printInitialForm());
 		panel.add(printINITIAL, "flowx,cell 1 3,growx");
 
-		FlatButton standardButton_1 = new FlatButton();
-		standardButton_1.setText("Create a Session");
-		standardButton_1.setButtonType(ButtonType.none);
-		standardButton_1.addActionListener(e -> SessionForm());
-		panel.add(standardButton_1, "cell 3 3,growx");
-		
+		FlatButton createSessionBtn = new FlatButton();
+		createSessionBtn.setText("Create a Session");
+		createSessionBtn.setButtonType(ButtonType.none);
+		createSessionBtn.addActionListener(e -> SessionForm());
+		panel.add(createSessionBtn, "cell 3 3,growx");
+
 		FlatButton setAppointment = new FlatButton();
 		setAppointment.setText("Set Appointment");
 		setAppointment.setButtonType(ButtonType.none);
+		setAppointment.addActionListener(e -> createAppointment());
 		panel.add(setAppointment, "flowx,cell 5 3,growx");
-		
-		FlatButton viewStudents = new FlatButton();
-		viewStudents.setText("View Students");
-		viewStudents.setButtonType(ButtonType.none);
-		panel.add(viewStudents, "flowx,cell 7 3,growx");
-		
-		JButton createIncident = new JButton("Create a Incident Record");
+
+		FlatButton createIncident = new FlatButton();
+		createIncident.setText("Create a Incident Record");
+		createIncident.setButtonType(ButtonType.none);
+		createIncident.addActionListener(e -> createIncidentRecord());
 		panel.add(createIncident, "cell 1 4");
-		
+
 		FlatButton viewAppointments = new FlatButton();
 		viewAppointments.setText("View Appointments");
 		viewAppointments.setButtonType(ButtonType.none);
 		viewAppointments.addActionListener(e -> viewAppointments());
 		panel.add(viewAppointments, "cell 5 4,growx");
 
-		JButton searchStudent = new JButton("Search Student");
+		FlatButton viewStudents = new FlatButton();
+		viewStudents.setText("View Students");
+		viewStudents.setButtonType(ButtonType.none);
+		viewStudents.addActionListener(e -> {
+			StudentMangementGUI studManagement = new StudentMangementGUI(connection);
+			FormManager.showForm(studManagement);
+		});
+		panel.add(viewStudents, "flowx,cell 7 3,growx");
+
+		FlatButton searchStudent = new FlatButton();
+		searchStudent.setText("Search Student");
+		searchStudent.setButtonType(ButtonType.none);
+		searchStudent.addActionListener(e -> {
+			if (ModalDialog.isIdExist("search")) {
+				return;
+			}
+			StudentSearchPanel searchPanel = new StudentSearchPanel(connection, student -> {
+				// Callback when student is selected show
+				// its full details using StudentFullData.java
+				StudentFullData studentFullData = new StudentFullData(connection, student);
+				FormManager.showForm(studentFullData);
+
+				ModalDialog.closeModal("search");
+			}) {
+				
+			};
+
+			ModalDialog.getDefaultOption().setOpacity(0f).setAnimationOnClose(true).getBorderOption()
+					.setBorderWidth(0.5f)
+					.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+
+			ModalDialog.showModal(this, searchPanel, "search");
+			ModalDialog.getDefaultOption().getLayoutOption().setSize(700, 500);
+		});
+
 		panel.add(searchStudent, "cell 7 4");
 		return panel;
 	}
@@ -388,39 +465,49 @@ public class MainDashboard extends Form {
 	private void SessionForm() {
 		try {
 			SessionsForm sessionsForm = new SessionsForm(connection);
-			if (Main.formManager != null) {
-				Main.formManager.showForm(sessionsForm);
-			} else {
-				JOptionPane.showMessageDialog(this, 
-					"Unable to open Sessions form: FormManager not available", 
-					"Error", JOptionPane.ERROR_MESSAGE);
-			}
+			FormManager.showForm(sessionsForm);
 		} catch (Exception e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, 
-				"Error opening Sessions form: " + e.getMessage(), 
-				"Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,
+					"Error opening Sessions form: " + e.getMessage(),
+					"Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
-	
+
 	private void viewAppointments() {
 		try {
-			AppointmentCalendar appointmentCalendar = new AppointmentCalendar(new AppointmentDAO(connection), connection);
-			if (Main.formManager != null) {
-				Form appointmentForm = new Form();
-				appointmentForm.setLayout(new BorderLayout());
-				appointmentForm.add(appointmentCalendar, BorderLayout.CENTER);
-				Main.formManager.showForm(appointmentForm);
-			} else {
-				JOptionPane.showMessageDialog(this, 
-					"Unable to open Appointments view: FormManager not available", 
-					"Error", JOptionPane.ERROR_MESSAGE);
-			}
+			AppointmentManagement appointments = new AppointmentManagement(connection);
+			FormManager.showForm(appointments);
 		} catch (Exception e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, 
-				"Error opening Appointments view: " + e.getMessage(), 
-				"Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,
+					"Error opening Appointments view: " + e.getMessage(),
+					"Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
+
+	private void createAppointment() {
+		Appointment newAppointment = new Appointment();
+		newAppointment.setAppointmentDateTime(Timestamp.valueOf(LocalDateTime.now())); // Set default date and time
+		AppointmentDAO appointmentDAO = Main.appointmentCalendar.appointmentDAO;
+
+		// Set the guidanceCounselorId from FormManager
+		newAppointment.setGuidanceCounselorId(Main.formManager.getCounselorObject().getGuidanceCounselorId());
+
+		AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
+
+		// Use AddAppointmentModal to show the dialog
+		AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO, 700, 650);
+		Main.appointmentCalendar.refreshViews();
+	}
+
+	private void printInitialForm() {
+		IncidentReportGenerator.createINITIALIncidentReport(this);
+	}
+
+	private void createIncidentRecord() {
+		IncidentFillUpForm incidentFillUp = new IncidentFillUpForm(connection);
+		FormManager.showForm(incidentFillUp);
+	}
+
 }

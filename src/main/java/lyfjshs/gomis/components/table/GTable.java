@@ -1,7 +1,6 @@
 package lyfjshs.gomis.components.table;
 
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
@@ -9,6 +8,7 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.JCheckBox;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -20,6 +20,8 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.components.FlatTable;
 import com.formdev.flatlaf.extras.components.FlatTableHeader;
 
+import lyfjshs.gomis.Main;
+
 public class GTable extends FlatTable {
     private static final long serialVersionUID = 1L;
     private double[] columnProportions;
@@ -27,11 +29,11 @@ public class GTable extends FlatTable {
     private boolean hasCheckbox;
     private TableActionManager actionManager;
 
-    public GTable(Object[][] data, String[] columnNames, Class<?>[] columnTypes, 
-                  boolean[] editableColumns, double[] columnWidths, int[] alignments, 
-                  boolean includeCheckbox, TableActionManager actionManager) {
-                
-        DefaultTableModel defaultTableModel =new DefaultTableModel(data, columnNames) {
+    public GTable(Object[][] data, String[] columnNames, Class<?>[] columnTypes,
+            boolean[] editableColumns, double[] columnWidths, int[] alignments,
+            boolean includeCheckbox, TableActionManager actionManager) {
+
+        DefaultTableModel defaultTableModel = new DefaultTableModel(data, columnNames) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 return columnTypes[columnIndex];
@@ -42,23 +44,24 @@ public class GTable extends FlatTable {
                 return editableColumns[columnIndex];
             }
         };
-        
+
         this.setModel(defaultTableModel);
-        
+
         this.hasCheckbox = includeCheckbox;
         this.columnProportions = columnWidths.clone();
         this.columnAlignments = alignments.clone();
         this.actionManager = actionManager;
-        
+
         configureTable();
-        applyColumnWidths();
+//        applyColumnWidths();
         applyColumnAlignments();
+        updateRowHeightFromSettings();
 
         // Add listener to update column widths on parent resize
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                applyColumnWidths();
+//                applyColumnWidths();
             }
         });
     }
@@ -79,14 +82,13 @@ public class GTable extends FlatTable {
     private void configureTable() {
         setShowVerticalLines(false);
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        setRowHeight(35);
-        setFont(new Font("Tahoma", Font.PLAIN, 12));
+
+        // Calculate row height based on font size
+        updateRowHeightFromSettings();
 
         // Use FlatTableHeader for a modern header
         FlatTableHeader header = new FlatTableHeader();
         header.setColumnModel(getColumnModel());
-
-        header.setFont(new Font("Tahoma", Font.BOLD, 12));
         setTableHeader(header);
 
         putClientProperty(FlatClientProperties.STYLE,
@@ -117,46 +119,54 @@ public class GTable extends FlatTable {
         }
     }
 
+    public void updateRowHeightFromSettings() {
+        int fontSize = Main.settings.getSettingsState().fontSize; // Get font size from settings
+        int rowHeight = fontSize + 20; // Dynamically adjust height
+        setRowHeight(rowHeight);
+    }
+
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        if (Main.settings != null) {
+            SwingUtilities.invokeLater(this::updateRowHeightFromSettings); // 🔹 Forces row height update
+        }
+    }
+
     public void setColumnWidths(double[] widths) {
         if (widths.length != getColumnCount()) {
             throw new IllegalArgumentException("Width array must match column count");
         }
         this.columnProportions = widths.clone();
-        applyColumnWidths();
+//        applyColumnWidths();
     }
 
-    private void applyColumnWidths() {
-        int totalWidth = getParent() != null ? getParent().getWidth() : 800;
-        if (totalWidth <= 0)
-            totalWidth = 800;
-
-        TableColumnModel columnModel = getColumnModel();
-        for (int i = 0; i < columnModel.getColumnCount(); i++) {
-            TableColumn column = columnModel.getColumn(i);
-            String columnName = getColumnName(i);
-            
-            // Handle special columns
-            if (hasCheckbox && i == 0) {
-                continue;
-            }
-            
-            if (columnName.equals("Actions")) {
-                // Set fixed width for ACTIONS column to fit 2 buttons
-                column.setMinWidth(270);
-                column.setMaxWidth(270);
-                column.setPreferredWidth(310);
-                column.setResizable(false);
-                continue;
-            }
-            
-            // Normal columns
-            if (actionManager != null && i == getColumnCount() - 1) {
-                continue;
-            }
-            int width = (int) (totalWidth * columnProportions[i]);
-            column.setPreferredWidth(width);
-        }
-    }
+//    private void applyColumnWidths() {
+//        int totalWidth = getParent() != null ? getParent().getWidth() : 800;
+//        if (totalWidth <= 0)
+//            totalWidth = 800;
+//
+//        TableColumnModel columnModel = getColumnModel();
+//        for (int i = 0; i < columnModel.getColumnCount(); i++) {
+//            TableColumn column = columnModel.getColumn(i);
+//
+//            // Handle checkbox column
+//            if (hasCheckbox && i == 0)
+//                continue;
+//
+//            // Handle Actions column (Allow Resizing)
+//            if (actionManager != null && i == getColumnCount() - 1) {
+//                int actionColumnWidth = (int) (totalWidth * 0.15); // Make it responsive (15% of table width)
+//                column.setPreferredWidth(actionColumnWidth);
+//                column.setResizable(true);
+//                continue;
+//            }
+//
+//            // Normal columns
+//            int width = (int) (totalWidth * columnProportions[i]);
+//            column.setPreferredWidth(width);
+//        }
+//    }
 
     public void setColumnAlignments(int[] alignments) {
         if (alignments.length != getColumnCount()) {
@@ -180,6 +190,6 @@ public class GTable extends FlatTable {
     @Override
     public void doLayout() {
         super.doLayout();
-        applyColumnWidths();
+//        applyColumnWidths();
     }
 }

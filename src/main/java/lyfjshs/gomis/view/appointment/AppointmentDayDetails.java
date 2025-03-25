@@ -10,11 +10,12 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JButton;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
@@ -52,10 +53,19 @@ public class AppointmentDayDetails extends JPanel {
 		this.onParticipantSelect = onParticipantSelect;
 		this.onRedirectToSession = onRedirectToSession;
 		this.onEditAppointment = onEditAppointment;
+
+		// Set proper opaque and background
+		setOpaque(true);
+		setBackground(UIManager.getColor("Panel.background"));
+		
 		setLayout(new MigLayout("fill, insets 10", "[grow]", "[grow]"));
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		// Header Panel
+
+		// Initialize header panel with proper colors
 		JPanel headerPanel = new JPanel(new MigLayout("insets 0", "[grow][right]", "[]"));
+		headerPanel.setOpaque(true);
+		headerPanel.setBackground(UIManager.getColor("Panel.background"));
+		
 		JLabel titleLabel = new JLabel("Appointment Details");
 		titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
 		headerPanel.add(titleLabel, "align center");

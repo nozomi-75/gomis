@@ -1,10 +1,10 @@
 package lyfjshs.gomis.components.settings;
 
 public class SettingsState {
-	public final String theme;
-	public final String fontStyle;
-	public final int fontSize;
-	public final boolean notifications;
+	public String theme;
+	public String fontStyle;
+	public int fontSize;
+	public boolean notifications;
 
 	public SettingsState(String theme, String fontStyle, int fontSize, boolean notifications) {
 		this.theme = theme;

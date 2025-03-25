@@ -69,7 +69,7 @@ public class ViolationTablePanel extends JPanel {
         actionManager.addAction("Resolve",
                 (t, row) -> handleResolveAction(row),
                 new Color(46, 204, 113),
-                new com.formdev.flatlaf.extras.FlatSVGIcon("icons/check.svg", 0.5f));
+                new com.formdev.flatlaf.extras.FlatSVGIcon("icons/resolve.svg", 0.5f));
         return actionManager;
     }
 
@@ -77,7 +77,7 @@ public class ViolationTablePanel extends JPanel {
         String[] columnNames = { "Student LRN", "Name", "Violation Type", "Reinforcement", "Status", "Actions" };
         Class<?>[] columnTypes = { String.class, String.class, String.class, String.class, String.class, Object.class };
         boolean[] editableColumns = { false, false, false, false, false, true };
-        double[] columnWidths = { 0.15, 0.25, 0.20, 0.25, 0.10, 0.05 }; // Adjusted widths for better spacing
+        double[] columnWidths = { 0.15, 0.25, 0.20, 0.25, 0.10, 0.04 }; // Adjusted widths for better spacing
         int[] alignments = { SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.LEFT, SwingConstants.LEFT,
                 SwingConstants.CENTER, SwingConstants.CENTER };
 
@@ -101,7 +101,36 @@ public class ViolationTablePanel extends JPanel {
     private void handleResolveAction(int row) {
         ViolationRecord violation = getViolationAt(row);
         if (violation != null) {
-
+            int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to resolve this violation?",
+                "Confirm Resolution",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    if (violationCRUD.updateViolationStatus(violation.getViolationId(), "RESOLVED")) {
+                        JOptionPane.showMessageDialog(
+                            this,
+                            "Violation has been resolved successfully.",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE
+                        );
+                        refreshData(); // Refresh the table to show updated status
+                    } else {
+                        JOptionPane.showMessageDialog(
+                            this,
+                            "Failed to resolve violation.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                } catch (Exception e) {
+                    showError("Error resolving violation", e);
+                }
+            }
         }
     }
 

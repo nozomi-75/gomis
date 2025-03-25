@@ -118,7 +118,6 @@ public class ViewViolationDetails extends JDialog {
 
 		// Set dialog properties
 		setSize(364, 446);
-		setResizable(false);
 	}
 
 	// ... (rest of the code remains the same)

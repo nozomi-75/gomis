@@ -18,8 +18,8 @@ public class ToggleSwitchExample {
             
             JFrame frame = new JFrame("FlatToggleSwitch Example");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(300, 150);
-            frame.setLayout(new FlowLayout());
+            frame.setSize(679, 371);
+            frame.getContentPane().setLayout(new FlowLayout());
 
             JLabel label = new JLabel("Dark Mode");
             FlatToggleSwitch toggleSwitch = new FlatToggleSwitch(new Color(0, 122, 255));
@@ -36,8 +36,11 @@ public class ToggleSwitchExample {
                 FlatAnimatedLafChange.hideSnapshotWithAnimation();
             });
 
-            frame.add(label);
-            frame.add(toggleSwitch);
+            frame.getContentPane().add(label);
+            frame.getContentPane().add(toggleSwitch);
+            
+            JLabel lblNewLabel = new JLabel("New label");
+            frame.getContentPane().add(lblNewLabel);
 
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
