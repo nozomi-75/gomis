@@ -1,9 +1,7 @@
-package lyfjshs.gomis.test;
+package lyfjshs.gomis.view.sessions;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -199,7 +197,7 @@ public class SessionSearchPanel extends JPanel {
                 "Consultation Type: " + consultationType + "\n" +
                 "Appointment Type: " + appointmentType + "\n" +
                 "Date From: " + (dateFrom != null ? dateFrom : "Not Selected") + "\n" +
-                "Date To: " + (dateTo != null ? dateTo : "Not Selected"),
+                "Date To: " + (dateTo != null ? dateTo : "Not Selected") + "\n\n",
                 "Search Results", 
                 JOptionPane.INFORMATION_MESSAGE);
            

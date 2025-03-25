@@ -8,24 +8,25 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
+
+import org.jdesktop.core.animation.timing.KeyFrames.Frame;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import lyfjshs.gomis.Database.entity.Sessions;
-
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
-import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
@@ -40,12 +41,12 @@ public class SessionRecords extends Form {
     private GTable sessionTable; // Use GTable instead of JTable
     private SessionsDAO sessionsDAO;
     private final Connection connection;
-    private final String[] columnNames = { "#", "Session ID", "Session Type", "Participants", "Date & Time", "Status", "Actions" };
     private SlidePane slidePane;
     private JButton backBtn;
     private JPanel mainPanel;
     private JPanel sessionFullDataPanel; // Panel to show session details
     private JButton addSessionBtn;
+    private JButton searchSessionBtn;
 
     public SessionRecords(Connection conn) {
         this.connection = conn;
@@ -80,8 +81,13 @@ public class SessionRecords extends Form {
         addSessionBtn = new JButton("Add Session");
         addSessionBtn.addActionListener(e -> openAddSessionForm());
         
+        // Initialize search session button
+        searchSessionBtn = new JButton("Search Session");
+        searchSessionBtn.addActionListener(e -> openSearchSessionDialog()); // Add action listener for search button
+        
         slidePane.addSlide(mainPanel, SlidePaneTransition.Type.FORWARD);
     }
+
     private void openAddSessionForm() {
         try {
             DrawerBuilder.switchToSessionsForm();
@@ -93,9 +99,26 @@ public class SessionRecords extends Form {
                 JOptionPane.ERROR_MESSAGE);
         }
     }
-        
-        // Add the main panel as the first slide
-       
+
+    private void openSearchSessionDialog() {
+        try {
+            // Create a new dialog for the session search panel
+            JDialog searchDialog = new JDialog();
+            searchDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            searchDialog.setSize(400, 300); // Set the size of the dialog
+            searchDialog.setLocationRelativeTo(this); // Center the dialog relative to the parent
+
+            // Create an instance of SessionSearchPanel
+            SessionSearchPanel searchPanel = new SessionSearchPanel();
+            searchDialog.add(searchPanel); // Add the search panel to the dialog
+
+            // Make the dialog visible
+            searchDialog.setVisible(true);
+        } catch (Exception e) {
+            e.printStackTrace(); // Print the stack trace for debugging
+            JOptionPane.showMessageDialog(this, "Error opening search dialog: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     private void setupTable() {
         Object[][] initialData = new Object[0][7]; // Adjusted for new column structure
@@ -201,7 +224,8 @@ public class SessionRecords extends Form {
 
         headerPanel.add(headerLabel, "flowx,cell 1 0,alignx center,growy");
         headerPanel.add(addSessionBtn, "cell 2 0");
-        headerPanel.add(backBtn, "cell 3 0");
+        headerPanel.add(searchSessionBtn, "cell 3 0");
+        headerPanel.add(backBtn, "cell 4 0");
 
         // Add components to main frame
         add(headerPanel, BorderLayout.NORTH);
@@ -214,8 +238,6 @@ public class SessionRecords extends Form {
         panel.add(scrollPane, "cell 0 0,grow");
         return panel;
     }
-
-   
 
     private void loadSessionData() {
         try {
