@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Window;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
@@ -21,6 +22,7 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -32,6 +34,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import lyfjshs.gomis.Main;
@@ -155,43 +158,40 @@ public class SessionsForm extends Form implements Printable {
 			return;
 		}
 
-		// Create an anonymous class that extends the abstract StudentSearchPanel
-		StudentSearchPanel searchPanel = new StudentSearchPanel(connect, student -> {
-			// Create new participant
-			Participants participant = new Participants();
-			participant.setStudentUid(student.getStudentUid());
-			participant.setParticipantType("Student");
-			participant.setParticipantLastName(student.getStudentLastname());
-			participant.setParticipantFirstName(student.getStudentFirstname());
-			participant.setSex(student.getStudentSex());
-			participant.setContactNumber(student.getContact().getContactNumber());
-
-			// Generate temporary ID
-			int tempId = tempIdCounter--;
-
-			// Store in pendingParticipants
-			pendingParticipants.put(tempId, participant);
-
-			Map<String, String> details = new HashMap<>();
-			details.put("firstName", participant.getParticipantFirstName());
-			details.put("lastName", participant.getParticipantLastName());
-			details.put("fullName", participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
-			details.put("type", "Student");
-			details.put("contact", participant.getContactNumber());
-			details.put("sex", participant.getSex());
-			participantDetails.put(tempId, details);
-
-			// Add to table with row number and hidden tempId
-			int rowNumber = participantTableModel.getRowCount() + 1;
-			participantTableModel
-					.addRow(new Object[] { rowNumber, details.get("fullName"), "Student", "View | Remove", tempId });
-
-			// Close the modal using the correct ID
-			ModalDialog.closeModal(modalId);
-		}) {
+		StudentSearchPanel searchPanel = new StudentSearchPanel(connect, modalId) {
 			@Override
 			protected void onStudentSelected(Student student) {
-				// This is already handled by the callback
+				// Create new participant
+				Participants participant = new Participants();
+				participant.setStudentUid(student.getStudentUid());
+				participant.setParticipantType("Student");
+				participant.setParticipantLastName(student.getStudentLastname());
+				participant.setParticipantFirstName(student.getStudentFirstname());
+				participant.setSex(student.getStudentSex());
+				participant.setContactNumber(student.getContact().getContactNumber());
+
+				// Generate temporary ID
+				int tempId = tempIdCounter--;
+
+				// Store in pendingParticipants
+				pendingParticipants.put(tempId, participant);
+
+				Map<String, String> details = new HashMap<>();
+				details.put("firstName", participant.getParticipantFirstName());
+				details.put("lastName", participant.getParticipantLastName());
+				details.put("fullName", participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
+				details.put("type", "Student");
+				details.put("contact", participant.getContactNumber());
+				details.put("sex", participant.getSex());
+				participantDetails.put(tempId, details);
+
+				// Add to table with row number and hidden tempId
+				int rowNumber = participantTableModel.getRowCount() + 1;
+				participantTableModel
+						.addRow(new Object[] { rowNumber, details.get("fullName"), "Student", "View | Remove", tempId });
+
+				// Close the modal using the correct ID
+				ModalDialog.closeModal(modalId);
 			}
 		};
 
@@ -544,13 +544,34 @@ public class SessionsForm extends Form implements Printable {
 		if (pageIndex > 0) {
 			return NO_SUCH_PAGE;
 		}
+
+		// Calculate printable area
+		double width = pf.getImageableWidth();
+		double height = pf.getImageableHeight();
+
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.translate(pf.getImageableX(), pf.getImageableY());
-		this.printAll(g);
+
+		// Scale to fit page
+		double scaleX = width / getWidth();
+		double scaleY = height / getHeight();
+		double scale = Math.min(scaleX, scaleY);
+		g2d.scale(scale, scale);
+
+		// Print the component
+		printAll(g2d);
+
 		return PAGE_EXISTS;
 	}
 
-	// Add this method to display participant details
+	// Add this method to properly handle modal dialog disposal
+	private void closeDialog() {
+		Window window = SwingUtilities.getWindowAncestor(this);
+		if (window instanceof JDialog) {
+			((JDialog) window).dispose();
+		}
+	}
+
 	private void showParticipantDetails(int id) {
 		Map<String, String> details = participantDetails.get(id);
 

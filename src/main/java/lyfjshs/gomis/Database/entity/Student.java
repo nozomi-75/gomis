@@ -19,12 +19,14 @@ public class Student {
     private int studentAge;
     private String studentIpType;
     private String studentReligion;
+    private int sf_id;
+    private String sf_section; // Keep this for display purposes
 
     private Address address;
     private Contact contact;
     private Parents parents;
     private Guardian guardian;
-    private SchoolForm schoolForm; // 🔹 New SchoolForm reference
+    private SchoolForm schoolForm; 
 
     public Student(int studentUid, int parentId, int guardianId, int addressId, int contactId, 
                    String schoolSection, String studentLrn, String studentLastname, 
@@ -55,7 +57,6 @@ public class Student {
         this.guardian = guardian;
         this.schoolForm = schoolForm; // 🔹 Assign SchoolForm object
     }
-
 
     // Getters and Setters
     public int getStudentUid() {
@@ -224,6 +225,14 @@ public class Student {
 
     public void setSchoolForm(SchoolForm schoolForm) {
         this.schoolForm = schoolForm;
+    }
+
+    public int getSF_ID() {
+        return sf_id;
+    }
+
+    public void setSF_ID(int sf_id) {
+        this.sf_id = sf_id;
     }
 
     @Override

@@ -151,6 +151,10 @@ public class MainDashboard extends Form {
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
 
 			for (ViolationRecord violation : violations) {
+				if (!"Active".equals(violation.getStatus())) {
+					violationCRUD.deleteViolation(violation.getViolationId());
+					continue;
+				}
 				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
 				if (participant != null && participant.getStudentUid() != null) {
 					Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
@@ -446,8 +450,12 @@ public class MainDashboard extends Form {
 				FormManager.showForm(studentFullData);
 
 				ModalDialog.closeModal("search");
-			}) {
-				
+			}, "search") {
+				@Override
+				protected void onStudentSelected(Student student) {
+					// Optional: Implement any specific behavior here
+					// This method is called when a student is selected
+				}
 			};
 
 			ModalDialog.getDefaultOption().setOpacity(0f).setAnimationOnClose(true).getBorderOption()

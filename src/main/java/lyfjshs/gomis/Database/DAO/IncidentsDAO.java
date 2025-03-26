@@ -132,7 +132,7 @@ public class IncidentsDAO {
                     "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
                     "LEFT JOIN PARENTS par ON s.PARENT_ID = par.PARENT_ID " +
                     "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
-                    "LEFT JOIN SCHOOL_FORM sf ON s.SF_SECTION = sf.SF_SECTION " +
+                    "LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID " + // Updated join condition
                     "WHERE i.INCIDENT_ID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

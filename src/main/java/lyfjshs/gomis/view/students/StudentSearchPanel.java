@@ -39,20 +39,23 @@ public abstract class StudentSearchPanel extends Modal {
     private DatePicker datePicker;
     protected final Connection connection;
     private JPanel panelResult;
-    private Student selectedStudent; // Add this field to store selected student
+    private Student selectedStudent; 
     private List<StudentResult> resultPanels = new ArrayList<>();
     private StudentSelectionCallback callback;
+    private String modalId; // Add this field
 
-    public StudentSearchPanel(Connection connection) {
-        this(connection, null);
+    // Add modalId parameter to constructors
+    public StudentSearchPanel(Connection connection, String modalId) {
+        this(connection, null, modalId);
     }
 
     /**
      * @wbp.parser.constructor
      */
-    public StudentSearchPanel(Connection connection, StudentSelectionCallback callback) {
+    public StudentSearchPanel(Connection connection, StudentSelectionCallback callback, String modalId) {
         this.connection = connection;
         this.callback = callback;
+        this.modalId = modalId;
         setLayout(new MigLayout("fillx,insets 0,wrap", "[500,grow,fill][]", "[][][pref!][][100px,grow]"));
         JTextField textSearch = new JTextField();
         panelResult = new JPanel(new MigLayout("insets 3 10 3 10,fillx,wrap", "[fill]"));
@@ -244,7 +247,9 @@ public abstract class StudentSearchPanel extends Modal {
                 } else {
                     onStudentSelected(student);
                 }
-                ModalDialog.closeModal("search");
+                if (modalId != null) {
+                    ModalDialog.closeModal(modalId);
+                }
             }
         });
     }

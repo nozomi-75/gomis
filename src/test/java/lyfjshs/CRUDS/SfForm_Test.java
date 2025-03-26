@@ -27,9 +27,14 @@ public class SfForm_Test {
     }
 
     private static void testCreateSchoolForm(SchoolFormDAO dao) {
-        SchoolForm schoolForm = new SchoolForm(0, "Sample School", "S12345", "District 1", "Division 1", "Region 1", "1st", "2024-2025", "Grade 11", "Section A", "ICT", "Programming");
-        int id = dao.createSchoolForm(schoolForm);
-        System.out.println(id > 0 ? "✔ School Form created with ID: " + id : "❌ Failed to create School Form");
+        try {
+            SchoolForm schoolForm = new SchoolForm(0, "Sample School", "S12345", "District 1", "Division 1", "Region 1", "1st", "2024-2025", "Grade 11", "Section A", "ICT", "Programming");
+            int id = dao.createSchoolForm(schoolForm);
+            System.out.println(id > 0 ? "✔ School Form created with ID: " + id : "❌ Failed to create School Form");
+        } catch (SQLException e) {
+            System.out.println("❌ Error creating School Form: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private static void testGetAllSchoolForms(SchoolFormDAO dao) {

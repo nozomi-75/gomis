@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,20 +28,28 @@ public class StudentsDataDAO {
             Parents parents, Guardian guardian, SchoolForm schoolForm) throws SQLException {
         connection.setAutoCommit(false);
         try {
+            // Create school form first to get its ID
+            SchoolFormDAO schoolFormDAO = new SchoolFormDAO(connection);
+            int schoolFormId = schoolFormDAO.createSchoolForm(schoolForm);
+            if (schoolFormId == 0) {
+                throw new SQLException("Failed to create school form");
+            }
+
+            // Set the generated school form ID in the student object
+            student.setSF_ID(schoolFormId);
+
+            // Create other related entities
             AddressDAO addressDAO = new AddressDAO(connection);
             ContactDAO contactDAO = new ContactDAO(connection);
             ParentsDAO parentsDAO = new ParentsDAO(connection);
             GuardianDAO guardianDAO = new GuardianDAO(connection);
-            SchoolFormDAO schoolFormDAO = new SchoolFormDAO(connection);
 
-            // 🔹 Insert related entities
             int addressId = addressDAO.createAddress(address);
             int contactId = contactDAO.createContact(contact);
             int parentId = parentsDAO.createParents(parents);
             int guardianId = guardianDAO.createGuardian(guardian);
-            int schoolFormId = schoolFormDAO.createSchoolForm(schoolForm);
 
-            if (addressId == 0 || contactId == 0 || parentId == 0 || schoolFormId == 0) {
+            if (addressId == 0 || contactId == 0 || parentId == 0) {
                 throw new SQLException("Failed to insert one or more related entities.");
             }
 
@@ -48,8 +57,8 @@ public class StudentsDataDAO {
             student.setContactId(contactId);
             student.setParentId(parentId);
             student.setGuardianId(guardianId);
-            student.setSchoolSection(schoolForm.getSF_SECTION()); // Use school section instead of schoolFormId
 
+            // Now create the student record
             boolean success = createStudentData(student);
             if (success) {
                 connection.commit();
@@ -69,30 +78,40 @@ public class StudentsDataDAO {
 
     // ✅ Insert Student Data
     public boolean createStudentData(Student student) {
-        String sql = "INSERT INTO STUDENT (STUDENT_UID, Parent_ID, GUARDIAN_ID, ADDRESS_ID, CONTACT_ID, SF_SECTION, " +
-                "STUDENT_LRN, STUDENT_LASTNAME, STUDENT_FIRSTNAME, STUDENT_MIDDLENAME, STUDENT_SEX, " +
-                "STUDENT_BIRTHDATE, STUDENT_MOTHERTONGUE, STUDENT_AGE, STUDENT_IP_TYPE, STUDENT_RELIGION) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO STUDENT (PARENT_ID, GUARDIAN_ID, ADDRESS_ID, " +
+                "CONTACT_ID, SF_ID, STUDENT_LRN, STUDENT_LASTNAME, STUDENT_FIRSTNAME, " +
+                "STUDENT_MIDDLENAME, STUDENT_SEX, STUDENT_BIRTHDATE, STUDENT_MOTHERTONGUE, " +
+                "STUDENT_AGE, STUDENT_IP_TYPE, STUDENT_RELIGION) VALUES " +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, student.getStudentUid());
-            pstmt.setInt(2, student.getParentId());
-            pstmt.setObject(3, student.getGuardianId() == 0 ? null : student.getGuardianId(), Types.INTEGER);
-            pstmt.setInt(4, student.getAddressId());
-            pstmt.setInt(5, student.getContactId());
-            pstmt.setString(6, student.getSchoolSection()); // 🔹 Reference school section
-            pstmt.setString(7, student.getStudentLrn());
-            pstmt.setString(8, student.getStudentLastname());
-            pstmt.setString(9, student.getStudentFirstname());
-            pstmt.setString(10, student.getStudentMiddlename());
-            pstmt.setString(11, student.getStudentSex());
-            pstmt.setDate(12, student.getStudentBirthdate());
-            pstmt.setString(13, student.getStudentMothertongue());
-            pstmt.setInt(14, student.getStudentAge());
-            pstmt.setString(15, student.getStudentIpType());
-            pstmt.setString(16, student.getStudentReligion());
+        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setInt(1, student.getParentId());
+            pstmt.setObject(2, student.getGuardianId() == 0 ? null : student.getGuardianId(), Types.INTEGER);
+            pstmt.setInt(3, student.getAddressId());
+            pstmt.setInt(4, student.getContactId());
+            pstmt.setInt(5, student.getSF_ID());
+            pstmt.setString(6, student.getStudentLrn());
+            pstmt.setString(7, student.getStudentLastname());
+            pstmt.setString(8, student.getStudentFirstname());
+            pstmt.setString(9, student.getStudentMiddlename());
+            pstmt.setString(10, student.getStudentSex());
+            pstmt.setDate(11, student.getStudentBirthdate());
+            pstmt.setString(12, student.getStudentMothertongue());
+            pstmt.setInt(13, student.getStudentAge());
+            pstmt.setString(14, student.getStudentIpType());
+            pstmt.setString(15, student.getStudentReligion());
 
-            return pstmt.executeUpdate() > 0;
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                // Get the generated ID and set it in the student object
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        student.setStudentUid(generatedKeys.getInt(1));
+                        return true;
+                    }
+                }
+            }
+            return false;
         } catch (SQLException e) {
             handleSQLException(e, "createStudentData");
             return false;
@@ -102,12 +121,7 @@ public class StudentsDataDAO {
     public List<Student> getStudentsByFilters(String lrn, String firstName, String lastName, String sex)
             throws SQLException {
         List<Student> students = new ArrayList<>();
-        StringBuilder query = new StringBuilder("SELECT s.*, a.*, c.*, p.*, g.*, sf.* FROM STUDENT s " +
-                "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
-                "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
-                "LEFT JOIN PARENTS p ON s.Parent_ID = p.PARENT_ID " +
-                "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
-                "LEFT JOIN SCHOOL_FORM sf ON s.SF_SECTION = sf.SF_SECTION WHERE 1=1");
+        StringBuilder query = new StringBuilder(getBaseQuery() + " WHERE 1=1");
 
         // Dynamically add filters
         List<Object> params = new ArrayList<>();
@@ -144,14 +158,7 @@ public class StudentsDataDAO {
 
     // ✅ Get Student by UID
     public Student getStudentById(int studentUid) throws SQLException {
-        String query = "SELECT s.*, a.*, c.*, p.*, g.*, sf.* " +
-                "FROM STUDENT s " +
-                "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
-                "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
-                "LEFT JOIN PARENTS p ON s.Parent_ID = p.PARENT_ID " +
-                "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
-                "LEFT JOIN SCHOOL_FORM sf ON s.SF_SECTION = sf.SF_SECTION " +
-                "WHERE s.STUDENT_UID = ?";
+        String query = getBaseQuery() + " WHERE s.STUDENT_UID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, studentUid);
@@ -165,14 +172,7 @@ public class StudentsDataDAO {
     }
 
     public Student getStudentDataByLrn(String lrn) throws SQLException {
-        String query = "SELECT s.*, a.*, c.*, p.*, g.*, sf.* " +
-                "FROM STUDENT s " +
-                "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
-                "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
-                "LEFT JOIN PARENTS p ON s.Parent_ID = p.PARENT_ID " +
-                "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
-                "LEFT JOIN SCHOOL_FORM sf ON s.SF_SECTION = sf.SF_SECTION " +
-                "WHERE s.STUDENT_LRN = ?";
+        String query = getBaseQuery() + " WHERE s.STUDENT_LRN = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, lrn);
@@ -188,17 +188,96 @@ public class StudentsDataDAO {
     // ✅ Get All Students
     public List<Student> getAllStudentsData() throws SQLException {
         List<Student> students = new ArrayList<>();
-        String sql = "SELECT s.*, a.*, c.*, p.*, g.*, sf.* FROM STUDENT s " +
+        String sql = "SELECT s.*, a.*, c.*, p.*, g.*, sf.* " +
+                "FROM STUDENT s " +
                 "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
                 "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
-                "LEFT JOIN PARENTS p ON s.Parent_ID = p.PARENT_ID " +
+                "LEFT JOIN PARENTS p ON s.PARENT_ID = p.PARENT_ID " +
                 "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
-                "LEFT JOIN SCHOOL_FORM sf ON s.SF_SECTION = sf.SF_SECTION";
+                "LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID " + // Changed join condition
+                "ORDER BY s.STUDENT_LASTNAME";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql);
-                ResultSet rs = pstmt.executeQuery()) {
-            while (rs.next()) {
-                students.add(mapResultSetToStudentWithRelations(rs));
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Address address = new Address(
+                        rs.getInt("ADDRESS_ID"),
+                        rs.getString("ADDRESS_HOUSE_NUMBER"),
+                        rs.getString("ADDRESS_STREET_SUBDIVISION"),
+                        rs.getString("ADDRESS_REGION"),
+                        rs.getString("ADDRESS_PROVINCE"),
+                        rs.getString("ADDRESS_MUNICIPALITY"),
+                        rs.getString("ADDRESS_BARANGAY"),
+                        rs.getString("ADDRESS_ZIP_CODE")
+                    );
+
+                    Contact contact = new Contact(
+                        rs.getInt("CONTACT_ID"),
+                        rs.getString("CONTACT_NUMBER")
+                    );
+
+                    Parents parents = new Parents(
+                        rs.getInt("PARENT_ID"),
+                        rs.getString("FATHER_LASTNAME"),
+                        rs.getString("FATHER_FIRSTNAME"),
+                        rs.getString("FATHER_MIDDLENAME"),
+                        rs.getString("FATHER_CONTACT_NUMBER"),
+                        rs.getString("MOTHER_LASTNAME"),
+                        rs.getString("MOTHER_FIRSTNAME"),
+                        rs.getString("MOTHER_MIDDLE_NAME"),
+                        rs.getString("MOTHER_CONTACT_NUMBER")
+                    );
+
+                    Guardian guardian = new Guardian(
+                        rs.getInt("GUARDIAN_ID"),
+                        rs.getString("GUARDIAN_LASTNAME"),
+                        rs.getString("GUARDIAN_FIRST_NAME"),
+                        rs.getString("GUARDIAN_MIDDLE_NAME"),
+                        rs.getString("GUARDIAN_RELATIONSHIP"),
+                        rs.getString("GUARDIAN_CONTACT_NUMBER")
+                    );
+
+                    SchoolForm schoolForm = new SchoolForm(
+                        rs.getInt("SF_ID"),
+                        rs.getString("SF_SCHOOL_NAME"),
+                        rs.getString("SF_SCHOOL_ID"),
+                        rs.getString("SF_DISTRICT"),
+                        rs.getString("SF_DIVISION"),
+                        rs.getString("SF_REGION"),
+                        rs.getString("SF_SEMESTER"),
+                        rs.getString("SF_SCHOOL_YEAR"),
+                        rs.getString("SF_GRADE_LEVEL"),
+                        rs.getString("SF_SECTION"),
+                        rs.getString("SF_TRACK_AND_STRAND"),
+                        rs.getString("SF_COURSE")
+                    );
+
+                    Student student = new Student(
+                        rs.getInt("STUDENT_UID"),
+                        rs.getInt("PARENT_ID"),
+                        rs.getInt("GUARDIAN_ID"),
+                        rs.getInt("ADDRESS_ID"),
+                        rs.getInt("CONTACT_ID"),
+                        rs.getString("SF_SECTION"),
+                        rs.getString("STUDENT_LRN"),
+                        rs.getString("STUDENT_LASTNAME"),
+                        rs.getString("STUDENT_FIRSTNAME"),
+                        rs.getString("STUDENT_MIDDLENAME"),
+                        rs.getString("STUDENT_SEX"),
+                        rs.getDate("STUDENT_BIRTHDATE"),
+                        rs.getString("STUDENT_MOTHERTONGUE"),
+                        rs.getInt("STUDENT_AGE"),
+                        rs.getString("STUDENT_IP_TYPE"),
+                        rs.getString("STUDENT_RELIGION"),
+                        address,
+                        contact,
+                        parents,
+                        guardian,
+                        schoolForm
+                    );
+
+                    students.add(student);
+                }
             }
         }
         return students;
@@ -244,7 +323,7 @@ public class StudentsDataDAO {
     public boolean updateStudentData(Student student) throws SQLException {
         String sql = "UPDATE STUDENT SET STUDENT_LRN = ?, STUDENT_LASTNAME = ?, STUDENT_FIRSTNAME = ?, " +
                 "STUDENT_MIDDLENAME = ?, STUDENT_SEX = ?, STUDENT_BIRTHDATE = ?, STUDENT_MOTHERTONGUE = ?, " +
-                "STUDENT_AGE = ?, STUDENT_IP_TYPE = ?, STUDENT_RELIGION = ?, SF_SECTION = ? " +
+                "STUDENT_AGE = ?, STUDENT_IP_TYPE = ?, STUDENT_RELIGION = ?, SF_SECTION = ? " + // Use SF_SECTION
                 "WHERE STUDENT_UID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, student.getStudentLrn());
@@ -257,7 +336,7 @@ public class StudentsDataDAO {
             stmt.setInt(8, student.getStudentAge());
             stmt.setString(9, student.getStudentIpType());
             stmt.setString(10, student.getStudentReligion());
-            stmt.setString(11, student.getSchoolSection()); // 🔹 Ensure section update
+            stmt.setString(11, student.getSchoolSection()); // Set SF_SECTION value
             stmt.setInt(12, student.getStudentUid()); // 🔹 Where clause for update
 
             return stmt.executeUpdate() > 0;
@@ -273,4 +352,13 @@ public class StudentsDataDAO {
         }
     }
 
+    private String getBaseQuery() {
+        return "SELECT s.*, a.*, c.*, p.*, g.*, sf.* " +
+               "FROM STUDENT s " +
+               "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
+               "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
+               "LEFT JOIN PARENTS p ON s.PARENT_ID = p.PARENT_ID " +
+               "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
+               "LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID";
+    }
 }

@@ -147,30 +147,30 @@ VALUES
 ON DUPLICATE KEY UPDATE SF_SCHOOL_NAME = VALUES(SF_SCHOOL_NAME);
 
 
--- Insert sample data into STUDENT table
-INSERT INTO STUDENT (STUDENT_UID, PARENT_ID, GUARDIAN_ID, ADDRESS_ID, CONTACT_ID, SF_SECTION, STUDENT_LRN, STUDENT_LASTNAME, STUDENT_FIRSTNAME, STUDENT_MIDDLENAME, STUDENT_SEX, STUDENT_BIRTHDATE, STUDENT_MOTHERTONGUE, STUDENT_AGE, STUDENT_IP_TYPE, STUDENT_RELIGION)
+-- Insert sample data into STUDENT table (updated to use SF_ID)
+INSERT INTO STUDENT (STUDENT_UID, PARENT_ID, GUARDIAN_ID, ADDRESS_ID, CONTACT_ID, SF_ID, STUDENT_LRN, STUDENT_LASTNAME, STUDENT_FIRSTNAME, STUDENT_MIDDLENAME, STUDENT_SEX, STUDENT_BIRTHDATE, STUDENT_MOTHERTONGUE, STUDENT_AGE, STUDENT_IP_TYPE, STUDENT_RELIGION)
 VALUES
-(1, 1, 1, 1, 1, 'Section A', 'LRN123', 'Doe', 'Jane', 'C', 'Female', '2005-01-01', 'English', 18, 'Type A', 'Christian'),
-(2, 2, 2, 2, 2, 'Section B', 'LRN234', 'Smith', 'Alice', 'B', 'Female', '2006-02-02', 'English', 17, 'Type B', 'Christian'),
-(3, 3, 3, 3, 3, 'Section C', 'LRN345', 'Johnson', 'Bob', 'C', 'Male', '2007-03-03', 'English', 16, 'Type C', 'Christian'),
-(4, 4, 4, 4, 4, 'Section D', 'LRN456', 'Williams', 'Charlie', 'D', 'Female', '2008-04-04', 'English', 15, 'Type D', 'Christian'),
-(5, 5, 5, 5, 5, 'Section E', 'LRN567', 'Brown', 'Daisy', 'E', 'Female', '2009-05-05', 'English', 14, 'Type E', 'Christian'),
-(6, 6, 6, 6, 6, 'Section F', 'LRN678', 'Jones', 'Eve', 'F', 'Male', '2010-06-06', 'English', 13, 'Type F', 'Christian'),
-(7, 7, 7, 7, 7, 'Section G', 'LRN789', 'Garcia', 'Frank', 'G', 'Male', '2011-07-07', 'English', 12, 'Type G', 'Christian'),
-(8, 8, 8, 8, 8, 'Section H', 'LRN890', 'Miller', 'Grace', 'H', 'Female', '2012-08-08', 'English', 11, 'Type H', 'Christian'),
-(9, 9, 9, 9, 9, 'Section I', 'LRN901', 'Davis', 'Heidi', 'I', 'Female', '2013-09-09', 'English', 10, 'Type I', 'Christian'),
-(10, 10, 10, 10, 10, 'Section J', 'LRN012', 'Rodriguez', 'Ivy', 'J', 'Male', '2014-10-10', 'English', 9, 'Type J', 'Christian'),
-(11, 11, 11, 11, 11, 'Section K', 'LRN123', 'Martinez', 'Jack', 'K', 'Male', '2015-11-11', 'English', 8, 'Type K', 'Christian'),
-(12, 12, 12, 12, 12, 'Section L', 'LRN234', 'Hernandez', 'Kate', 'L', 'Female', '2016-12-12', 'English', 7, 'Type L', 'Christian'),
-(13, 13, 13, 13, 13, 'Section M', 'LRN345', 'Lopez', 'Leo', 'M', 'Male', '2017-01-01', 'English', 6, 'Type M', 'Christian'),
-(14, 14, 14, 14, 14, 'Section N', 'LRN456', 'Gonzalez', 'Mia', 'N', 'Female', '2018-02-02', 'English', 5, 'Type N', 'Christian'),
-(15, 15, 15, 15, 15, 'Section O', 'LRN567', 'Wilson', 'Nina', 'O', 'Female', '2019-03-03', 'English', 4, 'Type O', 'Christian'),
-(16, 16, 16, 16, 16, 'Section P', 'LRN678', 'Anderson', 'Oscar', 'P', 'Male', '2020-04-04', 'English', 3, 'Type P', 'Christian'),
-(17, 17, 17, 17, 17, 'Section Q', 'LRN789', 'Thomas', 'Peter', 'Q', 'Male', '2021-05-05', 'English', 2, 'Type Q', 'Christian'),
-(18, 18, 18, 18, 18, 'Section R', 'LRN890', 'Moore', 'Quinn', 'R', 'Female', '2022-06-06', 'English', 1, 'Type R', 'Christian'),
-(19, 19, 19, 19, 19, 'Section S', 'LRN901', 'Taylor', 'Rachel', 'S', 'Female', '2023-07-07', 'English', 0, 'Type S', 'Christian'),
-(20, 20, 20, 20, 20, 'Section T', 'LRN012', 'Martin', 'Sam', 'T', 'Male', '2024-08-08', 'English', 18, 'Type T', 'Christian'),
-(21, 21, 21, 21, 21, 'Section U', 'LRN123', 'Lee', 'Tina', 'U', 'Female', '2025-09-09', 'English', 18, 'Type U', 'Christian')
+(1, 1, 1, 1, 1, 1, 'LRN123', 'Doe', 'Jane', 'C', 'Female', '2005-01-01', 'English', 18, 'Type A', 'Christian'),
+(2, 2, 2, 2, 2, 2, 'LRN234', 'Smith', 'Alice', 'B', 'Female', '2006-02-02', 'English', 17, 'Type B', 'Christian'),
+(3, 3, 3, 3, 3, 3, 'LRN345', 'Johnson', 'Bob', 'C', 'Male', '2007-03-03', 'English', 16, 'Type C', 'Christian'),
+(4, 4, 4, 4, 4, 4, 'LRN456', 'Williams', 'Charlie', 'D', 'Female', '2008-04-04', 'English', 15, 'Type D', 'Christian'),
+(5, 5, 5, 5, 5, 5, 'LRN567', 'Brown', 'Daisy', 'E', 'Female', '2009-05-05', 'English', 14, 'Type E', 'Christian'),
+(6, 6, 6, 6, 6, 6, 'LRN678', 'Jones', 'Eve', 'F', 'Male', '2010-06-06', 'English', 13, 'Type F', 'Christian'),
+(7, 7, 7, 7, 7, 7, 'LRN789', 'Garcia', 'Frank', 'G', 'Male', '2011-07-07', 'English', 12, 'Type G', 'Christian'),
+(8, 8, 8, 8, 8, 8, 'LRN890', 'Miller', 'Grace', 'H', 'Female', '2012-08-08', 'English', 11, 'Type H', 'Christian'),
+(9, 9, 9, 9, 9, 9, 'LRN901', 'Davis', 'Heidi', 'I', 'Female', '2013-09-09', 'English', 10, 'Type I', 'Christian'),
+(10, 10, 10, 10, 10, 10, 'LRN012', 'Rodriguez', 'Ivy', 'J', 'Male', '2014-10-10', 'English', 9, 'Type J', 'Christian'),
+(11, 11, 11, 11, 11, 11, 'LRN123', 'Martinez', 'Jack', 'K', 'Male', '2015-11-11', 'English', 8, 'Type K', 'Christian'),
+(12, 12, 12, 12, 12, 12, 'LRN234', 'Hernandez', 'Kate', 'L', 'Female', '2016-12-12', 'English', 7, 'Type L', 'Christian'),
+(13, 13, 13, 13, 13, 13, 'LRN345', 'Lopez', 'Leo', 'M', 'Male', '2017-01-01', 'English', 6, 'Type M', 'Christian'),
+(14, 14, 14, 14, 14, 14, 'LRN456', 'Gonzalez', 'Mia', 'N', 'Female', '2018-02-02', 'English', 5, 'Type N', 'Christian'),
+(15, 15, 15, 15, 15, 15, 'LRN567', 'Wilson', 'Nina', 'O', 'Female', '2019-03-03', 'English', 4, 'Type O', 'Christian'),
+(16, 16, 16, 16, 16, 16, 'LRN678', 'Anderson', 'Oscar', 'P', 'Male', '2020-04-04', 'English', 3, 'Type P', 'Christian'),
+(17, 17, 17, 17, 17, 17, 'LRN789', 'Thomas', 'Peter', 'Q', 'Male', '2021-05-05', 'English', 2, 'Type Q', 'Christian'),
+(18, 18, 18, 18, 18, 18, 'LRN890', 'Moore', 'Quinn', 'R', 'Female', '2022-06-06', 'English', 1, 'Type R', 'Christian'),
+(19, 19, 19, 19, 19, 19, 'LRN901', 'Taylor', 'Rachel', 'S', 'Female', '2023-07-07', 'English', 0, 'Type S', 'Christian'),
+(20, 20, 20, 20, 20, 20, 'LRN012', 'Martin', 'Sam', 'T', 'Male', '2024-08-08', 'English', 18, 'Type T', 'Christian'),
+(21, 21, 21, 21, 21, 21, 'LRN123', 'Lee', 'Tina', 'U', 'Female', '2025-09-09', 'English', 18, 'Type U', 'Christian')
 ON DUPLICATE KEY UPDATE STUDENT_LASTNAME = VALUES(STUDENT_LASTNAME);
 
 

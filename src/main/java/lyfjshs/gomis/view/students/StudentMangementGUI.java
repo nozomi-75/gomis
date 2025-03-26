@@ -183,15 +183,15 @@ public class StudentMangementGUI extends Form {
         option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
 
         // Create StudentSearchPanel with a callback to handle selected student
-        StudentSearchPanel searchPanel = new StudentSearchPanel(connection) {
+        StudentSearchPanel searchPanel = new StudentSearchPanel(connection, "student-search") {
             @Override
             protected void onStudentSelected(Student student) {
-                ModalDialog.closeModal("search"); // Close the search panel
+                ModalDialog.closeModal("student-search"); // Close the search panel
                 showStudentDetails(student); // Show the student details
             }
         };
         
-        ModalDialog.showModal(this, searchPanel, option, "search");
+        ModalDialog.showModal(this, searchPanel, option, "student-search");
     }
 
     public void showStudentDetails(Student studentData) {

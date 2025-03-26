@@ -475,7 +475,7 @@ public class IncidentFillUpForm extends Form {
 			return;
 		}
 
-		StudentSearchPanel searchPanel = new StudentSearchPanel(conn) {
+		StudentSearchPanel searchPanel = new StudentSearchPanel(conn, "reporterSearch") {
 			@Override
 			protected void onStudentSelected(Student student) {
 				reporterStudent = student;
@@ -495,7 +495,7 @@ public class IncidentFillUpForm extends Form {
 			return;
 		}
 
-		StudentSearchPanel searchPanel = new StudentSearchPanel(conn) {
+		StudentSearchPanel searchPanel = new StudentSearchPanel(conn, "participantSearch") {
 			@Override
 			protected void onStudentSelected(Student student) {
 				try {

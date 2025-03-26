@@ -13,6 +13,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
@@ -26,7 +27,6 @@ import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
-import javax.swing.JScrollPane;
 
 public class StudentInfoFullForm extends Form {
     private JTextField lrnField, lastNameField, firstNameField, middleNameField;
@@ -359,6 +359,7 @@ public class StudentInfoFullForm extends Form {
                         JOptionPane.INFORMATION_MESSAGE);
                 clearForm();
             } else {
+                
                 JOptionPane.showMessageDialog(this, "Failed to save student information.", "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
