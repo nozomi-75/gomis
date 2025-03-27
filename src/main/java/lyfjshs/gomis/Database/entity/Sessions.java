@@ -35,8 +35,8 @@ public class Sessions {
         this.sessionNotes = sessionNotes;
         this.sessionStatus = sessionStatus;
         this.updatedAt = updatedAt;
-        this.sessionSummary = null; // Initialize summary
-    }
+        this.sessionSummary = sessionSummary != null ? sessionSummary : ""; // Initialize summary with empty string if null
+   }
 
     // Getters and Setters
     public int getSessionId() {

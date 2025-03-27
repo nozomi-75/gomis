@@ -53,7 +53,7 @@ public class AddAppointmentPanel extends JPanel {
     private JTextField nonStudentFirstNameField;
     private JTextField nonStudentLastNameField;
     private JTextField nonStudentContactField;
-    private JTextField nonStudentSexField;
+    private JComboBox<String> nonStudentSexComboBox;
 
     // Fields for appointment details
     private JTextField titleField;
@@ -356,9 +356,9 @@ public class AddAppointmentPanel extends JPanel {
 
         // sex
         JLabel sexLabel = new JLabel("Sex:");
-        nonStudentSexField = new JTextField();
+        nonStudentSexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
         panel.add(sexLabel);
-        panel.add(nonStudentSexField, "growx");
+        panel.add(nonStudentSexComboBox, "growx");
 
         return panel;
     }
@@ -483,46 +483,18 @@ public class AddAppointmentPanel extends JPanel {
                     }
                 }
                 
-                // Skip if no type selected
-                if ("SELECT TYPE".equals(participantType)) {
+                // Skip if no type selected or if it's "SELECT TYPE"
+                if (participantType == null || "SELECT TYPE".equals(participantType)) {
                     continue;
                 }
 
                 JPanel innerPanel = getVisibleParticipantPanel(participantPanel);
                 if (innerPanel != null) {
-                    // For student panel, use existing participant ID
-                    if ("Student".equals(participantType)) {
-                        // Get the LRN field value
-                        String lrn = "";
-                        for (Component c : innerPanel.getComponents()) {
-                            if (c instanceof JTextField && 
-                                c.getParent().getComponent(0) instanceof JLabel && 
-                                ((JLabel)c.getParent().getComponent(0)).getText().equals("LRN:")) {
-                                lrn = ((JTextField)c).getText().trim();
-                                break;
-                            }
-                        }
-                        
-                        // Find existing participant ID for this student
-                        try {
-                            StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-                            ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
-                            
-                            Student student = studentsDataDAO.getStudentDataByLrn(lrn);
-                            if (student != null) {
-                                List<Participants> existingParticipants = participantsDAO.getParticipantByStudentUid(student.getStudentUid());
-                                if (!existingParticipants.isEmpty()) {
-                                    participantIds.add(existingParticipants.get(0).getParticipantId());
-                                    continue; // Skip creating new participant
-                                }
-                            }
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    
-                    // For non-student or new student participant
                     try {
+                        // Validate the panel first
+                        validateParticipantPanel(innerPanel);
+                        
+                        // Create and save the participant
                         Participants participant = createParticipantFromPanel(innerPanel, participantType);
                         if (participant != null) {
                             ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
@@ -535,6 +507,11 @@ public class AddAppointmentPanel extends JPanel {
                             "Error", 
                             JOptionPane.ERROR_MESSAGE);
                         e.printStackTrace();
+                    } catch (IllegalArgumentException e) {
+                        JOptionPane.showMessageDialog(this,
+                            "Validation error: " + e.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -546,46 +523,38 @@ public class AddAppointmentPanel extends JPanel {
         Participants participant = new Participants();
         participant.setParticipantType(participantType);
         
-        // Get rest of participant details
-        for (Component comp : panel.getComponents()) {
-            if (comp instanceof JLabel) {
-                JLabel label = (JLabel) comp;
-                Component next = panel.getComponent(panel.getComponentZOrder(comp) + 1);
+        if ("Student".equals(participantType)) {
+            try {
+                StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+                Student student = studentsDataDAO.getStudentDataByLrn(studentLrnField.getText().trim());
                 
-                if (next instanceof JTextField) {
-                    JTextField field = (JTextField) next;
-                    String text = field.getText().trim();
-                    switch (label.getText()) {
-                        case "First Name:":
-                            participant.setParticipantFirstName(text);
-                            break;
-                        case "Last Name:":
-                            participant.setParticipantLastName(text);
-                            break;
-                        case "Contact Number:":
-                            participant.setContactNumber(text);
-                            break;
-                        case "Sex:":
-                            participant.setSex(text);
-                            break;
-                        case "LRN:":
-                            // For student type, try to link with existing student
-                            if ("Student".equals(participantType)) {
-                                try {
-                                    StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-                                    Student student = studentsDataDAO.getStudentDataByLrn(text);
-                                    if (student != null) {
-                                        participant.setStudentUid(student.getStudentUid());
-                                    }
-                                } catch (SQLException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            break;
-                    }
+                if (student != null) {
+                    participant.setStudentUid(student.getStudentUid());
+                    participant.setParticipantFirstName(student.getStudentFirstname());
+                    participant.setParticipantLastName(student.getStudentLastname());
+                    participant.setSex(student.getStudentSex());
+                    participant.setContactNumber(student.getContact() != null ? 
+                        student.getContact().getContactNumber() : "");
+                } else {
+                    // If student not found, use the form fields
+                    participant.setParticipantFirstName(studentFirstNameField.getText().trim());
+                    participant.setParticipantLastName(studentLastNameField.getText().trim());
+                    participant.setSex((String) studentSexComboBox.getSelectedItem());
                 }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                // If there's an error, use the form fields
+                participant.setParticipantFirstName(studentFirstNameField.getText().trim());
+                participant.setParticipantLastName(studentLastNameField.getText().trim());
+                participant.setSex((String) studentSexComboBox.getSelectedItem());
             }
+        } else if ("Non-Student".equals(participantType)) {
+            participant.setParticipantFirstName(nonStudentFirstNameField.getText().trim());
+            participant.setParticipantLastName(nonStudentLastNameField.getText().trim());
+            participant.setContactNumber(nonStudentContactField.getText().trim());
+            participant.setSex((String) nonStudentSexComboBox.getSelectedItem());
         }
+        
         return participant;
     }
 
@@ -688,60 +657,47 @@ public class AddAppointmentPanel extends JPanel {
         StringBuilder errors = new StringBuilder();
 
         // Get the type selection from combo box
-        Component[] components = panel.getComponents();
-        for (Component comp : components) {
+        String participantType = null;
+        for (Component comp : panel.getComponents()) {
             if (comp instanceof JComboBox) {
                 @SuppressWarnings("unchecked")
                 JComboBox<String> typeBox = (JComboBox<String>) comp;
-                if ("SELECT TYPE".equals(typeBox.getSelectedItem())) {
-                    errors.append("- Please select a participant type\n");
-                    break;
-                }
+                participantType = (String) typeBox.getSelectedItem();
+                break;
             }
         }
 
-        String firstName = "";
-        String lastName = "";
-        String contact = "";
-        String sex = "";
-
-        for (Component comp : panel.getComponents()) {
-            if (comp instanceof JLabel) {
-                JLabel label = (JLabel) comp;
-                Component next = panel.getComponent(panel.getComponentZOrder(comp) + 1);
-
-                if (next instanceof JTextField) {
-                    JTextField field = (JTextField) next;
-                    String value = field.getText().trim();
-
-                    switch (label.getText()) {
-                        case "First Name:":
-                            if (value.isEmpty())
-                                errors.append("- First name is required\n");
-                            else if (value.length() < 2)
-                                errors.append("- First name too short\n");
-                            firstName = value;
-                            break;
-                        case "Last Name:":
-                            if (value.isEmpty())
-                                errors.append("- Last name is required\n");
-                            else if (value.length() < 2)
-                                errors.append("- Last name too short\n");
-                            lastName = value;
-                            break;
-                        case "Contact Number:":
-                            if (!value.isEmpty() && !value.matches("\\d{11}")) {
-                                errors.append("- Invalid contact number format\n");
-                            }
-                            contact = value;
-                            break;
-                        case "Sex:":
-                            if (value.isEmpty())
-                                errors.append("- Sex is required\n");
-                            sex = value;
-                            break;
-                    }
-                }
+        if ("SELECT TYPE".equals(participantType)) {
+            errors.append("- Please select a participant type\n");
+        } else if ("Student".equals(participantType)) {
+            // Validate student fields
+            if (studentLrnField.getText().trim().isEmpty()) {
+                errors.append("- Student LRN is required\n");
+            }
+            if (studentFirstNameField.getText().trim().isEmpty()) {
+                errors.append("- Student first name is required\n");
+            }
+            if (studentLastNameField.getText().trim().isEmpty()) {
+                errors.append("- Student last name is required\n");
+            }
+            if (studentSexComboBox.getSelectedItem() == null) {
+                errors.append("- Student sex is required\n");
+            }
+        } else if ("Non-Student".equals(participantType)) {
+            // Validate non-student fields
+            if (nonStudentFirstNameField.getText().trim().isEmpty()) {
+                errors.append("- First name is required\n");
+            }
+            if (nonStudentLastNameField.getText().trim().isEmpty()) {
+                errors.append("- Last name is required\n");
+            }
+            if (nonStudentContactField.getText().trim().isEmpty()) {
+                errors.append("- Contact number is required\n");
+            } else if (!nonStudentContactField.getText().trim().matches("\\d{11}")) {
+                errors.append("- Invalid contact number format (must be 11 digits)\n");
+            }
+            if (nonStudentSexComboBox.getSelectedItem() == null) {
+                errors.append("- Sex is required\n");
             }
         }
 

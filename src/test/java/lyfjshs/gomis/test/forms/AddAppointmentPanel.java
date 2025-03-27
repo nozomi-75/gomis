@@ -1,7 +1,9 @@
 package lyfjshs.gomis.test.forms;
 
 import java.awt.Color;
-
+import java.awt.Component;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -110,6 +112,15 @@ public class AddAppointmentPanel extends Modal {
 		studentPanel.setVisible(true);
 		nonStudentPanel.setVisible(false);
 
+		// Add action listener to typeComboBox to switch between panels
+		typeComboBox.addActionListener(e -> {
+			String selectedType = (String) typeComboBox.getSelectedItem();
+			studentPanel.setVisible("Student".equals(selectedType));
+			nonStudentPanel.setVisible("Non-Student".equals(selectedType));
+			participantPanel.revalidate();
+			participantPanel.repaint();
+		});
+
 		// Remove Button in its own row
 		JButton removeButton = new JButton("Remove Participant");
 		removeButton.setBackground(new Color(244, 67, 54));
@@ -183,8 +194,47 @@ public class AddAppointmentPanel extends Modal {
 		JLabel emailLabel = new JLabel("Email:");
 		JTextField nonStudentEmailField = new JTextField();
 		panel.add(emailLabel);
-		panel.add(nonStudentEmailField, "growx");
+		panel.add(nonStudentEmailField, "growx, wrap");
+
+		// Add validation for required fields
+		nonStudentFirstNameField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) { validateFields(); }
+			public void removeUpdate(DocumentEvent e) { validateFields(); }
+			public void insertUpdate(DocumentEvent e) { validateFields(); }
+		});
+
+		nonStudentLastNameField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) { validateFields(); }
+			public void removeUpdate(DocumentEvent e) { validateFields(); }
+			public void insertUpdate(DocumentEvent e) { validateFields(); }
+		});
+
+		nonStudentContactField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) { validateFields(); }
+			public void removeUpdate(DocumentEvent e) { validateFields(); }
+			public void insertUpdate(DocumentEvent e) { validateFields(); }
+		});
 
 		return panel;
+	}
+
+	private void validateFields() {
+		// Get all text fields from the non-student panel
+		Component[] components = ((JPanel) getComponent(0)).getComponents();
+		for (Component comp : components) {
+			if (comp instanceof JPanel) {
+				JPanel panel = (JPanel) comp;
+				for (Component field : panel.getComponents()) {
+					if (field instanceof JTextField) {
+						JTextField textField = (JTextField) field;
+						if (textField.getText().trim().isEmpty()) {
+							textField.setBorder(BorderFactory.createLineBorder(Color.RED));
+						} else {
+							textField.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+						}
+					}
+				}
+			}
+		}
 	}
 }

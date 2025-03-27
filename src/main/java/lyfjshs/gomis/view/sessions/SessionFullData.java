@@ -474,7 +474,7 @@ public class SessionFullData extends Form {
 	private void updateSessionView(Sessions updatedSession) {
 		// Update the session data
 		this.sessionData.setSessionStatus(updatedSession.getSessionStatus());
-		this.sessionData.setSessionSummary(updatedSession.getSessionSummary());
+		this.sessionData.setSessionSummary(updatedSession.getSessionSummary() != null ? updatedSession.getSessionSummary() : "");
 		this.sessionData.setSessionNotes(updatedSession.getSessionNotes());
 		this.sessionData.setAppointmentType(updatedSession.getAppointmentType());
 		this.sessionData.setConsultationType(updatedSession.getConsultationType());

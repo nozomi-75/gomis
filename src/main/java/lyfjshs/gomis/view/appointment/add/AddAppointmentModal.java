@@ -102,6 +102,18 @@ public class AddAppointmentModal {
                         }
                     }
                 }), "add_appointment_modal");
-        ModalDialog.getDefaultOption().getLayoutOption().setSize(width, height);
+
+        // Set the modal size and configure layout options
+        ModalDialog.getDefaultOption()
+            .setOpacity(1f)
+            .setAnimationOnClose(true)
+            .getBorderOption()
+            .setBorderWidth(0.5f)
+            .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+        
+        // Set size for the modal
+        ModalDialog.getDefaultOption().getLayoutOption()
+            .setSize(Math.max(800, width.intValue()), 
+                    Math.max(600, height.intValue()));
     }
 }

@@ -531,13 +531,13 @@ public class MainDashboard extends Form {
 
 		AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
 
-		// Use AddAppointmentModal to show the dialog
+		// Use AddAppointmentModal to show the dialog with correct size
 		AddAppointmentModal.getInstance().showModal(connection,
 				this,
 				addAppointmentPanel,
 				appointmentDAO,
-				700,
-				65,
+				800,  // Increased width
+				600,  // Increased height
 				() -> Main.appointmentCalendar.refreshViews());
 	}
 

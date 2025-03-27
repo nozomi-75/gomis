@@ -346,13 +346,47 @@ public class IncidentFillUpForm extends Form {
 		participantsComboBox.setSelectedIndex(0);
 	}
 
-	private void saveIncidentReport() {
-		// Validate required fields
-		if (!validateFields()) {
-			return;
+	private int getOrCreateParticipant() throws SQLException {
+		if (reporterStudent == null) {
+			throw new IllegalArgumentException("Please select a reporter student first");
 		}
 
+		ParticipantsDAO participantsDAO = new ParticipantsDAO(conn);
+
+		// Create participant from reporter student
+		Participants participant = new Participants();
+		participant.setStudentUid(reporterStudent.getStudentUid());
+		participant.setParticipantType("Reporter");
+		participant.setParticipantLastName(reporterStudent.getStudentLastname());
+		participant.setParticipantFirstName(reporterStudent.getStudentFirstname());
+		participant.setSex(reporterStudent.getStudentSex());
+		
+		// Safely get contact number
+		String contactNumber = "";
+		if (reporterStudent.getContact() != null) {
+			contactNumber = reporterStudent.getContact().getContactNumber();
+		}
+		participant.setContactNumber(contactNumber);
+
+		return participantsDAO.createParticipant(participant);
+	}
+
+	private void saveIncidentReport() {
 		try {
+			// Validate required fields
+			if (!validateFields()) {
+				return;
+			}
+
+			// Validate reporter student
+			if (reporterStudent == null) {
+				JOptionPane.showMessageDialog(this,
+					"Please select a reporter student first",
+					"Validation Error",
+					JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
 			IncidentsDAO incidentsDAO = new IncidentsDAO(conn);
 
 			// Create new incident
@@ -373,9 +407,17 @@ public class IncidentFillUpForm extends Form {
 				clearForm();
 			}
 
+		} catch (IllegalArgumentException ex) {
+			JOptionPane.showMessageDialog(this, 
+				"Validation error: " + ex.getMessage(),
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
 		} catch (SQLException ex) {
-			JOptionPane.showMessageDialog(this, "Error saving incident: " + ex.getMessage(), "Database Error",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, 
+				"Error saving incident: " + ex.getMessage(), 
+				"Database Error",
+				JOptionPane.ERROR_MESSAGE);
+			ex.printStackTrace();
 		}
 	}
 
@@ -409,21 +451,6 @@ public class IncidentFillUpForm extends Form {
 
 	private void showError(String message) {
 		JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
-	}
-
-	private int getOrCreateParticipant() throws SQLException {
-		ParticipantsDAO participantsDAO = new ParticipantsDAO(conn);
-
-		// Create participant from reporter student
-		Participants participant = new Participants();
-		participant.setStudentUid(reporterStudent.getStudentUid());
-		participant.setParticipantType("Reporter");
-		participant.setParticipantLastName(reporterStudent.getStudentLastname());
-		participant.setParticipantFirstName(reporterStudent.getStudentFirstname());
-		participant.setSex(reporterStudent.getStudentSex());
-		participant.setContactNumber(reporterStudent.getContact().getContactNumber()); // Can be updated if needed
-
-		return participantsDAO.createParticipant(participant);
 	}
 
 	private java.sql.Timestamp parseDateTime(String date, String time) {

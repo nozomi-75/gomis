@@ -131,6 +131,12 @@ public class SessionsDAO {
 
     // ✅ Map ResultSet to Session
     private Sessions mapRowToSession(ResultSet rs) throws SQLException {
+        String sessionSummary = rs.getString("SESSION_SUMMARY");
+        // Ensure summary is never null
+        if (sessionSummary == null) {
+            sessionSummary = "";
+        }
+        
         Sessions session = new Sessions(
                 rs.getInt("SESSION_ID"),
                 rs.getObject("APPOINTMENT_ID", Integer.class),
@@ -140,7 +146,7 @@ public class SessionsDAO {
                 rs.getString("CONSULTATION_TYPE"),
                 rs.getTimestamp("SESSION_DATE_TIME"),
                 rs.getString("SESSION_NOTES"),
-                rs.getString("SESSION_SUMMARY"),
+                sessionSummary,
                 rs.getString("SESSION_STATUS"),
                 rs.getTimestamp("UPDATED_AT"));
         return session;
