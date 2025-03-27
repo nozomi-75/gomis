@@ -13,6 +13,7 @@ import lyfjshs.gomis.Database.entity.Address;
 import lyfjshs.gomis.Database.entity.Contact;
 import lyfjshs.gomis.Database.entity.Guardian;
 import lyfjshs.gomis.Database.entity.Parents;
+import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.SchoolForm;
 import lyfjshs.gomis.Database.entity.Student;
 
@@ -352,63 +353,6 @@ public class StudentsDataDAO {
         }
     }
 
-    public boolean dropStudentWithRelations(int studentUid) throws SQLException {
-        connection.setAutoCommit(false); // Start transaction
-        try {
-            // Retrieve the student to get related entity IDs
-            Student student = getStudentById(studentUid);
-            if (student == null) {
-                throw new SQLException("Student with UID " + studentUid + " does not exist.");
-            }
-
-            // Delete related entities in the correct order
-            if (student.getAddressId() != 0) {
-                AddressDAO addressDAO = new AddressDAO(connection);
-                addressDAO.deleteAddress(student.getAddressId());
-            }
-
-            if (student.getContactId() != 0) {
-                ContactDAO contactDAO = new ContactDAO(connection);
-                contactDAO.deleteContact(student.getContactId());
-            }
-
-            if (student.getParentId() != 0) {
-                ParentsDAO parentsDAO = new ParentsDAO(connection);
-                parentsDAO.deleteParents(student.getParentId());
-            }
-
-            if (student.getGuardianId() != 0) {
-                GuardianDAO guardianDAO = new GuardianDAO(connection);
-                guardianDAO.deleteGuardian(student.getGuardianId());
-            }
-
-            // Finally, delete the student record
-            boolean studentDeleted = deleteStudentData(studentUid);
-            if (!studentDeleted) {
-                throw new SQLException("Failed to delete student with UID " + studentUid);
-            }
-
-            connection.commit(); // Commit transaction
-            return true;
-        } catch (SQLException e) {
-            connection.rollback(); // Rollback transaction on error
-            handleSQLException(e, "dropStudentWithRelations");
-            throw e;
-        } finally {
-            connection.setAutoCommit(true); // Restore auto-commit mode
-        }
-    }
-
-    private String getBaseQuery() {
-        return "SELECT s.*, a.*, c.*, p.*, g.*, sf.* " +
-               "FROM STUDENT s " +
-               "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
-               "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
-               "LEFT JOIN PARENTS p ON s.PARENT_ID = p.PARENT_ID " +
-               "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
-               "LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID";
-    }
-
     // Add method to update student's school form ID
     public boolean updateStudentSchoolFormId(int studentUid, Integer sfId) throws SQLException {
         String sql = "UPDATE STUDENT SET SF_ID = ? WHERE STUDENT_UID = ?";
@@ -421,5 +365,206 @@ public class StudentsDataDAO {
             stmt.setInt(2, studentUid);
             return stmt.executeUpdate() > 0;
         }
+    }
+
+    // Add method to update student references to null
+    public boolean updateStudentReferences(int studentUid) throws SQLException {
+        String sql = "UPDATE STUDENT SET PARENT_ID = NULL, GUARDIAN_ID = NULL, ADDRESS_ID = NULL, " +
+                    "CONTACT_ID = NULL, SF_ID = NULL WHERE STUDENT_UID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, studentUid);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    // Add method to delete student related records
+    public boolean deleteStudentRelatedRecords(int studentUid) throws SQLException {
+        Student student = getStudentById(studentUid);
+        if (student == null) {
+            return false;
+        }
+
+        // Delete records in reverse order of dependencies
+        try {
+            // Get any participant records that reference this student
+            ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
+            List<Participants> participants = participantsDAO.getParticipantByStudentUid(studentUid);
+            
+            for (Participants participant : participants) {
+                int participantId = participant.getParticipantId();
+                
+                // First delete from APPOINTMENT_PARTICIPANTS
+                String deleteAppointmentParticipantsSQL = "DELETE FROM APPOINTMENT_PARTICIPANTS WHERE PARTICIPANT_ID = ?";
+                try (PreparedStatement stmt = connection.prepareStatement(deleteAppointmentParticipantsSQL)) {
+                    stmt.setInt(1, participantId);
+                    stmt.executeUpdate();
+                }
+                
+                // Delete from SESSIONS_PARTICIPANTS
+                String deleteSessionParticipantsSQL = "DELETE FROM SESSIONS_PARTICIPANTS WHERE PARTICIPANT_ID = ?";
+                try (PreparedStatement stmt = connection.prepareStatement(deleteSessionParticipantsSQL)) {
+                    stmt.setInt(1, participantId);
+                    stmt.executeUpdate();
+                }
+                
+                // Delete from VIOLATION_RECORD
+                String deleteViolationSQL = "DELETE FROM VIOLATION_RECORD WHERE PARTICIPANT_ID = ?";
+                try (PreparedStatement stmt = connection.prepareStatement(deleteViolationSQL)) {
+                    stmt.setInt(1, participantId);
+                    stmt.executeUpdate();
+                }
+                
+                // Delete from INCIDENTS
+                String deleteIncidentsSQL = "DELETE FROM INCIDENTS WHERE PARTICIPANT_ID = ?";
+                try (PreparedStatement stmt = connection.prepareStatement(deleteIncidentsSQL)) {
+                    stmt.setInt(1, participantId);
+                    stmt.executeUpdate();
+                }
+                
+                // Finally delete the participant record itself
+                participantsDAO.deleteParticipant(participantId);
+            }
+
+            // Delete guardian if exists and not referenced by other students
+            if (student.getGuardianId() != 0) {
+                GuardianDAO guardianDAO = new GuardianDAO(connection);
+                if (!isGuardianReferencedByOtherStudents(student.getGuardianId(), studentUid)) {
+                    guardianDAO.deleteGuardian(student.getGuardianId());
+                }
+            }
+
+            // Delete parents if exists and not referenced by other students
+            if (student.getParentId() != 0) {
+                ParentsDAO parentsDAO = new ParentsDAO(connection);
+                if (!isParentReferencedByOtherStudents(student.getParentId(), studentUid)) {
+                    parentsDAO.deleteParents(student.getParentId());
+                }
+            }
+
+            // Delete contact if exists and not referenced by other students
+            if (student.getContactId() != 0) {
+                ContactDAO contactDAO = new ContactDAO(connection);
+                if (!isContactReferencedByOtherStudents(student.getContactId(), studentUid)) {
+                    contactDAO.deleteContact(student.getContactId());
+                }
+            }
+
+            // Delete address if exists and not referenced by other students
+            if (student.getAddressId() != 0) {
+                AddressDAO addressDAO = new AddressDAO(connection);
+                if (!isAddressReferencedByOtherStudents(student.getAddressId(), studentUid)) {
+                    addressDAO.deleteAddress(student.getAddressId());
+                }
+            }
+
+            return true;
+        } catch (SQLException e) {
+            throw new SQLException("Error deleting related records: " + e.getMessage());
+        }
+    }
+
+    // Helper methods to check if records are referenced by other students
+    private boolean isGuardianReferencedByOtherStudents(int guardianId, int excludeStudentUid) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM STUDENT WHERE GUARDIAN_ID = ? AND STUDENT_UID != ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, guardianId);
+            stmt.setInt(2, excludeStudentUid);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isParentReferencedByOtherStudents(int parentId, int excludeStudentUid) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM STUDENT WHERE PARENT_ID = ? AND STUDENT_UID != ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, parentId);
+            stmt.setInt(2, excludeStudentUid);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isContactReferencedByOtherStudents(int contactId, int excludeStudentUid) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM STUDENT WHERE CONTACT_ID = ? AND STUDENT_UID != ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, contactId);
+            stmt.setInt(2, excludeStudentUid);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isAddressReferencedByOtherStudents(int addressId, int excludeStudentUid) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM STUDENT WHERE ADDRESS_ID = ? AND STUDENT_UID != ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, addressId);
+            stmt.setInt(2, excludeStudentUid);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Method to delete student record
+    public boolean deleteStudent(int studentUid) throws SQLException {
+        String sql = "DELETE FROM STUDENT WHERE STUDENT_UID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, studentUid);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    // Updated dropStudentWithRelations method
+    public boolean dropStudentWithRelations(int studentUid) throws SQLException {
+        connection.setAutoCommit(false);
+        try {
+            // First update student to remove all foreign key references
+            if (!updateStudentReferences(studentUid)) {
+                throw new SQLException("Failed to update student references");
+            }
+
+            // Then delete related records
+            if (!deleteStudentRelatedRecords(studentUid)) {
+                throw new SQLException("Failed to delete related records");
+            }
+
+            // Finally delete the student record
+            if (!deleteStudent(studentUid)) {
+                throw new SQLException("Failed to delete student record");
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException e) {
+            connection.rollback();
+            throw new SQLException("Error during student deletion: " + e.getMessage());
+        } finally {
+            connection.setAutoCommit(true);
+        }
+    }
+
+    private String getBaseQuery() {
+        return "SELECT s.*, a.*, c.*, p.*, g.*, sf.* " +
+               "FROM STUDENT s " +
+               "LEFT JOIN ADDRESS a ON s.ADDRESS_ID = a.ADDRESS_ID " +
+               "LEFT JOIN CONTACT c ON s.CONTACT_ID = c.CONTACT_ID " +
+               "LEFT JOIN PARENTS p ON s.PARENT_ID = p.PARENT_ID " +
+               "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
+               "LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID";
     }
 }

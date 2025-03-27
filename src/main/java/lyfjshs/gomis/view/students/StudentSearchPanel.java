@@ -264,6 +264,7 @@ public abstract class StudentSearchPanel extends Modal {
                 } else {
                     onStudentSelected(student);
                 }
+                // Close the modal properly using ModalDialog
                 if (modalId != null) {
                     ModalDialog.closeModal(modalId);
                 }

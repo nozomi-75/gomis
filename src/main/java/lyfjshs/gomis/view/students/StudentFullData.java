@@ -38,8 +38,8 @@ import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.utils.DroppingFormGenerator;
 import lyfjshs.gomis.utils.GoodMoralGenerator;
-import lyfjshs.gomis.view.students.StudentMangementGUI;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
@@ -339,9 +339,41 @@ public class StudentFullData extends Form {
 	}
 
 	private void createGoodMoralReport(Student student) {
-		// Create a new report generator
-		GoodMoralGenerator generator = new GoodMoralGenerator(student);
-		generator.createGoodMoralReport(this);
+		try {
+			// Check for active violations
+			ViolationCRUD violationCRUD = new ViolationCRUD(connect);
+			List<ViolationRecord> violations = violationCRUD.getViolationsByStudentUID(student.getStudentUid());
+			
+			// Check if there are any active violations
+			boolean hasActiveViolations = false;
+			if (violations != null && !violations.isEmpty()) {
+				for (ViolationRecord violation : violations) {
+					if ("Active".equalsIgnoreCase(violation.getStatus())) {
+						hasActiveViolations = true;
+						break;
+					}
+				}
+			}
+			
+			if (hasActiveViolations) {
+				JOptionPane.showMessageDialog(this, 
+					"Cannot print Good Moral Certificate. Student has active violations that need to be resolved first.",
+					"Active Violations Found",
+					JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			
+			// If no active violations, proceed with creating the good moral
+			GoodMoralGenerator generator = new GoodMoralGenerator(student);
+			generator.createGoodMoralReport(this);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this,
+				"Error checking violations: " + e.getMessage(),
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	private JPanel createPersonalInfoPanel() {
@@ -690,20 +722,29 @@ public class StudentFullData extends Form {
 
 			ModalDialog.showModal(this, new SimpleModalBorder(droppingForm, "Drop Confirmation",
 					new SimpleModalBorder.Option[] {
-							new SimpleModalBorder.Option("Yes", SimpleModalBorder.YES_OPTION),
-							new SimpleModalBorder.Option("No", SimpleModalBorder.NO_OPTION)
+							new SimpleModalBorder.Option("Print & Drop", SimpleModalBorder.YES_OPTION),
+							new SimpleModalBorder.Option("Cancel", SimpleModalBorder.NO_OPTION)
 					},
 					(controller, action) -> {
 						if (action == SimpleModalBorder.YES_OPTION) {
 							controller.consume();
 							try {
-								// First, set the student's SF_ID to null to remove the reference to SchoolForm
-								boolean success = studentsDataDAO.updateStudentSchoolFormId(student.getStudentUid(), null);
-								
-								if (success) {
-									// Now try to drop the student and related records (except SchoolForm)
-									success = studentsDataDAO.dropStudentWithRelations(student.getStudentUid());
-								}
+								// First print the dropping form
+								DroppingFormGenerator.createDroppingForm(
+									this,
+									droppingForm.getDateField().getText(),
+									student.getStudentFirstname() + " " + student.getStudentLastname(),
+									counselor.getFirstName() + " " + counselor.getLastName(),
+									student.getSchoolForm().getSF_TRACK_AND_STRAND(),
+									student.getSchoolForm().getSF_GRADE_LEVEL() + " " + student.getSchoolForm().getSF_SECTION(),
+									droppingForm.getAbsencesField().getText(),
+									droppingForm.getActionTextArea().getText(),
+									droppingForm.getReasonTextArea().getText(),
+									droppingForm.getEffectiveDateField().getText()
+								);
+
+								// Then drop the student
+								boolean success = studentsDataDAO.dropStudentWithRelations(student.getStudentUid());
 
 								if (success) {
 									JOptionPane.showMessageDialog(this, 

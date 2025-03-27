@@ -36,6 +36,7 @@ import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
 import lyfjshs.gomis.Database.entity.Appointment;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.Database.entity.Student;
@@ -206,6 +207,7 @@ public class SessionsForm extends Form {
 	private void openStudentSearchUI() {
 		String modalId = "session_student_search"; // Use unique modal ID
 		if (ModalDialog.isIdExist(modalId)) {
+			ModalDialog.closeModal(modalId); // Close existing modal if it exists
 			return;
 		}
 
@@ -242,9 +244,6 @@ public class SessionsForm extends Form {
 				participantTableModel
 						.addRow(new Object[] { rowNumber, details.get("fullName"), "Student", "View | Remove",
 								tempId });
-
-				// Close the modal using the correct ID
-				ModalDialog.closeModal(modalId);
 			}
 		};
 
@@ -624,18 +623,24 @@ public class SessionsForm extends Form {
 	private void populateRecordedByField() {
 		try {
 			if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
-				String counselorName = Main.formManager.getCounselorObject().getFirstName() + " "
-						+ Main.formManager.getCounselorObject().getMiddleName() + " "
-						+ Main.formManager.getCounselorObject().getLastName();
-				if (counselorName != null && !counselorName.isEmpty()) {
+				GuidanceCounselor counselor = Main.formManager.getCounselorObject();
+				String counselorName = String.format("%s %s %s",
+					counselor.getFirstName(),
+					counselor.getMiddleName(),
+					counselor.getLastName()
+				).trim();
+				
+				if (!counselorName.isEmpty()) {
 					recordedByField.setText(counselorName);
 				}
 			} else {
 				System.out.println("No counselor logged in. Skipping population of 'Recorded By' field.");
 			}
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, "Error retrieving counselor information: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, 
+				"Error retrieving counselor information: " + e.getMessage(), 
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
 	}

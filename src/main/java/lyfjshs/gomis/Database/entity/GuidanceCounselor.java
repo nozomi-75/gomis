@@ -4,7 +4,7 @@ public class GuidanceCounselor {
     private int guidanceCounselorId;
     private String lastName;
     private String firstName;
-    private String middleName;  // Renamed from middleInitial
+    private String middleName;
     private String suffix;
     private String gender;
     private String specialization;
@@ -19,7 +19,7 @@ public class GuidanceCounselor {
         this.guidanceCounselorId = guidanceCounselorId;
         this.lastName = lastName;
         this.firstName = firstName;
-        this.middleName = middleName;  // Updated
+        this.middleName = middleName;
         this.suffix = suffix;
         this.gender = gender;
         this.specialization = specialization;
@@ -29,91 +29,110 @@ public class GuidanceCounselor {
         this.profilePicture = profilePicture;
     }
 
+    // Getters
     public int getGuidanceCounselorId() {
         return guidanceCounselorId;
-    }
-
-    public void setGuidanceCounselorId(int guidanceCounselorId) {
-        this.guidanceCounselorId = guidanceCounselorId;
     }
 
     public String getLastName() {
         return lastName;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
     public String getFirstName() {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getMiddleName() {  // Renamed method
+    public String getMiddleName() {
         return middleName;
-    }
-
-    public void setMiddleName(String middleName) {  // Renamed method
-        this.middleName = middleName;
     }
 
     public String getSuffix() {
         return suffix;
     }
 
-    public void setSuffix(String suffix) {
-        this.suffix = suffix;
-    }
-
     public String getGender() {
         return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
     }
 
     public String getSpecialization() {
         return specialization;
     }
 
-    public void setSpecialization(String specialization) {
-        this.specialization = specialization;
-    }
-
     public String getContactNum() {
         return contactNum;
-    }
-
-    public void setContactNum(String contactNum) {
-        this.contactNum = contactNum;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getPosition() {
         return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
     }
 
     public byte[] getProfilePicture() {
         return profilePicture;
     }
 
+    // Setters
+    public void setGuidanceCounselorId(int guidanceCounselorId) {
+        this.guidanceCounselorId = guidanceCounselorId;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setMiddleName(String middleName) {
+        this.middleName = middleName;
+    }
+
+    public void setSuffix(String suffix) {
+        this.suffix = suffix;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setSpecialization(String specialization) {
+        this.specialization = specialization;
+    }
+
+    public void setContactNum(String contactNum) {
+        this.contactNum = contactNum;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
     public void setProfilePicture(byte[] profilePicture) {
         this.profilePicture = profilePicture;
+    }
+
+    // Compatibility methods for LoginController
+    public int getCounselorId() {
+        return guidanceCounselorId;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNum = contactNumber;
+    }
+
+    public String getContactNumber() {
+        return contactNum;
+    }
+
+    public void setPassword(String password) {
+        // This is a compatibility method - in the actual system, password is stored in USERS table
     }
 }

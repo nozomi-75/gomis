@@ -166,12 +166,15 @@ public class ViolationTablePanel extends JPanel {
                 Student student = studentsDataDAO.getStudentById(violation.getParticipantId());
                 String studentLRN = student != null ? student.getStudentLrn() : "N/A";
                 String fullName = student != null
-                        ? String.format("%s %s", student.getStudentFirstname(), student.getStudentLastname())
+                        ? String.format("%s %s %s", 
+                            student.getStudentFirstname(), 
+                            student.getStudentMiddlename() != null ? student.getStudentMiddlename() : "",
+                            student.getStudentLastname())
                         : "N/A";
 
                 model.addRow(new Object[] {
                         studentLRN,
-                        fullName,
+                        fullName.trim(), // Trim to remove extra spaces if middle name is null
                         violation.getViolationType(),
                         violation.getReinforcement(),
                         violation.getStatus(),

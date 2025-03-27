@@ -14,6 +14,7 @@ lyfjshs\gomis\test\auto\DemoPanel.class
 lyfjshs\gomis\test\ToastNotificationApp$2.class
 lyfjshs\gomis\test\JFrameSizeTest$1.class
 lyfjshs\gomis\SignUpTEST.class
+lyfjshs\gomis\test\forms\AddAppointmentPanel$1.class
 lyfjshs\gomis\LoadingAnimationTest.class
 lyfjshs\gomis\SplashTest$LogoPanel$1.class
 lyfjshs\gomis\SignUpTEST$3.class
@@ -44,6 +45,7 @@ lyfjshs\gomis\test\GuidanceCounselingAppointmentsPanel.class
 lyfjshs\gomis\FlatTest\FlatClickablePanel.class
 lyfjshs\CRUDS\ContactDB_Test.class
 lyfjshs\gomis\FlatTest\loading\SwingLoadingAnimation.class
+lyfjshs\gomis\test\forms\AddAppointmentPanel$3.class
 lyfjshs\gomis\test\SessionSearchPanel$1.class
 lyfjshs\gomis\test\ViolationRecordsDashboard$1.class
 lyfjshs\gomis\test\simple\SignUpPanel$2.class
@@ -63,6 +65,7 @@ lyfjshs\gomis\test\SFtoDB.class
 lyfjshs\gomis\test\BackgroundApp$2.class
 lyfjshs\gomis\test\SchoolFormsReader$1.class
 lyfjshs\gomis\FlatTest\FlatAnimation$AnimatedLoaderPanel.class
+lyfjshs\gomis\test\forms\AddAppointmentPanel$2.class
 lyfjshs\gomis\SplashTest$LogoPanel$2.class
 lyfjshs\gomis\table\BooleanRenderer.class
 lyfjshs\gomis\test\AestheticDatePicker.class

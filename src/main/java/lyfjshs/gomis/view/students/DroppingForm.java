@@ -147,4 +147,25 @@ public class DroppingForm extends JPanel {
 		// method to drop student
 		DroppingFormGenerator.createDroppingForm(absencesField, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY);
 	}
+
+	// Add getter methods for the form fields
+	public JFormattedTextField getDateField() {
+		return dateField;
+	}
+
+	public JFormattedTextField getEffectiveDateField() {
+		return effectiveDateField;
+	}
+
+	public JTextField getAbsencesField() {
+		return absencesField;
+	}
+
+	public JTextArea getActionTextArea() {
+		return actionTextArea;
+	}
+
+	public JTextArea getReasonTextArea() {
+		return reasonTextArea;
+	}
 }

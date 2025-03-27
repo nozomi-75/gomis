@@ -16,24 +16,31 @@ public class DroppingFormGenerator {
 			String trackStrand, String gradeSection, String inclusiveDates, String actionTaken,
 			String reasonForDropping, String effectiveDate) {
 
-		generateReport(DEFAULT_JASPER_TEMPLATE, date, nameOfStudent, adviser, trackStrand, gradeSection, inclusiveDates,
-				actionTaken, reasonForDropping, effectiveDate, "print", null);
+		try {
+			// Generate report parameters
+			Map<String, Object> parameters = new HashMap<>();
+			parameters.put("Date", date);
+			parameters.put("NameofStudent", nameOfStudent);
+			parameters.put("Adviser", adviser);
+			parameters.put("Trank/Strand Specialization", trackStrand);
+			parameters.put("Grade/Section", gradeSection);
+			parameters.put("InclusiveDateofAbsences", inclusiveDates);
+			parameters.put("ActionTaken", actionTaken);
+			parameters.put("ReasonforDropping", reasonForDropping);
+			parameters.put("EffectiveDate", effectiveDate);
+			parameters.put("IS_PDF_EXPORT", false);
 
-//		EXPORT AS DOCX
-//		JFileChooser fileChooser = setupFileChooser("docx");
-//		if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-//			String baseName = fileChooser.getSelectedFile().getAbsolutePath().replace(".docx", "");
-//			generateReport(DEFAULT_JASPER_TEMPLATE, date, nameOfStudent, adviser, trackStrand, gradeSection,
-//					inclusiveDates, actionTaken, reasonForDropping, effectiveDate, "docx", baseName);
-//		}
-//		EXPORT AS PDF
-//		JFileChooser fileChooser = setupFileChooser("pdf");
-//		if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-//			String baseName = fileChooser.getSelectedFile().getAbsolutePath().replace(".pdf", "");
-//			generateReport(DEFAULT_JASPER_TEMPLATE, date, nameOfStudent, adviser, trackStrand, gradeSection,
-//					inclusiveDates, actionTaken, reasonForDropping, effectiveDate, "pdf", baseName);
-//		}
+			// Create report generator and process the report
+			ReportGenerator reportGenerator = new ReportGenerator(DEFAULT_JASPER_TEMPLATE);
+			reportGenerator.processReport(parameters, "DroppingForm", "print");
 
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(parent,
+				"Failed to generate dropping form: " + e.getMessage(),
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
 	}
 
 	/**

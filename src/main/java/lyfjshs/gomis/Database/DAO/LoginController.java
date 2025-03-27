@@ -23,11 +23,11 @@ import lyfjshs.gomis.components.FormManager.FormManager;
  */
 public class LoginController {
 
-    private Connection connection;
+    private final Connection connection;
+    private GuidanceCounselor currentUser;
 
-    public LoginController(Connection connect) {
-        this.connection = connect;
-    
+    public LoginController(Connection connection) {
+        this.connection = connection;
     }
 
     /**
@@ -276,5 +276,108 @@ public class LoginController {
                 e.printStackTrace();
             }
         }
+    }
+
+    public boolean authenticate(String username, String password) throws SQLException {
+        String sql = "SELECT * FROM GUIDANCE_COUNSELORS WHERE USERNAME = ? AND PASSWORD = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    // Create GuidanceCounselor object from result set
+                    currentUser = new GuidanceCounselor(
+                        rs.getInt("GUIDANCE_COUNSELOR_ID"),
+                        rs.getString("LAST_NAME"),
+                        rs.getString("FIRST_NAME"),
+                        rs.getString("MIDDLE_NAME"),
+                        rs.getString("SUFFIX"),
+                        rs.getString("GENDER"),
+                        rs.getString("SPECIALIZATION"),
+                        rs.getString("CONTACT_NUM"),
+                        rs.getString("EMAIL"),
+                        rs.getString("POSITION"),
+                        rs.getBytes("PROFILE_PICTURE")
+                    );
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public GuidanceCounselor getCurrentUser() {
+        return currentUser;
+    }
+
+    public void logout() {
+        currentUser = null;
+    }
+
+    public boolean isLoggedIn() {
+        return currentUser != null;
+    }
+
+    public boolean changePassword(String oldPassword, String newPassword) throws SQLException {
+        if (!isLoggedIn()) {
+            return false;
+        }
+
+        // First verify old password
+        String verifySql = "SELECT * FROM GUIDANCE_COUNSELOR WHERE COUNSELOR_ID = ? AND PASSWORD = ?";
+        try (PreparedStatement verifyStmt = connection.prepareStatement(verifySql)) {
+            verifyStmt.setInt(1, currentUser.getCounselorId());
+            verifyStmt.setString(2, oldPassword);
+            
+            try (ResultSet rs = verifyStmt.executeQuery()) {
+                if (!rs.next()) {
+                    return false; // Old password doesn't match
+                }
+            }
+        }
+
+        // Update to new password
+        String updateSql = "UPDATE GUIDANCE_COUNSELOR SET PASSWORD = ? WHERE COUNSELOR_ID = ?";
+        try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+            updateStmt.setString(1, newPassword);
+            updateStmt.setInt(2, currentUser.getCounselorId());
+            
+            int rowsAffected = updateStmt.executeUpdate();
+            if (rowsAffected > 0) {
+                currentUser.setPassword(newPassword);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean updateProfile(String firstName, String lastName, String email, String contactNumber) throws SQLException {
+        if (!isLoggedIn()) {
+            return false;
+        }
+
+        String sql = "UPDATE GUIDANCE_COUNSELOR SET FIRST_NAME = ?, LAST_NAME = ?, EMAIL = ?, CONTACT_NUMBER = ? " +
+                    "WHERE COUNSELOR_ID = ?";
+                    
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, email);
+            stmt.setString(4, contactNumber);
+            stmt.setInt(5, currentUser.getCounselorId());
+            
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                // Update current user object
+                currentUser.setFirstName(firstName);
+                currentUser.setLastName(lastName);
+                currentUser.setEmail(email);
+                currentUser.setContactNumber(contactNumber);
+                return true;
+            }
+        }
+        return false;
     }
 }

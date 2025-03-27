@@ -56,7 +56,7 @@ SOUTH SQUARE VILLAGE, PASONG KAWAYAN II, GEN. TRIAS CITY, CAVITE]]></text>
 			</element>
 		</band>
 	</detail>
-	<pageFooter height="109" splitType="Stretch">
+	<pageFooter height="119" splitType="Stretch">
 		<element kind="line" uuid="402044a5-7458-415f-b025-d38d3cad3d02" x="9" y="12" width="542" height="1"/>
 		<element kind="image" uuid="4d3eea09-13b4-453e-920d-827b6d0ab048" x="11" y="14" width="125" height="63">
 			<expression><![CDATA["images/DepEd-MATATAG_BagongPilipinas.png"]]></expression>
@@ -64,7 +64,7 @@ SOUTH SQUARE VILLAGE, PASONG KAWAYAN II, GEN. TRIAS CITY, CAVITE]]></text>
 		<element kind="image" uuid="7b64e541-5496-4f45-80f9-1a7bbc107dbb" x="137" y="16" width="59" height="57">
 			<expression><![CDATA["images/LYFJSHS.png"]]></expression>
 		</element>
-		<element kind="staticText" uuid="15f4ec38-1d34-4651-b8c3-3fcd58e51858" x="11" y="85" width="161" height="12" fontSize="8.0">
+		<element kind="staticText" uuid="15f4ec38-1d34-4651-b8c3-3fcd58e51858" x="11" y="84" width="161" height="12" fontSize="8.0">
 			<text><![CDATA[Generated Document using: GOMIS V1]]></text>
 		</element>
 		<element kind="image" uuid="b69214ae-661b-40c7-a635-e79b2a92e70e" x="197" y="16" width="357" height="65">
