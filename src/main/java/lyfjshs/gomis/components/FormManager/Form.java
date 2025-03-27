@@ -52,6 +52,7 @@ public class Form extends JPanel {
      * This method should be called when updates are made that require re-rendering.
      */
     public void formRefresh() {
+        
     }
 
     /**

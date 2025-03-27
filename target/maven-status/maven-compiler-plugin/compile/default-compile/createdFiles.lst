@@ -1,9 +1,11 @@
 lyfjshs\gomis\Database\SQLExceptionPane.class
 lyfjshs\gomis\Database\entity\Student.class
 lyfjshs\gomis\view\sessions\SessionsForm.class
+lyfjshs\gomis\view\sessions\SessionsRecordData$ButtonEditor.class
 lyfjshs\gomis\Database\entity\Address.class
 lyfjshs\gomis\components\ModelColor.class
 lyfjshs\gomis\view\students\create\GuardianPanel.class
+lyfjshs\gomis\view\sessions\SessionsRecordData.class
 lyfjshs\gomis\components\table\BooleanRenderer.class
 lyfjshs\gomis\view\appointment\AppointmentCalendar$4.class
 lyfjshs\gomis\view\sessions\SessionsForm$2.class
@@ -25,7 +27,9 @@ lyfjshs\gomis\Database\entity\User.class
 lyfjshs\gomis\view\appointment\AppointmentDailyOverview$1.class
 lyfjshs\gomis\components\DrawerBuilder$2.class
 lyfjshs\gomis\view\login\SignUpPanel.class
+lyfjshs\gomis\view\students\create\StudentInfoFullForm$4.class
 lyfjshs\gomis\view\students\create\AddressPanel.class
+lyfjshs\gomis\view\sessions\SessionsRecordData$ButtonRenderer.class
 lyfjshs\gomis\view\appointment\add\AddAppointmentPanel.class
 lyfjshs\gomis\Database\DAO\AddressDAO.class
 lyfjshs\gomis\view\loading\LogoPanel.class
@@ -39,6 +43,7 @@ lyfjshs\gomis\Database\entity\Appointment.class
 lyfjshs\gomis\view\loading\LogoPanel$1.class
 lyfjshs\gomis\view\incident\IncidentFullData.class
 lyfjshs\gomis\Database\DAO\ParentsDAO.class
+lyfjshs\gomis\view\students\create\StudentInfoFullForm$3.class
 lyfjshs\gomis\view\sessions\SessionRecords.class
 lyfjshs\gomis\view\students\StudentResult$1.class
 lyfjshs\gomis\view\sessions\SessionsForm$1.class
@@ -76,6 +81,7 @@ lyfjshs\gomis\utils\IncidentReportGenerator$1.class
 lyfjshs\gomis\view\students\StudentMangementGUI.class
 lyfjshs\gomis\view\login\SignUpPanel$5.class
 lyfjshs\gomis\view\incident\IncidentFillUpForm$2.class
+lyfjshs\gomis\view\students\create\StudentInfoFullForm$7.class
 lyfjshs\gomis\components\GFrame$2.class
 lyfjshs\gomis\view\appointment\add\AddAppointmentModal.class
 lyfjshs\gomis\Database\entity\Guardian.class
@@ -91,10 +97,13 @@ lyfjshs\gomis\view\appointment\AppointmentDailyOverview$3.class
 lyfjshs\gomis\components\GFrame.class
 lyfjshs\gomis\Database\entity\GuidanceCounselor.class
 lyfjshs\gomis\view\students\create\StudentInfoFullForm$2.class
+lyfjshs\gomis\utils\CompileJasper.class
 lyfjshs\gomis\view\login\SignUpPanel$3.class
+lyfjshs\gomis\components\NotificationManager.class
 lyfjshs\gomis\utils\IncidentReportGenerator.class
 lyfjshs\gomis\Database\entity\SchoolForm.class
 lyfjshs\gomis\components\FlatToggleSwitch.class
+lyfjshs\gomis\view\sessions\SessionsRecordData$1.class
 lyfjshs\gomis\view\loading\BackgroundCirclesPanel$1.class
 lyfjshs\gomis\view\students\StudentSelectionCallback.class
 lyfjshs\gomis\view\incident\IncidentFillUpForm.class
@@ -109,6 +118,7 @@ lyfjshs\gomis\view\students\create\StudentInfoFullForm.class
 lyfjshs\gomis\view\login\SignUpPanel$2.class
 lyfjshs\gomis\view\loading\BackgroundCirclesPanel$Circle.class
 lyfjshs\gomis\view\loading\ProgressPanel.class
+lyfjshs\gomis\view\sessions\SessionFullData$2.class
 lyfjshs\gomis\view\students\create\StudentPanel.class
 lyfjshs\gomis\view\appointment\AppointmentCalendar$2.class
 lyfjshs\gomis\view\appointment\AppointmentDailyOverview$5.class
@@ -130,6 +140,7 @@ lyfjshs\gomis\view\students\StudentSearchPanel$1.class
 lyfjshs\gomis\view\login\LoginView.class
 lyfjshs\gomis\Database\DAO\ContactDAO.class
 lyfjshs\gomis\view\appointment\AppointmentOverview.class
+lyfjshs\gomis\view\students\create\StudentInfoFullForm$5.class
 lyfjshs\gomis\view\students\DroppingForm.class
 lyfjshs\gomis\utils\ReportGenerator$ExportAction.class
 lyfjshs\gomis\view\appointment\AppointmentSection.class
@@ -150,6 +161,7 @@ lyfjshs\gomis\view\appointment\AppointmentDayDetails.class
 lyfjshs\gomis\view\SettingsPanel.class
 lyfjshs\gomis\view\appointment\AppointmentDailyOverview$4.class
 lyfjshs\gomis\Database\DAO\RemarksDAO.class
+lyfjshs\gomis\view\students\create\StudentInfoFullForm$6.class
 lyfjshs\gomis\components\table\GTable$2.class
 lyfjshs\gomis\components\PanelGradient.class
 lyfjshs\gomis\view\students\create\ParentPanel.class

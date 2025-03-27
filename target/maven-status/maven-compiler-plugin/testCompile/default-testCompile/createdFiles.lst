@@ -40,6 +40,7 @@ lyfjshs\gomis\test\ViolationRecordForm.class
 lyfjshs\gomis\CoolButtonComponent$Ripple.class
 lyfjshs\gomis\test\ToastNotificationApp$ToastPanel$2.class
 lyfjshs\CRUDS\AppointmentsDB_Test$1.class
+lyfjshs\gomis\test\GuidanceCounselingAppointmentsPanel.class
 lyfjshs\gomis\FlatTest\FlatClickablePanel.class
 lyfjshs\CRUDS\ContactDB_Test.class
 lyfjshs\gomis\FlatTest\loading\SwingLoadingAnimation.class

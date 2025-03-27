@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,9 +20,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-
-import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
@@ -90,6 +89,7 @@ public class AddAppointmentPanel extends JPanel {
         JLabel label = new JLabel("Time:");
         bodyPanel.add(label, "flowx,cell 1 2,alignx label");
         String[] consultationTypes = {
+                "~Please Select~",
                 "Academic Consultation",
                 "Career Guidance",
                 "Personal Consultation",
@@ -101,7 +101,7 @@ public class AddAppointmentPanel extends JPanel {
         JLabel lblConsultationType = new JLabel("Consultation Type:");
         bodyPanel.add(lblConsultationType, "cell 0 3 2 1,growx");
         typeComboBox = new JComboBox<>(consultationTypes);
-        typeComboBox.setSelectedItem(appointment.getConsultationType());
+        typeComboBox.setSelectedItem("~Please Select~"); // Set default value
         bodyPanel.add(typeComboBox, "cell 0 4 2 1,growx");
 
         // Guidance Counselor Details
@@ -123,9 +123,9 @@ public class AddAppointmentPanel extends JPanel {
         // Status Field (replace the existing status field code with this)
         JLabel statusLabel = new JLabel("Status:");
         bodyPanel.add(statusLabel, "cell 0 7,alignx label");
-        String[] statusOptions = {"On-going", "Completed", "Cancelled", "Rescheduled", "Pending"};
+        String[] statusOptions = { "~Please Select~", "On-going", "Rescheduled" };
         statusComboBox = new JComboBox<>(statusOptions);
-        statusComboBox.setSelectedItem("On-going"); // Set default value
+        statusComboBox.setSelectedItem("~Please Select~"); // Set default value
         bodyPanel.add(statusComboBox, "cell 0 8 2 1,growx");
 
         // Participants Section
@@ -152,28 +152,74 @@ public class AddAppointmentPanel extends JPanel {
         bodyPanel.add(scrollPane_1, "cell 0 12 2 2,growx");
 
         JScrollPane scrollPane = new JScrollPane(bodyPanel);
+        
+        // Initialize DatePicker
         datePicker = new DatePicker();
+        datePicker.setDateSelectionMode(DatePicker.DateSelectionMode.SINGLE_DATE_SELECTED);
+        
         JFormattedTextField dateField = new JFormattedTextField();
         datePicker.setEditor(dateField);
 
         // Set current date if appointment date is null
         if (appointment.getAppointmentDateTime() != null) {
-            datePicker.setSelectedDate(appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
+            LocalDate appointmentDate = appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate();
+            // Only set the date if it's not in the past
+            if (!appointmentDate.isBefore(LocalDate.now())) {
+                datePicker.setSelectedDate(appointmentDate);
+            } else {
+                datePicker.setSelectedDate(LocalDate.now());
+            }
         } else {
-            datePicker.setSelectedDate(java.time.LocalDate.now());
+            datePicker.setSelectedDate(LocalDate.now());
         }
 
+        // Add listener to prevent selecting past dates
+        datePicker.addDateSelectionListener(e -> {
+            if (datePicker.getDateSelectionMode() == DatePicker.DateSelectionMode.SINGLE_DATE_SELECTED) {
+                LocalDate selectedDate = datePicker.getSelectedDate();
+                if (selectedDate != null && selectedDate.isBefore(LocalDate.now())) {
+                    datePicker.setSelectedDate(LocalDate.now());
+                    JOptionPane.showMessageDialog(this,
+                        "Cannot select a date in the past. Date has been reset to today.",
+                        "Invalid Date",
+                        JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
+
         bodyPanel.add(dateField, "cell 0 2,growx");
+        
+        // Initialize TimePicker
         timePicker = new TimePicker();
         JFormattedTextField timeField = new JFormattedTextField();
         timePicker.setEditor(timeField);
 
         // Set current time if appointment time is null
         if (appointment.getAppointmentDateTime() != null) {
-            timePicker.setSelectedTime(appointment.getAppointmentDateTime().toLocalDateTime().toLocalTime());
+            LocalDateTime appointmentDateTime = appointment.getAppointmentDateTime().toLocalDateTime();
+            if (!appointmentDateTime.isBefore(LocalDateTime.now())) {
+                timePicker.setSelectedTime(appointmentDateTime.toLocalTime());
+            } else {
+                timePicker.setSelectedTime(LocalDateTime.now().toLocalTime());
+            }
         } else {
-            timePicker.setSelectedTime(java.time.LocalTime.now());
+            timePicker.setSelectedTime(LocalDateTime.now().toLocalTime());
         }
+
+        // Add listener to TimePicker to validate selected time
+        timePicker.addTimeSelectionListener(e -> {
+            if (datePicker.getSelectedDate() != null && 
+                datePicker.getSelectedDate().equals(LocalDate.now()) && 
+                timePicker.getSelectedTime() != null && 
+                timePicker.getSelectedTime().isBefore(LocalDateTime.now().toLocalTime())) {
+                // If selected time is in the past, reset to current time
+                timePicker.setSelectedTime(LocalDateTime.now().toLocalTime());
+                JOptionPane.showMessageDialog(this,
+                    "Cannot select a time in the past. Time has been reset to current time.",
+                    "Invalid Time",
+                    JOptionPane.WARNING_MESSAGE);
+            }
+        });
 
         bodyPanel.add(timeField, "cell 1 2,growx");
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -186,7 +232,11 @@ public class AddAppointmentPanel extends JPanel {
 
         // Participant Type
         JLabel typeLabel = new JLabel("Type:");
-        JComboBox<String> typeComboBox = new JComboBox<>(new String[] { "Student", "Non-Student" });
+        JComboBox<String> typeComboBox = new JComboBox<>(new String[] {
+                "SELECT TYPE", // Default value
+                "Student",
+                "Non-Student"
+        });
         participantPanel.add(typeLabel);
         participantPanel.add(typeComboBox, "wrap");
 
@@ -194,11 +244,13 @@ public class AddAppointmentPanel extends JPanel {
         JPanel studentPanel = createStudentPanel();
         JPanel nonStudentPanel = createNonStudentPanel();
 
+        // Initially hide both panels since SELECT TYPE is default
+        studentPanel.setVisible(false);
+        nonStudentPanel.setVisible(false);
+
         // Add both panels to the same cell but initially show only student panel
         participantPanel.add(studentPanel, "cell 0 1 2 1,grow");
         participantPanel.add(nonStudentPanel, "cell 0 1 2 1,grow");
-        studentPanel.setVisible(true);
-        nonStudentPanel.setVisible(false);
 
         // Remove Button in its own row
         JButton removeButton = new JButton("Remove Participant");
@@ -213,17 +265,21 @@ public class AddAppointmentPanel extends JPanel {
         });
         participantPanel.add(removeButton, "cell 0 2 2 1, alignx center");
 
+        // Add ActionListener to handle type selection
         typeComboBox.addActionListener(e -> {
-            boolean isStudent = typeComboBox.getSelectedItem().equals("Student");
-            studentPanel.setVisible(isStudent);
-            nonStudentPanel.setVisible(!isStudent);
+            String selected = (String) typeComboBox.getSelectedItem();
+            if ("SELECT TYPE".equals(selected)) {
+                studentPanel.setVisible(false);
+                nonStudentPanel.setVisible(false);
+            } else {
+                boolean isStudent = "Student".equals(selected);
+                studentPanel.setVisible(isStudent);
+                nonStudentPanel.setVisible(!isStudent);
+            }
 
             // Ensure proper revalidation and animation
-            FlatAnimatedLafChange.showSnapshot();
             participantPanel.revalidate();
             participantPanel.repaint();
-            FlatLaf.updateUI();
-            FlatAnimatedLafChange.hideSnapshotWithAnimation();
         });
 
         parentPanel.add(participantPanel, "growx, wrap");
@@ -264,11 +320,11 @@ public class AddAppointmentPanel extends JPanel {
         JButton searchLrnButton = new JButton("Search by LRN");
         JButton searchNameButton = new JButton("Search by Name");
 
-        searchLrnButton
-                .addActionListener(e -> searchStudent(studentLrnField.getText(), studentFirstNameField,
-                        studentLastNameField, studentSexComboBox));
-        searchNameButton.addActionListener(
-                e -> searchStudent("", studentFirstNameField, studentLastNameField, studentSexComboBox));
+        searchLrnButton.addActionListener(e -> searchStudentByLrn(studentLrnField.getText()));
+        searchNameButton.addActionListener(e -> searchStudentByNameAndSex(
+                studentFirstNameField.getText(),
+                studentLastNameField.getText(),
+                (String) studentSexComboBox.getSelectedItem()));
 
         searchPanel.add(searchLrnButton, "growx");
         searchPanel.add(searchNameButton, "growx");
@@ -307,56 +363,92 @@ public class AddAppointmentPanel extends JPanel {
         return panel;
     }
 
-    private void searchStudent(String lrn, JTextField firstNameField, JTextField lastNameField,
-            JComboBox<String> sexComboBox) {
+    private void searchStudentByNameAndSex(String firstName, String lastName, String sex) {
         StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-        Student student = null;
-
-        // First attempt: Search by LRN if provided
-        if (!lrn.trim().isEmpty()) {
-            try {
-                student = studentsDataDAO.getStudentDataByLrn(lrn);
-                if (student != null) {
-                    firstNameField.setText(student.getStudentFirstname());
-                    lastNameField.setText(student.getStudentLastname());
-                    sexComboBox.setSelectedItem(student.getStudentSex());
-                    return; // Exit if found by LRN
-                }
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error searching by LRN: " + ex.getMessage(),
-                        "Search Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
-            }
-        }
-
-        // Fallback: Search by First Name, Last Name, and Sex if LRN is not available or
-        // no match
-        String firstName = firstNameField.getText().trim();
-        String lastName = lastNameField.getText().trim();
-        String sex = (String) sexComboBox.getSelectedItem();
-
-        if (!firstName.isEmpty() && !lastName.isEmpty()) {
-            try {
+        try {
+            if (!firstName.trim().isEmpty() && !lastName.trim().isEmpty()) {
                 List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, sex);
                 if (!students.isEmpty()) {
-                    student = students.get(0); // Take the first match
-                    firstNameField.setText(student.getStudentFirstname());
-                    lastNameField.setText(student.getStudentLastname());
-                    sexComboBox.setSelectedItem(student.getStudentSex());
-                    JOptionPane.showMessageDialog(this, "Student found using name and sex.", "Search Result",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    Student student = students.get(0);
+                    
+                    // Create participant from student
+                    Participants participant = new Participants();
+                    participant.setStudentUid(student.getStudentUid());
+                    participant.setParticipantType("Student");
+                    participant.setParticipantFirstName(student.getStudentFirstname());
+                    participant.setParticipantLastName(student.getStudentLastname());
+                    participant.setSex(student.getStudentSex());
+                    participant.setContactNumber(student.getContact() != null ? 
+                        student.getContact().getContactNumber() : null);
+
+                    // Save participant to database
+                    ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
+                    int participantId = participantsDAO.createParticipant(participant);
+                    participant.setParticipantId(participantId);
+                    
+                    // Add to participants list
+                    participantIds.add(participantId);
+
+                    // Populate fields
+                    studentFirstNameField.setText(student.getStudentFirstname());
+                    studentLastNameField.setText(student.getStudentLastname());
+                    studentSexComboBox.setSelectedItem(student.getStudentSex());
+                    studentLrnField.setText(student.getStudentLrn());
+                    
+                    JOptionPane.showMessageDialog(this, "Student found and added as participant!",
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(this, "No student found with the provided name and sex.",
-                            "Search Result", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "No student found with the provided details.",
+                            "Not Found", JOptionPane.WARNING_MESSAGE);
                 }
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error searching by name and sex: " + ex.getMessage(),
-                        "Search Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
             }
-        } else if (lrn.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter LRN or both first name and last name to search.",
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error searching student: " + ex.getMessage(),
                     "Search Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+    private void searchStudentByLrn(String lrn) {
+        StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+        try {
+            if (!lrn.trim().isEmpty()) {
+                Student student = studentsDataDAO.getStudentDataByLrn(lrn);
+                if (student != null) {
+                    // Create participant from student
+                    Participants participant = new Participants();
+                    participant.setStudentUid(student.getStudentUid());
+                    participant.setParticipantType("Student");
+                    participant.setParticipantFirstName(student.getStudentFirstname());
+                    participant.setParticipantLastName(student.getStudentLastname());
+                    participant.setSex(student.getStudentSex());
+                    participant.setContactNumber(student.getContact() != null ? 
+                        student.getContact().getContactNumber() : null);
+
+                    // Save participant to database
+                    ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
+                    int participantId = participantsDAO.createParticipant(participant);
+                    participant.setParticipantId(participantId);
+                    
+                    // Add to participants list
+                    participantIds.add(participantId);
+
+                    // Populate fields
+                    studentFirstNameField.setText(student.getStudentFirstname());
+                    studentLastNameField.setText(student.getStudentLastname());
+                    studentSexComboBox.setSelectedItem(student.getStudentSex());
+                    
+                    JOptionPane.showMessageDialog(this, "Student found and added as participant!",
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "No student found with the provided LRN.",
+                            "Not Found", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error searching by LRN: " + ex.getMessage(),
+                    "Search Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 
@@ -373,59 +465,123 @@ public class AddAppointmentPanel extends JPanel {
     }
 
     private void extractAndSaveParticipants() {
-        ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
-
+        // Clear previous list to avoid duplicates
+        participantIds.clear();
+        
         for (Component comp : participantsPanel.getComponents()) {
             if (comp instanceof JPanel) {
                 JPanel participantPanel = (JPanel) comp;
-                JPanel innerPanel = getVisibleParticipantPanel(participantPanel);
+                
+                // Get the type selection
+                String participantType = null;
+                for (Component c : participantPanel.getComponents()) {
+                    if (c instanceof JComboBox) {
+                        @SuppressWarnings("unchecked")
+                        JComboBox<String> typeBox = (JComboBox<String>) c;
+                        participantType = (String) typeBox.getSelectedItem();
+                        break;
+                    }
+                }
+                
+                // Skip if no type selected
+                if ("SELECT TYPE".equals(participantType)) {
+                    continue;
+                }
 
+                JPanel innerPanel = getVisibleParticipantPanel(participantPanel);
                 if (innerPanel != null) {
-                    Participants participant = createParticipantFromPanel(innerPanel);
+                    // For student panel, use existing participant ID
+                    if ("Student".equals(participantType)) {
+                        // Get the LRN field value
+                        String lrn = "";
+                        for (Component c : innerPanel.getComponents()) {
+                            if (c instanceof JTextField && 
+                                c.getParent().getComponent(0) instanceof JLabel && 
+                                ((JLabel)c.getParent().getComponent(0)).getText().equals("LRN:")) {
+                                lrn = ((JTextField)c).getText().trim();
+                                break;
+                            }
+                        }
+                        
+                        // Find existing participant ID for this student
+                        try {
+                            StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+                            ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
+                            
+                            Student student = studentsDataDAO.getStudentDataByLrn(lrn);
+                            if (student != null) {
+                                List<Participants> existingParticipants = participantsDAO.getParticipantByStudentUid(student.getStudentUid());
+                                if (!existingParticipants.isEmpty()) {
+                                    participantIds.add(existingParticipants.get(0).getParticipantId());
+                                    continue; // Skip creating new participant
+                                }
+                            }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    
+                    // For non-student or new student participant
                     try {
-                        participantsDAO.createParticipant(participant); // Save to DB and set participantId
-                        participantIds.add(participant.getParticipantId()); // Add to list
+                        Participants participant = createParticipantFromPanel(innerPanel, participantType);
+                        if (participant != null) {
+                            ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
+                            int participantId = participantsDAO.createParticipant(participant);
+                            participantIds.add(participantId);
+                        }
                     } catch (SQLException e) {
-                        JOptionPane.showMessageDialog(this, "Error saving participant: " + e.getMessage(),
-                                "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(this, 
+                            "Error saving participant: " + e.getMessage(),
+                            "Error", 
+                            JOptionPane.ERROR_MESSAGE);
                         e.printStackTrace();
-                        return; // Stop processing on error
                     }
                 }
             }
         }
     }
 
-    private Participants createParticipantFromPanel(JPanel panel) {
+    // Modified createParticipantFromPanel to include participant type
+    private Participants createParticipantFromPanel(JPanel panel, String participantType) {
         Participants participant = new Participants();
+        participant.setParticipantType(participantType);
+        
+        // Get rest of participant details
         for (Component comp : panel.getComponents()) {
             if (comp instanceof JLabel) {
                 JLabel label = (JLabel) comp;
-                int nextIndex = panel.getComponentZOrder(comp) + 1;
-                if (nextIndex < panel.getComponentCount()) {
-                    Component nextComponent = panel.getComponent(nextIndex);
-                    if (nextComponent instanceof JTextField) {
-                        JTextField field = (JTextField) nextComponent;
-                        String text = field.getText().trim();
-                        switch (label.getText()) {
-                            case "First Name:":
-                                participant.setParticipantFirstName(text);
-                                break;
-                            case "Last Name:":
-                                participant.setParticipantLastName(text);
-                                break;
-                            case "Contact Number:":
-                                participant.setContactNumber(text);
-                                break;
-                            case "Sex:":
-                                participant.setSex(text);
-                                break;
-                        }
-                    } else if (nextComponent instanceof JComboBox) {
-                        JComboBox<?> combo = (JComboBox<?>) nextComponent;
-                        if (label.getText().equals("Type:")) {
-                            participant.setParticipantType((String) combo.getSelectedItem());
-                        }
+                Component next = panel.getComponent(panel.getComponentZOrder(comp) + 1);
+                
+                if (next instanceof JTextField) {
+                    JTextField field = (JTextField) next;
+                    String text = field.getText().trim();
+                    switch (label.getText()) {
+                        case "First Name:":
+                            participant.setParticipantFirstName(text);
+                            break;
+                        case "Last Name:":
+                            participant.setParticipantLastName(text);
+                            break;
+                        case "Contact Number:":
+                            participant.setContactNumber(text);
+                            break;
+                        case "Sex:":
+                            participant.setSex(text);
+                            break;
+                        case "LRN:":
+                            // For student type, try to link with existing student
+                            if ("Student".equals(participantType)) {
+                                try {
+                                    StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
+                                    Student student = studentsDataDAO.getStudentDataByLrn(text);
+                                    if (student != null) {
+                                        participant.setStudentUid(student.getStudentUid());
+                                    }
+                                } catch (SQLException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            break;
                     }
                 }
             }
@@ -447,68 +603,151 @@ public class AddAppointmentPanel extends JPanel {
         return participantIds;
     }
 
-    public void validateInputs() {
+    public void validateInputs() throws IllegalArgumentException {
         StringBuilder errors = new StringBuilder();
 
         // Validate title
-        if (titleField.getText().trim().isEmpty()) {
-            errors.append("- Title is required.\n");
+        if (titleField.getText() == null || titleField.getText().trim().isEmpty()) {
+            errors.append("- Title is required\n");
+        } else if (titleField.getText().trim().length() < 3) {
+            errors.append("- Title must be at least 3 characters long\n");
         }
 
-        // Validate date
+        // Validate date and time
         if (datePicker.getSelectedDate() == null) {
-            errors.append("- Date is required.\n");
+            errors.append("- Date is required\n");
+        } else if (datePicker.getSelectedDate().isBefore(LocalDate.now())) {
+            errors.append("- Cannot schedule appointments in the past\n");
         }
 
-        // Validate time
         if (timePicker.getSelectedTime() == null) {
-            errors.append("- Time is required.\n");
+            errors.append("- Time is required\n");
+        }
+
+        // Validate future date/time combination
+        if (datePicker.getSelectedDate() != null && timePicker.getSelectedTime() != null) {
+            LocalDateTime selectedDateTime = LocalDateTime.of(
+                    datePicker.getSelectedDate(),
+                    timePicker.getSelectedTime());
+            if (selectedDateTime.isBefore(LocalDateTime.now())) {
+                errors.append("- Cannot schedule appointments in the past\n");
+            }
         }
 
         // Validate consultation type
-        if (typeComboBox.getSelectedItem() == null || typeComboBox.getSelectedItem().toString().trim().isEmpty()) {
-            errors.append("- Consultation type is required.\n");
+        if (typeComboBox.getSelectedItem() == null ||
+                typeComboBox.getSelectedItem().toString().equals("~Please Select~")) {
+            errors.append("- Consultation type must be selected\n");
+        }
+
+        // Validate status
+        if (statusComboBox.getSelectedItem() == null ||
+                statusComboBox.getSelectedItem().toString().equals("~Please Select~")) {
+            errors.append("- Status must be selected\n");
+        }
+
+        // Validate counselor assignment
+        if (appointment.getGuidanceCounselorId() == null ||
+                appointment.getGuidanceCounselorId() <= 0) {
+            errors.append("- A guidance counselor must be assigned\n");
         }
 
         // Validate participants
-        if (participantCount == 0) {
-            errors.append("- At least one participant is required.\n");
-        } else {
-            for (Component comp : participantsPanel.getComponents()) {
-                if (comp instanceof JPanel) {
-                    JPanel participantPanel = (JPanel) comp;
-                    JPanel innerPanel = getVisibleParticipantPanel(participantPanel);
+        boolean hasValidParticipant = false;
+        StringBuilder participantErrors = new StringBuilder();
 
-                    if (innerPanel != null) {
-                        boolean isValid = validateParticipantPanel(innerPanel);
-                        if (!isValid) {
-                            errors.append("- Invalid participant details.\n");
-                            break;
-                        }
+        for (Component comp : participantsPanel.getComponents()) {
+            if (comp instanceof JPanel) {
+                JPanel participantPanel = (JPanel) comp;
+                JPanel innerPanel = getVisibleParticipantPanel(participantPanel);
+
+                if (innerPanel != null) {
+                    try {
+                        validateParticipantPanel(innerPanel);
+                        hasValidParticipant = true;
+                    } catch (IllegalArgumentException e) {
+                        participantErrors.append("  ").append(e.getMessage()).append("\n");
                     }
                 }
             }
         }
-        // notes are not required
 
-        // Show errors if any
+        if (!hasValidParticipant) {
+            errors.append("- At least one valid participant is required\n");
+            if (participantErrors.length() > 0) {
+                errors.append("Participant validation errors:\n").append(participantErrors);
+            }
+        }
+
         if (errors.length() > 0) {
-            JOptionPane.showMessageDialog(this, "Please fix the following errors:\n" + errors.toString(),
-                    "Validation Errors", JOptionPane.ERROR_MESSAGE);
-            throw new IllegalArgumentException("Validation failed.");
+            throw new IllegalArgumentException("Please fix the following errors:\n" + errors.toString());
         }
     }
 
-    private boolean validateParticipantPanel(JPanel panel) {
-        for (Component comp : panel.getComponents()) {
-            if (comp instanceof JTextField) {
-                JTextField field = (JTextField) comp;
-                if (field.getText().trim().isEmpty()) {
-                    return false; // Empty field found
+    private void validateParticipantPanel(JPanel panel) throws IllegalArgumentException {
+        StringBuilder errors = new StringBuilder();
+
+        // Get the type selection from combo box
+        Component[] components = panel.getComponents();
+        for (Component comp : components) {
+            if (comp instanceof JComboBox) {
+                @SuppressWarnings("unchecked")
+                JComboBox<String> typeBox = (JComboBox<String>) comp;
+                if ("SELECT TYPE".equals(typeBox.getSelectedItem())) {
+                    errors.append("- Please select a participant type\n");
+                    break;
                 }
             }
         }
-        return true; // All fields are valid
+
+        String firstName = "";
+        String lastName = "";
+        String contact = "";
+        String sex = "";
+
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JLabel) {
+                JLabel label = (JLabel) comp;
+                Component next = panel.getComponent(panel.getComponentZOrder(comp) + 1);
+
+                if (next instanceof JTextField) {
+                    JTextField field = (JTextField) next;
+                    String value = field.getText().trim();
+
+                    switch (label.getText()) {
+                        case "First Name:":
+                            if (value.isEmpty())
+                                errors.append("- First name is required\n");
+                            else if (value.length() < 2)
+                                errors.append("- First name too short\n");
+                            firstName = value;
+                            break;
+                        case "Last Name:":
+                            if (value.isEmpty())
+                                errors.append("- Last name is required\n");
+                            else if (value.length() < 2)
+                                errors.append("- Last name too short\n");
+                            lastName = value;
+                            break;
+                        case "Contact Number:":
+                            if (!value.isEmpty() && !value.matches("\\d{11}")) {
+                                errors.append("- Invalid contact number format\n");
+                            }
+                            contact = value;
+                            break;
+                        case "Sex:":
+                            if (value.isEmpty())
+                                errors.append("- Sex is required\n");
+                            sex = value;
+                            break;
+                    }
+                }
+            }
+        }
+
+        if (errors.length() > 0) {
+            throw new IllegalArgumentException(errors.toString());
+        }
     }
 
     public boolean saveAppointment() {
@@ -536,6 +775,11 @@ public class AddAppointmentPanel extends JPanel {
             System.out.println("Notes: " + appointment.getAppointmentNotes());
             System.out.println("Participants: " + participantIds);
 
+            // Validate that we have at least one participant
+            if (participantIds.isEmpty()) {
+                throw new IllegalArgumentException("At least one participant is required");
+            }
+
             // Save the appointment using AppointmentDAO
             int generatedId = appointmentDao.insertAppointment(
                     appointment.getGuidanceCounselorId(),
@@ -549,16 +793,27 @@ public class AddAppointmentPanel extends JPanel {
             if (generatedId > 0) {
                 appointment.setAppointmentId(generatedId);
                 this.setConfirmed(true);
+                JOptionPane.showMessageDialog(this, 
+                    "Appointment saved successfully!", 
+                    "Success", 
+                    JOptionPane.INFORMATION_MESSAGE);
                 return true; // Successfully saved
             } else {
-                JOptionPane.showMessageDialog(this, "Failed to save the appointment.", "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to save the appointment.", 
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
             }
         } catch (IllegalArgumentException e) {
-            // Validation errors are already shown in validateInputs()
+            JOptionPane.showMessageDialog(this, 
+                "Validation Error: " + e.getMessage(),
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(), "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                "Database error: " + e.getMessage(), 
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
         return false; // Failed to save

@@ -9,6 +9,7 @@ C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\GFrame.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\LogoPanel.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\ModelColor.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\NotificationManager.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\PanelGradient.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\settings\SettingsManager.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\components\settings\SettingsState.java
@@ -51,6 +52,7 @@ C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\entity\ViolationRecord.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Database\SQLExceptionPane.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\Main.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\utils\CompileJasper.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\utils\DroppingFormGenerator.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\utils\GoodMoralGenerator.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\utils\IncidentReportGenerator.java
@@ -81,6 +83,7 @@ C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionRecords.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionSearchPanel.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionsForm.java
+C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\sessions\SessionsRecordData.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\SettingsPanel.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\students\create\AddressPanel.java
 C:\Users\Administrator\Documents\Main Projects\gomis\src\main\java\lyfjshs\gomis\view\students\create\GuardianPanel.java

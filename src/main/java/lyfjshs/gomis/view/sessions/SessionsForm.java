@@ -5,24 +5,18 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Window;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -34,7 +28,6 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import lyfjshs.gomis.Main;
@@ -57,14 +50,15 @@ import raven.datetime.TimePicker;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
 
-public class SessionsForm extends Form implements Printable {
+public class SessionsForm extends Form {
 	private JComboBox<String> violationField;
 	private JFormattedTextField timeField, dateField; // Declare the missing dateField
 	private JTextArea sessionSummaryArea, notesArea;
-	private JButton saveButton, printButton, searchStudentButton;
+	private JButton saveButton, searchStudentButton;
 	private JComboBox<String> participantsComboBox;
 	private JComboBox<String> consultationTypeComboBox;
 	private JComboBox<String> appointmentTypeComboBox;
+	private JComboBox<String> sessionStatusComboBox;
 	private Connection connect;
 	private JPanel mainPanel;
 	private JComboBox<String> sexCBox;
@@ -80,10 +74,12 @@ public class SessionsForm extends Form implements Printable {
 	private int tempIdCounter = -1;
 	private JButton searchBtn;
 	private Runnable saveCallback;
-	private JTextField customViolationField; 
+	private JTextField customViolationField;
 	private Integer selectedAppointmentId = null;
 	private DatePicker sessionDatePicker;
 	private TimePicker sessionTimePicker;
+	private Sessions currentSession;
+	private boolean isEditing = false;
 
 	// Violation type arrays
 	private String[] violations = { "Absence/Late", "Minor Property Damage", "Threatening/Intimidating",
@@ -146,6 +142,61 @@ public class SessionsForm extends Form implements Printable {
 		// Initialize recorded by field as JTextField
 		recordedByField = new JTextField();
 		recordedByField.setEditable(false); // Make it read-only
+
+		saveButton = new JButton("SAVE");
+		saveButton.setBackground(new Color(70, 130, 180));
+		saveButton.setForeground(Color.WHITE);
+		saveButton.setFocusPainted(false);
+		saveButton.addActionListener(e -> saveSessionToDatabase());
+
+		// Initialize session status combobox
+		sessionStatusComboBox = new JComboBox<>(new String[] { "Active", "Ended" });
+		sessionStatusComboBox.addActionListener(e -> {
+			String newStatus = (String) sessionStatusComboBox.getSelectedItem();
+			
+			if (isEditing && currentSession != null) {
+				String currentStatus = currentSession.getSessionStatus();
+				
+				// If changing from Active to Ended, keep save button enabled
+				if ("Active".equals(currentStatus) && "Ended".equals(newStatus)) {
+					saveButton.setEnabled(true);
+					saveButton.setText("Save Status Change");
+					return; // Don't disable components yet
+				}
+				
+				// If already Ended, disable everything
+				if ("Ended".equals(currentStatus)) {
+					notesArea.setEditable(false);
+					sessionSummaryArea.setEditable(false);
+					participantTable.setEnabled(false);
+					saveButton.setEnabled(false);
+					searchStudentButton.setEnabled(false);
+					violationField.setEnabled(false);
+					customViolationField.setEnabled(false);
+					participantsComboBox.setEnabled(false);
+					consultationTypeComboBox.setEnabled(false);
+					appointmentTypeComboBox.setEnabled(false);
+					searchBtn.setEnabled(false);
+					saveButton.setText("Session Ended");
+					return;
+				}
+			}
+			
+			// For Active status or new sessions
+			boolean isActive = "Active".equals(newStatus);
+			notesArea.setEditable(isActive);
+			sessionSummaryArea.setEditable(isActive);
+			participantTable.setEnabled(isActive);
+			saveButton.setEnabled(isActive);
+			searchStudentButton.setEnabled(isActive);
+			violationField.setEnabled(isActive);
+			customViolationField.setEnabled(isActive && "Others".equals(violationField.getSelectedItem()));
+			participantsComboBox.setEnabled(isActive);
+			consultationTypeComboBox.setEnabled(isActive);
+			appointmentTypeComboBox.setEnabled(isActive);
+			searchBtn.setEnabled(isActive);
+			saveButton.setText(isEditing ? "Update Session" : "SAVE");
+		});
 	}
 
 	private void toggleSearchStudentButton() {
@@ -179,7 +230,8 @@ public class SessionsForm extends Form implements Printable {
 				Map<String, String> details = new HashMap<>();
 				details.put("firstName", participant.getParticipantFirstName());
 				details.put("lastName", participant.getParticipantLastName());
-				details.put("fullName", participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
+				details.put("fullName",
+						participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
 				details.put("type", "Student");
 				details.put("contact", participant.getContactNumber());
 				details.put("sex", participant.getSex());
@@ -188,7 +240,8 @@ public class SessionsForm extends Form implements Printable {
 				// Add to table with row number and hidden tempId
 				int rowNumber = participantTableModel.getRowCount() + 1;
 				participantTableModel
-						.addRow(new Object[] { rowNumber, details.get("fullName"), "Student", "View | Remove", tempId });
+						.addRow(new Object[] { rowNumber, details.get("fullName"), "Student", "View | Remove",
+								tempId });
 
 				// Close the modal using the correct ID
 				ModalDialog.closeModal(modalId);
@@ -232,6 +285,7 @@ public class SessionsForm extends Form implements Printable {
 		pendingParticipants.clear();
 		tempIdCounter = -1; // Reset for next session
 		selectedAppointmentId = null;
+		sessionSummaryArea.setText("");
 	}
 
 	private void addParticipant() {
@@ -499,12 +553,6 @@ public class SessionsForm extends Form implements Printable {
 		JScrollPane summaryScrollPane = new JScrollPane(sessionSummaryArea);
 		mainPanel.add(summaryScrollPane, "cell 1 8 4 1,grow");
 
-		printButton = new JButton("PRINT");
-		printButton.setBackground(new Color(70, 130, 180));
-		printButton.setForeground(Color.WHITE);
-		printButton.setFocusPainted(false);
-		printButton.addActionListener(e -> printSessionDetails());
-
 		// Replace JComboBox with JTextField for Recorded By
 		mainPanel.remove(recordedByField);
 		JLabel recordedByLabel = new JLabel("Recorded By:");
@@ -512,9 +560,18 @@ public class SessionsForm extends Form implements Printable {
 		mainPanel.add(recordedByLabel, "flowx,cell 3 9");
 		mainPanel.add(recordedByField, "cell 3 9,growx");
 
-		// Buttons
-		mainPanel.add(printButton, "flowx,cell 4 9,growx");
-		mainPanel.add(saveButton, "cell 4 9,growx");
+		// Replace End Session button with status combobox
+		JPanel statusPanel = new JPanel(new MigLayout("", "[][grow]", "[]"));
+		JLabel statusLabel = new JLabel("Session Status:");
+		statusLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+		statusPanel.add(statusLabel, "cell 0 0");
+		statusPanel.add(sessionStatusComboBox, "cell 1 0,growx");
+		mainPanel.add(statusPanel, "cell 3 5,growx");
+
+		// Update button panel to only have save button
+		JPanel buttonPanel = new JPanel(new MigLayout("", "[]", "[]"));
+		buttonPanel.add(saveButton, "cell 0 0");
+		mainPanel.add(buttonPanel, "cell 4 9,growx");
 
 		consultationTypeComboBox = new JComboBox<>(new String[] { "Academic Consultation", "Career Guidance",
 				"Personal Consultation", "Behavioral Consultation", "Group Consultation" });
@@ -524,52 +581,6 @@ public class SessionsForm extends Form implements Printable {
 		mainPanel.add(appointmentTypeComboBox, "cell 3 3,growx");
 
 		searchBtn.addActionListener(e -> openAppointmentSearchDialog());
-	}
-
-	private void printSessionDetails() {
-		PrinterJob printerJob = PrinterJob.getPrinterJob();
-		printerJob.setPrintable(this);
-		if (printerJob.printDialog()) {
-			try {
-				printerJob.print();
-			} catch (PrinterException e) {
-				JOptionPane.showMessageDialog(this, "Printing Error: " + e.getMessage(), "Error",
-						JOptionPane.ERROR_MESSAGE);
-			}
-		}
-	}
-
-	@Override
-	public int print(Graphics g, PageFormat pf, int pageIndex) throws PrinterException {
-		if (pageIndex > 0) {
-			return NO_SUCH_PAGE;
-		}
-
-		// Calculate printable area
-		double width = pf.getImageableWidth();
-		double height = pf.getImageableHeight();
-
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.translate(pf.getImageableX(), pf.getImageableY());
-
-		// Scale to fit page
-		double scaleX = width / getWidth();
-		double scaleY = height / getHeight();
-		double scale = Math.min(scaleX, scaleY);
-		g2d.scale(scale, scale);
-
-		// Print the component
-		printAll(g2d);
-
-		return PAGE_EXISTS;
-	}
-
-	// Add this method to properly handle modal dialog disposal
-	private void closeDialog() {
-		Window window = SwingUtilities.getWindowAncestor(this);
-		if (window instanceof JDialog) {
-			((JDialog) window).dispose();
-		}
 	}
 
 	private void showParticipantDetails(int id) {
@@ -689,21 +700,29 @@ public class SessionsForm extends Form implements Printable {
 
 				if (appointment.getParticipants() != null) {
 					for (Participants participant : appointment.getParticipants()) {
-						// Store participant details with actual ID
+						// Store participant details with actual ID and correct type
 						Map<String, String> details = new HashMap<>();
 						details.put("firstName", participant.getParticipantFirstName());
 						details.put("lastName", participant.getParticipantLastName());
 						details.put("fullName",
 								participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
-						details.put("type", participant.getParticipantType());
+						// Explicitly set type based on StudentUID
+						String participantType = participant.getStudentUid() != null && participant.getStudentUid() > 0 ? 
+										  "Student" : "Non-Student";
+						details.put("type", participantType);
 						details.put("contact", participant.getContactNumber());
 						details.put("sex", participant.getSex());
 						participantDetails.put(participant.getParticipantId(), details);
 
 						// Add to table with row number and actual ID
 						int rowNumber = participantTableModel.getRowCount() + 1;
-						participantTableModel.addRow(new Object[] { rowNumber, details.get("fullName"),
-								participant.getParticipantType(), "View | Remove", participant.getParticipantId() });
+						participantTableModel.addRow(new Object[] { 
+							rowNumber, 
+							details.get("fullName"),
+							participantType, // Use correct type here
+							"View | Remove", 
+							participant.getParticipantId() 
+						});
 					}
 				}
 			}
@@ -724,94 +743,136 @@ public class SessionsForm extends Form implements Printable {
 				return;
 			}
 
-			// First create the session without violation records
+			// Get all form values
 			String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
 			String consultationType = (String) consultationTypeComboBox.getSelectedItem();
 			String violation = (String) violationField.getSelectedItem();
 			String notes = notesArea.getText();
+			String summary = sessionSummaryArea.getText().trim();
+			String sessionStatus = (String) sessionStatusComboBox.getSelectedItem();
+
+			// Validate summary
+			if (summary.isEmpty()) {
+				JOptionPane.showMessageDialog(this,
+						"Please enter a session summary.",
+						"Missing Information",
+						JOptionPane.WARNING_MESSAGE);
+				sessionSummaryArea.requestFocus();
+				return;
+			}
 
 			Integer appointmentId = "Walk-in".equals(appointmentType) ? null : selectedAppointmentId;
-
 			String violationText = "Others".equals(violation) ? customViolationField.getText().trim() : violation;
 
-			// Validate custom violation text
+			// Validate custom violation text if "Others" is selected
 			if ("Others".equals(violation) && (violationText == null || violationText.trim().isEmpty())) {
 				JOptionPane.showMessageDialog(this,
 						"Please enter a custom violation type.",
 						"Missing Information",
 						JOptionPane.WARNING_MESSAGE);
+				customViolationField.requestFocus();
 				return;
 			}
 
-			Sessions session = new Sessions(0, appointmentId, guidanceCounselorId, null, appointmentType,
-					consultationType, new java.sql.Timestamp(System.currentTimeMillis()), notes, "Active",
-					new java.sql.Timestamp(System.currentTimeMillis()));
+			if (isEditing && currentSession != null) {
+				// Update existing session
+				currentSession.setAppointmentType(appointmentType);
+				currentSession.setConsultationType(consultationType);
+				currentSession.setSessionDateTime(parseDateTime());
+				currentSession.setSessionNotes(notes);
+				currentSession.setSessionSummary(summary); // Always save the summary
+				currentSession.setSessionStatus(sessionStatus);
 
-			SessionsDAO sessionsDAO = new SessionsDAO(connect);
-			int sessionId = sessionsDAO.addSession(session);
+				SessionsDAO sessionsDAO = new SessionsDAO(connect);
+				sessionsDAO.updateSession(currentSession);
 
-			if (sessionId > 0) {
-				ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
-				// Map to track temporary IDs to real database IDs
-				Map<Integer, Integer> idMapping = new HashMap<>();
-
-				// Process all participants in the table
-				for (int i = 0; i < participantTableModel.getRowCount(); i++) {
-					int id = (int) participantTableModel.getValueAt(i, 4); // Get ID from hidden column
-
-					if (id < 0) {
-						// New participant with temporary ID
-						Participants participant = pendingParticipants.get(id);
-						int realId = participantsDAO.createParticipant(participant); // Save to DB, get actual ID
-						sessionsDAO.addParticipantToSession(sessionId, realId);
-						idMapping.put(id, realId); // Store mapping from temp ID to real ID
-					} else {
-						// Existing participant with actual ID
-						sessionsDAO.addParticipantToSession(sessionId, id);
-						idMapping.put(id, id); // Map ID to itself for consistency
-					}
+				// If session was just ended, update UI
+				if ("Active".equals(currentSession.getSessionStatus()) && "Ended".equals(sessionStatus)) {
+					currentSession.setSessionStatus("Ended");
+					notesArea.setEditable(false);
+					sessionSummaryArea.setEditable(false);
+					participantTable.setEnabled(false);
+					saveButton.setEnabled(false);
+					searchStudentButton.setEnabled(false);
+					violationField.setEnabled(false);
+					customViolationField.setEnabled(false);
+					participantsComboBox.setEnabled(false);
+					consultationTypeComboBox.setEnabled(false);
+					appointmentTypeComboBox.setEnabled(false);
+					searchBtn.setEnabled(false);
+					saveButton.setText("Session Ended");
 				}
 
-				// NOW create violation records if there's a violation, using real participant
-				// IDs
-				if (violation != null && !violation.equals("-- Select Violation --")) {
-					ViolationCRUD violationCRUD = new ViolationCRUD(connect);
-
-					// For each participant, create a violation record using real IDs
-					for (int i = 0; i < participantTableModel.getRowCount(); i++) {
-						int tempId = (int) participantTableModel.getValueAt(i, 4);
-						int realParticipantId = idMapping.get(tempId); // Get the real ID from our mapping
-
-						// Create violation record with real participant ID
-						boolean success = violationCRUD.addViolation(
-								realParticipantId,
-								violationText, // Use custom text if "Others" is selected
-								violationText, // Use custom text as description
-								sessionSummaryArea.getText(), // Use session summary as anecdotal record
-								notesArea.getText(), // Use notes as reinforcement
-								"Active",
-								new java.sql.Timestamp(System.currentTimeMillis()));
-
-						if (!success) {
-							throw new Exception(
-									"Failed to save violation record for participant ID: " + realParticipantId);
-						}
-					}
-				}
-
-				JOptionPane.showMessageDialog(this, "Session and participants saved successfully!", "Success",
+				JOptionPane.showMessageDialog(this, "Session updated successfully!", "Success",
 						JOptionPane.INFORMATION_MESSAGE);
-
-				// Refresh violation records if they exist in the system
-				refreshViolationRecords();
 
 				if (saveCallback != null) {
 					saveCallback.run();
 				}
-
-				clearFields();
 			} else {
-				JOptionPane.showMessageDialog(this, "Failed to save session.", "Error", JOptionPane.ERROR_MESSAGE);
+				// Create new session with summary
+				Sessions session = new Sessions(0, appointmentId, guidanceCounselorId, null, appointmentType,
+						consultationType, parseDateTime(), notes, summary, sessionStatus,
+						new java.sql.Timestamp(System.currentTimeMillis()));
+
+				SessionsDAO sessionsDAO = new SessionsDAO(connect);
+				int sessionId = sessionsDAO.addSession(session);
+
+				if (sessionId > 0) {
+					// Process participants
+					ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
+					Map<Integer, Integer> idMapping = new HashMap<>();
+
+					for (int i = 0; i < participantTableModel.getRowCount(); i++) {
+						int id = (int) participantTableModel.getValueAt(i, 4);
+
+						if (id < 0) {
+							Participants participant = pendingParticipants.get(id);
+							int realId = participantsDAO.createParticipant(participant);
+							sessionsDAO.addParticipantToSession(sessionId, realId);
+							idMapping.put(id, realId);
+						} else {
+							sessionsDAO.addParticipantToSession(sessionId, id);
+							idMapping.put(id, id);
+						}
+					}
+
+					// Create violation records if applicable
+					if (violation != null && !violation.equals("-- Select Violation --")) {
+						ViolationCRUD violationCRUD = new ViolationCRUD(connect);
+
+						for (int i = 0; i < participantTableModel.getRowCount(); i++) {
+							int tempId = (int) participantTableModel.getValueAt(i, 4);
+							int realParticipantId = idMapping.get(tempId);
+
+							boolean success = violationCRUD.addViolation(
+									realParticipantId,
+									violationText,
+									violationText,
+									summary, // Use session summary for anecdotal record
+									notes,
+									"Active",
+									new java.sql.Timestamp(System.currentTimeMillis()));
+
+							if (!success) {
+								throw new Exception("Failed to save violation record for participant ID: " + realParticipantId);
+							}
+						}
+					}
+
+					JOptionPane.showMessageDialog(this, "Session and participants saved successfully!", "Success",
+							JOptionPane.INFORMATION_MESSAGE);
+
+					refreshViolationRecords();
+
+					if (saveCallback != null) {
+						saveCallback.run();
+					}
+
+					clearFields();
+				} else {
+					JOptionPane.showMessageDialog(this, "Failed to save session.", "Error", JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error",
@@ -855,6 +916,93 @@ public class SessionsForm extends Form implements Printable {
 			if (appointment.getAppointmentNotes() != null) {
 				notesArea.setText(appointment.getAppointmentNotes());
 			}
+		}
+	}
+
+	public void setEditingSession(Sessions session) {
+		this.currentSession = session;
+		this.isEditing = true;
+		populateFormFromSession(session);
+	}
+
+	private void populateFormFromSession(Sessions session) {
+		try {
+			// Set appointment type and consultation type
+			appointmentTypeComboBox.setSelectedItem(session.getAppointmentType());
+			consultationTypeComboBox.setSelectedItem(session.getConsultationType());
+
+			// Set date and time
+			if (session.getSessionDateTime() != null) {
+				java.time.LocalDateTime dateTime = session.getSessionDateTime().toLocalDateTime();
+				sessionDatePicker.setSelectedDate(dateTime.toLocalDate());
+				sessionTimePicker.setSelectedTime(dateTime.toLocalTime());
+			}
+
+			// Set notes and summary
+			notesArea.setText(session.getSessionNotes());
+			sessionSummaryArea.setText(session.getSessionSummary());
+
+			// Populate participants
+			ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
+			List<Participants> participants = participantsDAO.getParticipantsBySessionId(session.getSessionId());
+			
+			participantTableModel.setRowCount(0);
+			for (Participants participant : participants) {
+				Map<String, String> details = new HashMap<>();
+				details.put("firstName", participant.getParticipantFirstName());
+				details.put("lastName", participant.getParticipantLastName());
+				details.put("fullName", participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
+				details.put("type", participant.getParticipantType());
+				details.put("contact", participant.getContactNumber());
+				details.put("sex", participant.getSex());
+				participantDetails.put(participant.getParticipantId(), details);
+
+				int rowNumber = participantTableModel.getRowCount() + 1;
+				participantTableModel.addRow(new Object[] {
+					rowNumber,
+					details.get("fullName"),
+					participant.getParticipantType(),
+					"View | Remove",
+					participant.getParticipantId()
+				});
+			}
+
+			// Set session status and update UI state
+			sessionStatusComboBox.setSelectedItem(session.getSessionStatus());
+			boolean isActive = "Active".equals(session.getSessionStatus());
+
+			// Enable/disable components based on status
+			notesArea.setEditable(isActive);
+			sessionSummaryArea.setEditable(isActive);
+			participantTable.setEnabled(isActive);
+			saveButton.setEnabled(isActive);
+			searchStudentButton.setEnabled(isActive);
+			violationField.setEnabled(isActive);
+			customViolationField.setEnabled(isActive && "Others".equals(violationField.getSelectedItem()));
+			participantsComboBox.setEnabled(isActive);
+			consultationTypeComboBox.setEnabled(isActive);
+			appointmentTypeComboBox.setEnabled(isActive);
+			searchBtn.setEnabled(isActive);
+
+			// Update button text
+			saveButton.setText(isActive ? "Update Session" : "Session Ended");
+
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(this, "Error loading session data: " + e.getMessage(), "Error",
+					JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private java.sql.Timestamp parseDateTime() {
+		try {
+			LocalDate date = sessionDatePicker.getSelectedDate();
+			LocalTime time = sessionTimePicker.getSelectedTime();
+			if (date != null && time != null) {
+				return java.sql.Timestamp.valueOf(date.atTime(time));
+			}
+			return new java.sql.Timestamp(System.currentTimeMillis());
+		} catch (Exception e) {
+			return new java.sql.Timestamp(System.currentTimeMillis());
 		}
 	}
 }

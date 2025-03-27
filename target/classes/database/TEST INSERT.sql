@@ -147,33 +147,35 @@ VALUES
 ON DUPLICATE KEY UPDATE SF_SCHOOL_NAME = VALUES(SF_SCHOOL_NAME);
 
 
--- Insert sample data into STUDENT table (updated to use SF_ID)
+-- Insert sample data into STUDENT table (updated to allow multiple students per SF_ID)
 INSERT INTO STUDENT (STUDENT_UID, PARENT_ID, GUARDIAN_ID, ADDRESS_ID, CONTACT_ID, SF_ID, STUDENT_LRN, STUDENT_LASTNAME, STUDENT_FIRSTNAME, STUDENT_MIDDLENAME, STUDENT_SEX, STUDENT_BIRTHDATE, STUDENT_MOTHERTONGUE, STUDENT_AGE, STUDENT_IP_TYPE, STUDENT_RELIGION)
 VALUES
-(1, 1, 1, 1, 1, 1, 'LRN123', 'Doe', 'Jane', 'C', 'Female', '2005-01-01', 'English', 18, 'Type A', 'Christian'),
-(2, 2, 2, 2, 2, 2, 'LRN234', 'Smith', 'Alice', 'B', 'Female', '2006-02-02', 'English', 17, 'Type B', 'Christian'),
-(3, 3, 3, 3, 3, 3, 'LRN345', 'Johnson', 'Bob', 'C', 'Male', '2007-03-03', 'English', 16, 'Type C', 'Christian'),
-(4, 4, 4, 4, 4, 4, 'LRN456', 'Williams', 'Charlie', 'D', 'Female', '2008-04-04', 'English', 15, 'Type D', 'Christian'),
-(5, 5, 5, 5, 5, 5, 'LRN567', 'Brown', 'Daisy', 'E', 'Female', '2009-05-05', 'English', 14, 'Type E', 'Christian'),
-(6, 6, 6, 6, 6, 6, 'LRN678', 'Jones', 'Eve', 'F', 'Male', '2010-06-06', 'English', 13, 'Type F', 'Christian'),
-(7, 7, 7, 7, 7, 7, 'LRN789', 'Garcia', 'Frank', 'G', 'Male', '2011-07-07', 'English', 12, 'Type G', 'Christian'),
-(8, 8, 8, 8, 8, 8, 'LRN890', 'Miller', 'Grace', 'H', 'Female', '2012-08-08', 'English', 11, 'Type H', 'Christian'),
-(9, 9, 9, 9, 9, 9, 'LRN901', 'Davis', 'Heidi', 'I', 'Female', '2013-09-09', 'English', 10, 'Type I', 'Christian'),
-(10, 10, 10, 10, 10, 10, 'LRN012', 'Rodriguez', 'Ivy', 'J', 'Male', '2014-10-10', 'English', 9, 'Type J', 'Christian'),
-(11, 11, 11, 11, 11, 11, 'LRN123', 'Martinez', 'Jack', 'K', 'Male', '2015-11-11', 'English', 8, 'Type K', 'Christian'),
-(12, 12, 12, 12, 12, 12, 'LRN234', 'Hernandez', 'Kate', 'L', 'Female', '2016-12-12', 'English', 7, 'Type L', 'Christian'),
-(13, 13, 13, 13, 13, 13, 'LRN345', 'Lopez', 'Leo', 'M', 'Male', '2017-01-01', 'English', 6, 'Type M', 'Christian'),
-(14, 14, 14, 14, 14, 14, 'LRN456', 'Gonzalez', 'Mia', 'N', 'Female', '2018-02-02', 'English', 5, 'Type N', 'Christian'),
-(15, 15, 15, 15, 15, 15, 'LRN567', 'Wilson', 'Nina', 'O', 'Female', '2019-03-03', 'English', 4, 'Type O', 'Christian'),
-(16, 16, 16, 16, 16, 16, 'LRN678', 'Anderson', 'Oscar', 'P', 'Male', '2020-04-04', 'English', 3, 'Type P', 'Christian'),
-(17, 17, 17, 17, 17, 17, 'LRN789', 'Thomas', 'Peter', 'Q', 'Male', '2021-05-05', 'English', 2, 'Type Q', 'Christian'),
-(18, 18, 18, 18, 18, 18, 'LRN890', 'Moore', 'Quinn', 'R', 'Female', '2022-06-06', 'English', 1, 'Type R', 'Christian'),
-(19, 19, 19, 19, 19, 19, 'LRN901', 'Taylor', 'Rachel', 'S', 'Female', '2023-07-07', 'English', 0, 'Type S', 'Christian'),
-(20, 20, 20, 20, 20, 20, 'LRN012', 'Martin', 'Sam', 'T', 'Male', '2024-08-08', 'English', 18, 'Type T', 'Christian'),
-(21, 21, 21, 21, 21, 21, 'LRN123', 'Lee', 'Tina', 'U', 'Female', '2025-09-09', 'English', 18, 'Type U', 'Christian')
+(1, 1, 1, 1, 1, 1, 'LRN123', 'Doe', 'Jane', 'C', 'Female', '2005-01-01', 'English', 18, 'Type A', 'Christian'), -- SF_ID = 1
+(2, 2, 2, 2, 2, 1, 'LRN234', 'Smith', 'Alice', 'B', 'Female', '2006-02-02', 'English', 17, 'Type B', 'Christian'), -- SF_ID = 1
+(3, 3, 3, 3, 3, 1, 'LRN345', 'Johnson', 'Bob', 'C', 'Male', '2007-03-03', 'English', 16, 'Type C', 'Christian'), -- SF_ID = 1
+(4, 4, 4, 4, 4, 2, 'LRN456', 'Williams', 'Charlie', 'D', 'Female', '2008-04-04', 'English', 15, 'Type D', 'Christian'), -- SF_ID = 2
+(5, 5, 5, 5, 5, 2, 'LRN567', 'Brown', 'Daisy', 'E', 'Female', '2009-05-05', 'English', 14, 'Type E', 'Christian'), -- SF_ID = 2
+(6, 6, 6, 6, 6, 3, 'LRN678', 'Jones', 'Eve', 'F', 'Male', '2010-06-06', 'English', 13, 'Type F', 'Christian'), -- SF_ID = 3
+(7, 7, 7, 7, 7, 3, 'LRN789', 'Garcia', 'Frank', 'G', 'Male', '2011-07-07', 'English', 12, 'Type G', 'Christian'), -- SF_ID = 3
+(8, 8, 8, 8, 8, 4, 'LRN890', 'Miller', 'Grace', 'H', 'Female', '2012-08-08', 'English', 11, 'Type H', 'Christian'), -- SF_ID = 4
+(9, 9, 9, 9, 9, 4, 'LRN901', 'Davis', 'Heidi', 'I', 'Female', '2013-09-09', 'English', 10, 'Type I', 'Christian'), -- SF_ID = 4
+(10, 10, 10, 10, 10, 5, 'LRN012', 'Rodriguez', 'Ivy', 'J', 'Male', '2014-10-10', 'English', 9, 'Type J', 'Christian'), -- SF_ID = 5
+(11, 11, 11, 11, 11, 5, 'LRN123', 'Martinez', 'Jack', 'K', 'Male', '2015-11-11', 'English', 8, 'Type K', 'Christian'), -- SF_ID = 5
+(12, 12, 12, 12, 12, 6, 'LRN234', 'Hernandez', 'Kate', 'L', 'Female', '2016-12-12', 'English', 7, 'Type L', 'Christian'), -- SF_ID = 6
+(13, 13, 13, 13, 13, 6, 'LRN345', 'Lopez', 'Leo', 'M', 'Male', '2017-01-01', 'English', 6, 'Type M', 'Christian'), -- SF_ID = 6
+(14, 14, 14, 14, 14, 7, 'LRN456', 'Gonzalez', 'Mia', 'N', 'Female', '2018-02-02', 'English', 5, 'Type N', 'Christian'), -- SF_ID = 7
+(15, 15, 15, 15, 15, 7, 'LRN567', 'Wilson', 'Nina', 'O', 'Female', '2019-03-03', 'English', 4, 'Type O', 'Christian'), -- SF_ID = 7
+(16, 16, 16, 16, 16, 8, 'LRN678', 'Anderson', 'Oscar', 'P', 'Male', '2020-04-04', 'English', 3, 'Type P', 'Christian'), -- SF_ID = 8
+(17, 17, 17, 17, 17, 8, 'LRN789', 'Thomas', 'Peter', 'Q', 'Male', '2021-05-05', 'English', 2, 'Type Q', 'Christian'), -- SF_ID = 8
+(18, 18, 18, 18, 18, 9, 'LRN890', 'Moore', 'Quinn', 'R', 'Female', '2022-06-06', 'English', 1, 'Type R', 'Christian'), -- SF_ID = 9
+(19, 19, 19, 19, 19, 9, 'LRN901', 'Taylor', 'Rachel', 'S', 'Female', '2023-07-07', 'English', 0, 'Type S', 'Christian'), -- SF_ID = 9
+(20, 20, 20, 20, 20, 10, 'LRN012', 'Martin', 'Sam', 'T', 'Male', '2024-08-08', 'English', 18, 'Type T', 'Christian'), -- SF_ID = 10
+(21, 21, 21, 21, 21, 10, 'LRN123', 'Lee', 'Tina', 'U', 'Female', '2025-09-09', 'English', 18, 'Type U', 'Christian') -- SF_ID = 10
 ON DUPLICATE KEY UPDATE STUDENT_LASTNAME = VALUES(STUDENT_LASTNAME);
 
-
+SELECT SF_ID, COUNT(STUDENT_UID) AS student_count
+FROM STUDENT
+GROUP BY SF_ID;
 
 -- Insert Student Participant
 INSERT INTO PARTICIPANTS (PARTICIPANT_ID, STUDENT_UID, PARTICIPANT_TYPE, PARTICIPANT_LASTNAME, PARTICIPANT_FIRSTNAME, PARTICIPANT_SEX, CONTACT_NUMBER)

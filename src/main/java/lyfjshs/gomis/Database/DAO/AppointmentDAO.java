@@ -337,4 +337,21 @@ public class AppointmentDAO {
                 rs.getTimestamp("APPOINTMENT_DATE_TIME"), rs.getString("appointment_status"),
                 rs.getString("appointment_notes"), rs.getTimestamp("updated_at"));
     }
+
+    // Get today's appointments
+    public List<Appointment> getTodayAppointments() throws SQLException {
+        List<Appointment> appointments = new ArrayList<>();
+        String sql = "SELECT * FROM APPOINTMENTS WHERE DATE(APPOINTMENT_DATE_TIME) = CURDATE() " +
+                    "AND APPOINTMENT_STATUS = 'Active' ORDER BY APPOINTMENT_DATE_TIME";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                Appointment appointment = mapResultSetToAppointment(rs);
+                appointments.add(appointment);
+            }
+        }
+        return appointments;
+    }
 }

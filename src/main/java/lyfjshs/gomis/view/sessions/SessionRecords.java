@@ -212,7 +212,7 @@ public class SessionRecords extends Form {
             }
 
             // Create session details panel
-            sessionFullDataPanel = new SessionFullData(session, counselor, participants);
+            sessionFullDataPanel = new SessionFullData(session, counselor, participants, connection);
             slidePane.addSlide(sessionFullDataPanel, SlidePaneTransition.Type.FORWARD);
             
         } catch (Exception e) {

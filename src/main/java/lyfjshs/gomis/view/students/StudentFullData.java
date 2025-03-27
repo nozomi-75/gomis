@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagLayout;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -23,7 +24,6 @@ import javax.swing.table.DefaultTableModel;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
-import lyfjshs.gomis.Database.DAO.SchoolFormDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.DAO.ViolationCRUD;
 import lyfjshs.gomis.Database.entity.Address;
@@ -31,12 +31,15 @@ import lyfjshs.gomis.Database.entity.Contact;
 import lyfjshs.gomis.Database.entity.Guardian;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Parents;
+import lyfjshs.gomis.Database.entity.SchoolForm;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
 import lyfjshs.gomis.utils.GoodMoralGenerator;
+import lyfjshs.gomis.view.students.StudentMangementGUI;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
@@ -77,6 +80,17 @@ public class StudentFullData extends Form {
 	private FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.5f);
 	private JPanel noViolationPanel;
 	private JPanel containerPanel; // Add this field
+	private JTextField schoolNameField;
+	private JTextField schoolIdField;
+	private JTextField districtField;
+	private JTextField divisionField;
+	private JTextField schoolRegionField;
+	private JTextField semesterField;
+	private JTextField schoolYearField;
+	private JTextField gradeLevelField;
+	private JTextField sectionField;
+	private JTextField trackField;
+	private JTextField courseField;
 
 	public StudentFullData(Connection connection, Student studentData) {
 		this.setLayout(new MigLayout("", "[][grow][]", "[][]"));
@@ -272,6 +286,22 @@ public class StudentFullData extends Form {
 				guardianEmailField.setText(nullToEmpty(guardian.getGuardianRelationship()));
 			}
 
+			// School Form
+			SchoolForm schoolForm = studentData.getSchoolForm();
+			if (schoolForm != null) {
+				schoolNameField.setText(nullToEmpty(schoolForm.getSF_SCHOOL_NAME()));
+				schoolIdField.setText(nullToEmpty(schoolForm.getSF_SCHOOL_ID()));
+				districtField.setText(nullToEmpty(schoolForm.getSF_DISTRICT()));
+				divisionField.setText(nullToEmpty(schoolForm.getSF_DIVISION()));
+				schoolRegionField.setText(nullToEmpty(schoolForm.getSF_REGION()));
+				semesterField.setText(nullToEmpty(schoolForm.getSF_SEMESTER()));
+				schoolYearField.setText(nullToEmpty(schoolForm.getSF_SCHOOL_YEAR()));
+				gradeLevelField.setText(nullToEmpty(schoolForm.getSF_GRADE_LEVEL()));
+				sectionField.setText(nullToEmpty(schoolForm.getSF_SECTION()));
+				trackField.setText(nullToEmpty(schoolForm.getSF_TRACK_AND_STRAND()));
+				courseField.setText(nullToEmpty(schoolForm.getSF_COURSE()));
+			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Error setting student data: " + e.getMessage());
@@ -285,13 +315,14 @@ public class StudentFullData extends Form {
 	private void setupMainPanel(Student student) {
 		// Add components to the panel
 		JPanel mainPanel = new JPanel(
-				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow,fill][250px]"));
+				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow,fill][grow,fill][grow,fill][250px]"));
 		JScrollPane scroll = new JScrollPane(mainPanel);
 
 		mainPanel.add(createPersonalInfoPanel(), "cell 0 0 2 1,grow");
 		mainPanel.add(createParentPanel(), "cell 0 1 2 1,grow");
-		mainPanel.add(createGuardianPanel(), "cell 0 2,grow");
-		mainPanel.add(createViolationTablePanel(), "cell 1 2,grow");
+		mainPanel.add(createGuardianPanel(), "cell 0 2 2 1,grow");
+		mainPanel.add(createSchoolFormPanel(), "cell 0 3 2 1,grow");
+		mainPanel.add(createViolationTablePanel(), "cell 0 4 2 1,grow");
 
 		add(scroll, "cell 1 0,grow");
 
@@ -412,6 +443,89 @@ public class StudentFullData extends Form {
 		return parentPanel;
 	}
 
+	private JPanel createSchoolFormPanel() {
+		JPanel schoolFormPanel = new JPanel(new MigLayout("wrap 4", "[][grow]15[][grow]", "[]5[]5[]5[]5[]5[]"));
+		schoolFormPanel.setBorder(
+				new TitledBorder(null, "SCHOOL FORM INFORMATION", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		// Initialize text fields if not already done
+		if (schoolNameField == null) {
+			schoolNameField = new JTextField();
+			schoolNameField.setEditable(false);
+		}
+		if (schoolIdField == null) {
+			schoolIdField = new JTextField();
+			schoolIdField.setEditable(false);
+		}
+		if (districtField == null) {
+			districtField = new JTextField();
+			districtField.setEditable(false);
+		}
+		if (divisionField == null) {
+			divisionField = new JTextField();
+			divisionField.setEditable(false);
+		}
+		if (schoolRegionField == null) {
+			schoolRegionField = new JTextField();
+			schoolRegionField.setEditable(false);
+		}
+		if (semesterField == null) {
+			semesterField = new JTextField();
+			semesterField.setEditable(false);
+		}
+		if (schoolYearField == null) {
+			schoolYearField = new JTextField();
+			schoolYearField.setEditable(false);
+		}
+		if (gradeLevelField == null) {
+			gradeLevelField = new JTextField();
+			gradeLevelField.setEditable(false);
+		}
+		if (sectionField == null) {
+			sectionField = new JTextField();
+			sectionField.setEditable(false);
+		}
+		if (trackField == null) {
+			trackField = new JTextField();
+			trackField.setEditable(false);
+		}
+		if (courseField == null) {
+			courseField = new JTextField();
+			courseField.setEditable(false);
+		}
+
+		// Add components to panel
+		schoolFormPanel.add(new JLabel("School Name:"), "cell 0 0");
+		schoolFormPanel.add(schoolNameField, "cell 1 0,growx");
+		schoolFormPanel.add(new JLabel("School ID:"), "cell 2 0");
+		schoolFormPanel.add(schoolIdField, "cell 3 0,growx");
+
+		schoolFormPanel.add(new JLabel("District:"), "cell 0 1");
+		schoolFormPanel.add(districtField, "cell 1 1,growx");
+		schoolFormPanel.add(new JLabel("Division:"), "cell 2 1");
+		schoolFormPanel.add(divisionField, "cell 3 1,growx");
+
+		schoolFormPanel.add(new JLabel("Region:"), "cell 0 2");
+		schoolFormPanel.add(schoolRegionField, "cell 1 2,growx");
+		schoolFormPanel.add(new JLabel("Semester:"), "cell 2 2");
+		schoolFormPanel.add(semesterField, "cell 3 2,growx");
+
+		schoolFormPanel.add(new JLabel("School Year:"), "cell 0 3");
+		schoolFormPanel.add(schoolYearField, "cell 1 3,growx");
+		schoolFormPanel.add(new JLabel("Grade Level:"), "cell 2 3");
+		schoolFormPanel.add(gradeLevelField, "cell 3 3,growx");
+
+		schoolFormPanel.add(new JLabel("Section:"), "cell 0 4");
+		schoolFormPanel.add(sectionField, "cell 1 4,growx");
+		schoolFormPanel.add(new JLabel("Track & Strand:"), "cell 2 4");
+		schoolFormPanel.add(trackField, "cell 3 4,growx");
+
+		schoolFormPanel.add(new JLabel("Course:"), "cell 0 5");
+		schoolFormPanel.add(courseField, "cell 1 5 3 1,growx");
+
+		return schoolFormPanel;
+	}
+
 	private JPanel createViolationTablePanel() {
 		JPanel violationTablePanel = new JPanel(new BorderLayout());
 		violationTablePanel.setBorder(new TitledBorder(
@@ -474,6 +588,13 @@ public class StudentFullData extends Form {
 	private void viewViolation(int row) {
 		ViolationRecord violation = (ViolationRecord) violationTable.getClientProperty("violation_" + row);
 		if (violation != null) {
+			String modalId = "violation_details_" + violation.getViolationId();
+			
+			// Check if modal is already open
+			if (ModalDialog.isIdExist(modalId)) {
+				return;
+			}
+
 			JPanel violationDetailsPanel = new JPanel(new MigLayout("wrap 2", "[][grow]", "[]10[]10[]10[]10[]"));
 			violationDetailsPanel.add(new JLabel("Violation Type:"), "");
 			violationDetailsPanel.add(new JLabel(violation.getViolationType()), "growx");
@@ -486,12 +607,29 @@ public class StudentFullData extends Form {
 			violationDetailsPanel.add(new JLabel("Status:"), "");
 			violationDetailsPanel.add(new JLabel(violation.getStatus()), "growx");
 
+			// Configure modal options
+			ModalDialog.getDefaultOption()
+				.setOpacity(0f)
+				.setAnimationOnClose(false)
+				.getBorderOption()
+				.setBorderWidth(0.5f)
+				.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+
+			// Show modal with unique ID
 			ModalDialog.showModal(this,
 					new SimpleModalBorder(violationDetailsPanel, "Violation Details",
 							new SimpleModalBorder.Option[] {
 									new SimpleModalBorder.Option("Close", SimpleModalBorder.CANCEL_OPTION) },
-							(controller, action) -> controller.close()),
-					"violationDetails");
+							(controller, action) -> {
+								if (action == SimpleModalBorder.CANCEL_OPTION || 
+									action == SimpleModalBorder.CLOSE_OPTION) {
+									controller.close();
+								}
+							}),
+					modalId);
+
+			// Set size for the modal
+			ModalDialog.getDefaultOption().getLayoutOption().setSize(600, 400);
 		}
 	}
 
@@ -523,9 +661,10 @@ public class StudentFullData extends Form {
 			StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connect);
 			Student student = studentsDataDAO.getStudentDataByLrn(lrnField.getText());
 
-			// Fetch school form data
-			SchoolFormDAO schoolFormDAO = new SchoolFormDAO(connect);
-			String trackAndStrand = schoolFormDAO.getSchoolFormById(student.getStudentUid()).getSF_TRACK_AND_STRAND();
+			if (student == null) {
+				JOptionPane.showMessageDialog(this, "Student not found.", "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
 
 			// Fetch guidance counselor data
 			GuidanceCounselorDAO guidanceCounselorDAO = new GuidanceCounselorDAO(connect);
@@ -534,24 +673,77 @@ public class StudentFullData extends Form {
 			// Create a modal dialog for dropping a student
 			DroppingForm droppingForm = new DroppingForm(connect, student, counselor);
 
+			String modalId = "drop_student_" + student.getStudentUid();
+			
+			// Check if modal is already open
+			if (ModalDialog.isIdExist(modalId)) {
+				return;
+			}
+
+			// Configure modal options
+			ModalDialog.getDefaultOption()
+				.setOpacity(0f)
+				.setAnimationOnClose(false)
+				.getBorderOption()
+				.setBorderWidth(0.5f)
+				.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+
 			ModalDialog.showModal(this, new SimpleModalBorder(droppingForm, "Drop Confirmation",
-					new SimpleModalBorder.Option[] { new SimpleModalBorder.Option("Yes", SimpleModalBorder.YES_OPTION),
-							new SimpleModalBorder.Option("No", SimpleModalBorder.NO_OPTION) },
+					new SimpleModalBorder.Option[] {
+							new SimpleModalBorder.Option("Yes", SimpleModalBorder.YES_OPTION),
+							new SimpleModalBorder.Option("No", SimpleModalBorder.NO_OPTION)
+					},
 					(controller, action) -> {
 						if (action == SimpleModalBorder.YES_OPTION) {
 							controller.consume();
-							// Perform the drop student operation
+							try {
+								// First, set the student's SF_ID to null to remove the reference to SchoolForm
+								boolean success = studentsDataDAO.updateStudentSchoolFormId(student.getStudentUid(), null);
+								
+								if (success) {
+									// Now try to drop the student and related records (except SchoolForm)
+									success = studentsDataDAO.dropStudentWithRelations(student.getStudentUid());
+								}
 
-						} else if (action == SimpleModalBorder.NO_OPTION || action == SimpleModalBorder.CLOSE_OPTION
-								|| action == SimpleModalBorder.CANCEL_OPTION) {
+								if (success) {
+									JOptionPane.showMessageDialog(this, 
+										"Student has been dropped successfully.",
+										"Success", 
+										JOptionPane.INFORMATION_MESSAGE);
+									
+									// Close the modal
+									controller.close();
+									
+									// Navigate back or refresh UI
+									FormManager.showForm(new StudentMangementGUI(connect));
+								} else {
+									JOptionPane.showMessageDialog(this, 
+										"Failed to drop student records.",
+										"Error", 
+										JOptionPane.ERROR_MESSAGE);
+								}
+							} catch (SQLException e) {
+								e.printStackTrace();
+								JOptionPane.showMessageDialog(this, 
+									"An error occurred while dropping the student: " + e.getMessage(),
+									"Error", 
+									JOptionPane.ERROR_MESSAGE);
+							}
+						} else if (action == SimpleModalBorder.NO_OPTION || 
+								 action == SimpleModalBorder.CLOSE_OPTION || 
+								 action == SimpleModalBorder.CANCEL_OPTION) {
 							controller.close();
 						}
-					}), "dropStudentModal");
+					}), 
+					modalId);
+
 			ModalDialog.getDefaultOption().getLayoutOption().setSize(950, 600);
 		} catch (Exception e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Failed to load student or counselor data.", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, 
+				"Failed to load student or counselor data.", 
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }

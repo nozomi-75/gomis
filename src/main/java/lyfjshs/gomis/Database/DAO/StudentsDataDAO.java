@@ -352,6 +352,53 @@ public class StudentsDataDAO {
         }
     }
 
+    public boolean dropStudentWithRelations(int studentUid) throws SQLException {
+        connection.setAutoCommit(false); // Start transaction
+        try {
+            // Retrieve the student to get related entity IDs
+            Student student = getStudentById(studentUid);
+            if (student == null) {
+                throw new SQLException("Student with UID " + studentUid + " does not exist.");
+            }
+
+            // Delete related entities in the correct order
+            if (student.getAddressId() != 0) {
+                AddressDAO addressDAO = new AddressDAO(connection);
+                addressDAO.deleteAddress(student.getAddressId());
+            }
+
+            if (student.getContactId() != 0) {
+                ContactDAO contactDAO = new ContactDAO(connection);
+                contactDAO.deleteContact(student.getContactId());
+            }
+
+            if (student.getParentId() != 0) {
+                ParentsDAO parentsDAO = new ParentsDAO(connection);
+                parentsDAO.deleteParents(student.getParentId());
+            }
+
+            if (student.getGuardianId() != 0) {
+                GuardianDAO guardianDAO = new GuardianDAO(connection);
+                guardianDAO.deleteGuardian(student.getGuardianId());
+            }
+
+            // Finally, delete the student record
+            boolean studentDeleted = deleteStudentData(studentUid);
+            if (!studentDeleted) {
+                throw new SQLException("Failed to delete student with UID " + studentUid);
+            }
+
+            connection.commit(); // Commit transaction
+            return true;
+        } catch (SQLException e) {
+            connection.rollback(); // Rollback transaction on error
+            handleSQLException(e, "dropStudentWithRelations");
+            throw e;
+        } finally {
+            connection.setAutoCommit(true); // Restore auto-commit mode
+        }
+    }
+
     private String getBaseQuery() {
         return "SELECT s.*, a.*, c.*, p.*, g.*, sf.* " +
                "FROM STUDENT s " +
@@ -360,5 +407,19 @@ public class StudentsDataDAO {
                "LEFT JOIN PARENTS p ON s.PARENT_ID = p.PARENT_ID " +
                "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
                "LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID";
+    }
+
+    // Add method to update student's school form ID
+    public boolean updateStudentSchoolFormId(int studentUid, Integer sfId) throws SQLException {
+        String sql = "UPDATE STUDENT SET SF_ID = ? WHERE STUDENT_UID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            if (sfId == null) {
+                stmt.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(1, sfId);
+            }
+            stmt.setInt(2, studentUid);
+            return stmt.executeUpdate() > 0;
+        }
     }
 }

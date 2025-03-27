@@ -1,172 +1,192 @@
 package lyfjshs.gomis.view.violation;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.Period;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
+
+import com.formdev.flatlaf.FlatLightLaf;
 
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
-import net.miginfocom.swing.MigLayout; // Import MigLayout
+import net.miginfocom.swing.MigLayout;
 
 public class ViewViolationDetails extends JDialog {
 
-	private JTextField txtLRN;
-	private JTextField txtFIRST_NAME;
-	private JTextField txtLAST_NAME;
-	private JTextField txtContact;
-	private JComboBox<String> cmbParticipantType;
-	private JComboBox<String> cmbViolationType;
-	private JComboBox<String> cmbStatus;
-	private JComboBox<String> cmbReinforcement;
+	private JTextField txtViolationID;
+	private JTextField txtViolationType;
+	private JTextField txtStatus;
+	private JTextField txtUpdatedAt;
 	private JTextArea txtDescription;
-	private JButton btnEdit;
-	private JButton btnClose;	
+	private JTextArea txtAnecdotal;
+	private JTextField txtFullName;
+	private JTextField txtStudentLRN;
+	private JTextField txtAge;
+	private JTextField txtSex;
+	private JTextField txtGradeSection;
+	private JTextField txtContactNumber;
+	private JTextField txtReinforcementType;
+	private JTextField txtActionRecommended;
+	private JTextArea txtActions;
+	private JButton btnClose;
 	private ViolationRecord violation;
-	private boolean isEditing = false;
-	private StudentsDataDAO studentsDataDAO; // Add this line
-	private ParticipantsDAO participantsDAO; // Add this line
+	private StudentsDataDAO studentsDataDAO;
+	private ParticipantsDAO participantsDAO;
 
-	public ViewViolationDetails(JFrame parent, ViolationRecord violation, StudentsDataDAO studentsDataDAO, ParticipantsDAO participantsDAO) {
+	public ViewViolationDetails(JFrame parent, ViolationRecord violation, StudentsDataDAO studentsDataDAO,
+			ParticipantsDAO participantsDAO) {
 		super(parent, "Violation Details", true);
+		this.setModalityType(ModalityType.APPLICATION_MODAL);
 		this.violation = violation;
-		this.studentsDataDAO = studentsDataDAO; // Add this line
-		this.participantsDAO = participantsDAO; // Add this line
+		this.studentsDataDAO = studentsDataDAO;
+		this.participantsDAO = participantsDAO;
 		initComponents();
 		loadViolationData();
 		setLocationRelativeTo(parent);
 	}
 
 	private void initComponents() {
+		try {
+			UIManager.setLookAndFeel(new FlatLightLaf());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		getContentPane().setLayout(new BorderLayout());
 
-		// Main panel using MigLayout
-		JPanel mainPanel = new JPanel(new MigLayout("wrap 2, gapy 5, insets 20")); // 2 columns, gapy 5, 20px insets
+		JPanel mainPanel = new JPanel(new MigLayout("wrap, insets 30", "[grow]", "[]"));
+		mainPanel.setBackground(Color.WHITE);
+		mainPanel.setBorder(BorderFactory.createCompoundBorder(
+				BorderFactory.createLineBorder(new Color(0, 0, 0, 50), 1),
+				BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
-		// Initialize components
-		cmbParticipantType = new JComboBox<>(new String[] { "Student", "Teacher", "Staff" });
-		txtLRN = new JTextField(20);
-		txtFIRST_NAME = new JTextField(20);
-		txtLAST_NAME = new JTextField(20);
-		txtContact = new JTextField(20);
-		cmbViolationType = new JComboBox<>(new String[] { "Minor", "Major", "Critical" });
-		cmbStatus = new JComboBox<>(new String[] { "Pending", "Resolved" });
-		cmbReinforcement = new JComboBox<>(new String[] { "Warning", "Suspension", "Expulsion" });
+		JLabel sectionTitle1 = new JLabel("Violation Record Details");
+		sectionTitle1.setFont(new Font("Arial", Font.BOLD, 16));
+		sectionTitle1.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 123, 255)));
+		mainPanel.add(sectionTitle1, "spanx,growx,wrap 15");
+
+		JPanel violationGrid = new JPanel(new MigLayout("wrap 2", "[right]10[left]", "[]5[]"));
+		violationGrid.setBackground(Color.WHITE);
+
+		txtViolationID = new JTextField(20);
+		txtViolationType = new JTextField(20);
+		txtStatus = new JTextField(20);
+		txtUpdatedAt = new JTextField(20);
+
+		addLabelValuePair(violationGrid, "Violation ID:", txtViolationID);
+		addLabelValuePair(violationGrid, "Violation Type:", txtViolationType);
+		addLabelValuePair(violationGrid, "Status:", txtStatus);
+		addLabelValuePair(violationGrid, "Updated At:", txtUpdatedAt);
+
+		mainPanel.add(violationGrid, "span, wrap 15");
+
+		JLabel sectionTitle2 = new JLabel("Violation Description");
+		sectionTitle2.setFont(new Font("Arial", Font.BOLD, 14));
+		sectionTitle2.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 123, 255)));
+		mainPanel.add(sectionTitle2, "spanx,growx,wrap 10");
+
 		txtDescription = new JTextArea(5, 20);
-		JScrollPane scrollPane = new JScrollPane(txtDescription); // Scroll pane for description
+		txtDescription.setLineWrap(true);
+		txtDescription.setWrapStyleWord(true);
+		txtDescription.setEditable(false);
+		txtDescription.setFont(new Font("Arial", Font.PLAIN, 12));
+		txtDescription.setBackground(Color.WHITE);
+		mainPanel.add(new JScrollPane(txtDescription), "span, growx, wrap 15");
 
-		// Make all components non-editable initially
-		setFieldsEditable(false);
+		JLabel sectionTitle3 = new JLabel("Anecdotal Record");
+		sectionTitle3.setFont(new Font("Arial", Font.BOLD, 14));
+		sectionTitle3.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 123, 255)));
+		mainPanel.add(sectionTitle3, "spanx,growx,wrap 10");
 
-		// Add components to panel using MigLayout constraints
+		txtAnecdotal = new JTextArea(5, 20);
+		txtAnecdotal.setLineWrap(true);
+		txtAnecdotal.setWrapStyleWord(true);
+		txtAnecdotal.setEditable(false);
+		txtAnecdotal.setFont(new Font("Arial", Font.PLAIN, 12));
+		txtAnecdotal.setBackground(Color.WHITE);
+		mainPanel.add(new JScrollPane(txtAnecdotal), "span, growx, wrap 15");
 
-		mainPanel.add(new JLabel("Participant Type:"), "");
-		mainPanel.add(cmbParticipantType, "growx");
+		JLabel sectionTitle4 = new JLabel("Student Information");
+		sectionTitle4.setFont(new Font("Arial", Font.BOLD, 14));
+		sectionTitle4.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 123, 255)));
+		mainPanel.add(sectionTitle4, "spanx,growx,wrap 10");
 
-		mainPanel.add(new JLabel("LRN:"), "");
-		mainPanel.add(txtLRN, "growx");
+		JPanel studentGrid = new JPanel(new MigLayout("wrap 2", "[right]10[left]", "[]5[]"));
+		studentGrid.setBackground(Color.WHITE);
 
-		mainPanel.add(new JLabel("First Name:"), "");
-		mainPanel.add(txtFIRST_NAME, "growx");
+		txtFullName = new JTextField(20);
+		txtStudentLRN = new JTextField(20);
+		txtAge = new JTextField(20);
+		txtSex = new JTextField(20);
+		txtGradeSection = new JTextField(20);
+		txtContactNumber = new JTextField(20);
 
-		mainPanel.add(new JLabel("Last Name:"), "");
-		mainPanel.add(txtLAST_NAME, "growx");
+		addLabelValuePair(studentGrid, "Full Name:", txtFullName);
+		addLabelValuePair(studentGrid, "Student LRN:", txtStudentLRN);
+		addLabelValuePair(studentGrid, "Age:", txtAge);
+		addLabelValuePair(studentGrid, "Sex:", txtSex);
+		addLabelValuePair(studentGrid, "Grade/Section:", txtGradeSection);
+		addLabelValuePair(studentGrid, "Contact Number:", txtContactNumber);
 
+		mainPanel.add(studentGrid, "span, wrap 15");
 
-		mainPanel.add(new JLabel("Contact:"), "");
-		mainPanel.add(txtContact, "growx");
+		JLabel sectionTitle5 = new JLabel("Reinforcement & Recommendations");
+		sectionTitle5.setFont(new Font("Arial", Font.BOLD, 14));
+		sectionTitle5.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 123, 255)));
+		mainPanel.add(sectionTitle5, "spanx,growx,wrap 10");
 
-		mainPanel.add(new JLabel("Violation Type:"), "");
-		mainPanel.add(cmbViolationType, "growx");
+		JPanel reinforcementGrid = new JPanel(new MigLayout("wrap 2", "[right]10[left]", "[]5[]"));
+		reinforcementGrid.setBackground(Color.WHITE);
 
-		mainPanel.add(new JLabel("Status:"), "");
-		mainPanel.add(cmbStatus, "growx");
+		txtReinforcementType = new JTextField(20);
+		txtActionRecommended = new JTextField(20);
 
-		mainPanel.add(new JLabel("Reinforcement:"), "");
-		mainPanel.add(cmbReinforcement, "growx");
+		addLabelValuePair(reinforcementGrid, "Reinforcement Type:", txtReinforcementType);
+		addLabelValuePair(reinforcementGrid, "Action Recommended:", txtActionRecommended);
 
-		mainPanel.add(new JLabel("Description:"), "span 2, growx"); // Span 2 columns
-		mainPanel.add(scrollPane, "span 2, growx, growy"); // Span 2, grow both horizontally and vertically
+		mainPanel.add(reinforcementGrid, "span, wrap 10");
 
-		// Button panel
+		JLabel recommendedActionsLabel = new JLabel("Recommended actions include:");
+		recommendedActionsLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+		mainPanel.add(recommendedActionsLabel, "span, wrap 5");
+
+		txtActions = new JTextArea(
+				"• Conduct a one-on-one counseling session\n" +
+						"• Develop a behavior improvement plan\n" +
+						"• Involve parents/guardians in the intervention\n" +
+						"• Monitor progress and provide ongoing support");
+		txtActions.setEditable(false);
+		txtActions.setFont(new Font("Arial", Font.PLAIN, 12));
+		txtActions.setBackground(Color.WHITE);
+		mainPanel.add(new JScrollPane(txtActions), "span, growx");
+
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		btnEdit = new JButton("Edit");
 		btnClose = new JButton("Close");
-
-		btnEdit.addActionListener(e -> toggleEdit());
 		btnClose.addActionListener(e -> dispose());
-
-		buttonPanel.add(btnEdit);
 		buttonPanel.add(btnClose);
 
-		// Add panels to dialog
-		getContentPane().add(mainPanel, BorderLayout.CENTER);
+		getContentPane().add(new JScrollPane(mainPanel), BorderLayout.CENTER);
 		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
-		// Set dialog properties
-		setSize(364, 446);
-	}
-
-	// ... (rest of the code remains the same)
-	private void setFieldsEditable(boolean editable) {
-
-		txtLRN.setEditable(editable);
-
-		txtFIRST_NAME.setEditable(editable);
-
-		txtLAST_NAME.setEditable(editable);
-
-		txtContact.setEditable(editable);
-
-		cmbParticipantType.setEnabled(editable);
-
-		cmbViolationType.setEnabled(editable);
-
-		cmbStatus.setEnabled(editable);
-
-		cmbReinforcement.setEnabled(editable);
-
-		txtDescription.setEditable(editable);
-
-	}
-
-	private void toggleEdit() {
-		if (!isEditing) {
-			int choice = JOptionPane.showConfirmDialog(this, "Are you sure you want to edit?", "Confirm Edit",
-					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-
-			if (choice != JOptionPane.YES_OPTION) {
-				return;
-			}
-		} else {
-			int choice = JOptionPane.showConfirmDialog(this, "Are you sure you want to save the changes?",
-					"Confirm Save", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-
-			if (choice != JOptionPane.YES_OPTION) {
-				return;
-			}
-		}
-
-		isEditing = !isEditing;
-		setFieldsEditable(isEditing);
-		btnEdit.setText(isEditing ? "Save" : "Edit");
-
-		if (!isEditing) {
-			saveViolationData();
-		}
+		setSize(800, 600);
 	}
 
 	private void loadViolationData() {
@@ -174,48 +194,50 @@ public class ViewViolationDetails extends JDialog {
 			try {
 				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
 				if (participant != null) {
-					txtFIRST_NAME.setText(participant.getParticipantFirstName());
-					txtLAST_NAME.setText(participant.getParticipantLastName());
-					txtContact.setText(participant.getContactNumber());
-					cmbParticipantType.setSelectedItem(participant.getParticipantType());
+					txtFullName.setText(
+							participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
+					txtContactNumber.setText(participant.getContactNumber());
+					txtReinforcementType.setText(violation.getReinforcement());
+					txtActionRecommended.setText(violation.getViolationDescription());
 
 					if ("Student".equals(participant.getParticipantType())) {
 						Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
 						if (student != null) {
-							txtLRN.setText(student.getStudentLrn());
+							txtStudentLRN.setText(student.getStudentLrn());
+							txtAge.setText(student.getStudentBirthdate() != null
+									? String.valueOf(calculateAge(student.getStudentBirthdate()))
+									: "");
+							txtSex.setText(student.getStudentSex() != null ? student.getStudentSex() : "");
+							txtGradeSection
+									.setText(student.getSchoolSection() != null ? student.getSchoolSection() : "");
 						}
 					}
 				}
+				txtViolationID.setText(String.valueOf(violation.getViolationId()));
+				txtViolationType.setText(violation.getViolationType());
+				txtStatus.setText(violation.getStatus());
+				txtUpdatedAt.setText(violation.getUpdatedAt().toString());
+				txtDescription.setText(violation.getViolationDescription());
+				txtAnecdotal.setText(violation.getAnecdotalRecord());
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-			cmbViolationType.setSelectedItem(violation.getViolationType());
-			cmbStatus.setSelectedItem(violation.getStatus());
-			cmbReinforcement.setSelectedItem(violation.getReinforcement());
-			txtDescription.setText(violation.getViolationDescription());
 		}
 	}
 
-	private void saveViolationData() {
-		if (violation != null) {
-			violation.setParticipantId(getStudentUidFromLrn(txtLRN.getText()));
-			violation.setViolationType((String) cmbViolationType.getSelectedItem());
-			violation.setStatus((String) cmbStatus.getSelectedItem());
-			violation.setReinforcement((String) cmbReinforcement.getSelectedItem());
-			violation.setViolationDescription(txtDescription.getText()); // Save description
-		}
+	private int calculateAge(Date birthdate) {
+		LocalDate birthDate = birthdate.toLocalDate();
+		return Period.between(birthDate, LocalDate.now()).getYears();
 	}
 
-	// Method to get studentUid from LRN
-	private int getStudentUidFromLrn(String lrn) {
-		try {
-			Student student = studentsDataDAO.getStudentDataByLrn(lrn);
-			if (student != null) {
-				return student.getStudentUid();
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return -1; // Return -1 if student not found
+	private void addLabelValuePair(JPanel panel, String labelText, JTextField valueField) {
+		JLabel label = new JLabel(labelText);
+		label.setFont(new Font("Arial", Font.BOLD, 12));
+		label.setForeground(new Color(85, 85, 85));
+		valueField.setEditable(false);
+		valueField.setFont(new Font("Arial", Font.PLAIN, 12));
+		valueField.setBackground(Color.WHITE);
+		panel.add(label);
+		panel.add(valueField, "growx");
 	}
 }

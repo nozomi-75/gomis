@@ -17,10 +17,13 @@ public class Sessions {
     private int participantCount; // To store participant count if needed
     private Timestamp appointmentDateTime; // To store related appointment date time
     private List<Participants> participants; // ✅ Store multiple participants
+    private String sessionSummary; // New field
 
     // Full Constructor
     public Sessions(int sessionId, Integer appointmentId, int guidanceCounselorId, Integer violationId,
-                    String appointmentType, String consultationType, Timestamp sessionDateTime, String sessionNotes, String sessionStatus,
+                    String appointmentType, String consultationType, Timestamp sessionDateTime, 
+                    String sessionNotes, String sessionSummary,
+                     String sessionStatus,
                     Timestamp updatedAt) {
         this.sessionId = sessionId;
         this.appointmentId = appointmentId;
@@ -32,6 +35,7 @@ public class Sessions {
         this.sessionNotes = sessionNotes;
         this.sessionStatus = sessionStatus;
         this.updatedAt = updatedAt;
+        this.sessionSummary = null; // Initialize summary
     }
 
     // Getters and Setters
@@ -139,6 +143,13 @@ public class Sessions {
         this.participants = participants;
     }
 
+    public String getSessionSummary() {
+        return sessionSummary;
+    }
+
+    public void setSessionSummary(String sessionSummary) {
+        this.sessionSummary = sessionSummary;
+    }
 
     @Override
     public String toString() {
@@ -155,6 +166,7 @@ public class Sessions {
                 ", updatedAt=" + updatedAt +
                 ", participantCount=" + participantCount +
                 ", appointmentDateTime=" + appointmentDateTime +
+                ", sessionSummary='" + sessionSummary + '\'' +
                 '}';
     }
 }

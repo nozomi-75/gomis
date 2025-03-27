@@ -7,7 +7,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
@@ -28,6 +31,8 @@ import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.components.DrawerBuilder;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.view.appointment.add.AddAppointmentModal;
+import lyfjshs.gomis.view.appointment.add.AddAppointmentPanel;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
@@ -289,7 +294,8 @@ public class AppointmentCalendar extends JPanel {
             }
         );
         appointmentDetails.loadAppointmentDetails(appointment);
-        createAndShowModalDialog(appointmentDetails, "appointment_details_" + appointment.getAppointmentId());
+        createAndShowModalDialog(appointmentDetails, "appointment_details_" + appointment.getAppointmentId(), 
+            appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
     }
 
     private void showAppointmentDetailsPopup(LocalDate selectedDate) {
@@ -299,12 +305,12 @@ public class AppointmentCalendar extends JPanel {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        createAndShowModalDialog(appointmentDetails, "appointment_details_date_" + selectedDate.toString());
+        createAndShowModalDialog(appointmentDetails, "appointment_details_date_" + selectedDate.toString(), selectedDate);
     }
 
-    private void createAndShowModalDialog(AppointmentDayDetails detailsPanel, String modalId) {
+    private void createAndShowModalDialog(AppointmentDayDetails detailsPanel, String modalId, LocalDate selectedDate) {
         if (ModalDialog.isIdExist(modalId)) {
-            return; // Prevent multiple instances of the same modal
+            return;
         }
 
         try {
@@ -314,40 +320,68 @@ public class AppointmentCalendar extends JPanel {
                 parentWindow = Main.gFrame;
             }
 
-            // Configure modal with proper parent
+            // Configure modal options
             ModalDialog.getDefaultOption()
-                    .setOpacity(0f) // Transparent background
-                    .setAnimationOnClose(false) // No close animation
+                    .setOpacity(0f)
+                    .setAnimationOnClose(false)
                     .getBorderOption()
-                    .setBorderWidth(0.5f) // Thin border
-                    .setShadow(BorderOption.Shadow.MEDIUM); // Medium shadow
+                    .setBorderWidth(0.5f)
+                    .setShadow(BorderOption.Shadow.MEDIUM);
 
-            // Show modal with additional "Set a Session" button
+            // Check if there is a current appointment
+            Appointment currentAppointment = detailsPanel.getCurrentAppointment();
+            
+            // Set options based on whether there's an appointment
+            SimpleModalBorder.Option[] options;
+            if (currentAppointment != null) {
+                // If there's an appointment, show "Set a Session" option
+                options = new SimpleModalBorder.Option[] {
+                    new SimpleModalBorder.Option("Set a Session", SimpleModalBorder.YES_OPTION),
+                    new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+                };
+            } else {
+                // If no appointment, show "Add a Appointment" option
+                options = new SimpleModalBorder.Option[] {
+                    new SimpleModalBorder.Option("Add a Appointment", SimpleModalBorder.YES_OPTION),
+                    new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+                };
+            }
+
+            // Show modal with conditional action handling
             ModalDialog.showModal(this,
                     new SimpleModalBorder(detailsPanel, "Appointment Details",
-                            new SimpleModalBorder.Option[] {
-                                    new SimpleModalBorder.Option("Set a Session", SimpleModalBorder.YES_OPTION),
-                                    new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
-                            },
+                            options,
                             (controller, action) -> {
                                 if (action == SimpleModalBorder.YES_OPTION) {
-                                    // Switch to SessionsForm and populate data
-                                    DrawerBuilder.switchToSessionsForm();
-                                    
-                                    // Find and populate the SessionsForm
-                                    Form[] forms = FormManager.getForms();
-                                    for (Form form : forms) {
-                                        if (form instanceof SessionsForm) {
-                                            SessionsForm sessionsForm = (SessionsForm) form;
-                                            sessionsForm.populateFromAppointment(detailsPanel.getCurrentAppointment());
-                                            break;
+                                    if (currentAppointment != null) {
+                                        // Handle "Set a Session" action
+                                        DrawerBuilder.switchToSessionsForm();
+                                        Form[] forms = FormManager.getForms();
+                                        for (Form form : forms) {
+                                            if (form instanceof SessionsForm) {
+                                                SessionsForm sessionsForm = (SessionsForm) form;
+                                                try {
+                                                    AppointmentDAO appointmentDAO = new AppointmentDAO(connection);
+                                                    Appointment fullAppointment = appointmentDAO.getAppointmentById(
+                                                        currentAppointment.getAppointmentId());
+                                                    sessionsForm.populateFromAppointment(fullAppointment);
+                                                } catch (SQLException e) {
+                                                    e.printStackTrace();
+                                                    JOptionPane.showMessageDialog(this, 
+                                                        "Error loading appointment details: " + e.getMessage());
+                                                }
+                                                break;
+                                            }
                                         }
+                                    } else {
+                                        // Handle "Add a Appointment" action
+                                        showAddAppointmentDialog(selectedDate);
                                     }
                                     controller.close();
                                 } else if (action == SimpleModalBorder.CLOSE_OPTION) {
                                     controller.close();
                                 }
-                                // Add refresh after modal closes
+                                // Refresh views
                                 updateCalendar();
                                 if (getParent() instanceof AppointmentManagement) {
                                     ((AppointmentManagement) getParent()).refreshViews();
@@ -355,14 +389,72 @@ public class AppointmentCalendar extends JPanel {
                             }),
                     modalId);
 
-            // Set the size to match the original dialog
+            // Set modal size
             ModalDialog.getDefaultOption().getLayoutOption().setSize(700, 700);
 
         } catch (Exception e) {
             e.printStackTrace();
-            // Optionally, display an error message to the user
-            javax.swing.JOptionPane.showMessageDialog(this, "Error opening appointment details: " + e.getMessage(),
-                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                "Error opening appointment details: " + e.getMessage(),
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void showAddAppointmentDialog(LocalDate selectedDate) {
+        try {
+            // Verify counselor is logged in
+            if (Main.formManager == null || Main.formManager.getCounselorObject() == null) {
+                JOptionPane.showMessageDialog(this,
+                    "Please log in as a counselor to create appointments.",
+                    "Authentication Required",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Create new appointment with selected date
+            Appointment newAppointment = new Appointment();
+            // Set the appointment date to the selected date at current time
+            newAppointment.setAppointmentDateTime(Timestamp.valueOf(selectedDate.atTime(LocalDateTime.now().toLocalTime())));
+            newAppointment.setGuidanceCounselorId(Main.formManager.getCounselorObject().getGuidanceCounselorId());
+
+            // Create and configure the appointment panel
+            AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDao, connection);
+
+            // Show modal with proper size and validation
+            AddAppointmentModal.getInstance().showModal( connection,
+                this, 
+                addAppointmentPanel,
+                appointmentDao,
+                750,  // width 
+                800,   // height
+                () -> {
+                    // Callback for successful appointment creation
+                    try {
+                        // Reload appointments for the selected date
+                        AppointmentDayDetails detailsPanel = new AppointmentDayDetails(connection, null, null);
+                        detailsPanel.loadAppointmentsForDate(selectedDate);
+                        
+                        // Close and recreate modal with updated content
+                        if (ModalDialog.isIdExist("appointment_details_date_" + selectedDate.toString())) {
+                            ModalDialog.closeModal("appointment_details_date_" + selectedDate.toString());
+                            createAndShowModalDialog(detailsPanel, "appointment_details_date_" + selectedDate.toString(), selectedDate);
+                        }
+                        
+                        // Refresh calendar view
+                        updateCalendar();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }   
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Error creating appointment: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 }

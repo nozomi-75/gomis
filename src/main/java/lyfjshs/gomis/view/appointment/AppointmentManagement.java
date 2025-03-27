@@ -106,13 +106,25 @@ public class AppointmentManagement extends Form {
 		AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
 
 		// Use AddAppointmentModal to show the dialog
-		AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO, 700,650);
+		AddAppointmentModal.getInstance().showModal(connection, this, addAppointmentPanel, appointmentDAO, 700, 650, () -> refreshViews());
 
-		// Add refresh after modal closes
-		reloadAppointments();
+		// Update both views after modal closes
+		refreshViews();
 	}
 
 	public void refreshViews() {
-		reloadAppointments();
+		// Update calendar view
+		if (appointmentCalendar != null) {
+			appointmentCalendar.updateCalendar();
+		}
+		
+		// Update daily view if it exists
+		if (appointmentDaily != null) {
+			appointmentDaily.updateAppointmentsDisplay();
+		}
+		
+		// Force a repaint of the entire panel
+		revalidate();
+		repaint();
 	}
 }

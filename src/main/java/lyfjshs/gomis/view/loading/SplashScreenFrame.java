@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -20,6 +21,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
+import javax.swing.JOptionPane;
 
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
@@ -60,17 +62,38 @@ public class SplashScreenFrame extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(40, 40, 40, 40));
         
-    	// Load and resize the image to 150x150
-		ImageIcon originalIcon = new ImageIcon(getClass().getResource("/GOMIS Logo.png"));
-		Image scaledImage = originalIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
-		ImageIcon logoIcon = new ImageIcon(scaledImage);
-		JLabel logoLabel = new JLabel(logoIcon);
+        // Load logo with fallback
+        JLabel logoLabel;
+        try {
+            java.net.URL logoUrl = getClass().getResource("/images/GOMIS Logo.png");
+            if (logoUrl == null) {
+                logoUrl = getClass().getResource("/GOMIS Logo.png");
+            }
+            if (logoUrl == null) {
+                throw new Exception("Could not find logo image in resources");
+            }
+            
+            ImageIcon originalIcon = new ImageIcon(logoUrl);
+            if (originalIcon.getIconWidth() <= 0) {
+                throw new Exception("Failed to load logo image");
+            }
+            Image scaledImage = originalIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+            logoLabel = new JLabel(new ImageIcon(scaledImage));
+        } catch (Exception e) {
+            // Create a text-based fallback logo
+            logoLabel = new JLabel("GOMIS");
+            logoLabel.setFont(new Font("Arial", Font.BOLD, 36));
+            logoLabel.setForeground(Color.WHITE);
+            logoLabel.setPreferredSize(new Dimension(150, 150));
+            logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            System.err.println("Warning: Could not load logo image: " + e.getMessage());
+        }
 
-		// Logo panel
-		logoPanel = new JPanel();
-		logoPanel.setOpaque(false);
-		logoPanel.add(logoLabel);
-		
+        // Logo panel
+        logoPanel = new JPanel();
+        logoPanel.setOpaque(false);
+        logoPanel.add(logoLabel);
+        
         // Progress panel
         progressPanel = new ProgressPanel(ACCENT_COLOR_1, ACCENT_COLOR_2);
         progressPanel.setPreferredSize(new Dimension(300, 6));
@@ -136,33 +159,63 @@ public class SplashScreenFrame extends JFrame {
     }
     
     public void runInitialization() {
-        // Create a SwingWorker to run the initialization in the background
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+        SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
             @Override
             protected Void doInBackground() throws Exception {
-                Main.initDB(); // Initialize the database connection
-                Main.initFrame(); // Initialize the main frame
+                try {
+                    publish("Initializing database...");
+                    Main.initDB(); // Initialize the database connection
+                    
+                    publish("Setting up main window...");
+                    Main.initFrame(); // Initialize the main frame
+                    
+                    return null;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new Exception("Initialization failed: " + e.getMessage(), e);
+                }
+            }
 
-                return null;
+            @Override
+            protected void process(List<String> chunks) {
+                // Update loading text with the latest status
+                if (!chunks.isEmpty()) {
+                    loadingLabel.setText(chunks.get(chunks.size() - 1));
+                }
             }
 
             @Override
             protected void done() {
                 try {
-                    dispose(); // Close the splash screen
-                    if (Main.gFrame == null) {
-                        System.err.println("Error: Main.jFrame is null. Ensure initFrame() is called before accessing Main.jFrame.");
-                        System.exit(1); // Exit with error code
-                    } else {
-                        Main.gFrame.setVisible(true); // Make the main frame visible
+                    get(); // Check for exceptions from doInBackground
+                    
+                    // Stop the dot animation timer
+                    if (dotAnimationTimer != null) {
+                        dotAnimationTimer.stop();
                     }
+                    
+                    dispose(); // Close the splash screen
+                    
+                    if (Main.gFrame == null) {
+                        throw new Exception("Main window initialization failed.");
+                    }
+                    
+                    Main.gFrame.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.err.println("Error during splash screen completion: " + e.getMessage());
-                    System.exit(1); // Exit with error code
+                    String errorMessage = "Failed to start application: " + 
+                        (e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+                    
+                    JOptionPane.showMessageDialog(
+                        SplashScreenFrame.this,
+                        errorMessage,
+                        "Startup Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    System.exit(1);
                 }
             }
         };
-        worker.execute(); // Start the SwingWorker
+        worker.execute();
     }
 }

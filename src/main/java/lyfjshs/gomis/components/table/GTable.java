@@ -5,6 +5,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
 import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -53,7 +54,7 @@ public class GTable extends FlatTable {
         this.actionManager = actionManager;
 
         configureTable();
-//        applyColumnWidths();
+        applyColumnWidths(); // Call applyColumnWidths here
         applyColumnAlignments();
         updateRowHeightFromSettings();
 
@@ -61,7 +62,7 @@ public class GTable extends FlatTable {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-//                applyColumnWidths();
+                applyColumnWidths(); // Call applyColumnWidths here
             }
         });
     }
@@ -121,7 +122,8 @@ public class GTable extends FlatTable {
 
     public void updateRowHeightFromSettings() {
         int fontSize = Main.settings.getSettingsState().fontSize; // Get font size from settings
-        int rowHeight = fontSize + 20; // Dynamically adjust height
+        int buttonHeight = new JButton("Sample").getPreferredSize().height; // Get button height
+        int rowHeight = Math.max(fontSize + 20, buttonHeight + 10); // Adjust row height based on button height
         setRowHeight(rowHeight);
     }
 
@@ -138,35 +140,35 @@ public class GTable extends FlatTable {
             throw new IllegalArgumentException("Width array must match column count");
         }
         this.columnProportions = widths.clone();
-//        applyColumnWidths();
+        applyColumnWidths();
     }
 
-//    private void applyColumnWidths() {
-//        int totalWidth = getParent() != null ? getParent().getWidth() : 800;
-//        if (totalWidth <= 0)
-//            totalWidth = 800;
-//
-//        TableColumnModel columnModel = getColumnModel();
-//        for (int i = 0; i < columnModel.getColumnCount(); i++) {
-//            TableColumn column = columnModel.getColumn(i);
-//
-//            // Handle checkbox column
-//            if (hasCheckbox && i == 0)
-//                continue;
-//
-//            // Handle Actions column (Allow Resizing)
-//            if (actionManager != null && i == getColumnCount() - 1) {
-//                int actionColumnWidth = (int) (totalWidth * 0.15); // Make it responsive (15% of table width)
-//                column.setPreferredWidth(actionColumnWidth);
-//                column.setResizable(true);
-//                continue;
-//            }
-//
-//            // Normal columns
-//            int width = (int) (totalWidth * columnProportions[i]);
-//            column.setPreferredWidth(width);
-//        }
-//    }
+    private void applyColumnWidths() {
+        int totalWidth = getParent() != null ? getParent().getWidth() : 800;
+        if (totalWidth <= 0)
+            totalWidth = 800;
+
+        TableColumnModel columnModel = getColumnModel();
+        for (int i = 0; i < columnModel.getColumnCount(); i++) {
+            TableColumn column = columnModel.getColumn(i);
+
+            // Handle checkbox column
+            if (hasCheckbox && i == 0)
+                continue;
+
+            // Handle Actions column (Allow Resizing)
+            if (actionManager != null && i == getColumnCount() - 1) {
+                int actionColumnWidth = (int) (totalWidth * 0.15); // Make it responsive (15% of table width)
+                column.setPreferredWidth(actionColumnWidth);
+                column.setResizable(true);
+                continue;
+            }
+
+            // Normal columns
+            int width = (int) (totalWidth * columnProportions[i]);
+            column.setPreferredWidth(width);
+        }
+    }
 
     public void setColumnAlignments(int[] alignments) {
         if (alignments.length != getColumnCount()) {
@@ -190,6 +192,6 @@ public class GTable extends FlatTable {
     @Override
     public void doLayout() {
         super.doLayout();
-//        applyColumnWidths();
+        applyColumnWidths();
     }
 }

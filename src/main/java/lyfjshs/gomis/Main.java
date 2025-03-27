@@ -196,6 +196,10 @@ public class Main {
 			gFrame = new GFrame(1380, 750, false, "GOMIS", null, conn);
 			gFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
 			
+			// Initialize tray icon and notification system
+			gFrame.initializeTrayIcon();
+			gFrame.initializeNotifications(conn);
+			
 			// Install form manager before initializing panels
 			FormManager.install(gFrame);
 			formManager = new FormManager();

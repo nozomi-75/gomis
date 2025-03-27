@@ -1,11 +1,8 @@
 package lyfjshs.gomis.view.students;
 
-import java.awt.Color;
-import java.awt.Font;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 
-import javax.swing.BorderFactory;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -15,6 +12,7 @@ import javax.swing.JTextField;
 
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.utils.DroppingFormGenerator;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 
@@ -147,5 +145,6 @@ public class DroppingForm extends JPanel {
 
 	private void DropStudent(Connection connend) {
 		// method to drop student
+		DroppingFormGenerator.createDroppingForm(absencesField, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY);
 	}
 }

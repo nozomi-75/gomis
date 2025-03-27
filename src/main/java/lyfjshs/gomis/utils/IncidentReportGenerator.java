@@ -18,7 +18,7 @@ public class IncidentReportGenerator {
 		String timeVisit = "";
 		String incidentReport = "";
 		
-//		generateReport(DEFAULT_JASPER_TEMPLATE, name, gradeSection, date, timeVisit, incidentReport, "print", null);
+		generateReport(DEFAULT_JASPER_TEMPLATE, name, gradeSection, date, timeVisit, incidentReport, "print", null);
 
 //		JFileChooser fileChooser = setupFileChooser("docx");
 //		if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
@@ -27,12 +27,12 @@ public class IncidentReportGenerator {
 //					baseName);
 //		}
 
-		JFileChooser fileChooser = setupFileChooser("pdf");
-		if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-			String baseName = fileChooser.getSelectedFile().getAbsolutePath().replace(".pdf", "");
-			generateReport(DEFAULT_JASPER_TEMPLATE, name, gradeSection, date, timeVisit, incidentReport, "pdf",
-					baseName);
-		}
+		// JFileChooser fileChooser = setupFileChooser("pdf");
+		// if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
+		// 	String baseName = fileChooser.getSelectedFile().getAbsolutePath().replace(".pdf", "");
+		// 	generateReport(DEFAULT_JASPER_TEMPLATE, name, gradeSection, date, timeVisit, incidentReport, "pdf",
+		// 			baseName);
+		// }
 	}
 
 	/**

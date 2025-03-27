@@ -1,11 +1,17 @@
 package lyfjshs.gomis.view.students.create;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Map;
+import java.util.HashMap;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -15,7 +21,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JDialog;
+import javax.swing.JPopupMenu;
 import javax.swing.border.TitledBorder;
+import javax.swing.Timer;
 
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Address;
@@ -25,8 +34,11 @@ import lyfjshs.gomis.Database.entity.Parents;
 import lyfjshs.gomis.Database.entity.SchoolForm;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.utils.DroppingFormGenerator;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
+import lyfjshs.gomis.view.students.StudentMangementGUI;
 
 public class StudentInfoFullForm extends Form {
     private JTextField lrnField, lastNameField, firstNameField, middleNameField;
@@ -41,12 +53,14 @@ public class StudentInfoFullForm extends Form {
     private JTextField guardianNameField, relationToStudentField, guardianPhoneField;
     private JTextField schoolNameField, schoolIdField, districtField, divisionField, schoolRegionField;
     private JTextField semesterField, schoolYearField, gradeLevelField, sectionField, trackField, courseField;
-    private Connection connect;
+    private Connection connection;
     private JScrollPane scrollPane;
     private JPanel panel_1;
+    private int studentUid;
+    private Map<Integer, Map<String, String>> participantDetails = new HashMap<>();
 
     public StudentInfoFullForm(Connection conn) {
-        this.connect = conn;
+        this.connection = conn;
         setLayout(new MigLayout("wrap 1, fillx, insets 10", "[grow]", "[]"));
 
         // Initialize birthDatePicker first to avoid NullPointerException
@@ -58,8 +72,12 @@ public class StudentInfoFullForm extends Form {
         scrollPane = new JScrollPane();
         add(scrollPane, "cell 0 0,grow");
 
-        panel_1 = new JPanel(new MigLayout("wrap 1, fillx, insets 10", "[grow]", "[]10[]10[]10[][][]"));
+        // Configure scroll speed
+        scrollPane.getVerticalScrollBar().setUnitIncrement(20);  // Increase single scroll unit (mouse wheel)
+        scrollPane.getVerticalScrollBar().setBlockIncrement(100); // Increase scroll bar click increment
+        scrollPane.getVerticalScrollBar().putClientProperty("JScrollBar.smoothScrolling", true);
 
+        panel_1 = new JPanel(new MigLayout("wrap 1, fillx, insets 10", "[grow]", "[]10[]10[]10[][][]"));
         scrollPane.setViewportView(panel_1);
 
         // Create and add all panels
@@ -79,8 +97,138 @@ public class StudentInfoFullForm extends Form {
         panel_1.add(schoolFormPanel, "growx");
 
         JButton submitButton = new JButton("Submit");
+        submitButton.setBackground(new Color(70, 130, 180));
+        submitButton.setForeground(Color.WHITE);
+        submitButton.setFocusPainted(false);
         panel_1.add(submitButton, "alignx right");
         submitButton.addActionListener(e -> submitForm());
+
+        // Initialize input validation
+        initializeValidation();
+    }
+
+    private void initializeValidation() {
+        // LRN field - numbers only, max 12 digits
+        lrnField.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!Character.isDigit(c) || lrnField.getText().length() >= 12) {
+                    e.consume();
+                }
+            }
+        });
+
+        // Name fields - letters, spaces, hyphens, and apostrophes only
+        KeyAdapter nameValidator = new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!Character.isLetter(c) && c != ' ' && c != '-' && c != '\'') {
+                    e.consume();
+                }
+            }
+        };
+        firstNameField.addKeyListener(nameValidator);
+        lastNameField.addKeyListener(nameValidator);
+        middleNameField.addKeyListener(nameValidator);
+
+        // Phone number fields - numbers only, max 11 digits
+        KeyAdapter phoneValidator = new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                JTextField source = (JTextField) e.getComponent();
+                char c = e.getKeyChar();
+                if (!Character.isDigit(c) || source.getText().length() >= 11) {
+                    e.consume();
+                }
+            }
+        };
+        guardianPhoneField.addKeyListener(phoneValidator);
+        fatherPhoneNumberField.addKeyListener(phoneValidator);
+        motherPhoneNumberField.addKeyListener(phoneValidator);
+
+        // Grade level field - numbers 7-12 only
+        gradeLevelField.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                String currentText = gradeLevelField.getText();
+                char c = e.getKeyChar();
+                if (!Character.isDigit(c) || currentText.length() >= 2 ||
+                    (currentText.isEmpty() && c != '7' && c != '8' && c != '9' && c != '1') ||
+                    (!currentText.isEmpty() && currentText.equals("1") && c != '0' && c != '1' && c != '2')) {
+                    e.consume();
+                }
+            }
+        });
+
+        // Add focus listeners for visual feedback
+        FocusAdapter focusAdapter = new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                JTextField field = (JTextField) e.getComponent();
+                field.setBackground(new Color(240, 240, 255));
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                JTextField field = (JTextField) e.getComponent();
+                field.setBackground(Color.WHITE);
+                validateField(field);
+            }
+        };
+
+        // Apply focus listeners to required fields
+        lrnField.addFocusListener(focusAdapter);
+        firstNameField.addFocusListener(focusAdapter);
+        lastNameField.addFocusListener(focusAdapter);
+        guardianNameField.addFocusListener(focusAdapter);
+        schoolNameField.addFocusListener(focusAdapter);
+        schoolIdField.addFocusListener(focusAdapter);
+        gradeLevelField.addFocusListener(focusAdapter);
+        sectionField.addFocusListener(focusAdapter);
+    }
+
+    private void validateField(JTextField field) {
+        String text = field.getText().trim();
+        Color errorColor = new Color(255, 240, 240);
+        
+        if (field == lrnField) {
+            if (!text.matches("\\d{12}")) {
+                field.setBackground(errorColor);
+                showFieldError(field, "LRN must be exactly 12 digits");
+            }
+        } else if (field == firstNameField || field == lastNameField) {
+            if (!text.matches("[a-zA-Z\\s-']{2,50}")) {
+                field.setBackground(errorColor);
+                showFieldError(field, "Name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes");
+            }
+        } else if (field == guardianPhoneField || field == fatherPhoneNumberField || field == motherPhoneNumberField) {
+            if (!text.isEmpty() && !text.matches("\\d{11}")) {
+                field.setBackground(errorColor);
+                showFieldError(field, "Phone number must be 11 digits");
+            }
+        } else if (field == gradeLevelField) {
+            if (!text.matches("^(7|8|9|10|11|12)$")) {
+                field.setBackground(errorColor);
+                showFieldError(field, "Grade level must be between 7 and 12");
+            }
+        }
+    }
+
+    private void showFieldError(JTextField field, String message) {
+        // Create a tooltip with the error message
+        field.setToolTipText(message);
+        
+        // Show a small popup near the field
+        JLabel errorLabel = new JLabel(message);
+        errorLabel.setForeground(Color.RED);
+        errorLabel.setFont(errorLabel.getFont().deriveFont(Font.PLAIN, 11));
+        
+        JPopupMenu popup = new JPopupMenu();
+        popup.add(errorLabel);
+        popup.show(field, 0, field.getHeight());
+        
+        // Hide popup after 3 seconds
+        Timer timer = new Timer(3000, e -> popup.setVisible(false));
+        timer.setRepeats(false);
+        timer.start();
     }
 
     private JPanel createStudentPanel() {
@@ -350,7 +498,7 @@ public class StudentInfoFullForm extends Form {
                     age, ipTypeField.getText().trim(), religionField.getText().trim(),
                     address, contact, parents, guardian, schoolForm);
 
-            StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connect);
+            StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
             boolean success = studentsDataDAO.createStudentWithRelations(student, address, contact, parents, guardian,
                     schoolForm);
 
@@ -414,5 +562,36 @@ public class StudentInfoFullForm extends Form {
         sectionField.setText("");
         trackField.setText("");
         courseField.setText("");
+    }
+
+    private void showViolationDetails(int participantId) {
+        Map<String, String> details = participantDetails.get(participantId);
+        if (details == null) {
+            JOptionPane.showMessageDialog(this, "Participant details not found", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JDialog detailDialog = new JDialog((java.awt.Frame)this.getTopLevelAncestor(), "Participant Details", false);
+        detailDialog.setLayout(new MigLayout("wrap 2, fillx, insets 10", "[][grow]", "[]10[]10[]10[]"));
+
+        detailDialog.add(new JLabel("Full Name:"), "cell 0 0");
+        detailDialog.add(new JLabel(details.get("fullName")), "cell 1 0");
+        detailDialog.add(new JLabel("Contact Number:"), "cell 0 1");
+        detailDialog.add(new JLabel(details.get("contact")), "cell 1 1");
+        detailDialog.add(new JLabel("Type:"), "cell 0 2");
+        detailDialog.add(new JLabel(details.get("type")), "cell 1 2");
+
+        // Add close button
+        JButton closeButton = new JButton("Close");
+        closeButton.addActionListener(e -> detailDialog.dispose());
+        detailDialog.add(closeButton, "cell 0 3 2 1, alignx center");
+
+        detailDialog.pack();
+        detailDialog.setLocationRelativeTo(this);
+        detailDialog.setVisible(true);
+    }
+
+    public void setStudentUid(int studentUid) {
+        this.studentUid = studentUid;
     }
 }

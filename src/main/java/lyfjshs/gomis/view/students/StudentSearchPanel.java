@@ -192,12 +192,17 @@ public abstract class StudentSearchPanel extends Modal {
         try {
             List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, sex);
             panelResult.removeAll();
-            resultPanels.clear(); // Clear stored result panels
+            resultPanels.clear();
 
             if (!students.isEmpty()) {
                 for (Student student : students) {
+                    // Create result panel with full student info including LRN
                     StudentResult resultPanel = new StudentResult(
-                        student.getStudentFirstname() + " " + student.getStudentLastname(),
+                        String.format("%s %s (%s)", 
+                            student.getStudentFirstname(),
+                            student.getStudentLastname(),
+                            student.getStudentLrn() // Add LRN to display
+                        ),
                         student.getStudentLrn()
                     );
                     setupResultPanel(student, resultPanel);
@@ -242,6 +247,18 @@ public abstract class StudentSearchPanel extends Modal {
                 clearSelections();
                 resultPanel.setSelected(true);
                 selectedStudent = student;
+                
+                // Populate LRN field if it exists
+                java.awt.Component[] components = getComponents();
+                for (java.awt.Component comp : components) {
+                    if (comp instanceof JTextField && 
+                        ((JTextField)comp).getClientProperty("JTextField.placeholderText") != null &&
+                        ((JTextField)comp).getClientProperty("JTextField.placeholderText").equals("Enter LRN")) {
+                        ((JTextField)comp).setText(student.getStudentLrn());
+                        break;
+                    }
+                }
+                
                 if (callback != null) {
                     callback.onStudentSelected(student);
                 } else {

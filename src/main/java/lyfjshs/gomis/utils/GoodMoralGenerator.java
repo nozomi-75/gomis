@@ -78,7 +78,7 @@ public class GoodMoralGenerator {
 
                         String jasperTemplate = "src/main/resources/jasperTemplates/templates/GoodMoral_Final.jasper";
                         String purpose = purposeField.getText().trim();
-                        String dateGiven = dateGivenField.getText().trim();
+                        String dateGiven = formatDateSelected;
 
                         // Validate inputs only when generating the report
                         if (purpose.isEmpty() || dateGiven.isEmpty()) {

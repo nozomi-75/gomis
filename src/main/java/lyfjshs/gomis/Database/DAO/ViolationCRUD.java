@@ -218,4 +218,59 @@ public class ViolationCRUD {
         }
         return violations;
     }
+
+    public List<ViolationRecord> getViolationsByParticipantName(String participantName) throws SQLException {
+        List<ViolationRecord> violations = new ArrayList<>();
+        String sql = "SELECT vr.* FROM VIOLATION_RECORD vr " +
+                    "JOIN PARTICIPANTS p ON vr.PARTICIPANT_ID = p.PARTICIPANT_ID " +
+                    "WHERE CONCAT(p.PARTICIPANT_FIRSTNAME, ' ', p.PARTICIPANT_LASTNAME) = ? " +
+                    "ORDER BY vr.UPDATED_AT DESC";
+                    
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, participantName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ViolationRecord violation = new ViolationRecord(
+                        rs.getInt("VIOLATION_ID"),
+                        rs.getInt("PARTICIPANT_ID"),
+                        rs.getString("VIOLATION_TYPE"),
+                        rs.getString("VIOLATION_DESCRIPTION"),
+                        rs.getString("ANECDOTAL_RECORD"),
+                        rs.getString("REINFORCEMENT"),
+                        rs.getString("STATUS"),
+                        rs.getTimestamp("UPDATED_AT")
+                    );
+                    violations.add(violation);
+                }
+            }
+        }
+        return violations;
+    }
+
+    // Get active violations that need follow-up
+    public List<ViolationRecord> getActiveViolations() throws SQLException {
+        List<ViolationRecord> violations = new ArrayList<>();
+        String sql = "SELECT * FROM VIOLATION_RECORD WHERE STATUS = 'Active' " +
+                    "AND DATEDIFF(NOW(), UPDATED_AT) >= 7 " +
+                    "ORDER BY UPDATED_AT";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                ViolationRecord violation = new ViolationRecord(
+                    rs.getInt("VIOLATION_ID"),
+                    rs.getInt("PARTICIPANT_ID"),
+                    rs.getString("VIOLATION_TYPE"),
+                    rs.getString("VIOLATION_DESCRIPTION"),
+                    rs.getString("ANECDOTAL_RECORD"),
+                    rs.getString("REINFORCEMENT"),
+                    rs.getString("STATUS"),
+                    rs.getTimestamp("UPDATED_AT")
+                );
+                violations.add(violation);
+            }
+        }
+        return violations;
+    }
 }

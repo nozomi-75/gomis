@@ -2,6 +2,7 @@ package lyfjshs.gomis.view;
 
 
 import java.awt.Font;
+import java.awt.Component;
 import java.sql.Connection;
 import java.util.Map;
 
@@ -20,10 +21,10 @@ import net.miginfocom.swing.MigLayout;
 
 @SuppressWarnings({ "unused", "serial" })
 public class SettingsPanel extends Form {
-	private final FlatToggleSwitch notificationsToggle;
-	private final JComboBox<Integer> fontSizeComboBox;
-	private final JComboBox<String> fontComboBox;
-	private final JComboBox<String> themeComboBox;
+	private final FlatToggleSwitch notificationsToggle = new FlatToggleSwitch();
+	private JComboBox<Integer> fontSizeComboBox;
+	private JComboBox<String> fontComboBox;
+	private JComboBox<String> themeComboBox;
 	private final Map<String, String> themeMap = Map.of("Dark Theme", "FlatDarkLaf", "Light Theme", "FlatLightLaf",
 			"Mac Dark Theme", "FlatMacDarkLaf", "Mac Light Theme", "FlatMacLightLaf", "Darcula Theme", "FlatDarculaLaf",
 			"IntelliJ Theme", "FlatIntelliJLaf");
@@ -57,15 +58,33 @@ public class SettingsPanel extends Form {
 		panel_1.add(lblOnOff, "cell 0 0,growx,aligny center");
 
 		// Create our custom toggle
-		notificationsToggle = new FlatToggleSwitch();
-        // If you want to override the color just for this one instance:
-        // toggleSwitch.setTrackOnColor(new Color(76, 175, 80)); // green
-        // toggleSwitch.setAnimationDuration(200);               // e.g. 200ms
 		panel_1.add(notificationsToggle, "cell 1 0,growx,aligny center");
+
+		// Add listener to update the label text
+		notificationsToggle.addActionListener(e -> {
+			boolean isOn = notificationsToggle.isSelected();
+			lblOnOff.setText(isOn ? "On" : "Off");
+		});
+
+		// Update initial state based on settings
+		SettingsState currentState = Main.settings.getSettingsState();
+		notificationsToggle.setSelected(currentState.notifications);
+		lblOnOff.setText(currentState.notifications ? "On" : "Off");
 
 		JLabel lblDarkModeDesc = new JLabel("Turn on or off Notifications");
 		darkModePanel.add(lblDarkModeDesc, "cell 0 1");
 
+		// Initialize remaining components
+		initializeRemainingComponents(panel);
+
+		// Initialize settings and listeners
+		removeAllListeners();
+		updateUIComponents(Main.settings.getSettingsState());
+		SettingsManager.addSettingsListener(this::updateUIComponents);
+		addComponentListeners();
+	}
+
+	private void initializeRemainingComponents(JPanel panel) {
 		// Theme Selection Panel
 		JPanel themePanel = new JPanel(new MigLayout("fill", "[grow]", "[][]"));
 		themePanel.putClientProperty("FlatLaf.style",
@@ -114,21 +133,6 @@ public class SettingsPanel extends Form {
 
 		fontComboBox = new JComboBox<>(new String[] { "SansSerif", "Serif", "Monospaced" });
 		fontPanel.add(fontComboBox, "cell 1 0 1 2,alignx right,aligny center");
-
-		// Initialize with current settings before adding listeners
-        SettingsState currentState = Main.settings.getSettingsState();
-        
-        // Remove temporary listeners if any
-        removeAllListeners();
-        
-        // Update UI with current state
-        updateUIComponents(currentState);
-        
-        // Add settings listener for future changes
-        SettingsManager.addSettingsListener(this::updateUIComponents);
-        
-        // Add component listeners
-        addComponentListeners();
 	}
 
 	private void applySelectedTheme() {
@@ -164,6 +168,15 @@ public class SettingsPanel extends Form {
             fontSizeComboBox.setSelectedItem(state.fontSize);
             fontComboBox.setSelectedItem(state.fontStyle);
             notificationsToggle.setSelected(state.notifications);
+            
+            // Update the On/Off label
+            Component[] components = ((JPanel)notificationsToggle.getParent()).getComponents();
+            for (Component c : components) {
+                if (c instanceof JLabel && (((JLabel)c).getText().equals("On") || ((JLabel)c).getText().equals("Off"))) {
+                    ((JLabel)c).setText(state.notifications ? "On" : "Off");
+                    break;
+                }
+            }
             
             // Re-add listeners
             addComponentListeners();

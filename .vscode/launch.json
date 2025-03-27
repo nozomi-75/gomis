@@ -5,6 +5,34 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "java",
+            "name": "StudentsDataDAO",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.Database.DAO.StudentsDataDAO",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "ViolationRecordForm",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.test.ViolationRecordForm",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "CompileJasper",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.utils.CompileJasper",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.Main",
+            "projectName": "gomis"
+        },
+        {
             "type": "jdk",
             "request": "launch",
             "name": "Launch Java App"

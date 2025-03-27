@@ -255,10 +255,8 @@ private void showAppointmentDetailsPopup(Appointment appointment) {
             AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
 
             // Use AddAppointmentModal to show the dialog
-            AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO, 750, 800);
-
-            // Update the current view after the modal is closed
-            updateAppointmentsDisplay();
+            AddAppointmentModal.getInstance().showModal(connection, this, addAppointmentPanel, appointmentDAO, 750, 800, this::updateAppointmentsDisplay);
+            
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error creating appointment: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();

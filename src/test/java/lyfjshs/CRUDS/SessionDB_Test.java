@@ -107,23 +107,21 @@ public class SessionDB_Test {
                     participants.add(new Participants(participantId, null, null, null, null, null));
                 }
             }
+            // // Create new session
+            // Sessions newSession = new Sessions(appointmentId, guidanceCounselorId, violationId,
+            //         violationId, appointmentType, consultationType, sessionDateTime, sessionNotes, sessionStatus, 
+            //                             sessionStatus, new Timestamp(System.currentTimeMillis()));
     
-            // Create new session
-            Sessions newSession = new Sessions(0, appointmentId, guidanceCounselorId, violationId,
-                    appointmentType, consultationType, sessionDateTime, sessionNotes, sessionStatus, 
-                    new Timestamp(System.currentTimeMillis()));
-    
-            // ✅ Set participants
-            newSession.setParticipants(participants);
-    
-            // Insert session into database
-            int sessionId = sessionsDAO.addSession(newSession);
-            if (sessionId > 0) {
-                System.out.println("✅ Session created successfully with ID: " + sessionId);
-                System.out.println("✅ Participants added successfully.");
-            } else {
-                System.out.println("❌ Failed to create session.");
-            }
+            // // ✅ Set participants
+            // newSession.setParticipants(participants);
+            // // Insert session into database
+            // int sessionId = sessionsDAO.addSession(newSession);
+            // if (sessionId > 0) {
+            //     System.out.println("✅ Session created successfully with ID: " + sessionId);
+            //     System.out.println("✅ Participants added successfully.");
+            // } else {
+            //     System.out.println("❌ Failed to create session.");
+            // }
         } catch (SQLException e) {
             e.printStackTrace();
         }

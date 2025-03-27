@@ -118,6 +118,14 @@ public class ParentsDAO {
         return false;
     }
 
+    public boolean deleteParents(int parentId) throws SQLException {
+        String sql = "DELETE FROM PARENTS WHERE PARENT_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, parentId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
     // Retrieves all parent records from the database
     public List<String> getAllParents() {
         List<String> parents = new ArrayList<>();

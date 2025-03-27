@@ -114,10 +114,12 @@ public class MainDashboard extends Form {
 	FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.5f);
 
 	private JScrollPane createTablePanel() {
-		String[] columnNames = { "LRN", "Full Name", "Violation Type", "Violation Status", "Actions" };
+		String[] columnNames = { "LRN", "Full Name", "Violation Type", "Status", "Actions" }; // Changed "Violation
+																								// Status" to "Status"
 		Class<?>[] columnTypes = { String.class, String.class, String.class, String.class, Object.class };
 		boolean[] editableColumns = { false, false, false, false, true };
-		double[] columnWidths = { 0.15, 0.30, 0.19, 0.19, 0.18 };
+		double[] columnWidths = { 0.15, 0.20, 0.17, 0.10, 0.38 }; // Adjusted widths to ensure total is 1 and "Actions"
+																	// column is wide enough
 		int[] alignments = { SwingConstants.CENTER, // LRN
 				SwingConstants.LEFT, // Full Name
 				SwingConstants.LEFT, // Violation Type
@@ -140,37 +142,63 @@ public class MainDashboard extends Form {
 		GTable table = new GTable(initialData, columnNames, columnTypes, editableColumns, columnWidths, alignments,
 				false, // No checkbox column
 				actionsColumn);
-
-		// Load violation data
+		// Load violation data - Modified to only show active violations
 		try {
 			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
 			ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
 			StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
 
 			List<ViolationRecord> violations = violationCRUD.getAllViolations();
+			System.out.println("Found " + violations.size() + " violations"); // Debug line
+
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
+			model.setRowCount(0); // Clear existing rows
 
 			for (ViolationRecord violation : violations) {
-				if (!"Active".equals(violation.getStatus())) {
-					violationCRUD.deleteViolation(violation.getViolationId());
-					continue;
-				}
-				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
-				if (participant != null && participant.getStudentUid() != null) {
-					Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
-					if (student != null) {
-						String fullName = String.format("%s %s",
-								student.getStudentFirstname() != null ? student.getStudentFirstname() : "",
-								student.getStudentLastname() != null ? student.getStudentLastname() : "").trim();
+				// Debug information
+				System.out.println("\nProcessing violation:" +
+						"\nID: " + violation.getViolationId() +
+						"\nType: " + violation.getViolationType() +
+						"\nStatus: " + violation.getStatus() +
+						"\nParticipantID: " + violation.getParticipantId());
 
-						model.addRow(new Object[] {
-								student.getStudentLrn(),
-								fullName,
-								violation.getViolationType(), // Changed from student.getStudentSex()
-								violation.getStatus(), // Changed from student.getSchoolSection()
-								"actions" // This column will be handled by TableActionManager
-						});
+				// Only process active violations
+				if ("Active".equals(violation.getStatus())) {
+					Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
+					if (participant != null) {
+						System.out.println("Found participant:" +
+								"\nName: " + participant.getParticipantFirstName() + " "
+								+ participant.getParticipantLastName() +
+								"\nType: " + participant.getParticipantType() +
+								"\nStudentUID: " + participant.getStudentUid());
+
+						if (participant.getStudentUid() != null && participant.getStudentUid() > 0) {
+							Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
+							if (student != null) {
+								String fullName = String.format("%s %s",
+										student.getStudentFirstname() != null ? student.getStudentFirstname() : "",
+										student.getStudentLastname() != null ? student.getStudentLastname() : "")
+										.trim();
+
+								model.addRow(new Object[] {
+										student.getStudentLrn(),
+										fullName,
+										violation.getViolationType(),
+										violation.getStatus(),
+										"actions"
+								});
+							} else {
+								System.out.println("ERROR: Student not found in database for StudentUID: "
+										+ participant.getStudentUid());
+							}
+						} else {
+							System.out.println("ERROR: Invalid StudentUID (null or 0) for participant");
+						}
+					} else {
+						System.out.println("No participant found for ID: " + violation.getParticipantId());
 					}
+				} else {
+					System.out.println("Skipping non-active violation");
 				}
 			}
 		} catch (SQLException e) {
@@ -232,7 +260,6 @@ public class MainDashboard extends Form {
 					resolutionLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
 					detailPanel.add(resolutionLabel, "span, gaptop 10, gapbottom 5");
 				}
-
 
 				// Configure modal options based on violation status
 				SimpleModalBorder.Option[] options;
@@ -330,30 +357,30 @@ public class MainDashboard extends Form {
 				if (option == JOptionPane.YES_OPTION) {
 					boolean success = violationCRUD.updateViolationStatus(violation.getViolationId(), "Resolved");
 					if (success) {
-						JOptionPane.showMessageDialog(this, 
-							"Violation has been resolved successfully!",
-							"Success",
-							JOptionPane.INFORMATION_MESSAGE);
-						refreshTable();
+						JOptionPane.showMessageDialog(this,
+								"Violation has been resolved successfully!",
+								"Success",
+								JOptionPane.INFORMATION_MESSAGE);
+						refreshTable(); // Refresh table after resolving
 					} else {
-						JOptionPane.showMessageDialog(this, 
-							"Failed to resolve violation.", 
-							"Error",
-							JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(this,
+								"Failed to resolve violation.",
+								"Error",
+								JOptionPane.ERROR_MESSAGE);
 					}
 				}
 			} else {
 				JOptionPane.showMessageDialog(this,
-					"Violation not found.",
-					"Error",
-					JOptionPane.ERROR_MESSAGE);
+						"Violation not found.",
+						"Error",
+						JOptionPane.ERROR_MESSAGE);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, 
-				"Error resolving violation: " + e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,
+					"Error resolving violation: " + e.getMessage(),
+					"Error",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -505,8 +532,13 @@ public class MainDashboard extends Form {
 		AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
 
 		// Use AddAppointmentModal to show the dialog
-		AddAppointmentModal.getInstance().showModal(this, addAppointmentPanel, appointmentDAO, 700, 650);
-		Main.appointmentCalendar.refreshViews();
+		AddAppointmentModal.getInstance().showModal(connection,
+				this,
+				addAppointmentPanel,
+				appointmentDAO,
+				700,
+				65,
+				() -> Main.appointmentCalendar.refreshViews());
 	}
 
 	private void printInitialForm() {
@@ -518,4 +550,10 @@ public class MainDashboard extends Form {
 		FormManager.showForm(incidentFillUp);
 	}
 
+	// Add method to refresh table when dashboard is shown
+	@Override
+	public void formRefresh() {
+		super.formRefresh();
+		refreshTable();
+	}
 }

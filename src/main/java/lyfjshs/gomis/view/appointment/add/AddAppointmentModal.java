@@ -1,9 +1,17 @@
 package lyfjshs.gomis.view.appointment.add;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
+import lyfjshs.gomis.view.appointment.AppointmentCalendar;
+import lyfjshs.gomis.view.appointment.AppointmentDailyOverview;
+import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
 import raven.modal.component.SimpleModalBorder.Option;
@@ -22,7 +30,7 @@ public class AddAppointmentModal {
         return instance;
     }
 
-    public void showModal(JPanel parent, AddAppointmentPanel addAppointPanel, AppointmentDAO appointmentDAO, Number width, Number height) {
+    public void showModal(Connection conn, JPanel parent, AddAppointmentPanel addAppointPanel, AppointmentDAO appointmentDAO, Number width, Number height, Runnable onSuccess) {
         Option[] modalBorder = new SimpleModalBorder.Option[] {
                 new SimpleModalBorder.Option("Add Appointment", SimpleModalBorder.YES_OPTION),
                 new SimpleModalBorder.Option("Cancel", SimpleModalBorder.NO_OPTION) };
@@ -36,31 +44,58 @@ public class AddAppointmentModal {
                         try {
                             // Validate and save the appointment
                             if (addAppointPanel.saveAppointment()) {
-                                JOptionPane.showMessageDialog(parent, "Appointment created successfully!",
-                                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                                // Close the modal first
                                 controller.close();
-                            } else {
-                                JOptionPane.showMessageDialog(parent, "Failed to create appointment. Please try again.",
-                                        "Error", JOptionPane.ERROR_MESSAGE);
+                                
+                                // Call success callback
+                                if (onSuccess != null) {
+                                    onSuccess.run();
+                                }
+                                
+                                // Refresh the views after successful creation
+                                if (parent instanceof AppointmentCalendar) {
+                                    AppointmentCalendar calendar = (AppointmentCalendar) parent;
+                                    calendar.updateCalendar();
+                                    if (calendar.getParent() instanceof AppointmentManagement) {
+                                        ((AppointmentManagement) calendar.getParent()).refreshViews();
+                                    }
+                                } else if (parent instanceof AppointmentManagement) {
+                                    ((AppointmentManagement) parent).refreshViews();
+                                } else if (parent instanceof AppointmentDailyOverview) {
+                                    ((AppointmentDailyOverview) parent).updateAppointmentsDisplay();
+                                }
                             }
-                        } catch (IllegalArgumentException e) {
-                            // Validation errors are already shown in validateInputs()
                         } catch (Exception e) {
-                            JOptionPane.showMessageDialog(parent, "Error: " + e.getMessage(), "Error",
-                                    JOptionPane.ERROR_MESSAGE);
+                            // Show error message
+                            JOptionPane.showMessageDialog(parent, "Error creating appointment: " + e.getMessage(),
+                                    "Error", JOptionPane.ERROR_MESSAGE);
                             e.printStackTrace();
                         }
-                    } else if (action == SimpleModalBorder.NO_OPTION || action == SimpleModalBorder.CLOSE_OPTION
-                            || action == SimpleModalBorder.CANCEL_OPTION) {
-                        // Ask for confirmation if participants are already added
-                        if (addAppointPanel.getParticipantIds() != null
-                                && !addAppointPanel.getParticipantIds().isEmpty()) {
+                    } else if (action == SimpleModalBorder.NO_OPTION || action == SimpleModalBorder.CLOSE_OPTION) {
+                        // Ask for confirmation and cleanup participants if needed
+                        List<Integer> participants = addAppointPanel.getParticipantIds();
+                        if (participants != null && !participants.isEmpty()) {
                             int confirm = JOptionPane.showConfirmDialog(parent,
                                     "Are you sure you want to cancel? "
-                                            + "The participants you have added will be lost.",
-                                    "Cancel Appointment", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                                            + "All added participants will be removed.",
+                                    "Cancel Appointment", 
+                                    JOptionPane.YES_NO_OPTION, 
+                                    JOptionPane.WARNING_MESSAGE);
                             if (confirm == JOptionPane.YES_OPTION) {
-                                controller.close();
+                                // Cleanup participants
+                                try {
+                                    ParticipantsDAO participantsDAO = new ParticipantsDAO(conn);
+                                    for (Integer participantId : participants) {
+                                        participantsDAO.deleteParticipant(participantId);
+                                    }
+                                    controller.close();
+                                } catch (SQLException e) {
+                                    e.printStackTrace();
+                                    JOptionPane.showMessageDialog(parent,
+                                        "Error cleaning up participants: " + e.getMessage(),
+                                        "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                }
                             }
                         } else {
                             controller.close();

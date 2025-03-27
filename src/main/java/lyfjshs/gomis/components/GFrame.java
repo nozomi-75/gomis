@@ -1,32 +1,15 @@
 package lyfjshs.gomis.components;
 
-import java.awt.AWTException;
-import java.awt.Dimension;
-import java.awt.Image;
-import java.awt.LayoutManager;
-import java.awt.MenuItem;
-import java.awt.PopupMenu;
-import java.awt.SystemTray;
-import java.awt.Toolkit;
-import java.awt.TrayIcon;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.sql.Connection;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.components.FlatStyleableComponent;
-
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.components.settings.SettingsManager;
 import lyfjshs.gomis.components.settings.SettingsState;
@@ -41,6 +24,7 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	private TrayIcon trayIcon;
 	private Timer notificationTimer;
 	private boolean trayIconAdded = false;
+	private NotificationManager notificationManager;
 
 	private SettingsManager settingsManager; // 🔹 Reference to SettingsManager
 
@@ -143,8 +127,10 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	 * Minimizes the application to the system tray.
 	 */
 	private void minimizeToTray() {
-		if (systemTray == null || trayIconAdded)
+		if (!SystemTray.isSupported() || trayIconAdded) {
+			setVisible(false);
 			return;
+		}
 
 		try {
 			systemTray.add(trayIcon);
@@ -154,6 +140,8 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 					TrayIcon.MessageType.INFO);
 		} catch (AWTException e) {
 			e.printStackTrace();
+			// If we can't add to tray, just minimize
+			setVisible(false);
 		}
 	}
 
@@ -162,7 +150,8 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	 */
 	private void restoreFromTray() {
 		setVisible(true);
-		if (trayIconAdded) {
+		setExtendedState(JFrame.NORMAL);
+		if (trayIconAdded && systemTray != null) {
 			systemTray.remove(trayIcon);
 			trayIconAdded = false;
 		}
@@ -256,5 +245,111 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	@Override
 	public void putClientProperty(Object key, Object value) {
 		getRootPane().putClientProperty(key, value);
+	}
+
+	public void initializeTrayIcon() {
+		if (!SystemTray.isSupported()) {
+			System.err.println("System tray is not supported");
+			return;
+		}
+
+		if (trayIcon != null) {
+			// Clean up existing tray icon if any
+			if (trayIconAdded && systemTray != null) {
+				systemTray.remove(trayIcon);
+				trayIconAdded = false;
+			}
+			trayIcon = null;
+		}
+
+		systemTray = SystemTray.getSystemTray();
+		
+		// Try multiple possible icon locations
+		Image image = null;
+		String[] iconPaths = {
+			"/icons/app_icon.png",
+			"/images/GOMIS Logo.png",
+			"/GOMIS Logo.png",
+			"/GOMIS_Circle.png"
+		};
+		
+		for (String path : iconPaths) {
+			java.net.URL iconUrl = getClass().getResource(path);
+			if (iconUrl != null) {
+				image = new ImageIcon(iconUrl).getImage();
+				break;
+			}
+		}
+		
+		// If no icon found, create a default one
+		if (image == null) {
+			// Create a simple colored square as fallback
+			java.awt.image.BufferedImage fallbackImage = new java.awt.image.BufferedImage(
+				16, 16, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+			java.awt.Graphics2D g2 = fallbackImage.createGraphics();
+			g2.setColor(new Color(0x004aad));
+			g2.fillRect(0, 0, 16, 16);
+			g2.dispose();
+			image = fallbackImage;
+			System.err.println("Warning: Could not load tray icon, using fallback");
+		}
+		
+		PopupMenu popup = new PopupMenu();
+		MenuItem showItem = new MenuItem("Show");
+		showItem.addActionListener(e -> {
+			setVisible(true);
+			setExtendedState(JFrame.NORMAL);
+		});
+		MenuItem exitItem = new MenuItem("Exit");
+		exitItem.addActionListener(e -> {
+			if (notificationManager != null) {
+				notificationManager.stopNotificationServices();
+			}
+			System.exit(0);
+		});
+		
+		popup.add(showItem);
+		popup.addSeparator();
+		popup.add(exitItem);
+		
+		trayIcon = new TrayIcon(image, "GOMIS", popup);
+		trayIcon.setImageAutoSize(true);
+		trayIcon.addActionListener(e -> {
+			setVisible(true);
+			setExtendedState(JFrame.NORMAL);
+		});
+	}
+
+	public void initializeNotifications(Connection connection) {
+		if (trayIcon != null) {
+			notificationManager = new NotificationManager(connection, trayIcon);
+			// Only start notifications if enabled in settings
+			if (SettingsManager.getCurrentState().notifications) {
+				notificationManager.startNotificationServices();
+			}
+		}
+	}
+
+	@Override
+	public void dispose() {
+		if (notificationManager != null) {
+			notificationManager.stopNotificationServices();
+		}
+		if (trayIconAdded && systemTray != null) {
+			systemTray.remove(trayIcon);
+			trayIconAdded = false;
+		}
+		super.dispose();
+	}
+
+	// Override setVisible to minimize to tray
+	@Override
+	public void setVisible(boolean visible) {
+		if (!visible && SystemTray.isSupported()) {
+			// Minimize to tray
+			super.setVisible(false);
+		} else {
+			super.setVisible(visible);
+		}
 	}
 }

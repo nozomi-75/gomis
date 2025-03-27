@@ -142,4 +142,53 @@ public class ParticipantsDAO {
         }
         return participant;
     }
+
+    public List<Participants> getParticipantByStudentUid(int studentUid) throws SQLException {
+        List<Participants> participants = new ArrayList<>();
+        String sql = "SELECT * FROM participants WHERE student_uid = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, studentUid);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Participants participant = new Participants();
+                participant.setParticipantId(rs.getInt("participant_id"));
+                participant.setStudentUid(rs.getInt("student_uid"));
+                participant.setParticipantType(rs.getString("participant_type"));
+                participant.setParticipantFirstName(rs.getString("participant_firstname"));
+                participant.setParticipantLastName(rs.getString("participant_lastname"));
+                participant.setSex(rs.getString("participant_sex"));
+                participant.setContactNumber(rs.getString("contact_number"));
+                participants.add(participant);
+            }
+        }
+        return participants;
+    }
+
+    public List<Participants> getParticipantsBySessionId(int sessionId) throws SQLException {
+        List<Participants> participants = new ArrayList<>();
+        String sql = "SELECT p.* FROM PARTICIPANTS p " +
+                     "JOIN SESSIONS_PARTICIPANTS sp ON p.PARTICIPANT_ID = sp.PARTICIPANT_ID " +
+                     "WHERE sp.SESSION_ID = ?";
+                     
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, sessionId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Participants participant = new Participants(
+                        rs.getObject("STUDENT_UID", Integer.class),
+                        rs.getString("PARTICIPANT_TYPE"),
+                        rs.getString("PARTICIPANT_LASTNAME"),
+                        rs.getString("PARTICIPANT_FIRSTNAME"),
+                        rs.getString("PARTICIPANT_SEX"),
+                        rs.getString("CONTACT_NUMBER")
+                    );
+                    participant.setParticipantId(rs.getInt("PARTICIPANT_ID"));
+                    participants.add(participant);
+                }
+            }
+        }
+        return participants;
+    }
 }
