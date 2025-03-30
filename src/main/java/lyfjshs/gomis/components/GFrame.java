@@ -1,16 +1,40 @@
 package lyfjshs.gomis.components;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.LayoutManager;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.Connection;
 import java.util.Timer;
 import java.util.TimerTask;
-import javax.swing.*;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.components.FlatStyleableComponent;
+
 import lyfjshs.gomis.Database.DBConnection;
+import lyfjshs.gomis.components.notification.NotificationCallback;
+import lyfjshs.gomis.components.notification.NotificationManager;
+import lyfjshs.gomis.components.notification.NotificationPopup;
 import lyfjshs.gomis.components.settings.SettingsManager;
 import lyfjshs.gomis.components.settings.SettingsState;
 
@@ -18,15 +42,15 @@ import lyfjshs.gomis.components.settings.SettingsState;
  * The {@code GFrame} class extends {@code JFrame} with FlatLaf enhancements.
  * It includes system tray support, notifications, and animated UI updates.
  */
-public class GFrame extends JFrame implements FlatStyleableComponent {
+public class GFrame extends JFrame implements FlatStyleableComponent, NotificationCallback {
 	private static final long serialVersionUID = 1L;
 	private SystemTray systemTray;
 	private TrayIcon trayIcon;
 	private Timer notificationTimer;
 	private boolean trayIconAdded = false;
 	private NotificationManager notificationManager;
-
-	private SettingsManager settingsManager; // 🔹 Reference to SettingsManager
+	private NotificationPopup notificationPopup;
+	private SettingsManager settingsManager;
 
 	/**
 	 * Constructs a {@code GFrame} with specified properties.
@@ -39,19 +63,24 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	 * @param icon    The icon of the frame.
 	 */
 	public GFrame(int width, int height, boolean visible, String title, ImageIcon icon, Connection conn) {
+		super(title);
 		this.settingsManager = new SettingsManager(conn);
-		SettingsState state = settingsManager.getSettingsState(); // 🔹 Load saved settings
 
+		// Basic frame setup first
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setSize(width, height);
 		setLocationRelativeTo(null);
 		setTitle(title);
 
-		applySettings(state); // 🔹 Apply theme & font from settings
+		// Create and set the main content panel
+		JPanel mainPanel = new JPanel(new BorderLayout());
+		mainPanel.setOpaque(true);
+		setContentPane(mainPanel);
 
+		// Initialize system tray
 		setupSystemTray();
-		startNotificationTask();
 
+		// Add window listeners
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -65,23 +94,27 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 				setMinimumSize(new Dimension(1250, 700));
 			}
 		});
-	}
 
-	/**
-	 * Applies settings such as theme, font, and window properties.
-	 */
-	private void applySettings(SettingsState state) {
-		settingsManager.initializeAppSettings(); // 🔹 Apply the theme & font
-
-		// Enable full window content styling
-		putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
-		putClientProperty(FlatClientProperties.USE_WINDOW_DECORATIONS, true);
-		getRootPane().putClientProperty("JRootPane.roundedCorners", true);
-
-		// Apply FlatLaf system properties for better integration
+		// Apply FlatLaf system properties
 		System.setProperty("flatlaf.menuBarEmbedded", "true");
 		System.setProperty("flatlaf.useWindowDecorations", "true");
 
+		// Ensure frame is packed before applying settings
+		pack();
+
+		// Now apply settings after frame is fully initialized
+		SwingUtilities.invokeLater(() -> {
+			try {
+				settingsManager.initializeAppSettings();
+				if (getRootPane() != null) {
+					putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
+					putClientProperty(FlatClientProperties.USE_WINDOW_DECORATIONS, true);
+					getRootPane().putClientProperty("JRootPane.roundedCorners", true);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
 	/**
@@ -107,7 +140,7 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 			return;
 
 		systemTray = SystemTray.getSystemTray();
-		Image trayImage = Toolkit.getDefaultToolkit().getImage("GOMIS_Circle.png"); // Update path
+		Image trayImage = loadTrayIcon();
 
 		PopupMenu popupMenu = new PopupMenu();
 		MenuItem restoreItem = new MenuItem("Restore");
@@ -118,9 +151,34 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 		exitItem.addActionListener(e -> exitApplication());
 		popupMenu.add(exitItem);
 
-		trayIcon = new TrayIcon(trayImage, "GFrame Running", popupMenu);
+		trayIcon = new TrayIcon(trayImage, "GOMIS", popupMenu);
 		trayIcon.setImageAutoSize(true);
 		trayIcon.addActionListener(e -> restoreFromTray());
+	}
+
+	private Image loadTrayIcon() {
+		String[] iconPaths = {
+			"/icons/app_icon.png",
+			"/images/GOMIS Logo.png",
+			"/GOMIS Logo.png",
+			"/GOMIS_Circle.png"
+		};
+		
+		for (String path : iconPaths) {
+			java.net.URL iconUrl = getClass().getResource(path);
+			if (iconUrl != null) {
+				return new ImageIcon(iconUrl).getImage();
+			}
+		}
+		
+		// Create fallback icon
+		java.awt.image.BufferedImage fallbackImage = new java.awt.image.BufferedImage(
+			16, 16, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+		java.awt.Graphics2D g2 = fallbackImage.createGraphics();
+		g2.setColor(new Color(0x004aad));
+		g2.fillRect(0, 0, 16, 16);
+		g2.dispose();
+		return fallbackImage;
 	}
 
 	/**
@@ -136,8 +194,9 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 			systemTray.add(trayIcon);
 			trayIconAdded = true;
 			setVisible(false);
-			showNotification("Minimized to Tray", "The application is still running in the background.",
-					TrayIcon.MessageType.INFO);
+			if (notificationManager != null) {
+				notificationManager.showInfoNotification("GOMIS", "Application minimized to tray");
+			}
 		} catch (AWTException e) {
 			e.printStackTrace();
 			// If we can't add to tray, just minimize
@@ -158,38 +217,11 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	}
 
 	/**
-	 * Displays a system tray notification.
-	 * 
-	 * @param title   The notification title.
-	 * @param message The notification message.
-	 * @param type    The notification type (INFO, WARNING, ERROR).
-	 */
-	public void showNotification(String title, String message, TrayIcon.MessageType type) {
-		if (trayIcon != null) {
-			trayIcon.displayMessage(title, message, type);
-		}
-	}
-
-	/**
-	 * Starts a background task that triggers notifications at intervals.
-	 */
-	private void startNotificationTask() {
-		notificationTimer = new Timer();
-		notificationTimer.scheduleAtFixedRate(new TimerTask() {
-			@Override
-			public void run() {
-				showNotification("Appointment Reminder", "You have pending appointments.",
-						TrayIcon.MessageType.INFO);
-			}
-		}, 5000, 30000); // First notification in 5 sec, then every 30 sec
-	}
-
-	/**
 	 * Exits the application safely.
 	 */
 	private void exitApplication() {
-		if (notificationTimer != null) {
-			notificationTimer.cancel();
+		if (notificationManager != null) {
+			notificationManager.cleanup();
 		}
 		if (trayIconAdded) {
 			systemTray.remove(trayIcon);
@@ -218,12 +250,13 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	public void replaceContentPanel(JComponent contentPanel, LayoutManager manager, String title) {
 		SwingUtilities.invokeLater(() -> {
 			FlatAnimatedLafChange.showSnapshot();
-			getContentPane().removeAll();
-			getContentPane().setLayout(manager);
+			JPanel mainPanel = (JPanel) getContentPane();
+			mainPanel.removeAll();
+			mainPanel.setLayout(manager != null ? manager : new BorderLayout());
+			mainPanel.add(contentPanel, BorderLayout.CENTER);
 			setTitle(title);
-			setContentPane(contentPanel);
-			getContentPane().revalidate();
-			getContentPane().repaint();
+			mainPanel.revalidate();
+			mainPanel.repaint();
 			FlatAnimatedLafChange.hideSnapshotWithAnimation();
 		});
 	}
@@ -232,108 +265,81 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	 * Updates settings dynamically when a change is made.
 	 */
 	public void updateSettings() {
-		SettingsState state = settingsManager.getSettingsState();
-		applySettings(state); // 🔹 Reapply theme & font dynamically
-		refresh();
+		SwingUtilities.invokeLater(() -> {
+			try {
+				settingsManager.initializeAppSettings();
+				if (getRootPane() != null) {
+					putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
+					putClientProperty(FlatClientProperties.USE_WINDOW_DECORATIONS, true);
+					getRootPane().putClientProperty("JRootPane.roundedCorners", true);
+				}
+				refresh();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
 	@Override
 	public Object getClientProperty(Object key) {
-		return getRootPane().getClientProperty(key);
+		if (getRootPane() != null) {
+			return getRootPane().getClientProperty(key);
+		}
+		return null;
 	}
 
 	@Override
 	public void putClientProperty(Object key, Object value) {
-		getRootPane().putClientProperty(key, value);
-	}
-
-	public void initializeTrayIcon() {
-		if (!SystemTray.isSupported()) {
-			System.err.println("System tray is not supported");
-			return;
+		if (getRootPane() != null) {
+			getRootPane().putClientProperty(key, value);
 		}
-
-		if (trayIcon != null) {
-			// Clean up existing tray icon if any
-			if (trayIconAdded && systemTray != null) {
-				systemTray.remove(trayIcon);
-				trayIconAdded = false;
-			}
-			trayIcon = null;
-		}
-
-		systemTray = SystemTray.getSystemTray();
-		
-		// Try multiple possible icon locations
-		Image image = null;
-		String[] iconPaths = {
-			"/icons/app_icon.png",
-			"/images/GOMIS Logo.png",
-			"/GOMIS Logo.png",
-			"/GOMIS_Circle.png"
-		};
-		
-		for (String path : iconPaths) {
-			java.net.URL iconUrl = getClass().getResource(path);
-			if (iconUrl != null) {
-				image = new ImageIcon(iconUrl).getImage();
-				break;
-			}
-		}
-		
-		// If no icon found, create a default one
-		if (image == null) {
-			// Create a simple colored square as fallback
-			java.awt.image.BufferedImage fallbackImage = new java.awt.image.BufferedImage(
-				16, 16, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-			java.awt.Graphics2D g2 = fallbackImage.createGraphics();
-			g2.setColor(new Color(0x004aad));
-			g2.fillRect(0, 0, 16, 16);
-			g2.dispose();
-			image = fallbackImage;
-			System.err.println("Warning: Could not load tray icon, using fallback");
-		}
-		
-		PopupMenu popup = new PopupMenu();
-		MenuItem showItem = new MenuItem("Show");
-		showItem.addActionListener(e -> {
-			setVisible(true);
-			setExtendedState(JFrame.NORMAL);
-		});
-		MenuItem exitItem = new MenuItem("Exit");
-		exitItem.addActionListener(e -> {
-			if (notificationManager != null) {
-				notificationManager.stopNotificationServices();
-			}
-			System.exit(0);
-		});
-		
-		popup.add(showItem);
-		popup.addSeparator();
-		popup.add(exitItem);
-		
-		trayIcon = new TrayIcon(image, "GOMIS", popup);
-		trayIcon.setImageAutoSize(true);
-		trayIcon.addActionListener(e -> {
-			setVisible(true);
-			setExtendedState(JFrame.NORMAL);
-		});
 	}
 
 	public void initializeNotifications(Connection connection) {
-		if (trayIcon != null) {
-			notificationManager = new NotificationManager(connection, trayIcon);
-			// Only start notifications if enabled in settings
-			if (SettingsManager.getCurrentState().notifications) {
-				notificationManager.startNotificationServices();
-			}
+		// Initialize NotificationManager as a singleton
+		notificationManager = NotificationManager.getInstance();
+		
+		// Create NotificationPopup with the main content panel
+		notificationPopup = new NotificationPopup((JPanel) getContentPane(), this);
+		
+		// Register the popup with the manager
+		notificationManager.registerPopup(notificationPopup);
+	}
+
+	public NotificationManager getNotificationManager() {
+		return notificationManager;
+	}
+
+	public NotificationPopup getNotificationPopup() {
+		return notificationPopup;
+	}
+
+	// NotificationCallback implementation
+	@Override
+	public void onNotificationClicked(NotificationManager.Notification notification) {
+		// Handle notification click
+		System.out.println("Notification clicked: " + notification.getMessage());
+		if (notificationPopup != null) {
+			notificationPopup.hide();
 		}
+	}
+
+	@Override
+	public void onNotificationDisplayed(NotificationManager.Notification notification) {
+		// Handle notification display
+		System.out.println("Notification displayed: " + notification.getMessage());
+	}
+
+	@Override
+	public ImageIcon getNotificationIcon(NotificationManager.Notification notification) {
+		// Return custom icon based on notification type
+		return new ImageIcon(loadTrayIcon());
 	}
 
 	@Override
 	public void dispose() {
 		if (notificationManager != null) {
-			notificationManager.stopNotificationServices();
+			notificationManager.cleanup();
 		}
 		if (trayIconAdded && systemTray != null) {
 			systemTray.remove(trayIcon);
@@ -346,8 +352,7 @@ public class GFrame extends JFrame implements FlatStyleableComponent {
 	@Override
 	public void setVisible(boolean visible) {
 		if (!visible && SystemTray.isSupported()) {
-			// Minimize to tray
-			super.setVisible(false);
+			minimizeToTray();
 		} else {
 			super.setVisible(visible);
 		}

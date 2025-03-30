@@ -66,4 +66,12 @@ public class Form extends JPanel {
         }
     }
 
+    /**
+     * Disposes of any resources used by this form.
+     * This method should be overridden by subclasses that need to clean up resources.
+     */
+    public void dispose() {
+        // Default implementation does nothing
+    }
+
 }

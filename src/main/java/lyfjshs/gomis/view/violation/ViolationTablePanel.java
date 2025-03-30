@@ -25,6 +25,7 @@ import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.Database.entity.Participants;
 
 public class ViolationTablePanel extends JPanel {
     private GTable table; // Use GTable instead of JTable
@@ -53,23 +54,21 @@ public class ViolationTablePanel extends JPanel {
 
         actionManager.addAction("View", (table, row) -> {
             ViolationRecord violation = getViolationAt(row);
-            FlatAnimatedLafChange.showSnapshot();
-            // show violation details
             if (violation != null) {
-                ViewViolationDetails viewDialog = new ViewViolationDetails(
-                        (JFrame) SwingUtilities.getWindowAncestor(this),
-                        violation,
-                        new StudentsDataDAO(connect),
-                        new ParticipantsDAO(connect));
-                viewDialog.setVisible(true);
+                ViewViolationDetails.showDialog(
+                    SwingUtilities.getWindowAncestor(this), 
+                    violation, 
+                    new StudentsDataDAO(connect),
+                    new ParticipantsDAO(connect)
+                );
             }
-            FlatAnimatedLafChange.hideSnapshotWithAnimation();
         }, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
 
         actionManager.addAction("Resolve",
                 (t, row) -> handleResolveAction(row),
                 new Color(46, 204, 113),
-                new com.formdev.flatlaf.extras.FlatSVGIcon("icons/resolve.svg", 0.5f));
+                new FlatSVGIcon("icons/resolve.svg", 0.5f));
+
         return actionManager;
     }
 
@@ -77,7 +76,7 @@ public class ViolationTablePanel extends JPanel {
         String[] columnNames = { "Student LRN", "Name", "Violation Type", "Reinforcement", "Status", "Actions" };
         Class<?>[] columnTypes = { String.class, String.class, String.class, String.class, String.class, Object.class };
         boolean[] editableColumns = { false, false, false, false, false, true };
-        double[] columnWidths = { 0.15, 0.25, 0.20, 0.25, 0.10, 0.04 }; // Adjusted widths for better spacing
+        double[] columnWidths = { 0.15, 0.20, 0.15, 0.20, 0.10, 0.20 }; // Increased Actions column width
         int[] alignments = { SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.LEFT, SwingConstants.LEFT,
                 SwingConstants.CENTER, SwingConstants.CENTER };
 
@@ -90,8 +89,12 @@ public class ViolationTablePanel extends JPanel {
                 editableColumns,
                 columnWidths,
                 alignments,
-                false, // No checkbox column
+                false,
                 actionManager);
+
+        // Set minimum width for Actions column
+        table.getColumnModel().getColumn(5).setMinWidth(200);
+        table.getColumnModel().getColumn(5).setMaxWidth(250);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(null);
@@ -102,30 +105,27 @@ public class ViolationTablePanel extends JPanel {
         ViolationRecord violation = getViolationAt(row);
         if (violation != null) {
             int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to resolve this violation?",
-                "Confirm Resolution",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-            );
-            
+                    this,
+                    "Are you sure you want to resolve this violation?",
+                    "Confirm Resolution",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
                     if (violationCRUD.updateViolationStatus(violation.getViolationId(), "RESOLVED")) {
                         JOptionPane.showMessageDialog(
-                            this,
-                            "Violation has been resolved successfully.",
-                            "Success",
-                            JOptionPane.INFORMATION_MESSAGE
-                        );
+                                this,
+                                "Violation has been resolved successfully.",
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
                         refreshData(); // Refresh the table to show updated status
                     } else {
                         JOptionPane.showMessageDialog(
-                            this,
-                            "Failed to resolve violation.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE
-                        );
+                                this,
+                                "Failed to resolve violation.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (Exception e) {
                     showError("Error resolving violation", e);
@@ -157,24 +157,46 @@ public class ViolationTablePanel extends JPanel {
     private void loadViolations(List<ViolationRecord> violationList) {
         this.violations = violationList;
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-
         model.setRowCount(0); // Clear existing rows
 
         StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connect);
+        ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
+
         for (ViolationRecord violation : violations) {
             try {
-                Student student = studentsDataDAO.getStudentById(violation.getParticipantId());
-                String studentLRN = student != null ? student.getStudentLrn() : "N/A";
-                String fullName = student != null
-                        ? String.format("%s %s %s", 
-                            student.getStudentFirstname(), 
-                            student.getStudentMiddlename() != null ? student.getStudentMiddlename() : "",
-                            student.getStudentLastname())
-                        : "N/A";
+                // Get participant first
+                Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
+                String lrn = "N/A";
+                String fullName;
+
+                if (participant != null) {
+                    // If participant is a student, get student details
+                    if (participant.getStudentUid() != null && participant.getStudentUid() > 0) {
+                        Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
+                        if (student != null) {
+                            lrn = student.getStudentLrn();
+                            fullName = String.format("%s %s %s",
+                                    student.getStudentFirstname(),
+                                    student.getStudentMiddlename() != null ? student.getStudentMiddlename() : "",
+                                    student.getStudentLastname());
+                        } else {
+                            fullName = String.format("%s %s",
+                                    participant.getParticipantFirstName(),
+                                    participant.getParticipantLastName());
+                        }
+                    } else {
+                        // For non-student participants
+                        fullName = String.format("%s %s",
+                                participant.getParticipantFirstName(),
+                                participant.getParticipantLastName());
+                    }
+                } else {
+                    fullName = "Unknown Participant";
+                }
 
                 model.addRow(new Object[] {
-                        studentLRN,
-                        fullName.trim(), // Trim to remove extra spaces if middle name is null
+                        lrn,
+                        fullName.trim(), // Trim to remove extra spaces
                         violation.getViolationType(),
                         violation.getReinforcement(),
                         violation.getStatus(),
@@ -182,7 +204,7 @@ public class ViolationTablePanel extends JPanel {
                 });
 
             } catch (Exception e) {
-                showError("Error loading student data for violation", e);
+                showError("Error loading participant data for violation", e);
             }
         }
     }

@@ -27,7 +27,7 @@ public class AppointmentDetailsUI extends JPanel {
 		setLayout(new MigLayout("wrap, fillx", "[grow]", "[]20[]20[]20[200px]20[]20[]20[]20[][]"));
 
 		// **Appointment Details Section**
-		JPanel appointmentDetailsHeader = createSectionHeader("Appointment Details", "APT-2025-0356");
+		JPanel appointmentDetailsHeader = createSectionHeader("Appointment Details", "Appointment ID here!");
 		add(appointmentDetailsHeader, "cell 0 0, growx");
 
 		JPanel detailsGrid = new JPanel(new MigLayout("wrap 2, gap 15", "[grow][grow]"));
@@ -89,7 +89,7 @@ public class AppointmentDetailsUI extends JPanel {
 		statusLabel.setForeground(new Color(44, 62, 80));
 		statusLabel.setFont(new Font("Arial", Font.BOLD, 12));
 		statusPanel.add(statusLabel, "growx");
-		JLabel statusBadge = new JLabel("Pending");
+		JLabel statusBadge = new JLabel("on-going");
 		statusBadge.setOpaque(true);
 		statusBadge.setBackground(new Color(243, 156, 18));
 		statusBadge.setForeground(Color.WHITE);

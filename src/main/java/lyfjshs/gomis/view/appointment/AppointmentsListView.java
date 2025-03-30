@@ -233,7 +233,7 @@ public class AppointmentsListView extends JPanel {
 
             // Configure default modal options
             ModalDialog.getDefaultOption()
-                    .setOpacity(0f) // Transparent background
+                    .setOpacity(0.3f) // Transparent background
                     .setAnimationOnClose(false) // No close animation
                     .getBorderOption()
                     .setBorderWidth(0.5f) // Thin border

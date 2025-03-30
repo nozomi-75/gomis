@@ -78,6 +78,8 @@ public class TestSearch extends JFrame {
 			return;
 		}
 		Option option = ModalDialog.createOption();
+		option.setOpacity(0f);
+		
 		option.setAnimationEnabled(true);
 		option.getLayoutOption().setMargin(40, 10, 10, 10).setLocation(Location.CENTER, Location.TOP);
 		ModalDialog.showModal(this, new SearchPanel(), option, "search");

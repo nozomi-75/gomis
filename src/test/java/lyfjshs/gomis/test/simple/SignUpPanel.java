@@ -14,12 +14,14 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -29,6 +31,7 @@ import com.formdev.flatlaf.extras.components.FlatSeparator;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
 import net.miginfocom.swing.MigLayout;
+import javax.swing.UIManager;
 
 public class SignUpPanel extends JPanel {
     private JLabel passwordStrengthLabel;
@@ -37,7 +40,7 @@ public class SignUpPanel extends JPanel {
     public SignUpPanel() {
         FlatMacLightLaf.setup();
         
-        setLayout(new MigLayout("wrap,fillx,insets 10", "[500,grow,fill]", "[][][grow][][][][][][][][][][][][][][]"));
+        setLayout(new MigLayout("wrap,fillx,insets 10", "[500,grow,fill]", "[][][][][][][][][][][][][][][][][]"));
         putClientProperty(FlatClientProperties.STYLE, "arc:20; background:darken(@background,3%)");
 
         groupGender = new ButtonGroup();
@@ -168,5 +171,21 @@ public class SignUpPanel extends JPanel {
                 : password.matches(".*[A-Z].*") && password.matches(".*[!@#$%^&*].*") ? 3 : 2;
         passwordStrengthLabel.setText(strength == 1 ? "Weak" : strength == 2 ? "Medium" : "Strong");
         passwordStrengthLabel.setForeground(strength == 1 ? Color.RED : strength == 2 ? Color.ORANGE : Color.GREEN);
+    }
+    
+    public static void main(String[] args) {
+    	try {
+    		UIManager.setLookAndFeel("com.formdev.flatlaf.themes.FlatMacLightLaf");
+    	} catch (Throwable e) {
+    		e.printStackTrace();
+    	}
+        SwingUtilities.invokeLater(() -> {
+        	FlatMacLightLaf.setup();
+            JFrame frame = new JFrame("Sign Up Test");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(600, 800);
+            frame.getContentPane().add(new SignUpPanel());
+            frame.setVisible(true);
+        });
     }
 }

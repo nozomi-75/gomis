@@ -116,9 +116,10 @@ public class SessionsForm extends Form {
 		customViolationField.setVisible(false);
 		customViolationField.setEnabled(false);
 
-		// Initialize violation field with combined offenses
+		// Initialize violation field with "No Violation" option
 		violationField = new JComboBox<>();
 		violationField.addItem("-- Select Violation --");
+		violationField.addItem("No Violation");  // Add "No Violation" option
 		for (String violation : violations) {
 			violationField.addItem(violation);
 		}
@@ -126,7 +127,7 @@ public class SessionsForm extends Form {
 		// Add listener to update violation type label and show/hide custom field
 		violationField.addActionListener(e -> {
 			String selected = (String) violationField.getSelectedItem();
-			if (selected == null || selected.equals("-- Select Violation --")) {
+			if (selected == null || selected.equals("-- Select Violation --") || selected.equals("No Violation")) {
 				customViolationField.setEnabled(false);
 				customViolationField.setVisible(false);
 				customViolationField.setText(""); // Clear the text when hidden
@@ -167,37 +168,45 @@ public class SessionsForm extends Form {
 				
 				// If already Ended, disable everything
 				if ("Ended".equals(currentStatus)) {
-					notesArea.setEditable(false);
-					sessionSummaryArea.setEditable(false);
-					participantTable.setEnabled(false);
-					saveButton.setEnabled(false);
-					searchStudentButton.setEnabled(false);
-					violationField.setEnabled(false);
-					customViolationField.setEnabled(false);
-					participantsComboBox.setEnabled(false);
-					consultationTypeComboBox.setEnabled(false);
-					appointmentTypeComboBox.setEnabled(false);
-					searchBtn.setEnabled(false);
-					saveButton.setText("Session Ended");
+					disableFieldsForEndedSession();
 					return;
 				}
 			}
 			
 			// For Active status or new sessions
 			boolean isActive = "Active".equals(newStatus);
-			notesArea.setEditable(isActive);
-			sessionSummaryArea.setEditable(isActive);
-			participantTable.setEnabled(isActive);
-			saveButton.setEnabled(isActive);
-			searchStudentButton.setEnabled(isActive);
-			violationField.setEnabled(isActive);
-			customViolationField.setEnabled(isActive && "Others".equals(violationField.getSelectedItem()));
-			participantsComboBox.setEnabled(isActive);
-			consultationTypeComboBox.setEnabled(isActive);
-			appointmentTypeComboBox.setEnabled(isActive);
-			searchBtn.setEnabled(isActive);
-			saveButton.setText(isEditing ? "Update Session" : "SAVE");
+			enableFieldsBasedOnStatus(isActive);
 		});
+	}
+
+	private void disableFieldsForEndedSession() {
+		notesArea.setEditable(false);
+		sessionSummaryArea.setEditable(false);
+		participantTable.setEnabled(false);
+		saveButton.setEnabled(false);
+		searchStudentButton.setEnabled(false);
+		violationField.setEnabled(false);
+		customViolationField.setEnabled(false);
+		participantsComboBox.setEnabled(false);
+		consultationTypeComboBox.setEnabled(false);
+		appointmentTypeComboBox.setEnabled(false);
+		searchBtn.setEnabled(false);
+		saveButton.setText("Session Ended");
+	}
+
+	private void enableFieldsBasedOnStatus(boolean isActive) {
+		notesArea.setEditable(isActive);
+		sessionSummaryArea.setEditable(isActive);
+		participantTable.setEnabled(isActive);
+		saveButton.setEnabled(isActive);
+		searchStudentButton.setEnabled(isActive);
+		violationField.setEnabled(isActive);
+		customViolationField.setEnabled(isActive && "Others".equals(violationField.getSelectedItem()));
+		participantsComboBox.setEnabled(isActive);
+		consultationTypeComboBox.setEnabled(isActive);
+		appointmentTypeComboBox.setEnabled(isActive);
+		searchBtn.setEnabled(isActive);
+		saveButton.setText(isEditing ? "Update Session" : "SAVE");
 	}
 
 	private void toggleSearchStudentButton() {
@@ -842,10 +851,10 @@ public class SessionsForm extends Form {
 						}
 					}
 
-					// Create violation records if applicable
-					if (violation != null && !violation.equals("-- Select Violation --")) {
+					// Only create violation records if a violation type is selected and it's not "No Violation"
+					if (violation != null && !violation.equals("-- Select Violation --") && !violation.equals("No Violation")) {
+						// Create violation records
 						ViolationCRUD violationCRUD = new ViolationCRUD(connect);
-
 						for (int i = 0; i < participantTableModel.getRowCount(); i++) {
 							int tempId = (int) participantTableModel.getValueAt(i, 4);
 							int realParticipantId = idMapping.get(tempId);

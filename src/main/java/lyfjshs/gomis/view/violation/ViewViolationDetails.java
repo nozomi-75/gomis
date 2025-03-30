@@ -1,8 +1,7 @@
 package lyfjshs.gomis.view.violation;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
+import java.awt.Component;
 import java.awt.Font;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -10,9 +9,6 @@ import java.time.LocalDate;
 import java.time.Period;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -20,17 +16,17 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
-import com.formdev.flatlaf.FlatLightLaf;
-
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.ViolationRecord;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.ModalDialog;
+import raven.modal.component.SimpleModalBorder;
+import raven.modal.option.Option;
 
-public class ViewViolationDetails extends JDialog {
-
+public class ViewViolationDetails extends JPanel {
 	private JTextField txtViolationID;
 	private JTextField txtViolationType;
 	private JTextField txtStatus;
@@ -46,36 +42,27 @@ public class ViewViolationDetails extends JDialog {
 	private JTextField txtReinforcementType;
 	private JTextField txtActionRecommended;
 	private JTextArea txtActions;
-	private JButton btnClose;
 	private ViolationRecord violation;
 	private StudentsDataDAO studentsDataDAO;
 	private ParticipantsDAO participantsDAO;
 
-	public ViewViolationDetails(JFrame parent, ViolationRecord violation, StudentsDataDAO studentsDataDAO,
+	public ViewViolationDetails(ViolationRecord violation, StudentsDataDAO studentsDataDAO,
 			ParticipantsDAO participantsDAO) {
-		super(parent, "Violation Details", true);
-		this.setModalityType(ModalityType.APPLICATION_MODAL);
 		this.violation = violation;
 		this.studentsDataDAO = studentsDataDAO;
 		this.participantsDAO = participantsDAO;
 		initComponents();
 		loadViolationData();
-		setLocationRelativeTo(parent);
 	}
 
 	private void initComponents() {
-		try {
-			UIManager.setLookAndFeel(new FlatLightLaf());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		setLayout(new MigLayout("wrap, insets 30", "[grow]", "[]"));
+		putClientProperty("FlatLaf.style", "arc: 8");
 
-		getContentPane().setLayout(new BorderLayout());
-
-		JPanel mainPanel = new JPanel(new MigLayout("wrap, insets 30", "[grow]", "[]"));
-		mainPanel.setBackground(Color.WHITE);
+		JPanel mainPanel = new JPanel(new MigLayout("wrap, fillx, insets 20", "[grow]", "[]"));
+		mainPanel.putClientProperty("FlatLaf.style", "arc: 8");
 		mainPanel.setBorder(BorderFactory.createCompoundBorder(
-				BorderFactory.createLineBorder(new Color(0, 0, 0, 50), 1),
+				BorderFactory.createLineBorder(UIManager.getColor("Component.borderColor"), 1),
 				BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
 		JLabel sectionTitle1 = new JLabel("Violation Record Details");
@@ -177,16 +164,6 @@ public class ViewViolationDetails extends JDialog {
 		txtActions.setFont(new Font("Arial", Font.PLAIN, 12));
 		txtActions.setBackground(Color.WHITE);
 		mainPanel.add(new JScrollPane(txtActions), "span, growx");
-
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		btnClose = new JButton("Close");
-		btnClose.addActionListener(e -> dispose());
-		buttonPanel.add(btnClose);
-
-		getContentPane().add(new JScrollPane(mainPanel), BorderLayout.CENTER);
-		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-
-		setSize(800, 600);
 	}
 
 	private void loadViolationData() {
@@ -239,5 +216,39 @@ public class ViewViolationDetails extends JDialog {
 		valueField.setBackground(Color.WHITE);
 		panel.add(label);
 		panel.add(valueField, "growx");
+	}
+
+	public static void showDialog(Component parent, ViolationRecord violation, StudentsDataDAO studentsDataDAO,
+			ParticipantsDAO participantsDAO) {
+		ViewViolationDetails detailsPanel = new ViewViolationDetails(violation, studentsDataDAO, participantsDAO);
+
+		// Configure modal options
+		Option option = ModalDialog.createOption();
+		option.setOpacity(0.3f)
+			.setAnimationOnClose(false)
+			.getBorderOption()
+			.setBorderWidth(0.5f)
+			.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+
+		// Show modal with the correct ID
+		String modalId = "violation_details_" + violation.getViolationId();
+		if (ModalDialog.isIdExist(modalId)) {
+			ModalDialog.closeModal(modalId);
+		}
+
+		ModalDialog.showModal(parent,
+				new SimpleModalBorder(detailsPanel, "Violation Details",
+						new SimpleModalBorder.Option[] {
+								new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+						},
+						(controller, action) -> {
+							if (action == SimpleModalBorder.CLOSE_OPTION) {
+								controller.close();
+							}
+						}),
+				modalId);
+
+		// Set size
+		option.getLayoutOption().setSize(800, 600);
 	}
 }

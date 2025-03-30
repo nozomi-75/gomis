@@ -105,11 +105,11 @@ public class AddAppointmentModal {
 
         // Set the modal size and configure layout options
         ModalDialog.getDefaultOption()
-            .setOpacity(1f)
+            .setOpacity(0.5f)
             .setAnimationOnClose(true)
             .getBorderOption()
             .setBorderWidth(0.5f)
-            .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+            .setShadow(raven.modal.option.BorderOption.Shadow.SMALL);
         
         // Set size for the modal
         ModalDialog.getDefaultOption().getLayoutOption()

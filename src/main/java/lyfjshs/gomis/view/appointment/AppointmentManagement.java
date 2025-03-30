@@ -1,8 +1,13 @@
 package lyfjshs.gomis.view.appointment;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -16,6 +21,7 @@ import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.notification.NotificationManager;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentModal;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentPanel;
 import net.miginfocom.swing.MigLayout;
@@ -28,6 +34,9 @@ public class AppointmentManagement extends Form {
 	private AppointmentDailyOverview appointmentDaily;
 	private AppointmentCalendar appointmentCalendar;
 	public AppointmentDAO appointmentDAO;
+	private Timer notificationTimer;
+	private static final long NOTIFICATION_CHECK_INTERVAL = 30000; // Check every 30 seconds
+	private static final long NOTIFICATION_THRESHOLD = 10; // Notify 10 minutes before appointment
 
 	public AppointmentManagement(Connection connection) {
 		this.connection = connection;
@@ -72,6 +81,74 @@ public class AppointmentManagement extends Form {
 		// Start with month view
 		appointmentCalendar = new AppointmentCalendar(appointmentDAO, connection);
 		slidePane.addSlide(appointmentCalendar, SlidePaneTransition.Type.FORWARD);
+
+		// Start notification timer
+		startNotificationTimer();
+	}
+
+	private void startNotificationTimer() {
+		if (notificationTimer != null) {
+			notificationTimer.cancel();
+		}
+		notificationTimer = new Timer(true); // Run as daemon thread
+		notificationTimer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				checkUpcomingAppointments();
+			}
+		}, 0, NOTIFICATION_CHECK_INTERVAL);
+	}
+
+	private void checkUpcomingAppointments() {
+		try {
+			// Get all upcoming appointments
+			List<Appointment> appointments = appointmentDAO.getUpcomingAppointments();
+			LocalDateTime now = LocalDateTime.now();
+
+			// Filter for today's appointments only
+			List<Appointment> todayAppointments = appointments.stream()
+				.filter(appointment -> {
+					LocalDateTime appointmentTime = appointment.getAppointmentDateTime().toLocalDateTime();
+					return appointmentTime.toLocalDate().equals(now.toLocalDate()) &&
+						   !appointment.getAppointmentStatus().equals("Ended");
+				})
+				.toList();
+
+			for (Appointment appointment : todayAppointments) {
+				LocalDateTime appointmentTime = appointment.getAppointmentDateTime().toLocalDateTime();
+				long minutesUntilAppointment = ChronoUnit.MINUTES.between(now, appointmentTime);
+
+				// Check if appointment is within notification threshold (10 minutes)
+				if (minutesUntilAppointment > 0 && minutesUntilAppointment <= 10) {
+					// Show notification only if it's close to 10 minutes (between 9.5 and 10.5 minutes)
+					// This prevents multiple notifications for the same appointment
+					if (minutesUntilAppointment >= 9.5 && minutesUntilAppointment <= 10.5) {
+						NotificationManager notificationManager = Main.gFrame.getNotificationManager();
+						if (notificationManager != null) {
+							String timeStr = appointmentTime.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"));
+							String title = "⚠️ Appointment Starting Soon";
+							String message = String.format("%s starting at %s (in 10 minutes)", 
+								appointment.getAppointmentTitle(), timeStr);
+							notificationManager.showWarningNotification(title, message);
+						}
+					}
+				}
+
+				// Check if appointment is exactly at current time
+				if (minutesUntilAppointment == 0) {
+					NotificationManager notificationManager = Main.gFrame.getNotificationManager();
+					if (notificationManager != null) {
+						String timeStr = appointmentTime.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"));
+						String title = "🔔 Appointment Starting Now";
+						String message = String.format("%s is starting now at %s", 
+							appointment.getAppointmentTitle(), timeStr);
+						notificationManager.showWarningNotification(title, message);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void switchToMonthView() {
@@ -84,15 +161,6 @@ public class AppointmentManagement extends Form {
 		if (!(slidePane.getSlideComponent() instanceof AppointmentDailyOverview)) {
 			appointmentDaily = new AppointmentDailyOverview(appointmentDAO, connection);
 			slidePane.addSlide(appointmentDaily, SlidePaneTransition.Type.FORWARD, 300);
-		}
-	}
-
-	private void reloadAppointments() {
-		if (appointmentCalendar != null) {
-			appointmentCalendar.updateCalendar();
-		}
-		if (appointmentDaily != null) {
-			appointmentDaily.updateAppointmentsDisplay();
 		}
 	}
 
@@ -126,5 +194,14 @@ public class AppointmentManagement extends Form {
 		// Force a repaint of the entire panel
 		revalidate();
 		repaint();
+	}
+
+	@Override
+	public void dispose() {
+		if (notificationTimer != null) {
+			notificationTimer.cancel();
+			notificationTimer = null;
+		}
+		super.dispose();
 	}
 }

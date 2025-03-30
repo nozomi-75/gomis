@@ -6,6 +6,90 @@
     "configurations": [
         {
             "type": "java",
+            "name": "SessionsRecordData",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.sessions.SessionsRecordData",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "NativeNotificationExample",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.components.notification.NativeNotificationExample",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "JNANotification",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.notification.JNANotification",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "NativeNotificationExample",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.notification.NativeNotificationExample",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "NativeNotificationExample",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.test.notification.NativeNotificationExample",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "NativeNotificationExample",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.test.NativeNotificationExample",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "ViolationRecordsDashboard",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.test.ViolationRecordsDashboard",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestSearch",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.TestSearch",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "SplashTest",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.SplashTest",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "SignUpTEST",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.SignUpTEST",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "LoadingAnimationTest",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.LoadingAnimationTest",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "CoolButtonDemo",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.CoolButtonDemo",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "StudentsDataDAO",
             "request": "launch",
             "mainClass": "lyfjshs.gomis.Database.DAO.StudentsDataDAO",

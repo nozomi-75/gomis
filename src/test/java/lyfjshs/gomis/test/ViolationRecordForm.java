@@ -174,7 +174,7 @@ public class ViolationRecordForm extends JPanel {
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(800, 600);
             frame.setLocationRelativeTo(null);
-            frame.add(new ViolationRecordForm());
+            frame.getContentPane().add(new ViolationRecordForm());
             frame.setVisible(true);
         });
     }

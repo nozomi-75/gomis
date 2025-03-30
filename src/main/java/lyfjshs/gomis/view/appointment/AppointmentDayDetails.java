@@ -1,6 +1,7 @@
 package lyfjshs.gomis.view.appointment;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -10,15 +11,19 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 
+import com.formdev.flatlaf.FlatClientProperties;
+
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
-import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
@@ -29,18 +34,9 @@ public class AppointmentDayDetails extends JPanel {
 	private JPanel bodyPanel;
 	private Consumer<Participants> onParticipantSelect;
 	private Consumer<Appointment> onRedirectToSession;
-	// Add field to store current appointment
 	private Appointment currentAppointment;
-	// Add consumer for edit action
 	private Consumer<Appointment> onEditAppointment;
-
-	// Add fields for editable components
-	private JTextField titleField;
-	private JTextField typeField;
-	private JTextField statusField;
-	private JTextField notesField;
-	private JButton saveButton;
-	private boolean editMode = false;
+	private AppointmentDAO appointmentDAO;
 
 	public AppointmentDayDetails(Connection connection, Consumer<Participants> onParticipantSelect,
 			Consumer<Appointment> onRedirectToSession) {
@@ -53,315 +49,274 @@ public class AppointmentDayDetails extends JPanel {
 		this.onParticipantSelect = onParticipantSelect;
 		this.onRedirectToSession = onRedirectToSession;
 		this.onEditAppointment = onEditAppointment;
+		this.appointmentDAO = new AppointmentDAO(connection);
 
-		// Set proper opaque and background
-		setOpaque(true);
-		setBackground(UIManager.getColor("Panel.background"));
-		
-		setLayout(new MigLayout("fill, insets 10", "[grow]", "[grow]"));
-		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-		// Initialize header panel with proper colors
-		JPanel headerPanel = new JPanel(new MigLayout("insets 0", "[grow][right]", "[]"));
-		headerPanel.setOpaque(true);
-		headerPanel.setBackground(UIManager.getColor("Panel.background"));
-		
-		JLabel titleLabel = new JLabel("Appointment Details");
-		titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-		headerPanel.add(titleLabel, "align center");
-		headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
-		add(headerPanel, "north");
-
-		// Body Panel with MigLayout
-		bodyPanel = new JPanel(new MigLayout("wrap 1, insets 10", "[grow]", "[]"));
-		bodyPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-
-		JScrollPane scrollPane = new JScrollPane(bodyPanel);
-		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		add(scrollPane, "cell 0 0, grow");
+		setLayout(new MigLayout("fill, insets 0", "[grow]", "[grow]"));
+		bodyPanel = new JPanel(new MigLayout("fill", "[grow]", "[grow]"));
+		add(bodyPanel, "grow");
 	}
 
-	// Method to load appointments for a specific date
 	public void loadAppointmentsForDate(LocalDate date) throws SQLException {
-		bodyPanel.removeAll(); // Clear existing components
-		AppointmentDAO appointmentsDAO = new AppointmentDAO(connection);
-		List<Appointment> appointments = appointmentsDAO.getAppointmentsForDate(date);
-
-		if (appointments.isEmpty()) {
-			displayNoAppointmentsMessage();
+		List<Appointment> appointments = appointmentDAO.getAppointmentsForDate(date);
+		bodyPanel.removeAll();
+		
+		if (appointments != null && !appointments.isEmpty()) {
+			// Take the first appointment as current
+			this.currentAppointment = appointments.get(0);
+			displayAppointmentDetails(currentAppointment);
 		} else {
-			for (Appointment appointment : appointments) {
-				displayAppointmentDetails(appointment);
-			}
+			// Show empty state
+			JLabel emptyLabel = new JLabel("No appointments for this date");
+			emptyLabel.setHorizontalAlignment(JLabel.CENTER);
+			bodyPanel.add(emptyLabel, "center");
 		}
+		
 		bodyPanel.revalidate();
 		bodyPanel.repaint();
 	}
 
-	// Method to load a specific appointment
+	public Appointment getCurrentAppointment() {
+		return currentAppointment;
+	}
+
 	public void loadAppointmentDetails(Appointment appointment) {
-		this.currentAppointment = appointment; // Store the current appointment
-		bodyPanel.removeAll(); // Clear existing components
+		this.currentAppointment = appointment;
+		bodyPanel.removeAll();
 		displayAppointmentDetails(appointment);
 		bodyPanel.revalidate();
 		bodyPanel.repaint();
 	}
 
-	// Add getter for current appointment
-	public Appointment getCurrentAppointment() {
-		return currentAppointment;
-	}
-
-	// Method to display no appointments message
-	private void displayNoAppointmentsMessage() {
-		JLabel noAppointmentsLabel = new JLabel("No appointments scheduled for this day.");
-		noAppointmentsLabel.setFont(new Font("Arial", Font.ITALIC, 14));
-		bodyPanel.add(noAppointmentsLabel, "cell 0 0, align center");
-	}
-
-	// Method to display appointment details
+	/**
+	 * @wbp.parser.constructor
+	 */
 	private void displayAppointmentDetails(Appointment appointment) {
-		// Appointment Information Section
-		JPanel appointmentSection = new JPanel(new MigLayout("wrap 2, insets 10", "[grow][grow]", "[]"));
-		appointmentSection.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY),
-				"Appointment Information"));
+		// Main container with smooth scrolling
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Smooth scrolling
+		scrollPane.setBorder(null);
+		
+		// Content panel
+		JPanel contentPanel = new JPanel(new MigLayout("wrap, fillx", "[grow]", "[]20[]20[180px]20[]20[][]20[][]"));
+		contentPanel.setBackground(UIManager.getColor("Panel.background"));
+		
+		// Details grid
+		JPanel detailsGrid = new JPanel(new MigLayout("wrap 2, gap 15", "[grow][grow]"));
+		detailsGrid.setOpaque(false);
 
-		// Format date and time in 12-hour format
+		// Title
+		detailsGrid.add(createDetailItem("Appointment Title", appointment.getAppointmentTitle()), "grow");
+		
+		// Type
+		detailsGrid.add(createDetailItem("Consultation Type", appointment.getConsultationType()), "grow");
+		
+		// Date & Time
 		String dateTimeStr = appointment.getAppointmentDateTime().toLocalDateTime()
 				.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a"));
+		detailsGrid.add(createDetailItem("Date & Time", dateTimeStr), "grow");
+		
+		// Status with badge
+		JPanel statusPanel = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]"));
+		statusPanel.setOpaque(false);
+		JLabel statusLabel = new JLabel("Status");
+		statusLabel.setForeground(new Color(44, 62, 80));
+		statusLabel.setFont(new Font("Arial", Font.BOLD, 12));
+		statusPanel.add(statusLabel, "growx");
+		
+		JLabel statusBadge = new JLabel(appointment.getAppointmentStatus());
+		statusBadge.setOpaque(true);
+		Color statusColor = getStatusColor(appointment.getAppointmentStatus());
+		statusBadge.setBackground(statusColor);
+		statusBadge.setForeground(Color.WHITE);
+		statusBadge.setHorizontalAlignment(JLabel.CENTER);
+		statusBadge.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+		statusPanel.add(statusBadge, "growx");
+		detailsGrid.add(statusPanel, "grow");
 
-		// Create editable fields (initially displaying as regular text)
-		titleField = new JTextField(appointment.getAppointmentTitle());
-		titleField.setEditable(false);
-		titleField.setBorder(BorderFactory.createEmptyBorder());
-		titleField.setBackground(getBackground());
-		
-		typeField = new JTextField(appointment.getConsultationType());
-		typeField.setEditable(false);
-		typeField.setBorder(BorderFactory.createEmptyBorder());
-		typeField.setBackground(getBackground());
-		
-		statusField = new JTextField(appointment.getAppointmentStatus());
-		statusField.setEditable(false);
-		statusField.setBorder(BorderFactory.createEmptyBorder());
-		statusField.setBackground(getBackground());
-		
-		notesField = new JTextField(appointment.getAppointmentNotes() != null ? 
-				appointment.getAppointmentNotes() : "");
-		notesField.setEditable(false);
-		notesField.setBorder(BorderFactory.createEmptyBorder());
-		notesField.setBackground(getBackground());
-		
-		// Create Save Button (initially invisible)
-		saveButton = new JButton("Save");
-		saveButton.setVisible(false);
-		saveButton.addActionListener(e -> {
-			saveAppointmentChanges(appointment);
-			toggleEditMode(false);
-		});
-		
-		// Add Edit Button
-		JButton editButton = new JButton("Edit");
-		editButton.addActionListener(e -> {
-			if (onEditAppointment != null) {
-				onEditAppointment.accept(appointment);
+		contentPanel.add(detailsGrid, "growx");
+
+		// Participants section
+		JPanel participantsHeader = createSectionHeader("Participants", null);
+		contentPanel.add(participantsHeader, "growx");
+
+		// Participants table
+		String[] columnNames = { "Name", "Participant Type", "Contact Number", "Gender" };
+		DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
 			}
-			// Toggle edit mode
-			toggleEditMode(true);
-			editButton.setVisible(false);
-			saveButton.setVisible(true);
-		});
-		
-		appointmentSection.add(new JLabel("Title: "), "cell 0 0, alignx right");
-		appointmentSection.add(titleField, "cell 1 0, growx");
-		appointmentSection.add(new JLabel("Type: "), "cell 0 1, alignx right");
-		appointmentSection.add(typeField, "cell 1 1, growx");
-		appointmentSection.add(new JLabel("Date & Time: "), "cell 0 2, alignx right");
-		appointmentSection.add(new JLabel(dateTimeStr), "cell 1 2");
-		appointmentSection.add(new JLabel("Status: "), "cell 0 3, alignx right");
-		appointmentSection.add(statusField, "cell 1 3, growx");
-		if (appointment.getAppointmentNotes() != null && !appointment.getAppointmentNotes().isEmpty()) {
-			appointmentSection.add(new JLabel("Notes: "), "cell 0 4, alignx right");
-			appointmentSection.add(notesField, "cell 1 4, growx");
-		}
-		appointmentSection.add(new JLabel("Last Updated: "), "cell 0 5, alignx right");
-		appointmentSection.add(new JLabel(appointment.getUpdatedAt().toString()), "cell 1 5");
-		bodyPanel.add(appointmentSection, "growx, wrap");
+		};
 
-		// Add buttons panel
-		JPanel buttonsPanel = new JPanel(new MigLayout("insets 0", "[right]", "[]"));
-		buttonsPanel.add(editButton, "split 2");
-		buttonsPanel.add(saveButton);
-		bodyPanel.add(buttonsPanel, "align right, wrap");
-
-		// Participants Section
-		JPanel participantsSection = new JPanel(new MigLayout("wrap 1, insets 10", "[grow]", "[]"));
-		participantsSection.setBorder(
-				BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Participants"));
-		if (appointment.getParticipants() != null && !appointment.getParticipants().isEmpty()) {
+		// Add participants to table
+		if (appointment.getParticipants() != null) {
 			for (Participants participant : appointment.getParticipants()) {
-				String participantInfo = "Name: " + participant.getParticipantFirstName() + " "
-						+ participant.getParticipantLastName();
-				if (participant.getStudentUid() != null) {
-					participantInfo += " (Student UID: " + participant.getStudentUid() + ")";
-				}
-				if (participant.getContactNumber() != null) {
-					participantInfo += ", Contact: " + participant.getContactNumber();
-				}
-				if (participant.getSex() != null) {
-					participantInfo += ", Email: " + participant.getSex();
-				}
-				participantsSection.add(new JLabel(participantInfo), "growx");
+				model.addRow(new Object[] {
+					participant.getParticipantFirstName() + " " + participant.getParticipantLastName(),
+					participant.getParticipantType(),
+					participant.getContactNumber(),
+					participant.getSex()
+				});
 			}
-		} else {
-			participantsSection.add(new JLabel("No participants assigned."), "growx");
 		}
-		bodyPanel.add(participantsSection, "growx, wrap");
 
-		// Guidance Counselor Section
-		JPanel counselorSection = new JPanel(new MigLayout("wrap 2, insets 10", "[grow][grow]", "[]"));
-		counselorSection.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY),
-				"Guidance Counselor Information"));
-		GuidanceCounselorDAO counselorDAO = new GuidanceCounselorDAO(connection);
-		GuidanceCounselor counselor = null;
-		if (appointment.getGuidanceCounselorId() != null) {
-			counselor = counselorDAO.readGuidanceCounselor(appointment.getGuidanceCounselorId());
-		}
-		if (counselor != null) {
-			counselorSection.add(new JLabel("Name: "), "cell 0 0, alignx right");
-			counselorSection.add(new JLabel(counselor.getFirstName() + " " + counselor.getLastName()), "cell 1 0");
-			counselorSection.add(new JLabel("Gender: "), "cell 0 1, alignx right");
-			counselorSection.add(new JLabel(counselor.getGender()), "cell 1 1");
-			counselorSection.add(new JLabel("Specialization: "), "cell 0 2, alignx right");
-			counselorSection.add(new JLabel(counselor.getSpecialization()), "cell 1 2");
-			counselorSection.add(new JLabel("Contact: "), "cell 0 3, alignx right");
-			counselorSection.add(new JLabel(counselor.getContactNum()), "cell 1 3");
-			counselorSection.add(new JLabel("Email: "), "cell 0 4, alignx right");
-			counselorSection.add(new JLabel(counselor.getEmail()), "cell 1 4");
-			counselorSection.add(new JLabel("Position: "), "cell 0 5, alignx right");
-			counselorSection.add(new JLabel(counselor.getPosition()), "cell 1 5");
-		} else {
-			counselorSection.add(new JLabel("No guidance counselor information available."), "cell 0 0, span 2");
-		}
-		bodyPanel.add(counselorSection, "growx, wrap");
-	}
+		JTable participantsTable = new JTable(model);
+		participantsTable.setRowHeight(40);
+		participantsTable.setShowGrid(true);
+		participantsTable.setGridColor(new Color(221, 221, 221));
+		styleTable(participantsTable);
 
-	// Method to toggle edit mode
-	private void toggleEditMode(boolean enable) {
-		editMode = enable;
+		JScrollPane tableScrollPane = new JScrollPane(participantsTable);
+		contentPanel.add(tableScrollPane, "growx");
+
 		
-		// Enable/disable editing for text fields
-		titleField.setEditable(enable);
-		typeField.setEditable(enable);
-		statusField.setEditable(enable);
-		notesField.setEditable(enable);
+		JPanel notesSectionPanel = new JPanel(new MigLayout("wrap, insets 15", "[grow]", "[]10[]"));
+		notesSectionPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+		notesSectionPanel.setBackground(UIManager.getColor("Panel.background"));
+		notesSectionPanel.setBorder(BorderFactory.createLineBorder(UIManager.getColor("Component.borderColor")));
+
+		JLabel notesLabel = new JLabel("Appointment Notes");
+		notesLabel.setForeground(UIManager.getColor("Label.foreground"));
+		notesLabel.setFont(new Font("Arial", Font.BOLD, 12));
+
+		JTextArea notesArea = new JTextArea(appointment.getAppointmentNotes() != null ? 
+			appointment.getAppointmentNotes() : "No notes available");
+		notesArea.setLineWrap(true);
+		notesArea.setWrapStyleWord(true);
+		notesArea.setEditable(false);
+		notesArea.setOpaque(false);
+		notesArea.setBorder(null);
+		notesArea.setFont(new Font("Arial", Font.PLAIN, 12));
+		notesArea.setForeground(UIManager.getColor("TextArea.foreground"));
+		notesArea.setBackground(UIManager.getColor("TextArea.background"));
+
+		notesSectionPanel.add(notesLabel, "growx");
+		notesSectionPanel.add(notesArea, "growx");
+
+		contentPanel.add(notesSectionPanel, "growx");
 		
-		// Change appearance based on edit mode
-		if (enable) {
-			titleField.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-			titleField.setBackground(Color.WHITE);
-			
-			typeField.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-			typeField.setBackground(Color.WHITE);
-			
-			statusField.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-			statusField.setBackground(Color.WHITE);
-			
-			notesField.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-			notesField.setBackground(Color.WHITE);
-		} else {
-			titleField.setBorder(BorderFactory.createEmptyBorder());
-			titleField.setBackground(getBackground());
-			
-			typeField.setBorder(BorderFactory.createEmptyBorder());
-			typeField.setBackground(getBackground());
-			
-			statusField.setBorder(BorderFactory.createEmptyBorder());
-			statusField.setBackground(getBackground());
-			
-			notesField.setBorder(BorderFactory.createEmptyBorder());
-			notesField.setBackground(getBackground());
-		}
-	}
-	
-	// Method to save appointment changes
-	private void saveAppointmentChanges(Appointment appointment) {
+		// Counselor section
+		JPanel counselorHeader = createSectionHeader("Guidance Counselor Information", null);
+		contentPanel.add(counselorHeader, "growx");
+
+		// Counselor details grid
+		JPanel counselorGrid = new JPanel(new MigLayout("wrap 2, gap 15", "[grow][grow]"));
+		counselorGrid.setOpaque(false);
+
+		// Get counselor details
 		try {
-			// Update appointment object with edited values
-			appointment.setAppointmentTitle(titleField.getText());
-			appointment.setConsultationType(typeField.getText());
-			appointment.setAppointmentStatus(statusField.getText());
-			appointment.setAppointmentNotes(notesField.getText());
-			
-			// Save to database
-			AppointmentDAO appointmentDAO = new AppointmentDAO(connection);
-			boolean updated = appointmentDAO.updateAppointment(appointment);
-			
-			if (updated) {
-				// Get the updated appointment from the database to ensure all fields are current
-				Appointment refreshedAppointment = appointmentDAO.getAppointmentById(appointment.getAppointmentId());
-				
-				// Update the current appointment reference
-				this.currentAppointment = refreshedAppointment;
-				
-				// Call the edit consumer to notify parent components if needed
-				if (onEditAppointment != null) {
-					onEditAppointment.accept(refreshedAppointment);
-				}
-				
-				// Clear and reload the appointment details to refresh the view
-				bodyPanel.removeAll();
-				displayAppointmentDetails(refreshedAppointment);
-				
-				// Show success message
-				JLabel successLabel = new JLabel("Appointment updated successfully!");
-				successLabel.setForeground(Color.GREEN.darker());
-				bodyPanel.add(successLabel, "align center, wrap");
-				
-				// Make changes visible immediately
-				bodyPanel.revalidate();
-				bodyPanel.repaint();
-				
-				// Remove success message after a delay
-				new javax.swing.Timer(3000, e -> {
-					bodyPanel.remove(successLabel);
-					bodyPanel.revalidate();
-					bodyPanel.repaint();
-				}).start();
+			GuidanceCounselor counselor = Main.formManager.getCounselorObject();
+			if (counselor != null) {
+				counselorGrid.add(createDetailItem("Name", 
+					String.format("%s %s %s", counselor.getFirstName(), counselor.getMiddleName(), counselor.getLastName())), "grow");
+				counselorGrid.add(createDetailItem("Specialization", counselor.getSpecialization()), "grow");
+				counselorGrid.add(createDetailItem("Contact Number", counselor.getContactNum()), "grow");
+				counselorGrid.add(createDetailItem("Email", counselor.getEmail()), "grow");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		contentPanel.add(counselorGrid, "growx");
+
+
+		
+
+		// Add content panel to scroll pane
+		scrollPane.setViewportView(contentPanel);
+		bodyPanel.add(scrollPane, "grow");
+	}
+
+	private JPanel createSectionHeader(String title, String badge) {
+		JPanel headerPanel = new JPanel(new MigLayout("insets 12 15, fillx"));
+		headerPanel.putClientProperty("FlatLaf.style", "arc: 8");
+		headerPanel.setBackground(UIManager.getColor("Button.default.startBackground"));
+
+		JLabel titleLabel = new JLabel(title);
+		titleLabel.setForeground(UIManager.getColor("Label.foreground"));
+		titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+
+		headerPanel.add(titleLabel, "grow, pushx");
+
+		if (badge != null) {
+			JLabel badgeLabel = new JLabel(badge);
+			badgeLabel.setForeground(UIManager.getColor("Label.foreground"));
+			Color bgColor = UIManager.getColor("Button.default.startBackground");
+			if (bgColor != null) {
+				badgeLabel.setBackground(bgColor.darker());
 			} else {
-				// Show error if update failed
-				JLabel errorLabel = new JLabel("Failed to update appointment. Please try again.");
-				errorLabel.setForeground(Color.RED);
-				bodyPanel.add(errorLabel, "align center, wrap");
-				bodyPanel.revalidate();
-				bodyPanel.repaint();
+				badgeLabel.setBackground(new Color(60, 60, 60));
 			}
-			
-		} catch (Exception ex) {
-			// Show error message
-			JLabel errorLabel = new JLabel("Error updating appointment: " + ex.getMessage());
-			errorLabel.setForeground(Color.RED);
-			bodyPanel.add(errorLabel, "align center, wrap");
-			bodyPanel.revalidate();
-			bodyPanel.repaint();
+			badgeLabel.setOpaque(true);
+			badgeLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+			headerPanel.add(badgeLabel);
 		}
+
+		return headerPanel;
 	}
 
-	// Add a method to refresh from external components
-	public void refreshAppointment() {
-		if (currentAppointment != null) {
-			try {
-				// Fetch the latest data for the current appointment
-				AppointmentDAO appointmentDAO = new AppointmentDAO(connection);
-				Appointment refreshedAppointment = appointmentDAO.getAppointmentById(currentAppointment.getAppointmentId());
-				
-				// Reload with the latest data
-				loadAppointmentDetails(refreshedAppointment);
-			} catch (Exception ex) {
-				// Handle any errors silently - this is just a refresh operation
-				System.err.println("Error refreshing appointment: " + ex.getMessage());
-			}
-		}
+	private JPanel createDetailItem(String label, String value) {
+		JPanel item = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]"));
+		item.setOpaque(false);
+
+		JLabel labelLbl = new JLabel(label);
+		labelLbl.setFont(new Font("Arial", Font.BOLD, 12));
+		labelLbl.setForeground(UIManager.getColor("Label.foreground"));
+		item.add(labelLbl, "growx");
+
+		JLabel valueLbl = new JLabel(value != null ? value : "N/A");
+		valueLbl.setFont(new Font("Arial", Font.PLAIN, 14));
+		valueLbl.setOpaque(true);
+		valueLbl.setBackground(UIManager.getColor("TextField.background"));
+		valueLbl.setForeground(UIManager.getColor("TextField.foreground"));
+		valueLbl.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createLineBorder(UIManager.getColor("Component.borderColor")),
+			BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+		item.add(valueLbl, "growx");
+
+		return item;
 	}
 
+	private void styleTable(JTable table) {
+		// Custom header renderer
+		table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value,
+					boolean isSelected, boolean hasFocus, int row, int column) {
+				JLabel label = (JLabel) super.getTableCellRendererComponent(table, value,
+						isSelected, hasFocus, row, column);
+				label.setBackground(new Color(241, 243, 245));
+				label.setForeground(new Color(44, 62, 80));
+				label.setFont(new Font("Arial", Font.BOLD, 12));
+				label.setBorder(BorderFactory.createCompoundBorder(
+					BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(221, 221, 221)),
+					BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+				return label;
+			}
+		});
+
+		// Custom cell renderer
+		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value,
+					boolean isSelected, boolean hasFocus, int row, int column) {
+				JLabel label = (JLabel) super.getTableCellRendererComponent(table, value,
+						isSelected, hasFocus, row, column);
+				label.setBorder(BorderFactory.createCompoundBorder(
+					BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(221, 221, 221)),
+					BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+				return label;
+			}
+		});
+	}
+
+	private Color getStatusColor(String status) {
+		return switch (status.toLowerCase()) {
+			case "on-going" -> new Color(243, 156, 18); // Orange
+			case "ended" -> new Color(231, 76, 60);     // Red
+			case "rescheduled" -> new Color(52, 152, 219); // Blue
+			case "cancelled" -> new Color(231, 76, 60);  // Red
+			default -> new Color(149, 165, 166);        // Gray
+		};
+	}
 }

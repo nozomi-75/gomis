@@ -123,9 +123,9 @@ public class AddAppointmentPanel extends JPanel {
         // Status Field (replace the existing status field code with this)
         JLabel statusLabel = new JLabel("Status:");
         bodyPanel.add(statusLabel, "cell 0 7,alignx label");
-        String[] statusOptions = { "~Please Select~", "On-going", "Rescheduled" };
+        String[] statusOptions = { "On-going", "Rescheduled" };
         statusComboBox = new JComboBox<>(statusOptions);
-        statusComboBox.setSelectedItem("~Please Select~"); // Set default value
+        statusComboBox.setSelectedItem("On-going"); // Set default value
         bodyPanel.add(statusComboBox, "cell 0 8 2 1,growx");
 
         // Participants Section

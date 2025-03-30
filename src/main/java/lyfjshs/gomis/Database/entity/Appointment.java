@@ -5,20 +5,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Appointment {
-    private int appointmentId;
+    private Integer appointmentId;
     private Integer guidanceCounselorId;
     private String appointmentTitle;
     private String ConsultationType;
     private Timestamp appointmentDateTime;
     private String appointmentStatus;
     private String appointmentNotes;
+    private Timestamp createdAt;
     private Timestamp updatedAt;
     private List<Participants> participants; // New field for multiple participants
 
     public Appointment() {
     }
 
-    public Appointment(int appointmentId,
+    public Appointment(Integer appointmentId,
             Integer guidanceCounselorId, // Change to Integer
             String appointmentTitle,
             String ConsultationType,
@@ -37,11 +38,11 @@ public class Appointment {
     }
 
     // Getters and Setters...
-    public int getAppointmentId() {
+    public Integer getAppointmentId() {
         return appointmentId;
     }
 
-    public void setAppointmentId(int appointmentId) {
+    public void setAppointmentId(Integer appointmentId) {
         this.appointmentId = appointmentId;
     }
 
@@ -91,6 +92,14 @@ public class Appointment {
 
     public void setAppointmentNotes(String appointmentNotes) {
         this.appointmentNotes = appointmentNotes;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Timestamp getUpdatedAt() {

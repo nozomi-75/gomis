@@ -1,7 +1,6 @@
 package lyfjshs.gomis;
 
 import java.awt.EventQueue;
-import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -11,7 +10,6 @@ import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
 import lyfjshs.gomis.Database.DBConnection;
@@ -196,8 +194,7 @@ public class Main {
 			gFrame = new GFrame(1380, 750, false, "GOMIS", null, conn);
 			gFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
 			
-			// Initialize tray icon and notification system
-			gFrame.initializeTrayIcon();
+			// Initialize notifications
 			gFrame.initializeNotifications(conn);
 			
 			// Install form manager before initializing panels

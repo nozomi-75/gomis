@@ -354,4 +354,107 @@ public class AppointmentDAO {
         }
         return appointments;
     }
+
+    /**
+     * Gets all upcoming appointments that haven't happened yet.
+     * 
+     * @return List of upcoming appointments
+     * @throws SQLException if a database error occurs
+     */
+    public List<Appointment> getUpcomingAppointments() throws SQLException {
+        List<Appointment> appointments = new ArrayList<>();
+        String sql = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_DATE_TIME > NOW() ORDER BY APPOINTMENT_DATE_TIME ASC";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Appointment appointment = new Appointment();
+                appointment.setAppointmentId(rs.getInt("APPOINTMENT_ID"));
+                appointment.setGuidanceCounselorId(rs.getInt("GUIDANCE_COUNSELOR_ID"));
+                appointment.setAppointmentTitle(rs.getString("APPOINTMENT_TITLE"));
+                appointment.setConsultationType(rs.getString("CONSULTATION_TYPE"));
+                appointment.setAppointmentDateTime(rs.getTimestamp("APPOINTMENT_DATE_TIME"));
+                appointment.setAppointmentNotes(rs.getString("APPOINTMENT_NOTES"));
+                appointment.setAppointmentStatus(rs.getString("APPOINTMENT_STATUS"));
+                appointment.setUpdatedAt(rs.getTimestamp("UPDATED_AT"));
+                
+                // Load participants for this appointment
+                appointment.setParticipants(getParticipantsForAppointment(appointment.getAppointmentId()));
+                
+                appointments.add(appointment);
+            }
+        }
+        
+        return appointments;
+    }
+
+    /**
+     * Gets all participants for a specific appointment.
+     * 
+     * @param appointmentId The ID of the appointment
+     * @return List of participants for the appointment
+     * @throws SQLException if a database error occurs
+     */
+    private List<Participants> getParticipantsForAppointment(int appointmentId) throws SQLException {
+        List<Participants> participants = new ArrayList<>();
+        String sql = "SELECT p.* FROM PARTICIPANTS p " +
+                    "JOIN APPOINTMENT_PARTICIPANTS ap ON p.PARTICIPANT_ID = ap.PARTICIPANT_ID " +
+                    "WHERE ap.APPOINTMENT_ID = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, appointmentId);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Participants participant = new Participants();
+                participant.setParticipantId(rs.getInt("PARTICIPANT_ID"));
+                participant.setStudentUid(rs.getObject("STUDENT_UID", Integer.class));
+                participant.setParticipantType(rs.getString("PARTICIPANT_TYPE"));
+                participant.setParticipantFirstName(rs.getString("PARTICIPANT_FIRSTNAME"));
+                participant.setParticipantLastName(rs.getString("PARTICIPANT_LASTNAME"));
+                participant.setSex(rs.getString("PARTICIPANT_SEX"));
+                participant.setContactNumber(rs.getString("CONTACT_NUMBER"));
+                participants.add(participant);
+            }
+        }
+        
+        return participants;
+    }
+
+    public List<Appointment> getAppointmentsByStatus(String status) throws SQLException {
+        List<Appointment> appointments = new ArrayList<>();
+        String sql;
+        
+        if ("all appointments".equalsIgnoreCase(status)) {
+            sql = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_STATUS IN ('Ended', 'Cancelled') ORDER BY APPOINTMENT_DATE_TIME DESC";
+        } else {
+            sql = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_STATUS = ? ORDER BY APPOINTMENT_DATE_TIME DESC";
+        }
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            if (!"all appointments".equalsIgnoreCase(status)) {
+                stmt.setString(1, status);
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Appointment appointment = new Appointment();
+                    appointment.setAppointmentId(rs.getInt("APPOINTMENT_ID"));
+                    appointment.setAppointmentTitle(rs.getString("APPOINTMENT_TITLE"));
+                    appointment.setAppointmentDateTime(rs.getTimestamp("APPOINTMENT_DATE_TIME"));
+                    appointment.setAppointmentStatus(rs.getString("APPOINTMENT_STATUS"));
+                    appointment.setAppointmentNotes(rs.getString("APPOINTMENT_NOTES"));
+                    appointment.setConsultationType(rs.getString("CONSULTATION_TYPE"));
+                    appointment.setGuidanceCounselorId(rs.getInt("GUIDANCE_COUNSELOR_ID"));
+                    
+                    // Load participants for this appointment
+                    appointment.setParticipants(getParticipantsForAppointment(appointment.getAppointmentId()));
+                    
+                    appointments.add(appointment);
+                }
+            }
+        }
+        
+        return appointments;
+    }
 }

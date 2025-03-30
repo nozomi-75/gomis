@@ -55,17 +55,17 @@ public class SessionFullData extends Form {
 	private final Connection conn;
 
 	// Colors from the CSS
-	private static final Color CONTAINER_BG = Color.WHITE;
-	private static final Color CARD_BG = new Color(0xF8F9FA);
-	private static final Color BORDER_COLOR = new Color(0xE9ECEF);
-	private static final Color HEADER_COLOR = new Color(0x2C3E50);
-	private static final Color TEXT_COLOR = new Color(0x212529);
-	private static final Color SUBTEXT_COLOR = new Color(0x495057);
-	private static final Color TABLE_HEADER_BG = new Color(0xF1F3F5);
-	private static final Color BLUE_BUTTON = new Color(0x3498DB);
-	private static final Color GREEN_BUTTON = new Color(0x2ECC71);
-	private static final Color RED_BUTTON = new Color(0xE74C3C);
-	private static final Color MODAL_CLOSE_COLOR = new Color(0x6C757D);
+	private static final Color CONTAINER_BG = UIManager.getColor("Panel.background");
+	private static final Color CARD_BG = UIManager.getColor("TextField.background");
+	private static final Color BORDER_COLOR = UIManager.getColor("Component.borderColor");
+	private static final Color HEADER_COLOR = UIManager.getColor("Label.foreground");
+	private static final Color TEXT_COLOR = UIManager.getColor("Label.foreground");
+	private static final Color SUBTEXT_COLOR = UIManager.getColor("Label.disabledText");
+	private static final Color TABLE_HEADER_BG = UIManager.getColor("Table.background");
+	private static final Color BLUE_BUTTON = UIManager.getColor("Button.default.startBackground");
+	private static final Color GREEN_BUTTON = new Color(46, 204, 113);
+	private static final Color RED_BUTTON = new Color(231, 76, 60);
+	private static final Color MODAL_CLOSE_COLOR = UIManager.getColor("Button.disabledText");
 
 	// Fonts
 	private static final Font HEADER_FONT = new Font("Segoe UI", Font.BOLD, 24);
@@ -87,13 +87,6 @@ public class SessionFullData extends Form {
 		this.sessionData = sessionData;
 		this.conn = conn;
 		
-		// Set FlatLaf look and feel
-		try {
-			UIManager.setLookAndFeel(new FlatLightLaf());
-		} catch (UnsupportedLookAndFeelException e) {
-			LOGGER.log(Level.SEVERE, "Failed to set FlatLaf look and feel", e);
-		}
-
 		// Panel setup
 		setLayout(new MigLayout("fill, insets 30", "[grow]", "[][][][][][]"));
 		setBackground(CONTAINER_BG);

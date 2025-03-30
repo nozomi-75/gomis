@@ -6,6 +6,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -13,8 +16,10 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import lyfjshs.gomis.Main;
+import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.components.notification.NotificationManager;
 
 /**
  * The LoginController class provides methods for interacting with the 'users' table in the database.
@@ -198,7 +203,6 @@ public class LoginController {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-
             String username = usernameTF.getText();
             String password = String.valueOf(passwordTF.getPassword());
 
@@ -244,6 +248,9 @@ public class LoginController {
                             // Debug: Verify details set in FormManager
                             System.out.println("Set in FormManager: " + Main.formManager.getCounselorFullName() + ", " + Main.formManager.getCounselorPosition());
                             
+                            // Check for upcoming appointments
+                            checkUpcomingAppointments(counselor.getGuidanceCounselorId());
+                            
                             // Then call login() which will create the drawer with the updated details
                             FormManager.login(connection);							
                             // Close the counselor resources
@@ -275,6 +282,66 @@ public class LoginController {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void checkUpcomingAppointments(int counselorId) {
+        try {
+            AppointmentDAO appointmentDAO = new AppointmentDAO(connection);
+            List<Appointment> appointments = appointmentDAO.getUpcomingAppointments();
+            LocalDateTime now = LocalDateTime.now();
+            NotificationManager notificationManager = Main.gFrame.getNotificationManager();
+
+            // Get counselor details
+            GuidanceCounselor counselor = Main.formManager.getCounselorObject();
+            String counselorName = counselor != null ? 
+                String.format("%s %s", counselor.getFirstName(), counselor.getLastName()) : 
+                "Counselor";
+
+            // Filter appointments for today only
+            List<Appointment> todayAppointments = appointments.stream()
+                .filter(appointment -> {
+                    LocalDateTime appointmentTime = appointment.getAppointmentDateTime().toLocalDateTime();
+                    return appointmentTime.toLocalDate().equals(now.toLocalDate());
+                })
+                .toList();
+
+            if (todayAppointments.isEmpty()) {
+                notificationManager.showInfoNotification(
+                    "Welcome Back", 
+                    String.format("Welcome back %s! You have no appointments scheduled for today.", counselorName)
+                );
+                return;
+            }
+
+            // Show summary notification for today's appointments
+            notificationManager.showInfoNotification(
+                "Welcome Back", 
+                String.format("Welcome back %s! You have %d appointment(s) today.", 
+                    counselorName, todayAppointments.size())
+            );
+
+            // Show details for each upcoming appointment today
+            for (Appointment appointment : todayAppointments) {
+                LocalDateTime appointmentTime = appointment.getAppointmentDateTime().toLocalDateTime();
+                long minutesUntil = ChronoUnit.MINUTES.between(now, appointmentTime);
+
+                if (minutesUntil > 0) {
+                    String timeMessage;
+                    if (minutesUntil < 60) {
+                        timeMessage = "today at " + appointmentTime.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"));
+                    } else {
+                        timeMessage = "today at " + appointmentTime.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"));
+                    }
+
+                    notificationManager.showInfoNotification(
+                        "Today's Appointment", 
+                        appointment.getAppointmentTitle() + " " + timeMessage
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
