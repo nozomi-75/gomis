@@ -20,23 +20,24 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.DAO.ViolationCRUD;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.Database.entity.Student;
-import lyfjshs.gomis.Database.entity.ViolationRecord;
+import lyfjshs.gomis.Database.entity.Violation;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.Database.entity.Participants;
 
 public class ViolationTablePanel extends JPanel {
     private GTable table; // Use GTable instead of JTable
-    private ViolationCRUD violationCRUD;
+    private ViolationDAO ViolationDAO;
     private Connection connect;
-    private List<ViolationRecord> violations; // Store violations for action handling
+    private List<Violation> violations; // Store violations for action handling
     private TableActionManager actionManager;
 
-    public ViolationTablePanel(Connection conn, ViolationCRUD violationCRUD) {
+    public ViolationTablePanel(Connection conn, ViolationDAO ViolationDAO) {
         this.connect = conn;
-        this.violationCRUD = violationCRUD;
+        this.ViolationDAO = ViolationDAO;
         this.violations = new ArrayList<>();
         initializePanel();
         initializeTable();
@@ -46,28 +47,27 @@ public class ViolationTablePanel extends JPanel {
 
     private void initializePanel() {
         setLayout(new BorderLayout());
-        setBorder(new EmptyBorder(10, 10, 10, 10));
     }
 
     private TableActionManager setupTableActions() {
-        TableActionManager actionManager = new TableActionManager();
+        TableActionManager actionManager = new DefaultTableActionManager();
 
-        actionManager.addAction("View", (table, row) -> {
-            ViolationRecord violation = getViolationAt(row);
-            if (violation != null) {
-                ViewViolationDetails.showDialog(
-                    SwingUtilities.getWindowAncestor(this), 
-                    violation, 
-                    new StudentsDataDAO(connect),
-                    new ParticipantsDAO(connect)
-                );
-            }
-        }, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
-
-        actionManager.addAction("Resolve",
+        ((DefaultTableActionManager)actionManager)
+            .addAction("View", (table, row) -> {
+                Violation violation = getViolationAt(row);
+                if (violation != null) {
+                    ViewViolationDetails.showDialog(
+                        SwingUtilities.getWindowAncestor(this), 
+                        violation, 
+                        new StudentsDataDAO(connect),
+                        new ParticipantsDAO(connect)
+                    );
+                }
+            }, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.4f))
+            .addAction("Resolve",
                 (t, row) -> handleResolveAction(row),
                 new Color(46, 204, 113),
-                new FlatSVGIcon("icons/resolve.svg", 0.5f));
+                new FlatSVGIcon("icons/resolve.svg", 0.4f));
 
         return actionManager;
     }
@@ -102,7 +102,7 @@ public class ViolationTablePanel extends JPanel {
     }
 
     private void handleResolveAction(int row) {
-        ViolationRecord violation = getViolationAt(row);
+        Violation violation = getViolationAt(row);
         if (violation != null) {
             int confirm = JOptionPane.showConfirmDialog(
                     this,
@@ -113,7 +113,7 @@ public class ViolationTablePanel extends JPanel {
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    if (violationCRUD.updateViolationStatus(violation.getViolationId(), "RESOLVED")) {
+                    if (ViolationDAO.updateViolationStatus(violation.getViolationId(), "RESOLVED")) {
                         JOptionPane.showMessageDialog(
                                 this,
                                 "Violation has been resolved successfully.",
@@ -136,7 +136,7 @@ public class ViolationTablePanel extends JPanel {
 
     public void refreshData() {
         try {
-            loadViolations(violationCRUD.getAllViolations());
+            loadViolations(ViolationDAO.getAllViolations());
         } catch (Exception e) {
             showError("Error loading violation data", e);
         }
@@ -148,13 +148,13 @@ public class ViolationTablePanel extends JPanel {
                 refreshData();
                 return;
             }
-            loadViolations(violationCRUD.searchViolations(searchTerm));
+            loadViolations(ViolationDAO.searchViolations(searchTerm));
         } catch (Exception e) {
             showError("Error searching violations", e);
         }
     }
 
-    private void loadViolations(List<ViolationRecord> violationList) {
+    private void loadViolations(List<Violation> violationList) {
         this.violations = violationList;
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.setRowCount(0); // Clear existing rows
@@ -162,7 +162,7 @@ public class ViolationTablePanel extends JPanel {
         StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connect);
         ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
 
-        for (ViolationRecord violation : violations) {
+        for (Violation violation : violations) {
             try {
                 // Get participant first
                 Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
@@ -209,7 +209,7 @@ public class ViolationTablePanel extends JPanel {
         }
     }
 
-    private ViolationRecord getViolationAt(int row) {
+    private Violation getViolationAt(int row) {
         return (violations != null && row >= 0 && row < violations.size()) ? violations.get(row) : null;
     }
 

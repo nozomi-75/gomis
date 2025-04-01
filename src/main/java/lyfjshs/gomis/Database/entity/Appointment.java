@@ -8,21 +8,21 @@ public class Appointment {
     private Integer appointmentId;
     private Integer guidanceCounselorId;
     private String appointmentTitle;
-    private String ConsultationType;
+    private String consultationType;
     private Timestamp appointmentDateTime;
     private String appointmentStatus;
     private String appointmentNotes;
-    private Timestamp createdAt;
     private Timestamp updatedAt;
-    private List<Participants> participants; // New field for multiple participants
+    private List<Participants> participants;
 
     public Appointment() {
+        this.participants = new ArrayList<>();
     }
 
     public Appointment(Integer appointmentId,
-            Integer guidanceCounselorId, // Change to Integer
+            Integer guidanceCounselorId,
             String appointmentTitle,
-            String ConsultationType,
+            String consultationType,
             Timestamp appointmentDateTime,
             String appointmentStatus,
             String appointmentNotes,
@@ -30,14 +30,15 @@ public class Appointment {
         this.appointmentId = appointmentId;
         this.guidanceCounselorId = guidanceCounselorId;
         this.appointmentTitle = appointmentTitle;
-        this.ConsultationType = ConsultationType;
+        this.consultationType = consultationType;
         this.appointmentDateTime = appointmentDateTime;
         this.appointmentStatus = appointmentStatus;
         this.appointmentNotes = appointmentNotes;
         this.updatedAt = updatedAt;
+        this.participants = new ArrayList<>();
     }
 
-    // Getters and Setters...
+    // Getters and Setters
     public Integer getAppointmentId() {
         return appointmentId;
     }
@@ -46,11 +47,11 @@ public class Appointment {
         this.appointmentId = appointmentId;
     }
 
-    public Integer getGuidanceCounselorId() { // Change to Integer
+    public Integer getGuidanceCounselorId() {
         return guidanceCounselorId;
     }
 
-    public void setGuidanceCounselorId(Integer guidanceCounselorId) { // Change to Integer
+    public void setGuidanceCounselorId(Integer guidanceCounselorId) {
         this.guidanceCounselorId = guidanceCounselorId;
     }
 
@@ -63,11 +64,11 @@ public class Appointment {
     }
 
     public String getConsultationType() {
-        return ConsultationType;
+        return consultationType;
     }
 
-    public void setConsultationType(String ConsultationType) {
-        this.ConsultationType = ConsultationType;
+    public void setConsultationType(String consultationType) {
+        this.consultationType = consultationType;
     }
 
     public Timestamp getAppointmentDateTime() {
@@ -94,14 +95,6 @@ public class Appointment {
         this.appointmentNotes = appointmentNotes;
     }
 
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public Timestamp getUpdatedAt() {
         return updatedAt;
     }
@@ -111,10 +104,56 @@ public class Appointment {
     }
 
     public List<Participants> getParticipants() {
-        return participants != null ? participants : new ArrayList<>();
+        if (participants == null) {
+            participants = new ArrayList<>();
+        }
+        return participants;
     }
 
     public void setParticipants(List<Participants> participants) {
-        this.participants = participants;
+        this.participants = participants != null ? participants : new ArrayList<>();
+    }
+
+    public void addParticipant(Participants participant) {
+        if (participants == null) {
+            participants = new ArrayList<>();
+        }
+        if (participant != null && !participants.contains(participant)) {
+            participants.add(participant);
+        }
+    }
+
+    public void removeParticipant(Participants participant) {
+        if (participants != null) {
+            participants.remove(participant);
+        }
+    }
+
+    public List<Integer> getParticipantIds() {
+        List<Integer> ids = new ArrayList<>();
+        if (participants != null) {
+            for (Participants participant : participants) {
+                Integer participantId = participant.getParticipantId();
+                if (participantId != null) {
+                    ids.add(participantId);
+                }
+            }
+        }
+        return ids;
+    }
+
+    @Override
+    public String toString() {
+        return "Appointment{" +
+                "appointmentId=" + appointmentId +
+                ", guidanceCounselorId=" + guidanceCounselorId +
+                ", appointmentTitle='" + appointmentTitle + '\'' +
+                ", consultationType='" + consultationType + '\'' +
+                ", appointmentDateTime=" + appointmentDateTime +
+                ", appointmentStatus='" + appointmentStatus + '\'' +
+                ", appointmentNotes='" + appointmentNotes + '\'' +
+                ", updatedAt=" + updatedAt +
+                ", participantsCount=" + (participants != null ? participants.size() : 0) +
+                '}';
     }
 }

@@ -1,7 +1,8 @@
 package lyfjshs.CRUDS;
 
 import java.sql.Connection;
-import java.sql.DriverManager;import java.sql.SQLException;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -55,7 +56,7 @@ public class AppointmentsDB_Test {
         String url = "jdbc:mariadb://localhost:3306/gomisdb";
         String user = "root";
         String password = "YourRootPassword123!";
-        
+
         connection = DriverManager.getConnection(url, user, password);
         appointmentDAO = new AppointmentDAO(connection);
         participantDAO = new ParticipantsDAO(connection);
@@ -72,34 +73,34 @@ public class AppointmentsDB_Test {
         JButton btnUpdate = new JButton("Update Appointment");
         JButton btnDelete = new JButton("Delete Appointment");
         JButton btnReload = new JButton("Reload Data");
-        
+
         JPanel panel = new JPanel(new MigLayout("", "[][][][]", ""));
         panel.add(btnAdd);
         panel.add(btnUpdate);
         panel.add(btnDelete);
         panel.add(btnReload);
-        
-        String[] columnNames = {"ID", "Title", "Category", "DateTime", "Notes", "Status", "Participants"};
+
+        String[] columnNames = { "ID", "Title", "Category", "DateTime", "Notes", "Status", "Participants" };
         tableModel = new DefaultTableModel(columnNames, 0);
         table = new JTable(tableModel);
-        
+
         JScrollPane scrollPane = new JScrollPane(table);
-        
+
         frame.add(panel, "wrap");
         frame.add(scrollPane, "grow, wrap");
-        
+
         btnAdd.addActionListener(e -> showAppointmentDialog(null));
         btnUpdate.addActionListener(e -> updateAppointment());
         btnDelete.addActionListener(e -> deleteAppointment());
         btnReload.addActionListener(e -> reloadData());
-        
+
         // Set up the glass pane for loading animation
         loadingGlassPane = new LoadingGlassPane("loading.svg", 100, 10, "circleG.svg");
         frame.setGlassPane(loadingGlassPane);
-        
+
         // Make the frame visible
         frame.setVisible(true);
-        
+
         // Initial data load with animation
         loadingGlassPane.setAlpha(1.0f);
         loadingGlassPane.setVisible(true);
@@ -128,7 +129,7 @@ public class AppointmentsDB_Test {
                         String participantNames = a.getParticipants().stream()
                                 .map(p -> p.getParticipantFirstName() + " " + p.getParticipantLastName())
                                 .collect(Collectors.joining(", "));
-                        tableModel.addRow(new Object[]{
+                        tableModel.addRow(new Object[] {
                                 a.getAppointmentId(),
                                 a.getAppointmentTitle(),
                                 a.getConsultationType(),
@@ -162,11 +163,11 @@ public class AppointmentsDB_Test {
     }
 
     private static void startFadeOut() {
-        final float[] alpha = {1.0f};
+        final float[] alpha = { 1.0f };
         Timer fadeTimer = new Timer(90, e -> {
             alpha[0] -= 0.1f;
             if (alpha[0] <= 0) {
-                ((Timer)e.getSource()).stop();
+                ((Timer) e.getSource()).stop();
                 loadingGlassPane.setAlpha(0.0f);
                 loadingGlassPane.setVisible(false);
             } else {
@@ -179,10 +180,10 @@ public class AppointmentsDB_Test {
     private static void showAppointmentDialog(Appointment appointment) {
         JTextField titleField = new JTextField(20);
         JTextField notesField = new JTextField(20);
-        JComboBox<String> statusBox = new JComboBox<>(new String[]{"Scheduled", "Completed", "Cancelled"});
+        JComboBox<String> statusBox = new JComboBox<>(new String[] { "Scheduled", "Completed", "Cancelled" });
         JList<Participants> participantList = new JList<>(new DefaultListModel<>());
         JScrollPane participantScrollPane = new JScrollPane(participantList);
-        
+
         try {
             List<Participants> participants = participantDAO.getAllParticipants();
             DefaultListModel<Participants> listModel = (DefaultListModel<Participants>) participantList.getModel();
@@ -209,15 +210,15 @@ public class AppointmentsDB_Test {
                     .map(Participants::getParticipantId)
                     .collect(Collectors.toList());
             Timestamp appointmentDateTime = Timestamp.valueOf(LocalDateTime.now().plusDays(1));
-            int insertResult = 0;
+            boolean insertResult = false;
             try {
-                insertResult = appointmentDAO.insertAppointment(
-                        1, titleField.getText(), "General", appointmentDateTime, notesField.getText(),
-                        (String) statusBox.getSelectedItem(), selectedParticipants);
+                Appointment newAppointment = new Appointment(null, 1, titleField.getText(), "General",
+                        appointmentDateTime, (String) statusBox.getSelectedItem(), notesField.getText(), null);
+                insertResult = appointmentDAO.insertAppointment(newAppointment);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            if (insertResult > 0) {
+            if (insertResult == true) {
                 JOptionPane.showMessageDialog(null, "✔ Appointment Added");
                 reloadData(); // Reload with animation after adding
             } else {

@@ -1,41 +1,44 @@
 package lyfjshs.gomis.components.table;
 
+import javax.swing.*;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.util.List;
+
 /**
- * A custom table cell renderer for displaying action buttons inside a specific column of a {@link JTable}.
- * This renderer replaces the default cell content with an {@link ActionColumnPanel}, which contains buttons
- * for performing actions on the corresponding row.
- * <p>
- * The actions are defined as a list of {@link TableRowAction} and passed during initialization.
- * </p>
+ * Custom TableCellRenderer for rendering action buttons in a table column.
  */
-public class ActionColumnRenderer extends javax.swing.table.DefaultTableCellRenderer {
-    private final java.util.List<TableRowAction> actions;
+public class ActionColumnRenderer implements TableCellRenderer {
+    private final List<TableRowAction> actions;
+    private final JPanel panel;
 
     /**
-     * Constructs an {@code ActionColumnRenderer} with the specified list of actions.
+     * Creates a new ActionColumnRenderer with the specified actions.
      *
-     * @param actions the list of {@link TableRowAction} defining the available actions for each row
+     * @param actions the list of actions to render as buttons
      */
-    public ActionColumnRenderer(java.util.List<TableRowAction> actions) {
+    public ActionColumnRenderer(List<TableRowAction> actions) {
         this.actions = actions;
+        this.panel = new JPanel();
+        this.panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
     }
 
-    /**
-     * Returns a component that renders action buttons in the specified table cell.
-     *
-     * @param table      the {@link JTable} that contains this renderer
-     * @param value      the value to be rendered (not used, since this column contains buttons)
-     * @param isSelected whether the cell is selected
-     * @param hasFocus   whether the cell has focus
-     * @param row        the row index of the cell being rendered
-     * @param column     the column index of the cell being rendered
-     * @return a {@link ActionColumnPanel} containing action buttons for the row
-     */
     @Override
-    public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected, boolean hasFocus,
-                                                   int row, int column) {
-        ActionColumnPanel panel = new ActionColumnPanel(actions, table, -1);
+    public Component getTableCellRendererComponent(JTable table, Object value,
+                                                 boolean isSelected, boolean hasFocus,
+                                                 int row, int column) {
+        panel.removeAll();
         panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+
+        for (TableRowAction action : actions) {
+            JButton button = new JButton(action.getText());
+            button.setBackground(action.getButtonColor());
+            if (action.getIcon() != null) {
+                button.setIcon(action.getIcon());
+            }
+            panel.add(button);
+        }
+
         return panel;
     }
 }

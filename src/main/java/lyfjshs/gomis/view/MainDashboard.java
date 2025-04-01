@@ -29,15 +29,17 @@ import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.DAO.ViolationCRUD;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
-import lyfjshs.gomis.Database.entity.ViolationRecord;
+import lyfjshs.gomis.Database.entity.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.utils.IncidentReportGenerator;
 import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.appointment.AppointmentOverview;
@@ -110,8 +112,8 @@ public class MainDashboard extends Form {
 		refreshTable();
 	}
 
-	FlatSVGIcon viewIcon = new FlatSVGIcon("icons/view.svg", 0.5f);
-	FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.5f);
+	FlatSVGIcon viewIcon = new FlatSVGIcon("icons/view.svg", 0.4f);
+	FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.4f);
 
 	private JScrollPane createTablePanel() {
 		String[] columnNames = { "LRN", "Full Name", "Violation Type", "Status", "Actions" }; // Changed "Violation
@@ -127,16 +129,16 @@ public class MainDashboard extends Form {
 				SwingConstants.CENTER // Actions
 		};
 
-		TableActionManager actionsColumn = new TableActionManager();
-		actionsColumn.addAction("View", (t, row) -> {
-			String lrn = (String) t.getValueAt(row, 0);
-			showViolationDetails(lrn);
-		}, new Color(0, 150, 136), viewIcon);
-
-		actionsColumn.addAction("Resolve", (t, row) -> {
-			String lrn = (String) t.getValueAt(row, 0);
-			resolveViolation(lrn);
-		}, new Color(0, 150, 136), resolveIcon);
+		TableActionManager actionsColumn = new DefaultTableActionManager();
+		((DefaultTableActionManager)actionsColumn)
+			.addAction("View", (t, row) -> {
+				String lrn = (String) t.getValueAt(row, 0);
+				showViolationDetails(lrn);
+			}, new Color(0, 150, 136), viewIcon)
+			.addAction("Resolve", (t, row) -> {
+				String lrn = (String) t.getValueAt(row, 0);
+				resolveViolation(lrn);
+			}, new Color(0, 150, 136), resolveIcon);
 
 		Object[][] initialData = new Object[0][columnNames.length];
 		GTable table = new GTable(initialData, columnNames, columnTypes, editableColumns, columnWidths, alignments,
@@ -144,17 +146,17 @@ public class MainDashboard extends Form {
 				actionsColumn);
 		// Load violation data - Modified to only show active violations
 		try {
-			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
+			ViolationDAO ViolationDAO = new ViolationDAO(connection);
 			ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
 			StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
 
-			List<ViolationRecord> violations = violationCRUD.getAllViolations();
+			List<Violation> violations = ViolationDAO.getAllViolations();
 			System.out.println("Found " + violations.size() + " violations"); // Debug line
 
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
 			model.setRowCount(0); // Clear existing rows
 
-			for (ViolationRecord violation : violations) {
+			for (Violation violation : violations) {
 				// Debug information
 				System.out.println("\nProcessing violation:" +
 						"\nID: " + violation.getViolationId() +
@@ -212,8 +214,8 @@ public class MainDashboard extends Form {
 
 	private void showViolationDetails(String lrn) {
 		try {
-			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
-			ViolationRecord violation = violationCRUD.getViolationByLRN(lrn);
+			ViolationDAO ViolationDAO = new ViolationDAO(connection);
+			Violation violation = ViolationDAO.getViolationByLRN(lrn);
 
 			if (violation != null) {
 				// Create panel with proper styling
@@ -250,7 +252,7 @@ public class MainDashboard extends Form {
 				});
 
 				// Add text areas with improved styling
-				createTextAreaField(detailPanel, "Anecdotal Record:", violation.getAnecdotalRecord(), 5);
+				createTextAreaField(detailPanel, "Session Summary:", violation.getSessionSummary(), 5);
 				createTextAreaField(detailPanel, "Reinforcement:", violation.getReinforcement(), 5);
 
 				// Add resolution status message if resolved
@@ -336,8 +338,8 @@ public class MainDashboard extends Form {
 
 	private void resolveViolation(String lrn) {
 		try {
-			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
-			ViolationRecord violation = violationCRUD.getViolationByLRN(lrn);
+			ViolationDAO violationDAO = new ViolationDAO(connection);
+			Violation violation = violationDAO.getViolationByLRN(lrn);
 
 			if (violation != null) {
 				// Check if violation is already resolved
@@ -355,7 +357,13 @@ public class MainDashboard extends Form {
 						JOptionPane.YES_NO_OPTION);
 
 				if (option == JOptionPane.YES_OPTION) {
-					boolean success = violationCRUD.updateViolationStatus(violation.getViolationId(), "Resolved");
+					boolean success;
+					try {
+						success = violationDAO.updateViolationStatus(violation.getViolationId(), "Resolved");
+					} catch (Exception e) {
+						e.printStackTrace();
+						success = false;
+					}
 					if (success) {
 						JOptionPane.showMessageDialog(this,
 								"Violation has been resolved successfully!",
@@ -485,7 +493,7 @@ public class MainDashboard extends Form {
 				}
 			};
 
-			ModalDialog.getDefaultOption().setOpacity(0f).setAnimationOnClose(true).getBorderOption()
+			ModalDialog.getDefaultOption().setOpacity(0.5f).setAnimationOnClose(true).getBorderOption()
 					.setBorderWidth(0.5f)
 					.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
 

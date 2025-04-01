@@ -21,6 +21,7 @@ public class Student {
     private String studentReligion;
     private int sf_id;
     private String sf_section; // Keep this for display purposes
+    private int studentId;
 
     private Address address;
     private Contact contact;
@@ -233,6 +234,14 @@ public class Student {
 
     public void setSF_ID(int sf_id) {
         this.sf_id = sf_id;
+    }
+
+    public int getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(int studentId) {
+        this.studentId = studentId;
     }
 
     @Override

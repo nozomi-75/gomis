@@ -235,6 +235,12 @@ private void loadAppointments(LocalDate date) {
         List<Appointment> loadedAppointments = null;
         try {
             loadedAppointments = appointmentDAO.getAppointmentsForDate(date);
+            // Filter out ended appointments
+            if (loadedAppointments != null) {
+                loadedAppointments = loadedAppointments.stream()
+                    .filter(appt -> !"Ended".equals(appt.getAppointmentStatus()))
+                    .toList();
+            }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error fetching appointments: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);

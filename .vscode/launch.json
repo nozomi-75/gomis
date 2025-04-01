@@ -6,107 +6,23 @@
     "configurations": [
         {
             "type": "java",
-            "name": "SessionsRecordData",
+            "name": "TestModal",
             "request": "launch",
-            "mainClass": "lyfjshs.gomis.view.sessions.SessionsRecordData",
+            "mainClass": "test.TestModal",
             "projectName": "gomis"
         },
         {
             "type": "java",
-            "name": "NativeNotificationExample",
+            "name": "TestModal",
             "request": "launch",
-            "mainClass": "lyfjshs.gomis.components.notification.NativeNotificationExample",
+            "mainClass": "lyfjshs.gomis.test.Modal.TestModal",
             "projectName": "gomis"
         },
         {
             "type": "java",
-            "name": "JNANotification",
+            "name": "SFtoDB",
             "request": "launch",
-            "mainClass": "lyfjshs.gomis.notification.JNANotification",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "NativeNotificationExample",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.notification.NativeNotificationExample",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "NativeNotificationExample",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.test.notification.NativeNotificationExample",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "NativeNotificationExample",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.test.NativeNotificationExample",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "ViolationRecordsDashboard",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.test.ViolationRecordsDashboard",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "TestSearch",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.TestSearch",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "SplashTest",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.SplashTest",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "SignUpTEST",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.SignUpTEST",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "LoadingAnimationTest",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.LoadingAnimationTest",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "CoolButtonDemo",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.CoolButtonDemo",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "StudentsDataDAO",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.Database.DAO.StudentsDataDAO",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "ViolationRecordForm",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.test.ViolationRecordForm",
-            "projectName": "gomis"
-        },
-        {
-            "type": "java",
-            "name": "CompileJasper",
-            "request": "launch",
-            "mainClass": "lyfjshs.gomis.utils.CompileJasper",
+            "mainClass": "lyfjshs.SFtoDB",
             "projectName": "gomis"
         },
         {
@@ -117,9 +33,10 @@
             "projectName": "gomis"
         },
         {
-            "type": "jdk",
+            "type": "java",
             "request": "launch",
-            "name": "Launch Java App"
+            "name": "Launch Java App",
+            "mainClass": "lyfjshs.gomis.Main"
         }
     ]
 }

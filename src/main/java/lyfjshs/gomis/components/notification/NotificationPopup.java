@@ -1,8 +1,5 @@
 package lyfjshs.gomis.components.notification;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
@@ -15,13 +12,13 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import lyfjshs.gomis.components.FormManager.MainForm;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.Modal;
 import raven.modal.option.Option;
 
 public class NotificationPopup extends Modal {
-	private static final Color BORDER_COLOR = new Color(229, 229, 229);
 	private final JPanel notificationsContainer;
 	private final NotificationManager notificationManager;
 	private final JPanel parent;
@@ -36,12 +33,10 @@ public class NotificationPopup extends Modal {
 
 		// Main content pane with theme-aware background
 		setLayout(new MigLayout("insets 0, fillx", "[grow]", "[][grow]"));
-		setBackground(UIManager.getColor("Panel.background"));
 		setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
 		// Header panel with theme-aware background
 		JPanel headerPanel = new JPanel(new MigLayout("insets 15 20 15 20, fillx", "[grow][]", "[]"));
-		headerPanel.setBackground(UIManager.getColor("Panel.background"));
 		headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("Separator.foreground")));
 
 		// Title with modern font
@@ -55,7 +50,6 @@ public class NotificationPopup extends Modal {
 
 		// Notifications container with theme-aware background
 		notificationsContainer = new JPanel(new MigLayout("insets 0, fillx", "[grow]", ""));
-		notificationsContainer.setBackground(UIManager.getColor("Panel.background"));
 
 		// Load existing notifications
 		updateNotifications();
@@ -63,7 +57,6 @@ public class NotificationPopup extends Modal {
 		// Scroll pane for notifications
 		JScrollPane scrollPane = new JScrollPane(notificationsContainer);
 		scrollPane.setBorder(null);
-		scrollPane.setBackground(UIManager.getColor("Panel.background"));
 		scrollPane.getViewport().setBackground(UIManager.getColor("Panel.background"));
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -82,7 +75,7 @@ public class NotificationPopup extends Modal {
 					updatePosition();
 				}
 			}
-			
+
 			@Override
 			public void componentHidden(java.awt.event.ComponentEvent e) {
 				hide();
@@ -92,50 +85,35 @@ public class NotificationPopup extends Modal {
 
 	private void updatePosition() {
 		Point location = parent.getLocationOnScreen();
-		JButton notificationButton = findNotificationButton(parent);
+		JButton notificationButton = MainForm.getNotificationButton();
 		if (notificationButton != null) {
 			location = notificationButton.getLocationOnScreen();
-			
+
 			// Close existing modal if it exists
 			if (ModalDialog.isIdExist(MODAL_ID)) {
 				ModalDialog.closeModal(MODAL_ID);
 			}
-			
+
 			Option option = ModalDialog.createOption();
-			option.setOpacity(0f);
+			option.setOpacity(0.2f);
 			option.setAnimationEnabled(false);
-			
 			option.getLayoutOption()
-				.setMargin(0, 0, 0, 0)
-				.setLocation(
-					location.x - getPreferredSize().width + notificationButton.getWidth(),
-					location.y + notificationButton.getHeight());
-			
+					.setMargin(0, 0, 0, 0)
+					.setLocation(
+							location.x - getPreferredSize().width + notificationButton.getWidth(),
+							location.y + notificationButton.getHeight());
+
 			ModalDialog.showModal(parent, this, option, MODAL_ID);
 		}
 	}
 
-	private JButton findNotificationButton(Container container) {
-		for (Component comp : container.getComponents()) {
-			if (comp instanceof JButton && "N".equals(((JButton) comp).getText())) {
-				return (JButton) comp;
-			}
-			if (comp instanceof Container) {
-				JButton result = findNotificationButton((Container) comp);
-				if (result != null) {
-					return result;
-				}
-			}
-		}
-		return null;
-	}
 
 	public void addNotification(NotificationManager.Notification notification) {
 		SwingUtilities.invokeLater(() -> {
 			// Add new notification at the top
-			ClickableNotification clickableNotification = new ClickableNotification(notification, this, callback);
+			ClickableNotification clickableNotification = new ClickableNotification(notification, callback);
 			clickableNotification.setUnread(notification.isUnread());
-			notificationsContainer.add(clickableNotification, "wrap, growx", 0);  // Add at index 0
+			notificationsContainer.add(clickableNotification, "wrap, growx", 0); // Add at index 0
 			notificationsContainer.revalidate();
 			notificationsContainer.repaint();
 		});
@@ -145,7 +123,7 @@ public class NotificationPopup extends Modal {
 		SwingUtilities.invokeLater(() -> {
 			notificationsContainer.removeAll();
 			for (NotificationManager.Notification notification : notificationManager.getNotifications()) {
-				ClickableNotification clickableNotification = new ClickableNotification(notification, this, callback);
+				ClickableNotification clickableNotification = new ClickableNotification(notification, callback);
 				clickableNotification.setUnread(notification.isUnread());
 				notificationsContainer.add(clickableNotification, "wrap, growx");
 			}

@@ -186,7 +186,7 @@ public class AppointmentCalendar extends JPanel {
 
         List<Appointment> appointments = null;
         try {
-            appointments = appointmentDao.getAppointmentsForDate(date);
+            appointments = appointmentDao.getAppointmentsForDateExcludingEnded(date);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -218,7 +218,7 @@ public class AppointmentCalendar extends JPanel {
                 appointmentPanel.setBackground(colors[0]);
                 appointmentPanel.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60), 1));
 
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
                 String timeDisplay = appt.getAppointmentDateTime().toLocalDateTime().format(timeFormatter);
 
                 JLabel appLabel = new JLabel(timeDisplay + " - " + appt.getAppointmentTitle());
@@ -281,31 +281,62 @@ public class AppointmentCalendar extends JPanel {
             return;
         }
 
-        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(
-            connection, 
-            null, 
-            null,
-            // Add refresh callback
-            refreshedAppointment -> {
-                updateCalendar();
-                if (getParent() instanceof AppointmentManagement) {
-                    ((AppointmentManagement) getParent()).refreshViews();
-                }
+        try {
+            // First check if the appointment is not ended
+            Appointment currentAppointment = appointmentDao.getAppointmentByIdExcludingEnded(appointment.getAppointmentId());
+            if (currentAppointment == null) {
+                // If the appointment is ended, don't show it
+                return;
             }
-        );
-        appointmentDetails.loadAppointmentDetails(appointment);
-        createAndShowModalDialog(appointmentDetails, "appointment_details_" + appointment.getAppointmentId(), 
-            appointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
+
+            AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(
+                connection, 
+                null, 
+                null,
+                // Add refresh callback
+                refreshedAppointment -> {
+                    updateCalendar();
+                    if (getParent() instanceof AppointmentManagement) {
+                        ((AppointmentManagement) getParent()).refreshViews();
+                    }
+                }
+            );
+            appointmentDetails.loadAppointmentDetails(currentAppointment);
+            createAndShowModalDialog(appointmentDetails, "appointment_details_" + currentAppointment.getAppointmentId(), 
+                currentAppointment.getAppointmentDateTime().toLocalDateTime().toLocalDate());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, 
+                "Error loading appointment details: " + e.getMessage(),
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void showAppointmentDetailsPopup(LocalDate selectedDate) {
-        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection, null, null); // Pass null since we don't need selection here
+        AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection, null, null);
         try {
-            appointmentDetails.loadAppointmentsForDate(selectedDate);
+            // Only get non-ended appointments
+            List<Appointment> appointments = appointmentDao.getAppointmentsForDateExcludingEnded(selectedDate);
+            
+            // If there are no active appointments, show empty state
+            if (appointments == null || appointments.isEmpty()) {
+                appointmentDetails = new AppointmentDayDetails(connection, null, null);
+                // Initialize with empty state
+                appointmentDetails.loadAppointmentDetails(null);
+            } else {
+                // Load the first active appointment
+                appointmentDetails.loadAppointmentDetails(appointments.get(0));
+            }
+            
+            createAndShowModalDialog(appointmentDetails, "appointment_details_date_" + selectedDate.toString(), selectedDate);
         } catch (SQLException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Error loading appointments: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
         }
-        createAndShowModalDialog(appointmentDetails, "appointment_details_date_" + selectedDate.toString(), selectedDate);
     }
 
     private void createAndShowModalDialog(AppointmentDayDetails detailsPanel, String modalId, LocalDate selectedDate) {
@@ -333,14 +364,14 @@ public class AppointmentCalendar extends JPanel {
             
             // Set options based on whether there's an appointment
             SimpleModalBorder.Option[] options;
-            if (currentAppointment != null) {
-                // If there's an appointment, show "Set a Session" option
+            if (currentAppointment != null && !"Ended".equals(currentAppointment.getAppointmentStatus())) {
+                // If there's an active appointment, show "Set a Session" option
                 options = new SimpleModalBorder.Option[] {
                     new SimpleModalBorder.Option("Set a Session", SimpleModalBorder.YES_OPTION),
                     new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
                 };
             } else {
-                // If no appointment, show "Add a Appointment" option
+                // If no appointment or ended appointment, show "Add a Appointment" option
                 options = new SimpleModalBorder.Option[] {
                     new SimpleModalBorder.Option("Add a Appointment", SimpleModalBorder.YES_OPTION),
                     new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
@@ -353,7 +384,7 @@ public class AppointmentCalendar extends JPanel {
                             options,
                             (controller, action) -> {
                                 if (action == SimpleModalBorder.YES_OPTION) {
-                                    if (currentAppointment != null) {
+                                    if (currentAppointment != null && !"Ended".equals(currentAppointment.getAppointmentStatus())) {
                                         // Handle "Set a Session" action
                                         DrawerBuilder.switchToSessionsForm();
                                         Form[] forms = FormManager.getForms();
@@ -362,9 +393,11 @@ public class AppointmentCalendar extends JPanel {
                                                 SessionsForm sessionsForm = (SessionsForm) form;
                                                 try {
                                                     AppointmentDAO appointmentDAO = new AppointmentDAO(connection);
-                                                    Appointment fullAppointment = appointmentDAO.getAppointmentById(
+                                                    Appointment fullAppointment = appointmentDAO.getAppointmentByIdExcludingEnded(
                                                         currentAppointment.getAppointmentId());
-                                                    sessionsForm.populateFromAppointment(fullAppointment);
+                                                    if (fullAppointment != null) {
+                                                        sessionsForm.populateFromAppointment(fullAppointment);
+                                                    }
                                                 } catch (SQLException e) {
                                                     e.printStackTrace();
                                                     JOptionPane.showMessageDialog(this, 

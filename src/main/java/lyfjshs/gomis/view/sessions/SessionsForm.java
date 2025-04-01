@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
-import lyfjshs.gomis.Database.DAO.ViolationCRUD;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
@@ -93,6 +94,7 @@ public class SessionsForm extends Form {
 
 	public SessionsForm(Connection conn) {
 		this.connect = conn;
+		this.mainPanel = new JPanel(); // Initialize mainPanel here
 		initializeComponents();
 		layoutComponents();
 		populateRecordedByField(); // Call the method to populate the recordedByField
@@ -152,7 +154,7 @@ public class SessionsForm extends Form {
 		saveButton.addActionListener(e -> saveSessionToDatabase());
 
 		// Initialize session status combobox
-		sessionStatusComboBox = new JComboBox<>(new String[] { "Active", "Ended" });
+		sessionStatusComboBox = new JComboBox<>(new String[] { "Select Status", "Active", "Ended" });
 		sessionStatusComboBox.addActionListener(e -> {
 			String newStatus = (String) sessionStatusComboBox.getSelectedItem();
 			
@@ -163,7 +165,7 @@ public class SessionsForm extends Form {
 				if ("Active".equals(currentStatus) && "Ended".equals(newStatus)) {
 					saveButton.setEnabled(true);
 					saveButton.setText("Save Status Change");
-					return; // Don't disable components yet
+					return;
 				}
 				
 				// If already Ended, disable everything
@@ -174,9 +176,24 @@ public class SessionsForm extends Form {
 			}
 			
 			// For Active status or new sessions
-			boolean isActive = "Active".equals(newStatus);
+			boolean isActive = !"Select Status".equals(newStatus);
 			enableFieldsBasedOnStatus(isActive);
 		});
+
+		// New Date and Time Fields for Rescheduling
+		JLabel newDateLabel = new JLabel("New Date:");
+		dateField = new JFormattedTextField(); // Initialize the date field
+		dateField.setColumns(10);
+		
+		JLabel newTimeLabel = new JLabel("New Time:");
+		timeField = new JFormattedTextField(); // Initialize the time field
+		timeField.setColumns(10);
+
+		// Add to the main panel
+		mainPanel.add(newDateLabel, "cell 0 3");
+		mainPanel.add(dateField, "cell 1 3, growx");
+		mainPanel.add(newTimeLabel, "cell 0 4");
+		mainPanel.add(timeField, "cell 1 4, growx");
 	}
 
 	private void disableFieldsForEndedSession() {
@@ -195,10 +212,15 @@ public class SessionsForm extends Form {
 	}
 
 	private void enableFieldsBasedOnStatus(boolean isActive) {
+		// For walk-in sessions, always keep save button enabled when status is "Ended"
+		String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
+		String status = (String) sessionStatusComboBox.getSelectedItem();
+		boolean isWalkIn = "Walk-in".equals(appointmentType);
+		boolean isEnded = "Ended".equals(status);
+
 		notesArea.setEditable(isActive);
 		sessionSummaryArea.setEditable(isActive);
 		participantTable.setEnabled(isActive);
-		saveButton.setEnabled(isActive);
 		searchStudentButton.setEnabled(isActive);
 		violationField.setEnabled(isActive);
 		customViolationField.setEnabled(isActive && "Others".equals(violationField.getSelectedItem()));
@@ -206,7 +228,15 @@ public class SessionsForm extends Form {
 		consultationTypeComboBox.setEnabled(isActive);
 		appointmentTypeComboBox.setEnabled(isActive);
 		searchBtn.setEnabled(isActive);
-		saveButton.setText(isEditing ? "Update Session" : "SAVE");
+
+		// Keep save button enabled for walk-in sessions even when ended
+		if (isWalkIn && isEnded) {
+			saveButton.setEnabled(true);
+			saveButton.setText("Save Session");
+		} else {
+			saveButton.setEnabled(isActive);
+			saveButton.setText(isEditing ? "Update Session" : "SAVE");
+		}
 	}
 
 	private void toggleSearchStudentButton() {
@@ -748,12 +778,8 @@ public class SessionsForm extends Form {
 
 	private void saveSessionToDatabase() {
 		try {
-			int guidanceCounselorId;
-			if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
-				guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
-			} else {
-				JOptionPane.showMessageDialog(this, "No guidance counselor is currently logged in.", "Error",
-						JOptionPane.ERROR_MESSAGE);
+			// Validate inputs first
+			if (!validateInputs()) {
 				return;
 			}
 
@@ -765,28 +791,10 @@ public class SessionsForm extends Form {
 			String summary = sessionSummaryArea.getText().trim();
 			String sessionStatus = (String) sessionStatusComboBox.getSelectedItem();
 
-			// Validate summary
-			if (summary.isEmpty()) {
-				JOptionPane.showMessageDialog(this,
-						"Please enter a session summary.",
-						"Missing Information",
-						JOptionPane.WARNING_MESSAGE);
-				sessionSummaryArea.requestFocus();
-				return;
-			}
-
 			Integer appointmentId = "Walk-in".equals(appointmentType) ? null : selectedAppointmentId;
 			String violationText = "Others".equals(violation) ? customViolationField.getText().trim() : violation;
 
-			// Validate custom violation text if "Others" is selected
-			if ("Others".equals(violation) && (violationText == null || violationText.trim().isEmpty())) {
-				JOptionPane.showMessageDialog(this,
-						"Please enter a custom violation type.",
-						"Missing Information",
-						JOptionPane.WARNING_MESSAGE);
-				customViolationField.requestFocus();
-				return;
-			}
+			SessionsDAO sessionsDAO = new SessionsDAO(connect);
 
 			if (isEditing && currentSession != null) {
 				// Update existing session
@@ -794,27 +802,19 @@ public class SessionsForm extends Form {
 				currentSession.setConsultationType(consultationType);
 				currentSession.setSessionDateTime(parseDateTime());
 				currentSession.setSessionNotes(notes);
-				currentSession.setSessionSummary(summary); // Always save the summary
+				currentSession.setSessionSummary(summary);
 				currentSession.setSessionStatus(sessionStatus);
 
-				SessionsDAO sessionsDAO = new SessionsDAO(connect);
 				sessionsDAO.updateSession(currentSession);
 
-				// If session was just ended, update UI
-				if ("Active".equals(currentSession.getSessionStatus()) && "Ended".equals(sessionStatus)) {
-					currentSession.setSessionStatus("Ended");
-					notesArea.setEditable(false);
-					sessionSummaryArea.setEditable(false);
-					participantTable.setEnabled(false);
-					saveButton.setEnabled(false);
-					searchStudentButton.setEnabled(false);
-					violationField.setEnabled(false);
-					customViolationField.setEnabled(false);
-					participantsComboBox.setEnabled(false);
-					consultationTypeComboBox.setEnabled(false);
-					appointmentTypeComboBox.setEnabled(false);
-					searchBtn.setEnabled(false);
-					saveButton.setText("Session Ended");
+				// Update appointment status if session is ended and it's from a scheduled appointment
+				if ("Ended".equals(sessionStatus) && currentSession.getAppointmentId() != null) {
+					AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
+					Appointment appointment = appointmentDAO.getAppointmentById(currentSession.getAppointmentId());
+					if (appointment != null) {
+						appointment.setAppointmentStatus("Ended");
+						appointmentDAO.updateAppointment(appointment);
+					}
 				}
 
 				JOptionPane.showMessageDialog(this, "Session updated successfully!", "Success",
@@ -823,13 +823,26 @@ public class SessionsForm extends Form {
 				if (saveCallback != null) {
 					saveCallback.run();
 				}
+
+				// Update UI after saving
+				if ("Ended".equals(sessionStatus)) {
+					disableFieldsForEndedSession();
+				}
 			} else {
-				// Create new session with summary
+				// Create new session
+				int guidanceCounselorId;
+				if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
+					guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
+				} else {
+					JOptionPane.showMessageDialog(this, "No guidance counselor is currently logged in.", "Error",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
 				Sessions session = new Sessions(0, appointmentId, guidanceCounselorId, null, appointmentType,
 						consultationType, parseDateTime(), notes, summary, sessionStatus,
 						new java.sql.Timestamp(System.currentTimeMillis()));
 
-				SessionsDAO sessionsDAO = new SessionsDAO(connect);
 				int sessionId = sessionsDAO.addSession(session);
 
 				if (sessionId > 0) {
@@ -851,19 +864,29 @@ public class SessionsForm extends Form {
 						}
 					}
 
+					// Update appointment status if session is ended and it's from a scheduled appointment
+					if ("Ended".equals(sessionStatus) && appointmentId != null) {
+						AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
+						Appointment appointment = appointmentDAO.getAppointmentById(appointmentId);
+						if (appointment != null) {
+							appointment.setAppointmentStatus("Ended");
+							appointmentDAO.updateAppointment(appointment);
+						}
+					}
+
 					// Only create violation records if a violation type is selected and it's not "No Violation"
 					if (violation != null && !violation.equals("-- Select Violation --") && !violation.equals("No Violation")) {
 						// Create violation records
-						ViolationCRUD violationCRUD = new ViolationCRUD(connect);
+						ViolationDAO ViolationDAO = new ViolationDAO(connect);
 						for (int i = 0; i < participantTableModel.getRowCount(); i++) {
 							int tempId = (int) participantTableModel.getValueAt(i, 4);
 							int realParticipantId = idMapping.get(tempId);
 
-							boolean success = violationCRUD.addViolation(
+							boolean success = ViolationDAO.addViolation(
 									realParticipantId,
 									violationText,
 									violationText,
-									summary, // Use session summary for anecdotal record
+									summary,
 									notes,
 									"Active",
 									new java.sql.Timestamp(System.currentTimeMillis()));
@@ -877,7 +900,7 @@ public class SessionsForm extends Form {
 					JOptionPane.showMessageDialog(this, "Session and participants saved successfully!", "Success",
 							JOptionPane.INFORMATION_MESSAGE);
 
-					refreshViolationRecords();
+					refreshViolations();
 
 					if (saveCallback != null) {
 						saveCallback.run();
@@ -895,7 +918,60 @@ public class SessionsForm extends Form {
 		}
 	}
 
-	private void refreshViolationRecords() {
+	private boolean validateInputs() {
+		StringBuilder errors = new StringBuilder();
+
+		// Check session status
+		String status = (String) sessionStatusComboBox.getSelectedItem();
+		if ("Select Status".equals(status)) {
+			errors.append("- Please select a session status\n");
+		}
+
+		// Check consultation type
+		String consultationType = (String) consultationTypeComboBox.getSelectedItem();
+		if (consultationType == null || consultationType.trim().isEmpty()) {
+			errors.append("- Please select a consultation type\n");
+		}
+
+		// Check appointment type
+		String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
+		if (appointmentType == null || appointmentType.trim().isEmpty()) {
+			errors.append("- Please select an appointment type\n");
+		}
+
+		// Check session summary
+		String summary = sessionSummaryArea.getText().trim();
+		if (summary.isEmpty()) {
+			errors.append("- Please enter a session summary\n");
+		}
+
+		// Check violation if selected
+		String violation = (String) violationField.getSelectedItem();
+		if ("Others".equals(violation)) {
+			String customViolation = customViolationField.getText().trim();
+			if (customViolation.isEmpty()) {
+				errors.append("- Please enter a custom violation type\n");
+			}
+		}
+
+		// Check if there are any participants
+		if (participantTableModel.getRowCount() == 0) {
+			errors.append("- Please add at least one participant\n");
+		}
+
+		// If there are errors, show them and return false
+		if (errors.length() > 0) {
+			JOptionPane.showMessageDialog(this,
+				"Please fix the following errors:\n" + errors.toString(),
+				"Validation Error",
+				JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+
+		return true;
+	}
+
+	private void refreshViolations() {
 		// Find and refresh any open violation record forms
 		if (Main.formManager != null) {
 			Form[] forms = FormManager.getForms();
@@ -947,7 +1023,7 @@ public class SessionsForm extends Form {
 
 			// Set date and time
 			if (session.getSessionDateTime() != null) {
-				java.time.LocalDateTime dateTime = session.getSessionDateTime().toLocalDateTime();
+				LocalDateTime dateTime = session.getSessionDateTime().toLocalDateTime();
 				sessionDatePicker.setSelectedDate(dateTime.toLocalDate());
 				sessionTimePicker.setSelectedTime(dateTime.toLocalTime());
 			}
@@ -968,7 +1044,6 @@ public class SessionsForm extends Form {
 				details.put("fullName", participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
 				details.put("type", participant.getParticipantType());
 				details.put("contact", participant.getContactNumber());
-				details.put("sex", participant.getSex());
 				participantDetails.put(participant.getParticipantId(), details);
 
 				int rowNumber = participantTableModel.getRowCount() + 1;
@@ -986,20 +1061,8 @@ public class SessionsForm extends Form {
 			boolean isActive = "Active".equals(session.getSessionStatus());
 
 			// Enable/disable components based on status
-			notesArea.setEditable(isActive);
-			sessionSummaryArea.setEditable(isActive);
-			participantTable.setEnabled(isActive);
-			saveButton.setEnabled(isActive);
-			searchStudentButton.setEnabled(isActive);
-			violationField.setEnabled(isActive);
-			customViolationField.setEnabled(isActive && "Others".equals(violationField.getSelectedItem()));
-			participantsComboBox.setEnabled(isActive);
-			consultationTypeComboBox.setEnabled(isActive);
-			appointmentTypeComboBox.setEnabled(isActive);
-			searchBtn.setEnabled(isActive);
-
-			// Update button text
-			saveButton.setText(isActive ? "Update Session" : "Session Ended");
+			enableFieldsBasedOnStatus(isActive);
+			saveButton.setText("Save Appointment"); // Change button text to indicate update
 
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(this, "Error loading session data: " + e.getMessage(), "Error",

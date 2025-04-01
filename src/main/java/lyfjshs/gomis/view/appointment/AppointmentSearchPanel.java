@@ -24,6 +24,7 @@ import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 
@@ -88,8 +89,8 @@ public class AppointmentSearchPanel extends JPanel {
         };
 
         // Create action manager
-        TableActionManager actionManager = new TableActionManager();
-        actionManager.addAction("View", (table, row) -> {
+        TableActionManager actionManager = new DefaultTableActionManager();
+        ((DefaultTableActionManager)actionManager).addAction("View", (table, row) -> {
             Integer appointmentId = (Integer) table.getValueAt(row, 0);
             viewAppointment(appointmentId);
         }, new Color(0, 150, 136), viewIcon);
@@ -140,6 +141,11 @@ public class AppointmentSearchPanel extends JPanel {
                     null,          // status (not filtering by status)
                     counselorId    // filter by the current counselor
                 );
+
+                // Filter out ended appointments
+                appointments = appointments.stream()
+                    .filter(appt -> !"Ended".equals(appt.getAppointmentStatus()))
+                    .toList();
                 
                 // Update the table with the filtered appointments
                 updateAppointmentTableWithCounselor(appointments);
@@ -182,6 +188,11 @@ public class AppointmentSearchPanel extends JPanel {
                 null,  // status
                 counselorId
             );
+            
+            // Filter out ended appointments
+            appointments = appointments.stream()
+                .filter(appt -> !"Ended".equals(appt.getAppointmentStatus()))
+                .toList();
             
             System.out.println("Found " + appointments.size() + " appointments");
             

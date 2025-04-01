@@ -54,7 +54,7 @@ public class GTable extends FlatTable {
         this.actionManager = actionManager;
 
         configureTable();
-        applyColumnWidths(); // Call applyColumnWidths here
+        applyColumnWidths();
         applyColumnAlignments();
         updateRowHeightFromSettings();
 
@@ -62,7 +62,7 @@ public class GTable extends FlatTable {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                applyColumnWidths(); // Call applyColumnWidths here
+                applyColumnWidths();
             }
         });
     }
@@ -114,16 +114,15 @@ public class GTable extends FlatTable {
             checkColumn.setCellEditor(new DefaultCellEditor(checkBox));
             checkColumn.setMaxWidth(50);
         }
-
         if (actionManager != null) {
-            actionManager.applyTo(this, getColumnCount() - 1);
+            actionManager.applyTo(this);
         }
     }
 
     public void updateRowHeightFromSettings() {
-        int fontSize = Main.settings.getSettingsState().fontSize; // Get font size from settings
-        int buttonHeight = new JButton("Sample").getPreferredSize().height; // Get button height
-        int rowHeight = Math.max(fontSize + 20, buttonHeight + 10); // Adjust row height based on button height
+        int fontSize = Main.settings.getSettingsState().fontSize;
+        int buttonHeight = new JButton("Sample").getPreferredSize().height;
+        int rowHeight = Math.max(fontSize + 20, buttonHeight + 10);
         setRowHeight(rowHeight);
     }
 
@@ -131,7 +130,7 @@ public class GTable extends FlatTable {
     public void updateUI() {
         super.updateUI();
         if (Main.settings != null) {
-            SwingUtilities.invokeLater(this::updateRowHeightFromSettings); // 🔹 Forces row height update
+            SwingUtilities.invokeLater(this::updateRowHeightFromSettings);
         }
     }
 
@@ -153,14 +152,17 @@ public class GTable extends FlatTable {
             TableColumn column = columnModel.getColumn(i);
 
             // Handle checkbox column
-            if (hasCheckbox && i == 0)
+            if (hasCheckbox && i == 0) {
+                column.setPreferredWidth(50);
+                column.setMaxWidth(50);
                 continue;
+            }
 
             // Handle Actions column (Allow Resizing)
             if (actionManager != null && i == getColumnCount() - 1) {
-                int actionColumnWidth = (int) (totalWidth * 0.15); // Make it responsive (15% of table width)
+                int actionColumnWidth = (int) (totalWidth * 0.15);
                 column.setPreferredWidth(actionColumnWidth);
-                column.setResizable(true);
+                column.setMinWidth(actionColumnWidth);
                 continue;
             }
 

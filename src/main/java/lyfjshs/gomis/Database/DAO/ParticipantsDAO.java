@@ -191,4 +191,19 @@ public class ParticipantsDAO {
         }
         return participants;
     }
+
+    public Participants findParticipantByNameAndType(String firstName, String lastName, String participantType) throws SQLException {
+        String sql = "SELECT * FROM PARTICIPANTS WHERE PARTICIPANT_FIRSTNAME = ? AND PARTICIPANT_LASTNAME = ? AND PARTICIPANT_TYPE = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, participantType);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToParticipant(rs);
+                }
+            }
+        }
+        return null;
+    }
 }

@@ -12,7 +12,6 @@ import javax.swing.JTextField;
 
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Student;
-import lyfjshs.gomis.utils.DroppingFormGenerator;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 
@@ -32,12 +31,10 @@ public class DroppingForm extends JPanel {
 //			"Technical-Vocational-Livelihood (TVL) ICT - Programming",
 //			"Technical-Vocational-Livelihood (TVL) ICT - Technical Drafting" };
 
-	private Connection connection;
 	private JLabel lblNewLabel;
 	private JTextArea actionTextArea;
 
 	public DroppingForm(Connection conn, Student studee, GuidanceCounselor counselor) {
-		this.connection = conn;
 
 		// Initialize components first
 		initializeComponents();
@@ -141,11 +138,6 @@ public class DroppingForm extends JPanel {
 			
 			adviserField.setText(counselorName);
 		}
-	}
-
-	private void DropStudent(Connection connend) {
-		// method to drop student
-		DroppingFormGenerator.createDroppingForm(absencesField, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY, TOOL_TIP_TEXT_KEY);
 	}
 
 	// Add getter methods for the form fields

@@ -287,4 +287,41 @@ public class SessionsDAO {
         }
         return participants;
     }
+
+    public void deleteSessionsByAppointmentId(int appointmentId) throws SQLException {
+        // First, delete the session participants
+        String deleteParticipantsSQL = "DELETE sp FROM SESSIONS_PARTICIPANTS sp " +
+                                      "INNER JOIN SESSIONS s ON sp.SESSION_ID = s.SESSION_ID " +
+                                      "WHERE s.APPOINTMENT_ID = ?";
+        
+        // Then delete the sessions
+        String deleteSessionsSQL = "DELETE FROM SESSIONS WHERE APPOINTMENT_ID = ?";
+        
+        try {
+            // Start transaction
+            connection.setAutoCommit(false);
+            
+            // Delete participants first
+            try (PreparedStatement stmt = connection.prepareStatement(deleteParticipantsSQL)) {
+                stmt.setInt(1, appointmentId);
+                stmt.executeUpdate();
+            }
+            
+            // Then delete sessions
+            try (PreparedStatement stmt = connection.prepareStatement(deleteSessionsSQL)) {
+                stmt.setInt(1, appointmentId);
+                stmt.executeUpdate();
+            }
+            
+            // Commit transaction
+            connection.commit();
+        } catch (SQLException e) {
+            // Rollback on error
+            connection.rollback();
+            throw e;
+        } finally {
+            // Reset auto-commit
+            connection.setAutoCommit(true);
+        }
+    }
 }

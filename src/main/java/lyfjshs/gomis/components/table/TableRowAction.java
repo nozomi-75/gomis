@@ -1,37 +1,28 @@
 package lyfjshs.gomis.components.table;
 
-import java.awt.Color;
+import javax.swing.*;
+import java.awt.*;
 import java.util.function.BiConsumer;
 
-import javax.swing.Icon;
-import javax.swing.JTable;
-
-
 /**
- * Represents an action that can be performed on a specific row of a
- * {@link JTable}. This class encapsulates the action's properties, including
- * text, behavior, button color, and an optional icon.
- * 
- * Instances of this class are used in conjunction with
- * {@link TableActionBuilder} to define and apply actions to table rows.
+ * Represents a single action that can be performed on a table row.
+ * This class holds the information needed to display and execute a table action.
  */
 public class TableRowAction {
-	private final String text; // The label displayed on the action button
-	private final java.util.function.BiConsumer<javax.swing.JTable, Integer> action; // The logic to execute when the action is triggered
-	private final java.awt.Color buttonColor; // Background color of the button
-	private final Icon icon; // Optional icon for the button
+	private final String text;
+	private final BiConsumer<JTable, Integer> action;
+	private final Color buttonColor;
+	private final Icon icon;
 
 	/**
-	 * Constructs a new {@code TableRowAction} with the specified properties.
+	 * Creates a new TableRowAction with the specified parameters.
 	 *
-	 * @param text        the label displayed on the button
-	 * @param action      the function to execute when the button is clicked
-	 *                    (receives the table and row index as parameters)
+	 * @param text        the label for the action button
+	 * @param action      the action to perform when clicked
 	 * @param buttonColor the background color of the button
-	 * @param icon        an optional icon to display on the button (can be
-	 *                    {@code null})
+	 * @param icon        the icon to display on the button (can be null)
 	 */
-	public TableRowAction(String text, java.util.function.BiConsumer<javax.swing.JTable, Integer> action, java.awt.Color buttonColor, Icon icon) {
+	public TableRowAction(String text, BiConsumer<JTable, Integer> action, Color buttonColor, Icon icon) {
 		this.text = text;
 		this.action = action;
 		this.buttonColor = buttonColor;
@@ -39,40 +30,38 @@ public class TableRowAction {
 	}
 
 	/**
-	 * Gets the icon associated with this action.
+	 * Gets the button label text.
 	 *
-	 * @return the icon representing the icon, or {@code null} if
-	 *         none is set
-	 */
-	public Icon getIcon() {
-		return icon;
-	}
-
-	/**
-	 * Gets the text label of this action.
-	 *
-	 * @return the action label
+	 * @return the text to display on the button
 	 */
 	public String getText() {
 		return text;
 	}
 
 	/**
-	 * Gets the action behavior to be executed when this action is triggered.
+	 * Gets the action to perform.
 	 *
-	 * @return a {@link BiConsumer} that takes a {@link JTable} and row index as
-	 *         arguments
+	 * @return the action as a BiConsumer
 	 */
-	public java.util.function.BiConsumer<javax.swing.JTable, Integer> getAction() {
+	public BiConsumer<JTable, Integer> getAction() {
 		return action;
 	}
 
 	/**
-	 * Gets the background color of the button representing this action.
+	 * Gets the button background color.
 	 *
-	 * @return the {@link Color} of the button
+	 * @return the color for the button
 	 */
-	public java.awt.Color getButtonColor() {
+	public Color getButtonColor() {
 		return buttonColor;
+	}
+
+	/**
+	 * Gets the button icon.
+	 *
+	 * @return the icon to display, or null if no icon
+	 */
+	public Icon getIcon() {
+		return icon;
 	}
 }

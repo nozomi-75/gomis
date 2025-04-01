@@ -33,6 +33,7 @@ import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 
 public class SessionRecords extends Form {
 
@@ -146,23 +147,8 @@ public class SessionRecords extends Form {
             SwingConstants.CENTER   // Actions
         };
 
-        TableActionManager actionManager = setupTableActions();
-
-        sessionTable = new GTable(
-            initialData,
-            columnNames,
-            columnTypes,
-            editableColumns,
-            columnWidths,
-            alignments,
-            false, // No checkbox column
-            actionManager
-        );
-    }
-
-    private TableActionManager setupTableActions() {
-        TableActionManager actionManager = new TableActionManager();
-        actionManager.addAction("View", (table, row) -> {
+        TableActionManager actionManager = new DefaultTableActionManager();
+        ((DefaultTableActionManager)actionManager).addAction("View", (table, row) -> {
             // Get the actual session ID from the first column
             int sessionId = (int) table.getValueAt(row, 0);
             FlatAnimatedLafChange.showSnapshot();
@@ -190,7 +176,16 @@ public class SessionRecords extends Form {
             FlatAnimatedLafChange.hideSnapshotWithAnimation();
         }, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
 
-        return actionManager;
+        sessionTable = new GTable(
+            initialData,
+            columnNames,
+            columnTypes,
+            editableColumns,
+            columnWidths,
+            alignments,
+            false, // No checkbox column
+            actionManager
+        );
     }
 
     private void showSessionFullData(Sessions session) {

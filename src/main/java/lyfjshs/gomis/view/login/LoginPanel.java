@@ -26,24 +26,23 @@ public class LoginPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private JPasswordField psTField;
 	private JTextField unTField;
-
 	private Connection conn;
 	private JButton loginBtn;
+	private LoginController loginController;
 
 	public LoginPanel(Connection connDB, LoginView parent) {
-		this.conn = connDB; 
+		this.conn = connDB;
+		this.loginController = new LoginController(connDB);
+		
 		this.setLayout(new MigLayout("wrap,fillx,insets 35 45 30 45", "[pref!,grow,fill]", "[100px][][][][][][]"));
-		 putClientProperty(FlatClientProperties.STYLE, "arc:20; background:darken(@background,3%)");
-		LogoPanel logoPanel;
+		putClientProperty(FlatClientProperties.STYLE, "arc:20; background:darken(@background,3%)");
+		
 		try {
-			logoPanel = new LogoPanel("/GOMIS_Circle.png", 200, 200);
+			LogoPanel logoPanel = new LogoPanel("/GOMIS_Circle.png", 200, 200);
 			this.add(logoPanel, "cell 0 0,grow");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		
 
 		JLabel unLabel = new JLabel("Username:");
 		this.add(unLabel, "cell 0 1,alignx center,aligny center");
@@ -70,6 +69,7 @@ public class LoginPanel extends JPanel {
 		// Panel to hold both labels for correct positioning
 		JPanel signUpPanel = new JPanel();
 		signUpPanel.setOpaque(false); // Transparent background
+		
 		// Separate JLabel for static text
 		JLabel noAccountLabel = new JLabel("Don't have an account?");
 
@@ -90,27 +90,34 @@ public class LoginPanel extends JPanel {
 
 		// Add the sign-up section below the login button
 		this.add(signUpPanel, "cell 0 6, alignx center");
-
 	}
 
 	// Login method with space validation
 	private void loginMethod() {
-		// Retrieve the text from the username and password fields
-		String username = unTField.getText();
-		String password = new String(psTField.getPassword());
+		try {
+			// Retrieve the text from the username and password fields
+			String username = unTField.getText();
+			String password = new String(psTField.getPassword());
 
-		// Check if either the username or password contains spaces
-		if (username.contains(" ") || password.contains(" ")) {
-			// Display an error message
-			JOptionPane.showMessageDialog(this, "Invalid username or password. Spaces are not allowed.",
-					"Invalid Input", JOptionPane.ERROR_MESSAGE);
-			return; // Exit the method to prevent further execution
+			// Check if either the username or password contains spaces
+			if (username.contains(" ") || password.contains(" ")) {
+				JOptionPane.showMessageDialog(this, 
+					"Invalid username or password. Spaces are not allowed.",
+					"Invalid Input", 
+					JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			// If no spaces, proceed with login
+			loginController.login(unTField, psTField, FormManager.getFrame());
+			resetFields();
+		} catch (Exception ex) {
+			JOptionPane.showMessageDialog(this,
+				"Login error: " + ex.getMessage(),
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+			ex.printStackTrace();
 		}
-
-		// If no spaces, proceed with login
-		LoginController loginew = new LoginController(conn);
-		loginew.login(unTField, psTField, FormManager.getFrame());
-		resetFields();
 	}
 
 	/**

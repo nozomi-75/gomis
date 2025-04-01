@@ -13,6 +13,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
 import net.miginfocom.swing.MigLayout;
@@ -37,11 +38,12 @@ public class CustomTableTest {
 			double[] columnWidthsWithCheckbox = { 0.1, 0.3, 0.2, 0.2, 0.2 };
 			int[] alignmentsWithCheckbox = { SwingConstants.CENTER, SwingConstants.LEFT, SwingConstants.RIGHT,
 					SwingConstants.RIGHT, SwingConstants.CENTER };
-
 			// Configure actions
-			TableActionManager actionManager = new TableActionManager().addAction("Edit", (table, row) -> {
+			DefaultTableActionManager actionManager = new DefaultTableActionManager();
+			actionManager.addAction("Edit", (table, row) -> {
 				JOptionPane.showMessageDialog(table, "Editing row " + row + ": " + table.getValueAt(row, 1));
-			}, new Color(100, 150, 255), null).addAction("Delete", (table, row) -> {
+			}, new Color(100, 150, 255), null);
+			actionManager.addAction("Delete", (table, row) -> {
 				int confirm = JOptionPane.showConfirmDialog(table, "Delete " + table.getValueAt(row, 1) + "?",
 						"Confirm", JOptionPane.YES_NO_OPTION);
 				if (confirm == JOptionPane.YES_OPTION) {

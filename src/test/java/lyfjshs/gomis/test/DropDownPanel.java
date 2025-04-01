@@ -31,7 +31,7 @@ public class DropDownPanel extends JPanel {
 		dropdownPanel.setVisible(false);
 		
 				// Toggle button to show/hide the dropdown panel
-				toggleButton = new JButton("Select an option");
+				toggleButton = new JButton("Show DropDown Panel");
 				toggleButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {

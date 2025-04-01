@@ -2,29 +2,29 @@ package lyfjshs.gomis.view.students.create;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JDialog;
-import javax.swing.JPopupMenu;
-import javax.swing.border.TitledBorder;
 import javax.swing.Timer;
+import javax.swing.border.TitledBorder;
 
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Address;
@@ -34,11 +34,8 @@ import lyfjshs.gomis.Database.entity.Parents;
 import lyfjshs.gomis.Database.entity.SchoolForm;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
-import lyfjshs.gomis.components.FormManager.FormManager;
-import lyfjshs.gomis.utils.DroppingFormGenerator;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
-import lyfjshs.gomis.view.students.StudentMangementGUI;
 
 public class StudentInfoFullForm extends Form {
     private JTextField lrnField, lastNameField, firstNameField, middleNameField;

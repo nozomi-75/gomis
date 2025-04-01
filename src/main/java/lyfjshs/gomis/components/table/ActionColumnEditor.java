@@ -1,46 +1,62 @@
 package lyfjshs.gomis.components.table;
 
+import javax.swing.*;
+import javax.swing.table.TableCellEditor;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+
 /**
- * A custom table cell editor for handling action buttons inside a specific
- * column of a {@link JTable}. This editor replaces the default cell content
- * with an {@link ActionColumnPanel}, allowing interaction with row-specific
- * actions.
- * <p>
- * The actions are defined as a list of {@link TableRowAction} and passed during
- * initialization.
- * </p>
+ * Custom TableCellEditor for handling action button clicks in a table column.
  */
-public class ActionColumnEditor extends javax.swing.DefaultCellEditor {
-	private final java.util.List<TableRowAction> actions;
+public class ActionColumnEditor extends AbstractCellEditor implements TableCellEditor {
+	private final List<TableRowAction> actions;
+	private final JPanel panel;
+	private JTable table;
+	private int currentRow;
 
 	/**
-	 * Constructs an {@code ActionColumnEditor} with the specified list of actions.
+	 * Creates a new ActionColumnEditor with the specified actions.
 	 *
-	 * @param actions the list of {@link TableRowAction} defining the available
-	 *                actions for each row
+	 * @param actions the list of actions to handle
 	 */
-	public ActionColumnEditor(java.util.List<TableRowAction> actions) {
-		super(new javax.swing.JCheckBox());
+	public ActionColumnEditor(List<TableRowAction> actions) {
 		this.actions = actions;
+		this.panel = new JPanel();
+		this.panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
 	}
 
-	/**
-	 * Returns a component that renders action buttons for the specified table cell
-	 * when it is being edited.
-	 *
-	 * @param table      the {@link JTable} that contains this editor
-	 * @param value      the value to be edited (not used, since this column
-	 *                   contains buttons)
-	 * @param isSelected whether the cell is selected
-	 * @param row        the row index of the cell being edited
-	 * @param column     the column index of the cell being edited
-	 * @return a {@link ActionColumnPanel} containing action buttons for the row
-	 */
 	@Override
-	public java.awt.Component getTableCellEditorComponent(javax.swing.JTable table, Object value, boolean isSelected, int row,
-			int column) {
-		ActionColumnPanel panel = new ActionColumnPanel(actions, table, row);
-		panel.setBackground(table.getSelectionBackground());
+	public Component getTableCellEditorComponent(JTable table, Object value,
+											   boolean isSelected, int row, int column) {
+		this.table = table;
+		this.currentRow = row;
+		panel.removeAll();
+
+		for (TableRowAction action : actions) {
+			JButton button = new JButton(action.getText());
+			button.setBackground(action.getButtonColor());
+			if (action.getIcon() != null) {
+				button.setIcon(action.getIcon());
+			}
+
+			button.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					action.getAction().accept(table, currentRow);
+					fireEditingStopped();
+				}
+			});
+
+			panel.add(button);
+		}
+
 		return panel;
+	}
+
+	@Override
+	public Object getCellEditorValue() {
+		return "";
 	}
 }

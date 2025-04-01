@@ -24,7 +24,7 @@ import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
-import lyfjshs.gomis.Database.entity.ViolationRecord;
+import lyfjshs.gomis.Database.entity.Violation;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.Modal;
@@ -35,13 +35,13 @@ public class ViolationFullData extends Modal {
     private JTextField statusField;
     private JTextArea descriptionArea;
     private JTextField dateField;
-    private JTextField anecdotalRecordField;
+    private JTextField sessionSummaryField;
     private JTable participantsTable;
     private DefaultTableModel participantsTableModel;
     private JTextArea sessionDetailsArea; // New field for session details
     private Connection connection;
 
-    public static void showViolationDetails(JFrame parent, ViolationRecord violation, Connection connection) {
+    public static void showViolationDetails(JFrame parent, Violation violation, Connection connection) {
         ViolationFullData violationFullData = new ViolationFullData(violation, connection);
         
         ModalDialog.getDefaultOption()
@@ -55,7 +55,7 @@ public class ViolationFullData extends Modal {
         ModalDialog.getDefaultOption().getLayoutOption().setSize(800, 600);
     }
 
-    public ViolationFullData(ViolationRecord violation, Connection connection) {
+    public ViolationFullData(Violation violation, Connection connection) {
         try {
             UIManager.setLookAndFeel(new FlatLightLaf());
         } catch (Exception e) {
@@ -90,10 +90,10 @@ public class ViolationFullData extends Modal {
         descriptionArea.setFont(new Font("Arial", Font.PLAIN, 12));
         mainPanel.add(new JScrollPane(descriptionArea), "span, growx, h 100!, wrap 15");
 
-        // Anecdotal Record Section
-        addSectionHeader(mainPanel, "Anecdotal Record");
-        anecdotalRecordField.setFont(new Font("Arial", Font.PLAIN, 12));
-        mainPanel.add(anecdotalRecordField, "span, growx, wrap 15");
+        // Session Summary Section
+        addSectionHeader(mainPanel, "Session Summary");
+        sessionSummaryField.setFont(new Font("Arial", Font.PLAIN, 12));
+        mainPanel.add(sessionSummaryField, "span, growx, wrap 15");
 
         // Participants Section
         addSectionHeader(mainPanel, "Participants");
@@ -139,7 +139,7 @@ public class ViolationFullData extends Modal {
         statusField = new JTextField();
         descriptionArea = new JTextArea(5, 20);
         dateField = new JTextField();
-        anecdotalRecordField = new JTextField();
+        sessionSummaryField = new JTextField();
         sessionDetailsArea = new JTextArea(5, 20); // Initialize session details area
         sessionDetailsArea.setEditable(false);
         sessionDetailsArea.setLineWrap(true);
@@ -155,10 +155,10 @@ public class ViolationFullData extends Modal {
         statusField.setEditable(false);
         descriptionArea.setEditable(false);
         dateField.setEditable(false);
-        anecdotalRecordField.setEditable(false);
+        sessionSummaryField.setEditable(false);
     }
 
-    private void populateData(ViolationRecord violation) {
+    private void populateData(Violation violation) {
         ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
         Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
         if (participant != null) {
@@ -194,7 +194,7 @@ public class ViolationFullData extends Modal {
         statusField.setText(violation.getStatus());
         descriptionArea.setText(violation.getViolationDescription());
         dateField.setText(violation.getUpdatedAt() != null ? violation.getUpdatedAt().toString() : "");
-        anecdotalRecordField.setText(violation.getAnecdotalRecord());
+        sessionSummaryField.setText(violation.getSessionSummary());
 
         // Fetch and display session details related to the violation
         fetchSessionDetails(violation.getViolationId());

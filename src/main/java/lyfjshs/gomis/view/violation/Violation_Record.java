@@ -6,7 +6,7 @@ import java.sql.Connection;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import lyfjshs.gomis.Database.DAO.ViolationCRUD;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.components.FormManager.Form;
 import net.miginfocom.swing.MigLayout;
 
@@ -14,10 +14,10 @@ public class Violation_Record extends Form {
 
     private static final long serialVersionUID = 1L;
     private ViolationTablePanel tablePanel;
-    private ViolationCRUD violationCRUD;
+    private ViolationDAO ViolationDAO;
 
     public Violation_Record(Connection connect) {
-        violationCRUD = new ViolationCRUD(connect);
+        ViolationDAO = new ViolationDAO(connect);
 
         setLayout(new MigLayout("", "[grow]", "[pref!][grow]"));
 
@@ -36,7 +36,7 @@ public class Violation_Record extends Form {
     }
 
     private void initializeTablePanel(Connection conn) {
-        tablePanel = new ViolationTablePanel(conn, violationCRUD);
+        tablePanel = new ViolationTablePanel(conn, ViolationDAO);
         add(tablePanel, "cell 0 1,grow");
         tablePanel.refreshData();
     }

@@ -18,6 +18,7 @@ import javax.swing.SwingConstants;
 import com.formdev.flatlaf.FlatClientProperties;
 
 import lyfjshs.gomis.Main;
+import lyfjshs.gomis.Database.SQLExceptionPane;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.components.FormManager.Form;
@@ -31,10 +32,12 @@ import raven.extras.SlidePaneTransition;
 public class AppointmentManagement extends Form {
 	private Connection connection;
 	private SlidePane slidePane;
-	private AppointmentDailyOverview appointmentDaily;
+	private AppointmentHistory appointmentHistory;
 	private AppointmentCalendar appointmentCalendar;
+	private JPanel cancelledAppointmentsPanel;
 	public AppointmentDAO appointmentDAO;
 	private Timer notificationTimer;
+	private JButton actionButton;
 	private static final long NOTIFICATION_CHECK_INTERVAL = 30000; // Check every 30 seconds
 	private static final long NOTIFICATION_THRESHOLD = 10; // Notify 10 minutes before appointment
 
@@ -58,15 +61,10 @@ public class AppointmentManagement extends Form {
 		titleLabel.setHorizontalAlignment(JLabel.CENTER);
 		headerPanel.add(titleLabel, "cell 1 0, growx");
 
-		JPanel viewButtons = new JPanel(new MigLayout("nogrid, gap 5"));
-		JButton dayBtn = new JButton("Day");
-		dayBtn.addActionListener(e -> switchToDayView());
-		viewButtons.add(dayBtn);
-
-		JButton monthBtn = new JButton("Month");
-		monthBtn.addActionListener(e -> switchToMonthView());
-		viewButtons.add(monthBtn);
-		headerPanel.add(viewButtons, "cell 2 0, alignx right");
+		actionButton = new JButton("Show Cancelled");
+		actionButton.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+		actionButton.addActionListener(e -> toggleView());
+		headerPanel.add(actionButton, "cell 2 0, alignx right");
 
 		// Initialize SlidePane with content area
 		slidePane = new SlidePane();
@@ -78,8 +76,11 @@ public class AppointmentManagement extends Form {
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		add(scrollPane, "grow");
 
-		// Start with month view
+		// Initialize views
 		appointmentCalendar = new AppointmentCalendar(appointmentDAO, connection);
+		cancelledAppointmentsPanel = createCancelledAppointmentsPanel();
+
+		// Start with month view
 		slidePane.addSlide(appointmentCalendar, SlidePaneTransition.Type.FORWARD);
 
 		// Start notification timer
@@ -151,17 +152,23 @@ public class AppointmentManagement extends Form {
 		}
 	}
 
-	private void switchToMonthView() {
-		if (!(slidePane.getSlideComponent() instanceof AppointmentCalendar)) {
-			slidePane.addSlide(appointmentCalendar, SlidePaneTransition.Type.BACK, 300);
+	private void toggleView() {
+		if (slidePane.getSlideComponent() instanceof AppointmentCalendar) {
+			// Switch to cancelled appointments view
+			slidePane.addSlide(cancelledAppointmentsPanel, SlidePaneTransition.Type.FORWARD);
+			actionButton.setText("Back");
+		} else {
+			// Switch back to calendar view
+			slidePane.addSlide(appointmentCalendar, SlidePaneTransition.Type.BACK);
+			actionButton.setText("Show Cancelled");
 		}
 	}
 
-	private void switchToDayView() {
-		if (!(slidePane.getSlideComponent() instanceof AppointmentDailyOverview)) {
-			appointmentDaily = new AppointmentDailyOverview(appointmentDAO, connection);
-			slidePane.addSlide(appointmentDaily, SlidePaneTransition.Type.FORWARD, 300);
-		}
+	private JPanel createCancelledAppointmentsPanel() {
+		JPanel panel = new JPanel(new MigLayout("fill", "[grow]", "[grow]"));
+		appointmentHistory = new AppointmentHistory(appointmentDAO, connection);
+		panel.add(appointmentHistory, "grow");
+		return panel;
 	}
 
 	private void createAppointment() {
@@ -174,10 +181,23 @@ public class AppointmentManagement extends Form {
 		AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDAO, connection);
 
 		// Use AddAppointmentModal to show the dialog
-		AddAppointmentModal.getInstance().showModal(connection, this, addAppointmentPanel, appointmentDAO, 700, 650, () -> refreshViews());
-
-		// Update both views after modal closes
-		refreshViews();
+		AddAppointmentModal.getInstance().showModal(connection, this, addAppointmentPanel, appointmentDAO, 700, 650, () -> {
+			// After saving the appointment, check the session status
+			if (addAppointmentPanel.getAppointment().getAppointmentStatus().equals("Active")) {
+				// Set appointment status to Rescheduled
+				newAppointment.setAppointmentStatus("Rescheduled");
+			} else if (addAppointmentPanel.getAppointment().getAppointmentStatus().equals("Ended")) {
+				// Set appointment status to Ended
+				newAppointment.setAppointmentStatus("Ended");
+			}
+			// Save the updated appointment
+			try {
+				appointmentDAO.updateAppointment(newAppointment);
+			} catch (SQLException e) {
+				SQLExceptionPane.showSQLException(e, "Updating Appointment");
+			}
+			refreshViews();
+		});
 	}
 
 	public void refreshViews() {
@@ -186,9 +206,9 @@ public class AppointmentManagement extends Form {
 			appointmentCalendar.updateCalendar();
 		}
 		
-		// Update daily view if it exists
-		if (appointmentDaily != null) {
-			appointmentDaily.updateAppointmentsDisplay();
+		// Update history view if it exists
+		if (appointmentHistory != null) {
+			appointmentHistory.updateAppointmentsDisplay();
 		}
 		
 		// Force a repaint of the entire panel

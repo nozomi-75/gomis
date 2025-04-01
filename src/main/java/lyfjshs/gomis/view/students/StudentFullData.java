@@ -25,7 +25,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.DAO.ViolationCRUD;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.Database.entity.Address;
 import lyfjshs.gomis.Database.entity.Contact;
 import lyfjshs.gomis.Database.entity.Guardian;
@@ -33,11 +33,12 @@ import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Parents;
 import lyfjshs.gomis.Database.entity.SchoolForm;
 import lyfjshs.gomis.Database.entity.Student;
-import lyfjshs.gomis.Database.entity.ViolationRecord;
+import lyfjshs.gomis.Database.entity.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.utils.DroppingFormGenerator;
 import lyfjshs.gomis.utils.GoodMoralGenerator;
 import net.miginfocom.swing.MigLayout;
@@ -76,8 +77,8 @@ public class StudentFullData extends Form {
 	private Connection connect;
 	private JTextField fullAddField;
 	private JButton dropStudBtn;
-	private FlatSVGIcon viewIcon = new FlatSVGIcon("icons/view.svg", 0.5f);
-	private FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.5f);
+	private FlatSVGIcon viewIcon = new FlatSVGIcon("icons/view.svg", 0.4f);
+	private FlatSVGIcon resolveIcon = new FlatSVGIcon("icons/resolve.svg", 0.4f);
 	private JPanel noViolationPanel;
 	private JPanel containerPanel; // Add this field
 	private JTextField schoolNameField;
@@ -206,12 +207,15 @@ public class StudentFullData extends Form {
 		};
 
 		// Create action manager
-		TableActionManager actionManager = new TableActionManager().addAction("View", (table, row) -> {
-			viewViolation(row);
-		}, new Color(0, 150, 136), viewIcon).addAction("Resolve", (table, row) -> {
-			ViolationRecord violation = (ViolationRecord) table.getValueAt(row, -1);
-			resolveViolation(violation);
-		}, new Color(255, 150, 136), resolveIcon);
+		TableActionManager actionManager = new DefaultTableActionManager();
+		((DefaultTableActionManager)actionManager)
+			.addAction("View", (table, row) -> {
+				viewViolation(row);
+			}, new Color(0, 150, 136), viewIcon)
+			.addAction("Resolve", (table, row) -> {
+				Violation violation = (Violation) table.getValueAt(row, -1);
+				resolveViolation(violation);
+			}, new Color(255, 150, 136), resolveIcon);
 
 		violationTable = new GTable(new Object[0][5], columnNames, columnTypes, editableColumns, columnWidths,
 				alignments, false, // no checkbox
@@ -317,6 +321,9 @@ public class StudentFullData extends Form {
 		JPanel mainPanel = new JPanel(
 				new MigLayout("", "[40px:n,grow,fill][100px:n,grow]", "[fill][grow,fill][grow,fill][grow,fill][250px]"));
 		JScrollPane scroll = new JScrollPane(mainPanel);
+		scroll.getVerticalScrollBar().setUnitIncrement(20);  // Increase single scroll unit (mouse wheel)
+        scroll.getVerticalScrollBar().setBlockIncrement(100); // Increase scroll bar click increment
+        scroll	.getVerticalScrollBar().putClientProperty("JScrollBar.smoothScrolling", true);
 
 		mainPanel.add(createPersonalInfoPanel(), "cell 0 0 2 1,grow");
 		mainPanel.add(createParentPanel(), "cell 0 1 2 1,grow");
@@ -341,13 +348,13 @@ public class StudentFullData extends Form {
 	private void createGoodMoralReport(Student student) {
 		try {
 			// Check for active violations
-			ViolationCRUD violationCRUD = new ViolationCRUD(connect);
-			List<ViolationRecord> violations = violationCRUD.getViolationsByStudentUID(student.getStudentUid());
+			ViolationDAO ViolationDAO = new ViolationDAO(connect);
+			List<Violation> violations = ViolationDAO.getViolationsByStudentUID(student.getStudentUid());
 			
 			// Check if there are any active violations
 			boolean hasActiveViolations = false;
 			if (violations != null && !violations.isEmpty()) {
-				for (ViolationRecord violation : violations) {
+				for (Violation violation : violations) {
 					if ("Active".equalsIgnoreCase(violation.getStatus())) {
 						hasActiveViolations = true;
 						break;
@@ -587,8 +594,8 @@ public class StudentFullData extends Form {
 
 	private void loadViolations(int studentUID, Connection connection) {
 		try {
-			ViolationCRUD violationCRUD = new ViolationCRUD(connection);
-			List<ViolationRecord> violations = violationCRUD.getViolationsByStudentUID(studentUID);
+			ViolationDAO ViolationDAO = new ViolationDAO(connection);
+			List<Violation> violations = ViolationDAO.getViolationsByStudentUID(studentUID);
 			CardLayout cardLayout = (CardLayout) containerPanel.getLayout();
 
 			if (violations == null || violations.isEmpty()) {
@@ -599,7 +606,7 @@ public class StudentFullData extends Form {
 				model.setRowCount(0);
 
 				for (int i = 0; i < violations.size(); i++) {
-					ViolationRecord violation = violations.get(i);
+					Violation violation = violations.get(i);
 					model.addRow(new Object[] {
 							violation.getViolationType(),
 							violation.getViolationDescription(),
@@ -618,7 +625,7 @@ public class StudentFullData extends Form {
 	}
 
 	private void viewViolation(int row) {
-		ViolationRecord violation = (ViolationRecord) violationTable.getClientProperty("violation_" + row);
+		Violation violation = (Violation) violationTable.getClientProperty("violation_" + row);
 		if (violation != null) {
 			String modalId = "violation_details_" + violation.getViolationId();
 			
@@ -632,8 +639,8 @@ public class StudentFullData extends Form {
 			violationDetailsPanel.add(new JLabel(violation.getViolationType()), "growx");
 			violationDetailsPanel.add(new JLabel("Description:"), "");
 			violationDetailsPanel.add(new JLabel(violation.getViolationDescription()), "growx");
-			violationDetailsPanel.add(new JLabel("Anecdotal Record:"), "");
-			violationDetailsPanel.add(new JLabel(violation.getAnecdotalRecord()), "growx");
+			violationDetailsPanel.add(new JLabel("Session Summary:"), "");
+			violationDetailsPanel.add(new JLabel(violation.getSessionSummary()), "growx");
 			violationDetailsPanel.add(new JLabel("Reinforcement:"), "");
 			violationDetailsPanel.add(new JLabel(violation.getReinforcement()), "growx");
 			violationDetailsPanel.add(new JLabel("Status:"), "");
@@ -665,15 +672,15 @@ public class StudentFullData extends Form {
 		}
 	}
 
-	private void resolveViolation(ViolationRecord violation) {
+	private void resolveViolation(Violation violation) {
 		try {
-			ViolationCRUD violationCRUD = new ViolationCRUD(connect);
+			ViolationDAO ViolationDAO = new ViolationDAO(connect);
 
 			int choice = JOptionPane.showConfirmDialog(this, "Do you want to mark this violation as resolved?",
 					"Resolve Violation", JOptionPane.YES_NO_OPTION);
 
 			if (choice == JOptionPane.YES_OPTION) {
-				if (violationCRUD.updateViolationStatus(violation.getViolationId(), "RESOLVED")) {
+				if (ViolationDAO.updateViolationStatus(violation.getViolationId(), "RESOLVED")) {
 					JOptionPane.showMessageDialog(this, "Violation resolved successfully", "Success",
 							JOptionPane.INFORMATION_MESSAGE);
 					// Reload violations to refresh the table

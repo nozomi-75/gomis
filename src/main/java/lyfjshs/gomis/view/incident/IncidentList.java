@@ -16,6 +16,7 @@ import lyfjshs.gomis.Database.entity.Incident;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 
 public class IncidentList extends Form {
     private GTable table;
@@ -56,7 +57,8 @@ public class IncidentList extends Form {
             SwingConstants.CENTER
         };
 
-        TableActionManager actionManager = new TableActionManager()
+        TableActionManager actionManager = new DefaultTableActionManager();
+        ((DefaultTableActionManager)actionManager)
             .addAction("View", (t, row) -> {
                 int incidentId = (Integer) t.getValueAt(row, 0);
                 showIncidentDetails(incidentId);

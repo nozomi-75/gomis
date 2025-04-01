@@ -38,7 +38,7 @@ import lyfjshs.gomis.Database.DBConnection;
 public class MainForm extends JPanel implements NotificationCallback {
 	private List<Form> activeForms = new ArrayList<>();
 	private NotificationPopup notificationPopup;
-	private JButton buttonNotification;
+	private static JButton buttonNotification;
 	private static final String MODAL_ID = "notifications";
 
 	public MainForm() {
@@ -90,8 +90,8 @@ public class MainForm extends JPanel implements NotificationCallback {
 			// Get the location of the notification button
 			Point location = buttonNotification.getLocationOnScreen();
 			
-			// Configure modal options
-			Option option = ModalDialog.createOption();
+			// Configure modal options specifically for notifications
+			Option option = new Option();
 			option.setOpacity(0.2f);
 			option.setAnimationEnabled(false);
 			
@@ -100,7 +100,8 @@ public class MainForm extends JPanel implements NotificationCallback {
 				.setMargin(0, 0, 0, 0)
 				.setLocation(
 					location.x - notificationPopup.getPreferredSize().width + buttonNotification.getWidth(),
-					location.y + buttonNotification.getHeight() - 10);
+					location.y + buttonNotification.getHeight() - 10)
+				.setSize(400, 500); // Set specific size for notification popup
 			
 			// Show the modal with the notification popup
 			SwingUtilities.invokeLater(() -> {
@@ -181,16 +182,20 @@ public class MainForm extends JPanel implements NotificationCallback {
 			);
 			detailsPanel.loadAppointmentDetails(appointment);
 
-			// Configure modal options
-			ModalDialog.getDefaultOption()
-				.setOpacity(0.3f)
+			// Configure modal options specifically for appointment details
+			Option option = new Option();
+			option.setOpacity(0.3f)
 				.setAnimationOnClose(false)
 				.getBorderOption()
 				.setBorderWidth(0.5f)
 				.setShadow(BorderOption.Shadow.MEDIUM);
+			
+			// Set specific size for appointment details modal
+			option.getLayoutOption().setSize(700, 700);
 
 			// Show modal with "Set a Session" option
-			ModalDialog.showModal(this,
+			ModalDialog.showModal(
+				this,
 				new SimpleModalBorder(detailsPanel, "Appointment Details",
 					new SimpleModalBorder.Option[] {
 						new SimpleModalBorder.Option("Set a Session", SimpleModalBorder.YES_OPTION),
@@ -222,10 +227,9 @@ public class MainForm extends JPanel implements NotificationCallback {
 							controller.close();
 						}
 					}),
-				"appointment_details_" + appointment.getAppointmentId());
-
-			// Set modal size
-			ModalDialog.getDefaultOption().getLayoutOption().setSize(700, 700);
+				option,
+				"appointment_details_" + appointment.getAppointmentId()
+			);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -245,5 +249,9 @@ public class MainForm extends JPanel implements NotificationCallback {
 	public ImageIcon getNotificationIcon(NotificationManager.Notification notification) {
 		// Return null to use default icon
 		return null;
+	}
+
+    public static JButton getNotificationButton() {
+		return buttonNotification;
 	}
 }

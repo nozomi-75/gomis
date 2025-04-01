@@ -6,14 +6,18 @@ import java.awt.Component;
 import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.FlatClientProperties;
@@ -21,10 +25,14 @@ import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.Database.entity.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
+import lyfjshs.gomis.utils.GoodMoralGenerator;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
@@ -43,10 +51,12 @@ public class StudentMangementGUI extends Form {
     private JPanel mainPanel;
     private Component currentDetailPanel;
     private JPanel headerSearchPanel;
+    private ViolationDAO violationDAO;
 
     public StudentMangementGUI(Connection conn) {
         this.connection = conn;
         studentsDataCRUD = new StudentsDataDAO(conn);
+        this.violationDAO = new ViolationDAO(conn);
         initializeComponents();
         setupLayout();
         loadStudentData();
@@ -71,42 +81,32 @@ public class StudentMangementGUI extends Form {
         });
 
         slidePane.addSlide(mainPanel, SlidePaneTransition.Type.FORWARD);
+
+        JButton printGoodMoralButton = new JButton("Print Good Moral Certificate");
+        printGoodMoralButton.addActionListener(e -> handlePrintGoodMoral());
+        // Add the button to your UI layout
     }
 
     private void setupTable() {
         Object[][] initialData = new Object[0][columnNames.length];
-        Class<?>[] columnTypes = {Integer.class, String.class, String.class, String.class, Object.class};
-        boolean[] editableColumns = {false, false, false, false, true};
+        Class<?>[] columnTypes = {Boolean.class, Integer.class, String.class, String.class, String.class, Object.class};
+        boolean[] editableColumns = {true, false, false, false, false, true};
         
         // Adjusted column widths to match the image proportions
-        double[] columnWidths = {0.05, 0.25, 0.45, 0.10, 0.15}; // Sum to 1.0
+        double[] columnWidths = {0.05, 0.05, 0.20, 0.45, 0.10, 0.15}; // Sum to 1.0
         int[] alignments = {
+            SwingConstants.CENTER,  // Checkbox
             SwingConstants.CENTER,  // #
             SwingConstants.CENTER,  // LRN
             SwingConstants.LEFT,    // NAME
             SwingConstants.CENTER,  // SEX
             SwingConstants.CENTER   // Actions
         };
-        boolean includeCheckbox = false;
+        boolean includeCheckbox = true;
 
-        TableActionManager actionManager = setupTableActions();
-
-        studentDataTable = new GTable(
-            initialData,
-            columnNames,
-            columnTypes,
-            editableColumns,
-            columnWidths,
-            alignments,
-            includeCheckbox,
-            actionManager
-        );
-    }
-
-    private TableActionManager setupTableActions() {
-        TableActionManager actionManager = new TableActionManager();
-        actionManager.addAction("View", (table, row) -> {
-            String lrn = (String) table.getValueAt(row, 1);
+        TableActionManager actionManager = new DefaultTableActionManager();
+        ((DefaultTableActionManager)actionManager).addAction("View", (table, row) -> {
+            String lrn = (String) table.getValueAt(row, 2);
             FlatAnimatedLafChange.showSnapshot();
 
             try {
@@ -129,7 +129,16 @@ public class StudentMangementGUI extends Form {
             FlatAnimatedLafChange.hideSnapshotWithAnimation();
         }, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
 
-        return actionManager;
+        studentDataTable = new GTable(
+            initialData,
+            new String[]{" ", "#", "LRN", "NAME", "SEX", "Actions"},
+            columnTypes,
+            editableColumns,
+            columnWidths,
+            alignments,
+            includeCheckbox,
+            actionManager
+        );
     }
 
     private void setupLayout() {
@@ -145,6 +154,10 @@ public class StudentMangementGUI extends Form {
         JButton searchButton = createSearchButton("Search Student", " ");
         searchButton.addActionListener(e -> showSearchPanel());
         headerSearchPanel.add(searchButton, "cell 0 0,grow");
+
+        JButton printGoodMoralButton = new JButton("Print Good Moral Certificate");
+        printGoodMoralButton.addActionListener(e -> handlePrintGoodMoral());
+        headerSearchPanel.add(printGoodMoralButton, "cell 1 0,gapleft 10");
 
         headerPanel.add(headerSearchPanel, "flowx,cell 3 0,grow");
         headerPanel.add(backBtn, "cell 5 0");
@@ -225,6 +238,7 @@ public class StudentMangementGUI extends Form {
             for (Student studentData : studentsDataList) {
                 String fullName = studentData.getStudentFirstname() + " " + studentData.getStudentLastname();
                 model.addRow(new Object[] {
+                    false,  // Checkbox column
                     rowNum++,
                     studentData.getStudentLrn(),
                     fullName,
@@ -237,5 +251,61 @@ public class StudentMangementGUI extends Form {
                 JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+
+    private void handlePrintGoodMoral() {
+        List<Student> selectedStudents = new ArrayList<>();
+        for (int i = 0; i < studentDataTable.getRowCount(); i++) {
+            Boolean isSelected = (Boolean) studentDataTable.getValueAt(i, 0);
+            if (isSelected != null && isSelected) {
+                String lrn = (String) studentDataTable.getValueAt(i, 2);
+                try {
+                    Student student = studentsDataCRUD.getStudentDataByLrn(lrn);
+                    if (student != null) {
+                        selectedStudents.add(student);
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        if (selectedStudents.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select at least one student.", "No Selection",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Check for active violations
+        List<Student> studentsWithViolations = new ArrayList<>();
+        for (Student student : selectedStudents) {
+            try {
+                List<Violation> violations = violationDAO.getViolationsByStudentId(student.getStudentId());
+                boolean hasActiveViolation = violations.stream()
+                        .anyMatch(v -> v.getStatus().equals("Active"));
+                if (hasActiveViolation) {
+                    studentsWithViolations.add(student);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (!studentsWithViolations.isEmpty()) {
+            StringBuilder message = new StringBuilder("The following students have active violations and cannot receive a good moral certificate:\n\n");
+            for (Student student : studentsWithViolations) {
+                message.append("- ").append(student.getStudentFirstname())
+                       .append(" ").append(student.getStudentLastname())
+                       .append(" (LRN: ").append(student.getStudentLrn()).append(")\n");
+            }
+            message.append("\nPlease remove these students from the selection to proceed.");
+            
+            JOptionPane.showMessageDialog(this, message.toString(), "Active Violations Found",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // If no violations, proceed with printing
+        GoodMoralGenerator.createBatchGoodMoralReport(this, selectedStudents);
     }
 }

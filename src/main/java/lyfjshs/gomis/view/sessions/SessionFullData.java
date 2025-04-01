@@ -27,19 +27,22 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.SwingConstants;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
-import lyfjshs.gomis.Database.DAO.ViolationCRUD;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
-import lyfjshs.gomis.Database.entity.ViolationRecord;
+import lyfjshs.gomis.Database.entity.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
@@ -77,7 +80,7 @@ public class SessionFullData extends Form {
 	private static final Font MODAL_LABEL_FONT = new Font("Segoe UI", Font.PLAIN, 12);
 	private static final Font MODAL_VALUE_FONT = new Font("Segoe UI", Font.BOLD, 14);
 
-	private JTable participantsTable;
+	private GTable participantsTable;
 	private JButton printSessionReportBtn;
 	private JButton editSessionBtn;
 	private JButton endSessionBtn;
@@ -215,48 +218,59 @@ public class SessionFullData extends Form {
 
 	private JScrollPane createParticipantsTable(List<Participants> participants) {
 		String[] columnNames = {"#", "Participant Name", "Participant Type", "Actions"};
-		DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
-			@Override
-			public boolean isCellEditable(int row, int column) {
-				return column == 3; // Only allow editing of Actions column
-			}
+		Class<?>[] columnTypes = {Integer.class, String.class, String.class, Object.class};
+		boolean[] editableColumns = {false, false, false, true};
+		double[] columnWidths = {0.1, 0.4, 0.3, 0.2};
+		int[] alignments = {
+			SwingConstants.CENTER,
+			SwingConstants.LEFT,
+			SwingConstants.LEFT,
+			SwingConstants.CENTER
 		};
 
+		// Create initial data array
+		Object[][] initialData = new Object[0][4];
 		if (participants != null && !participants.isEmpty()) {
+			initialData = new Object[participants.size()][4];
 			for (int i = 0; i < participants.size(); i++) {
 				Participants participant = participants.get(i);
 				String fullName = participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
-				Object[] rowData = {
+				initialData[i] = new Object[]{
 					i + 1,
 					fullName,
 					participant.getParticipantType(),
 					"Actions"
 				};
-				model.addRow(rowData);
 			}
 		}
 
-		participantsTable = new JTable(model);
+		// Create action manager
+		TableActionManager actionManager = new DefaultTableActionManager();
+		((DefaultTableActionManager)actionManager).addAction("View", (table, row) -> {
+			String fullName = (String) table.getValueAt(row, 1);
+			String type = (String) table.getValueAt(row, 2);
+			showParticipantDetailsDialog(fullName, type);
+		}, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
+
+		// Create GTable with proper parameters
+		participantsTable = new GTable(
+			initialData,
+			columnNames,
+			columnTypes,
+			editableColumns,
+			columnWidths,
+			alignments,
+			false,
+			actionManager
+		);
+
 		participantsTable.setRowHeight(40);
 		participantsTable.getTableHeader().setBackground(TABLE_HEADER_BG);
 		participantsTable.getTableHeader().setForeground(SUBTEXT_COLOR);
 		participantsTable.getTableHeader().setFont(TABLE_HEADER_FONT);
 		participantsTable.setBorder(new LineBorder(new Color(0xDEE2E6), 1));
 
-		setupTableActions();
-
 		return new JScrollPane(participantsTable);
-	}
-
-	private void setupTableActions() {
-		TableActionManager actionManager = new TableActionManager();
-		actionManager.addAction("View", (table, row) -> {
-			String fullName = (String) table.getValueAt(row, 1);
-			String type = (String) table.getValueAt(row, 2);
-			showParticipantDetailsDialog(fullName, type);
-		}, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
-
-		actionManager.applyTo(participantsTable, 3);
 	}
 
 	private void showParticipantDetailsDialog(String fullName, String type) {
@@ -296,10 +310,10 @@ public class SessionFullData extends Form {
 
 		// Add violations data
 		try {
-			ViolationCRUD violationDAO = new ViolationCRUD(conn);
-			List<ViolationRecord> violations = violationDAO.getViolationsByParticipantName(fullName);
+			ViolationDAO violationDAO = new ViolationDAO(conn);
+			List<Violation> violations = violationDAO.getViolationsByParticipantName(fullName);
 			
-			for (ViolationRecord violation : violations) {
+			for (Violation violation : violations) {
 				violationsModel.addRow(new Object[] {
 					violation.getViolationType(),
 					violation.getViolationDescription(),

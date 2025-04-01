@@ -1,8 +1,9 @@
 package lyfjshs.gomis.components;
 
+import java.awt.Color;
+import java.awt.Dimension;
+
 import com.formdev.flatlaf.extras.components.FlatToggleButton;
-import javax.swing.*;
-import java.awt.*;
 
 /**
  * A custom toggle switch component that uses our FlatToggleSwitchUI.

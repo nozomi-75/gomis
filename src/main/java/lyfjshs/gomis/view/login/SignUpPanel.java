@@ -3,14 +3,14 @@ package lyfjshs.gomis.view.login;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Image;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -39,6 +39,7 @@ import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
 import lyfjshs.gomis.Database.DAO.LoginController;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.settings.SettingsManager;
+import lyfjshs.gomis.utils.ImageCropper;
 import net.miginfocom.swing.MigLayout;
 
 public class SignUpPanel extends JPanel {
@@ -140,18 +141,47 @@ public class SignUpPanel extends JPanel {
 		profilePicture.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		profilePicture.setPreferredSize(new Dimension(150, 150));
 		profilePicture.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				JFileChooser fileChooser = new JFileChooser();
-				fileChooser.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "jpeg"));
-				int returnValue = fileChooser.showOpenDialog(null);
-				if (returnValue == JFileChooser.APPROVE_OPTION) {
-					File selectedFile = fileChooser.getSelectedFile();
-					ImageIcon imageIcon = new ImageIcon(new ImageIcon(selectedFile.getAbsolutePath()).getImage()
-							.getScaledInstance(150, 150, Image.SCALE_SMOOTH));
-					profilePicture.setIcon(imageIcon);
-					profilePicture.setText("");
-				}
-			}
+		    public void mouseClicked(MouseEvent e) {
+		        if (e.isPopupTrigger() || e.getButton() == MouseEvent.BUTTON3) {
+		            showProfilePictureMenu(e);
+		            return;
+		        }
+
+		        // If there's already an image, show options
+		        if (profilePicture.getIcon() != null) {
+		            Object[] options = {"Re-crop Current Image", "Select New Image", "Cancel"};
+		            int choice = JOptionPane.showOptionDialog(SignUpPanel.this,
+		                "What would you like to do with the profile picture?",
+		                "Profile Picture Options",
+		                JOptionPane.YES_NO_CANCEL_OPTION,
+		                JOptionPane.QUESTION_MESSAGE,
+		                null,
+		                options,
+		                options[0]);
+
+		            if (choice == 0) { // Re-crop current image
+		                reCropCurrentImage();
+		            } else if (choice == 1) { // Select new image
+		                selectNewImage();
+		            }
+		            return;
+		        }
+
+		        // If no image exists, select new image directly
+		        selectNewImage();
+		    }
+
+		    public void mousePressed(MouseEvent e) {
+		        if (e.isPopupTrigger()) {
+		            showProfilePictureMenu(e);
+		        }
+		    }
+
+		    public void mouseReleased(MouseEvent e) {
+		        if (e.isPopupTrigger()) {
+		            showProfilePictureMenu(e);
+		        }
+		    }
 		});
 
 		JPanel panel_2 = new JPanel();
@@ -358,5 +388,91 @@ public class SignUpPanel extends JPanel {
 		super.addNotify();
 		clearFields();
 		
+	}
+
+	private void showProfilePictureMenu(MouseEvent e) {
+		javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
+		
+		javax.swing.JMenuItem reCropItem = new javax.swing.JMenuItem("Re-crop Image");
+		reCropItem.setEnabled(profilePicture.getIcon() != null);
+		reCropItem.addActionListener(evt -> reCropCurrentImage());
+		
+		javax.swing.JMenuItem newImageItem = new javax.swing.JMenuItem("Select New Image");
+		newImageItem.addActionListener(evt -> selectNewImage());
+		
+		javax.swing.JMenuItem removeItem = new javax.swing.JMenuItem("Remove Image");
+		removeItem.setEnabled(profilePicture.getIcon() != null);
+		removeItem.addActionListener(evt -> {
+			profilePicture.setIcon(null);
+			profilePicture.setText("Click to Select a Profile");
+		});
+		
+		menu.add(reCropItem);
+		menu.add(newImageItem);
+		menu.add(removeItem);
+		
+		menu.show(profilePicture, e.getX(), e.getY());
+	}
+
+	private void reCropCurrentImage() {
+		if (profilePicture.getIcon() != null) {
+			ImageIcon currentIcon = (ImageIcon) profilePicture.getIcon();
+			BufferedImage currentImage = new BufferedImage(
+				currentIcon.getIconWidth(),
+				currentIcon.getIconHeight(),
+				BufferedImage.TYPE_INT_ARGB
+			);
+			Graphics2D g = currentImage.createGraphics();
+			currentIcon.paintIcon(null, g, 0, 0);
+			g.dispose();
+
+			ImageCropper.showImageCropper(SignUpPanel.this, currentImage, croppedImage -> {
+				if (croppedImage != null) {
+					// Scale the cropped image to fit 150x150
+					BufferedImage scaledImage = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB);
+					Graphics2D g2d = scaledImage.createGraphics();
+					g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+					g2d.drawImage(croppedImage, 0, 0, 150, 150, null);
+					g2d.dispose();
+					
+					// Set the scaled image as icon
+					ImageIcon icon = new ImageIcon(scaledImage);
+					profilePicture.setIcon(icon);
+					profilePicture.setText("");
+				}
+			});
+		}
+	}
+
+	private void selectNewImage() {
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "jpeg"));
+		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+			try {
+				BufferedImage originalImage = ImageIO.read(fileChooser.getSelectedFile());
+				if (originalImage != null) {
+					ImageCropper.showImageCropper(SignUpPanel.this, originalImage, croppedImage -> {
+						if (croppedImage != null) {
+							// Scale the cropped image to fit 150x150
+							BufferedImage scaledImage = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB);
+							Graphics2D g2d = scaledImage.createGraphics();
+							g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+							g2d.drawImage(croppedImage, 0, 0, 150, 150, null);
+							g2d.dispose();
+							
+							// Set the scaled image as icon
+							ImageIcon icon = new ImageIcon(scaledImage);
+							profilePicture.setIcon(icon);
+							profilePicture.setText("");
+						}
+					});
+				}
+			} catch (IOException ex) {
+				JOptionPane.showMessageDialog(SignUpPanel.this, 
+					"Error loading image: " + ex.getMessage(),
+					"Error",
+					JOptionPane.ERROR_MESSAGE);
+			}
+		}
 	}
 }

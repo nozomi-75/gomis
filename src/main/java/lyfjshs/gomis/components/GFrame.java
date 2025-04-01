@@ -186,21 +186,21 @@ public class GFrame extends JFrame implements FlatStyleableComponent, Notificati
 	 */
 	private void minimizeToTray() {
 		if (!SystemTray.isSupported() || trayIconAdded) {
-			setVisible(false);
+			super.setVisible(false);
 			return;
 		}
 
 		try {
 			systemTray.add(trayIcon);
 			trayIconAdded = true;
-			setVisible(false);
+			super.setVisible(false);
 			if (notificationManager != null) {
 				notificationManager.showInfoNotification("GOMIS", "Application minimized to tray");
 			}
 		} catch (AWTException e) {
 			e.printStackTrace();
 			// If we can't add to tray, just minimize
-			setVisible(false);
+			super.setVisible(false);
 		}
 	}
 
@@ -351,7 +351,7 @@ public class GFrame extends JFrame implements FlatStyleableComponent, Notificati
 	// Override setVisible to minimize to tray
 	@Override
 	public void setVisible(boolean visible) {
-		if (!visible && SystemTray.isSupported()) {
+		if (!visible && SystemTray.isSupported() && !trayIconAdded) {
 			minimizeToTray();
 		} else {
 			super.setVisible(visible);

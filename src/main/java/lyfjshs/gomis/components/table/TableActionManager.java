@@ -3,49 +3,26 @@ package lyfjshs.gomis.components.table;
 import javax.swing.JTable;
 
 /**
- * Utility class for managing and applying action columns to {@link JTable}
- * instances. This class allows dynamic addition of action buttons to a table
- * column, enabling row-specific operations such as editing, deleting, or
- * viewing records.
- * <p>
- * It provides a fluent API to define multiple actions with custom labels,
- * colors, and icons.
- * </p>
+ * Interface for managing table actions in GTable
  */
-public class TableActionManager {
-	private final java.util.List<TableRowAction> actions = new java.util.ArrayList<>();
+public interface TableActionManager {
+	/**
+	 * Called when an action is performed on a table row
+	 * @param table The GTable instance
+	 * @param row The row index where the action was performed
+	 */
+	void onTableAction(GTable table, int row);
 
 	/**
-	 * Adds an action button to the column with the specified parameters.
-	 *
-	 * @param text        the label for the button
-	 * @param action      the action to perform when the button is clicked
-	 * @param buttonColor the background color of the button
-	 * @param icon        the optional icon for the button (can be {@code null})
-	 * @return this instance for method chaining
+	 * Sets up the action column in the table
+	 * @param table The GTable instance
+	 * @param actionColumnIndex The index of the action column
 	 */
-	public TableActionManager addAction(String text, java.util.function.BiConsumer<javax.swing.JTable, Integer> action,
-			java.awt.Color buttonColor, javax.swing.Icon icon) {
-		actions.add(new TableRowAction(text, action, buttonColor, icon));
-		return this;
-	}
+	void setupTableColumn(GTable table, int actionColumnIndex);
 
 	/**
-	 * Applies the defined actions as an interactive column to the specified table.
-	 *
-	 * @param table       the {@link JTable} to which the action column should be
-	 *                    added
-	 * @param columnIndex the index of the column where the action buttons should be
-	 *                    placed
+	 * Applies the action manager to a table
+	 * @param table The GTable instance
 	 */
-	public void applyTo(javax.swing.JTable table, int columnIndex) {
-		javax.swing.table.TableColumn actionColumn = table.getColumnModel().getColumn(columnIndex);
-		actionColumn.setCellRenderer(new ActionColumnRenderer(actions));
-		actionColumn.setCellEditor(new ActionColumnEditor(actions));
-
-		// Set preferred width based on number of actions
-		int buttonWidth = 80; // width per button
-		int spacing = 10; // spacing between buttons
-		actionColumn.setPreferredWidth((buttonWidth + spacing) * actions.size());
-	}
+	void applyTo(GTable table);
 }

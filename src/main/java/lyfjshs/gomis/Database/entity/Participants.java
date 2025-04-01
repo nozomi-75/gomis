@@ -89,6 +89,10 @@ public class Participants {
         this.student = student;
     }
 
+    public String getFullName() {
+        return participantFirstName + " " + participantLastName;
+    }
+
     // Overriding toString() for easy debugging
     @Override
     public String toString() {

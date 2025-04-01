@@ -190,7 +190,10 @@ public abstract class StudentSearchPanel extends Modal {
     private void searchByNameAndGender(String firstName, String middleName, String lastName, String sex) {
         StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
         try {
-            List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, sex);
+            // Convert "Male"/"Female" to "M"/"F" for database query
+            String dbSex = sex.equals("Male") ? "M" : "F";
+            
+            List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, dbSex);
             panelResult.removeAll();
             resultPanels.clear();
 
