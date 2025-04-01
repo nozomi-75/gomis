@@ -12,7 +12,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -33,7 +32,11 @@ import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 import raven.datetime.TimePicker;
+import raven.modal.Toast;
 import raven.modal.component.Modal;
+import raven.modal.toast.option.ToastDirection;
+import raven.modal.toast.option.ToastLocation;
+import raven.modal.toast.option.ToastOption;
 
 public class AddAppointmentPanel extends Modal {
 	private final Connection connection;
@@ -249,9 +252,10 @@ public class AddAppointmentPanel extends Modal {
 		if (!isDuplicate) {
 			tempParticipants.add(participant);
 			updateParticipantsTable();
+			// Reset border when valid participant is added
+			participantsTable.putClientProperty("JTable.borderColor", null);
 		} else {
-			JOptionPane.showMessageDialog(this, "This student is already added as a participant.",
-					"Duplicate Participant", JOptionPane.WARNING_MESSAGE);
+			showToast("This student is already added as a participant.", Toast.Type.WARNING);
 		}
 	}
 
@@ -312,9 +316,11 @@ public class AddAppointmentPanel extends Modal {
 					appointment.getParticipantIds());
 
 			connection.commit();
+			showToast("Appointment saved successfully!", Toast.Type.SUCCESS);
 			return true;
 		} catch (SQLException e) {
 			connection.rollback();
+			showToast("Failed to save appointment: " + e.getMessage(), Toast.Type.ERROR);
 			throw e;
 		} finally {
 			connection.setAutoCommit(true);
@@ -322,25 +328,45 @@ public class AddAppointmentPanel extends Modal {
 	}
 
 	private boolean validateFields() {
+		boolean isValid = true;
+		// Reset all borders first
+		titleField.putClientProperty("JTextField.borderColor", null);
+		dateField.putClientProperty("JTextField.borderColor", null);
+		timeField.putClientProperty("JTextField.borderColor", null);
+		participantsTable.putClientProperty("JTable.borderColor", null);
+
+		// Validate title
 		if (titleField.getText().trim().isEmpty()) {
-			JOptionPane.showMessageDialog(this, "Please enter an appointment title.", "Validation Error",
-					JOptionPane.ERROR_MESSAGE);
-			return false;
+			titleField.putClientProperty("JTextField.borderColor", new Color(220, 53, 69));
+			showToast("Please enter an appointment title.", Toast.Type.ERROR);
+			isValid = false;
 		}
 
+		// Validate date and time
 		if (datePicker.getSelectedDate() == null || timePicker.getSelectedTime() == null) {
-			JOptionPane.showMessageDialog(this, "Please select both date and time.", "Validation Error",
-					JOptionPane.ERROR_MESSAGE);
-			return false;
+			dateField.putClientProperty("JTextField.borderColor", new Color(220, 53, 69));
+			timeField.putClientProperty("JTextField.borderColor", new Color(220, 53, 69));
+			showToast("Please select both date and time.", Toast.Type.ERROR);
+			isValid = false;
 		}
 
+		// Validate participants
 		if (tempParticipants.isEmpty()) {
-			JOptionPane.showMessageDialog(this, "Please add at least one participant.", "Validation Error",
-					JOptionPane.ERROR_MESSAGE);
-			return false;
+			participantsTable.putClientProperty("JTable.borderColor", new Color(220, 53, 69));
+			showToast("Please add at least one participant.", Toast.Type.ERROR);
+			isValid = false;
 		}
 
-		return true;
+		return isValid;
+	}
+
+	private void showToast(String message, Toast.Type type) {
+		ToastOption toastOption = Toast.createOption();
+		toastOption.getLayoutOption()
+				.setMargin(0, 0, 50, 0)
+				.setDirection(ToastDirection.TOP_TO_BOTTOM);
+		
+		Toast.show(this, type, message, ToastLocation.BOTTOM_CENTER, toastOption);
 	}
 
 	public Appointment getAppointment() {

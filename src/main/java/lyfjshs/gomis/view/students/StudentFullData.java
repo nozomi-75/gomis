@@ -3,37 +3,23 @@ package lyfjshs.gomis.view.students;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagLayout;
+import java.awt.Toolkit;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
-import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
-import lyfjshs.gomis.Database.DAO.ViolationDAO;
-import lyfjshs.gomis.Database.entity.Address;
-import lyfjshs.gomis.Database.entity.Contact;
-import lyfjshs.gomis.Database.entity.Guardian;
-import lyfjshs.gomis.Database.entity.GuidanceCounselor;
-import lyfjshs.gomis.Database.entity.Parents;
-import lyfjshs.gomis.Database.entity.SchoolForm;
-import lyfjshs.gomis.Database.entity.Student;
-import lyfjshs.gomis.Database.entity.Violation;
+import lyfjshs.gomis.Database.DAO.*;
+import lyfjshs.gomis.Database.entity.*;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.table.GTable;
@@ -41,6 +27,7 @@ import lyfjshs.gomis.components.table.TableActionManager;
 import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.utils.DroppingFormGenerator;
 import lyfjshs.gomis.utils.GoodMoralGenerator;
+import lyfjshs.gomis.view.violation.ViewViolationDetails;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
@@ -634,41 +621,39 @@ public class StudentFullData extends Form {
 				return;
 			}
 
-			JPanel violationDetailsPanel = new JPanel(new MigLayout("wrap 2", "[][grow]", "[]10[]10[]10[]10[]"));
-			violationDetailsPanel.add(new JLabel("Violation Type:"), "");
-			violationDetailsPanel.add(new JLabel(violation.getViolationType()), "growx");
-			violationDetailsPanel.add(new JLabel("Description:"), "");
-			violationDetailsPanel.add(new JLabel(violation.getViolationDescription()), "growx");
-			violationDetailsPanel.add(new JLabel("Session Summary:"), "");
-			violationDetailsPanel.add(new JLabel(violation.getSessionSummary()), "growx");
-			violationDetailsPanel.add(new JLabel("Reinforcement:"), "");
-			violationDetailsPanel.add(new JLabel(violation.getReinforcement()), "growx");
-			violationDetailsPanel.add(new JLabel("Status:"), "");
-			violationDetailsPanel.add(new JLabel(violation.getStatus()), "growx");
+			ViewViolationDetails detailsPanel = new ViewViolationDetails(
+				connect, 
+				violation, 
+				new StudentsDataDAO(connect),
+				new ParticipantsDAO(connect)
+			);
 
 			// Configure modal options
 			ModalDialog.getDefaultOption()
-				.setOpacity(0f)
+				.setOpacity(0.3f)
 				.setAnimationOnClose(false)
 				.getBorderOption()
-				.setBorderWidth(0.5f)
+				.setBorderWidth(0f)
 				.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
 
-			// Show modal with unique ID
+			// Show modal with proper configuration
 			ModalDialog.showModal(this,
-					new SimpleModalBorder(violationDetailsPanel, "Violation Details",
-							new SimpleModalBorder.Option[] {
-									new SimpleModalBorder.Option("Close", SimpleModalBorder.CANCEL_OPTION) },
-							(controller, action) -> {
-								if (action == SimpleModalBorder.CANCEL_OPTION || 
-									action == SimpleModalBorder.CLOSE_OPTION) {
-									controller.close();
-								}
-							}),
-					modalId);
+				new SimpleModalBorder(detailsPanel, "Violation Details",
+					new SimpleModalBorder.Option[] {
+						new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+					},
+					(controller, action) -> {
+						if (action == SimpleModalBorder.CLOSE_OPTION) {
+							controller.close();
+						}
+					}),
+				modalId);
 
 			// Set size for the modal
-			ModalDialog.getDefaultOption().getLayoutOption().setSize(600, 400);
+			Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+			int width = Math.min(800, (int)(screenSize.width * 0.8));
+			int height = Math.min(600, (int)(screenSize.height * 0.8));
+			ModalDialog.getDefaultOption().getLayoutOption().setSize(width, height);
 		}
 	}
 

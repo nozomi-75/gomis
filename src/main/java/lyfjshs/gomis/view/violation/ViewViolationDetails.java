@@ -4,25 +4,32 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Toolkit;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
+import lyfjshs.gomis.Database.DAO.IncidentsDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
+import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.entity.Incident;
 import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.Violation;
 import net.miginfocom.swing.MigLayout;
@@ -34,97 +41,105 @@ public class ViewViolationDetails extends JPanel {
     private Violation violation;
     private StudentsDataDAO studentsDataDAO;
     private ParticipantsDAO participantsDAO;
+    private IncidentsDAO incidentsDAO;
+    private SessionsDAO sessionsDAO;
+    private List<Incident> incidents;
+    private List<Sessions> sessions;
 
-    public ViewViolationDetails(Violation violation, StudentsDataDAO studentsDataDAO,
-            ParticipantsDAO participantsDAO) {
+    public ViewViolationDetails(Connection conn,
+                                Violation violation,
+                                StudentsDataDAO studentsDataDAO,
+                                ParticipantsDAO participantsDAO) {
         this.violation = violation;
         this.studentsDataDAO = studentsDataDAO;
         this.participantsDAO = participantsDAO;
-        setLayout(new MigLayout("wrap, insets 20", "[grow]", "[]"));
+        this.incidentsDAO = new IncidentsDAO(conn);
+        this.sessionsDAO = new SessionsDAO(conn);
+        
+        // Fetch incidents and sessions data
+        try {
+            this.incidents = incidentsDAO.getIncidentsByParticipant(violation.getParticipantId());
+            this.sessions = sessionsDAO.getAllSessions().stream()
+                .filter(s -> s.getViolationId() != null && s.getViolationId() == violation.getViolationId())
+                .collect(Collectors.toList());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // Main panel layout with single column that grows
+        setLayout(new MigLayout("insets 0, fill", "[grow]", "[grow]"));
         putClientProperty(FlatClientProperties.STYLE, "arc: 8");
 
-        // Main container panel
-        JPanel mainPanel = new JPanel(new MigLayout("wrap 1, fillx", "[grow][grow]", "[]20[200px]20[][][]"));
-        mainPanel.setBackground(UIManager.getColor("Panel.background"));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // Content panel with proper spacing
+        JPanel mainPanel = new JPanel(new MigLayout("wrap, insets 15", "[grow]", "[]15[]15[]15[]15[]"));
+        mainPanel.setOpaque(false);
 
-        // Status and Date Panel
-        JPanel statusDatePanel = new JPanel(new MigLayout("insets 0, gap 10", "[left, grow][right]", ""));
-        statusDatePanel.setBackground(Color.WHITE);
+        // Status and Date Panel with flexible layout
+        JPanel statusDatePanel = new JPanel(new MigLayout("insets 0", "[grow][]", ""));
+        statusDatePanel.setOpaque(false);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
+        String formattedDate = dateFormat.format(violation.getUpdatedAt());
         
-        JLabel dateLabel = new JLabel("Date Recorded: " + violation.getUpdatedAt());
-        dateLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        
+        JLabel dateLabel = new JLabel("Date Recorded: " + formattedDate);
+        dateLabel.putClientProperty("FlatLaf.style", "font: 14 $medium.font");
+
         JLabel statusLabel = new JLabel("Status: " + violation.getStatus());
-        statusLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        statusLabel.setForeground(new Color(214, 69, 65));
-        statusLabel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(214, 69, 65), 1, true),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        statusLabel.putClientProperty("FlatLaf.style", "font: 14 $medium.font");
+        statusLabel.setBorder(
+                BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(UIManager.getColor("Component.accentColor"), 1, true),
+                    BorderFactory.createEmptyBorder(5, 10, 5, 10)));
         statusLabel.setOpaque(true);
-        statusLabel.setBackground(new Color(255, 240, 240));
-        
+        statusLabel.setBackground(UIManager.getColor("Component.accentColor"));
+        statusLabel.setForeground(Color.WHITE);
+
         statusDatePanel.add(dateLabel, "growx");
-        statusDatePanel.add(statusLabel, "right");
-        mainPanel.add(statusDatePanel, "growx, gapbottom 20");
-
-        // Student Information Section
+        statusDatePanel.add(statusLabel);
+        
+        mainPanel.add(statusDatePanel, "growx");
         mainPanel.add(createStudentInfoSection(), "growx");
-
-        // Violation Information Section
         mainPanel.add(createViolationInfoSection(), "growx");
-
-        // Incident Details Section
         mainPanel.add(createIncidentDetailsSection(), "growx");
-
-        // Counseling Sessions Section
         mainPanel.add(createCounselingSessionsSection(), "growx");
 
-        // Action Buttons
-        JPanel buttonPanel = new JPanel(new MigLayout("insets 20", "[right]", ""));
-        buttonPanel.setBackground(Color.WHITE);
-        JButton resolveButton = new JButton("Resolve");
-        resolveButton.setBackground(new Color(58, 86, 167));
-        resolveButton.setForeground(Color.WHITE);
-        resolveButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        JButton closeButton = new JButton("Close");
-        closeButton.setBackground(new Color(241, 241, 241));
-        closeButton.setForeground(Color.BLACK);
-        closeButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        buttonPanel.add(resolveButton, "gapx 10");
-        buttonPanel.add(closeButton);
-        mainPanel.add(buttonPanel, "growx");
-
-        add(mainPanel, "grow");
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setBorder(null);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        
+        add(scrollPane, "grow");
     }
 
     private JPanel createStudentInfoSection() {
-        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", ""));
-        section.setBackground(Color.WHITE);
+        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]15[]"));
+        section.setOpaque(false);
 
         JLabel title = new JLabel("Student Information");
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
         title.setForeground(new Color(58, 86, 167));
         section.add(title, "growx");
-        
+
         JPanel line = new JPanel();
         line.setBackground(new Color(58, 86, 167));
-        line.setPreferredSize(new Dimension(Integer.MAX_VALUE, 2));
-        section.add(line, "growx, wrap 15");
+        section.add(line, "growx, height 2!");
 
         try {
             Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
             if (participant != null) {
                 String fullName = participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
                 String contactNumber = participant.getContactNumber();
-                
-                JPanel namePanel = new JPanel(new MigLayout("insets 0", "[grow]", ""));
-                namePanel.setBackground(Color.WHITE);
+
+                JPanel namePanel = new JPanel(new MigLayout("insets 0", "[grow]", "[]5[]"));
+                namePanel.setOpaque(false);
+
                 JLabel nameLabel = new JLabel(fullName);
                 nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
                 namePanel.add(nameLabel, "wrap");
-                
+
                 if ("Student".equals(participant.getParticipantType())) {
                     Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
                     if (student != null) {
@@ -134,18 +149,18 @@ public class ViewViolationDetails extends JPanel {
                         namePanel.add(lrnLabel);
                     }
                 }
-                section.add(namePanel, "growx, wrap 20");
+                section.add(namePanel, "growx");
 
-                JPanel gridPanel = new JPanel(new MigLayout("wrap 2, insets 0", "[grow][grow]", "[]15[]"));
-                gridPanel.setBackground(Color.WHITE);
+                JPanel gridPanel = new JPanel(new MigLayout("wrap 2, insets 0", "[grow,fill][grow,fill]", "[]15[]"));
+                gridPanel.setOpaque(false);
 
                 if ("Student".equals(participant.getParticipantType())) {
                     Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
                     if (student != null) {
-                        gridPanel.add(createInfoGroup("Grade & Section", student.getSchoolSection()), "growx");
-                        gridPanel.add(createInfoGroup("Sex", student.getStudentSex()), "growx");
-                        gridPanel.add(createInfoGroup("Age", String.valueOf(calculateAge(student.getStudentBirthdate()))), "growx");
-                        gridPanel.add(createInfoGroup("Contact Number", contactNumber), "growx");
+                        gridPanel.add(createInfoGroup("Grade & Section", student.getSchoolSection()));
+                        gridPanel.add(createInfoGroup("Sex", student.getStudentSex()));
+                        gridPanel.add(createInfoGroup("Age", String.valueOf(calculateAge(student.getStudentBirthdate()))));
+                        gridPanel.add(createInfoGroup("Contact Number", contactNumber));
                     }
                 }
 
@@ -160,166 +175,194 @@ public class ViewViolationDetails extends JPanel {
 
     private JPanel createInfoGroup(String label, String value) {
         JPanel group = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]"));
-        group.setBackground(Color.WHITE);
+        group.setOpaque(false);
 
         JLabel infoLabel = new JLabel(label);
         infoLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        infoLabel.setForeground(new Color(85, 85, 85));
+        infoLabel.setForeground(UIManager.getColor("Label.foreground"));
         group.add(infoLabel);
 
-        JPanel valuePanel = new JPanel(new MigLayout("insets 10", "[grow]", ""));
-        valuePanel.setBackground(new Color(249, 249, 249));
-        valuePanel.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(58, 86, 167)));
+        JPanel valuePanel = new JPanel(new MigLayout("insets 10", "[grow]", "[]"));
+        valuePanel.setBackground(UIManager.getColor("TextField.background"));
+        valuePanel.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, UIManager.getColor("Component.accentColor")));
+        
         JLabel valueLabel = new JLabel(value != null ? value : "");
         valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        valuePanel.add(valueLabel);
+        valueLabel.setForeground(UIManager.getColor("Label.foreground"));
+        valuePanel.add(valueLabel, "growx");
         group.add(valuePanel, "growx");
 
         return group;
     }
 
     private JPanel createViolationInfoSection() {
-        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", ""));
-        section.setBackground(Color.WHITE);
+        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]15[]"));
+        section.setOpaque(false);
 
         JLabel title = new JLabel("Violation Information");
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title.setForeground(new Color(58, 86, 167));
+        title.setForeground(UIManager.getColor("Component.accentColor"));
         section.add(title, "growx");
-        
-        JPanel line = new JPanel();
-        line.setBackground(new Color(58, 86, 167));
-        line.setPreferredSize(new Dimension(Integer.MAX_VALUE, 2));
-        section.add(line, "growx, wrap 15");
 
-        // Violation Type
+        JPanel line = new JPanel();
+        line.setBackground(UIManager.getColor("Component.accentColor"));
+        section.add(line, "growx, height 2!");
+
         JLabel typeLabel = new JLabel("Violation Type");
         typeLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        typeLabel.setForeground(new Color(85, 85, 85));
-        section.add(typeLabel, "wrap 5");
+        typeLabel.setForeground(UIManager.getColor("Label.foreground"));
+        section.add(typeLabel);
 
-        JPanel badgePanel = new JPanel(new MigLayout("insets 10", "[grow]", ""));
-        badgePanel.setBackground(new Color(249, 249, 249));
-        badgePanel.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(58, 86, 167)));
+        JPanel badgePanel = new JPanel(new MigLayout("insets 10", "[grow]", "[]"));
+        badgePanel.setOpaque(false);
+        badgePanel.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, UIManager.getColor("Component.accentColor")));
+        
         JLabel violationBadge = new JLabel(violation.getViolationType());
         violationBadge.setFont(new Font("Segoe UI", Font.BOLD, 14));
         violationBadge.setForeground(Color.WHITE);
-        violationBadge.setBackground(Color.RED);
+        violationBadge.setBackground(UIManager.getColor("Component.accentColor"));
         violationBadge.setOpaque(true);
         violationBadge.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        badgePanel.add(violationBadge);
-        section.add(badgePanel, "growx, wrap 15");
-
-        // Violation Description
-        JLabel descLabel = new JLabel("Violation Description");
-        descLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        descLabel.setForeground(new Color(85, 85, 85));
-        section.add(descLabel, "wrap 5");
-
-        JPanel descPanel = new JPanel(new MigLayout("insets 10", "[grow]", ""));
-        descPanel.setBackground(new Color(249, 249, 249));
-        descPanel.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(58, 86, 167)));
-        JTextArea description = new JTextArea(violation.getViolationDescription());
-        description.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        description.setLineWrap(true);
-        description.setWrapStyleWord(true);
-        description.setEditable(false);
-        description.setBackground(new Color(249, 249, 249));
-        description.setBorder(BorderFactory.createEmptyBorder());
-        descPanel.add(description, "grow");
-        section.add(descPanel, "growx, wrap 20");
+        badgePanel.add(violationBadge, "growx");
+        section.add(badgePanel, "growx");
 
         return section;
     }
 
     private JPanel createIncidentDetailsSection() {
-        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", ""));
-        section.setBackground(Color.WHITE);
+        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]15[]"));
+        section.setOpaque(false);
 
         JLabel title = new JLabel("Incident Details");
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title.setForeground(new Color(58, 86, 167));
+        title.setForeground(UIManager.getColor("Component.accentColor"));
         section.add(title, "growx");
-        
+
         JPanel line = new JPanel();
-        line.setBackground(new Color(58, 86, 167));
-        line.setPreferredSize(new Dimension(Integer.MAX_VALUE, 2));
-        section.add(line, "growx, wrap 15");
+        line.setBackground(UIManager.getColor("Component.accentColor"));
+        section.add(line, "growx, height 2!");
 
-        JLabel actionLabel = new JLabel("Action Taken");
-        actionLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        actionLabel.setForeground(new Color(85, 85, 85));
-        section.add(actionLabel, "wrap 5");
+        if (incidents != null && !incidents.isEmpty()) {
+            for (Incident incident : incidents) {
+                JPanel incidentBox = new JPanel(new MigLayout("wrap, insets 15", "[grow]", "[]10[]10[]10[]"));
+                incidentBox.setOpaque(false);
+                incidentBox.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, UIManager.getColor("Component.accentColor")));
 
-        JPanel actionPanel = new JPanel(new MigLayout("insets 10", "[grow]", ""));
-        actionPanel.setBackground(new Color(249, 249, 249));
-        actionPanel.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(58, 86, 167)));
-        JTextArea actionTaken = new JTextArea(violation.getViolationDescription());
-        actionTaken.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        actionTaken.setLineWrap(true);
-        actionTaken.setWrapStyleWord(true);
-        actionTaken.setEditable(false);
-        actionTaken.setBackground(new Color(249, 249, 249));
-        actionTaken.setBorder(BorderFactory.createEmptyBorder());
-        actionPanel.add(actionTaken, "grow");
-        section.add(actionPanel, "growx, wrap 20");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
+                String formattedDate = dateFormat.format(incident.getIncidentDate());
+                
+                JLabel dateLabel = new JLabel("Incident Date: " + formattedDate);
+                dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                dateLabel.setForeground(UIManager.getColor("Label.foreground"));
+                incidentBox.add(dateLabel, "growx");
+
+                JLabel descLabel = new JLabel("Incident Description");
+                descLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                descLabel.setForeground(UIManager.getColor("Label.foreground"));
+                incidentBox.add(descLabel, "growx 5");
+
+                JTextArea descText = new JTextArea(incident.getIncidentDescription());
+                descText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                descText.setLineWrap(true);
+                descText.setWrapStyleWord(true);
+                descText.setEditable(false);
+                descText.setBackground(UIManager.getColor("TextField.background"));
+                descText.setForeground(UIManager.getColor("TextField.foreground"));
+                descText.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                incidentBox.add(descText, "growx 10");
+
+                JLabel actionLabel = new JLabel("Action Taken");
+                actionLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                actionLabel.setForeground(UIManager.getColor("Label.foreground"));
+                incidentBox.add(actionLabel, "growx 5");
+
+                JTextArea actionText = new JTextArea(incident.getActionTaken());
+                actionText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                actionText.setLineWrap(true);
+                actionText.setWrapStyleWord(true);
+                actionText.setEditable(false);
+                actionText.setBackground(UIManager.getColor("TextField.background"));
+                actionText.setForeground(UIManager.getColor("TextField.foreground"));
+                actionText.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                incidentBox.add(actionText, "growx 10");
+
+                section.add(incidentBox, "growx 15");
+            }
+        } else {
+            JLabel noIncidentLabel = new JLabel("No incident reports found for this violation.");
+            noIncidentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            noIncidentLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+            section.add(noIncidentLabel, "growx 15");
+        }
 
         return section;
     }
 
     private JPanel createCounselingSessionsSection() {
-        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", ""));
-        section.setBackground(Color.WHITE);
+        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]15[]"));
+        section.setOpaque(false);
 
         JLabel title = new JLabel("Counseling Sessions");
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title.setForeground(new Color(58, 86, 167));
+        title.setForeground(UIManager.getColor("Component.accentColor"));
         section.add(title, "growx");
-        
+
         JPanel line = new JPanel();
-        line.setBackground(new Color(58, 86, 167));
-        line.setPreferredSize(new Dimension(Integer.MAX_VALUE, 2));
-        section.add(line, "growx, wrap 15");
+        line.setBackground(UIManager.getColor("Component.accentColor"));
+        section.add(line, "growx, height 2!");
 
-        // Create a single session box for the current violation
-        JPanel sessionBox = new JPanel(new MigLayout("wrap, insets 15", "[grow]", "[]10[]15[]"));
-        sessionBox.setBackground(new Color(249, 249, 249));
-        sessionBox.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(58, 86, 167)));
+        if (sessions != null && !sessions.isEmpty()) {
+            for (Sessions session : sessions) {
+                JPanel sessionBox = new JPanel(new MigLayout("wrap, insets 15", "[grow]", "[]10[]10[]10[]"));
+                sessionBox.setOpaque(false);
+                sessionBox.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, UIManager.getColor("Component.accentColor")));
 
-        JLabel dateLabel = new JLabel("Session Date: " + violation.getUpdatedAt());
-        dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        dateLabel.setForeground(new Color(119, 119, 119));
-        sessionBox.add(dateLabel);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
+                String formattedDate = dateFormat.format(session.getSessionDateTime());
+                
+                JLabel dateLabel = new JLabel("Session Date: " + formattedDate);
+                dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                dateLabel.setForeground(UIManager.getColor("Label.foreground"));
+                sessionBox.add(dateLabel, "growx");
 
-        JLabel summaryLabel = new JLabel("Session Summary");
-        summaryLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        summaryLabel.setForeground(new Color(85, 85, 85));
-        sessionBox.add(summaryLabel, "wrap 5");
+                JLabel summaryLabel = new JLabel("Session Summary");
+                summaryLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                summaryLabel.setForeground(UIManager.getColor("Label.foreground"));
+                sessionBox.add(summaryLabel, "growx 5");
 
-        JTextArea summaryText = new JTextArea(violation.getSessionSummary());
-        summaryText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        summaryText.setLineWrap(true);
-        summaryText.setWrapStyleWord(true);
-        summaryText.setEditable(false);
-        summaryText.setBackground(new Color(249, 249, 249));
-        summaryText.setBorder(BorderFactory.createEmptyBorder());
-        sessionBox.add(summaryText, "growx, wrap 15");
+                JTextArea summaryText = new JTextArea(session.getSessionSummary());
+                summaryText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                summaryText.setLineWrap(true);
+                summaryText.setWrapStyleWord(true);
+                summaryText.setEditable(false);
+                summaryText.setBackground(UIManager.getColor("TextField.background"));
+                summaryText.setForeground(UIManager.getColor("TextField.foreground"));
+                summaryText.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                sessionBox.add(summaryText, "growx 10");
 
-        JLabel notesLabel = new JLabel("Session Notes");
-        notesLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        notesLabel.setForeground(new Color(85, 85, 85));
-        sessionBox.add(notesLabel, "wrap 5");
+                JLabel notesLabel = new JLabel("Session Notes");
+                notesLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                notesLabel.setForeground(UIManager.getColor("Label.foreground"));
+                sessionBox.add(notesLabel, "growx 5");
 
-        JTextArea notesText = new JTextArea(violation.getReinforcement());
-        notesText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        notesText.setLineWrap(true);
-        notesText.setWrapStyleWord(true);
-        notesText.setEditable(false);
-        notesText.setBackground(new Color(249, 249, 249));
-        notesText.setBorder(BorderFactory.createEmptyBorder());
-        sessionBox.add(notesText, "growx");
+                JTextArea notesText = new JTextArea(session.getSessionNotes());
+                notesText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                notesText.setLineWrap(true);
+                notesText.setWrapStyleWord(true);
+                notesText.setEditable(false);
+                notesText.setBackground(UIManager.getColor("TextField.background"));
+                notesText.setForeground(UIManager.getColor("TextField.foreground"));
+                notesText.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                sessionBox.add(notesText, "growx 10");
 
-        section.add(sessionBox, "growx, wrap 15");
+                section.add(sessionBox, "growx 15");
+            }
+        } else {
+            JLabel noSessionLabel = new JLabel("No counseling sessions found for this violation.");
+            noSessionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            noSessionLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+            section.add(noSessionLabel, "growx 15");
+        }
 
         return section;
     }
@@ -330,29 +373,48 @@ public class ViewViolationDetails extends JPanel {
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
 
-    public static void showDialog(Component parent, Violation violation, StudentsDataDAO studentsDataDAO,
-            ParticipantsDAO participantsDAO) {
-        ViewViolationDetails detailsPanel = new ViewViolationDetails(violation, studentsDataDAO, participantsDAO);
+    public static void showDialog(Component parent,
+                                  Connection conn,
+                                  Violation violation,
+                                  StudentsDataDAO studentsDataDAO,
+                                  ParticipantsDAO participantsDAO) {
+        ViewViolationDetails detailsPanel = new ViewViolationDetails(
+                conn, violation, studentsDataDAO, participantsDAO
+        );
 
         Option option = ModalDialog.createOption();
-        option.setOpacity(0.3f).setAnimationOnClose(false).getBorderOption().setBorderWidth(0f)
-                .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+        option.setOpacity(0.3f)
+              .setAnimationOnClose(false)
+              .getBorderOption()
+              .setBorderWidth(0f)
+              .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
 
         String modalId = "violation_details_" + violation.getViolationId();
         if (ModalDialog.isIdExist(modalId)) {
             ModalDialog.closeModal(modalId);
         }
-        option.getLayoutOption().setSize(800, 600);
 
-        ModalDialog.showModal(parent,
-                new SimpleModalBorder(detailsPanel, "Violation Details",
-                        new SimpleModalBorder.Option[] {
-                                new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION) },
+        // Set dialog size with proper dimensions
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int width = Math.min(600, screenSize.width - 100);
+        int height = Math.min(700, screenSize.height - 100);
+        option.getLayoutOption().setSize(width, height);
+
+        ModalDialog.showModal(
+                parent,
+                new SimpleModalBorder(
+                        detailsPanel,
+                        "Violation Details",
+                        new SimpleModalBorder.Option[]{
+                                new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+                        },
                         (controller, action) -> {
                             if (action == SimpleModalBorder.CLOSE_OPTION) {
                                 controller.close();
                             }
-                        }),
-                modalId);
+                        }
+                ),
+                modalId
+        );
     }
-} 
+}

@@ -45,7 +45,7 @@ public class StudentMangementGUI extends Form {
     private GTable studentDataTable;
     private StudentsDataDAO studentsDataCRUD;
     private final Connection connection;
-    private final String[] columnNames = {"#", "LRN", "NAME", "SEX", "Actions"};
+    private final String[] columnNames = {"#", "LRN", "NAME", "SEX", "GRADE & SECTION", "Actions"};
     private SlidePane slidePane;
     private JButton backBtn;
     private JPanel mainPanel;
@@ -89,17 +89,17 @@ public class StudentMangementGUI extends Form {
 
     private void setupTable() {
         Object[][] initialData = new Object[0][columnNames.length];
-        Class<?>[] columnTypes = {Boolean.class, Integer.class, String.class, String.class, String.class, Object.class};
-        boolean[] editableColumns = {true, false, false, false, false, true};
+        Class<?>[] columnTypes = {Boolean.class, Integer.class, String.class, String.class, String.class, String.class, Object.class};
+        boolean[] editableColumns = {true, false, false, false, false, false, true};
         
         // Adjusted column widths to match the image proportions
-        double[] columnWidths = {0.05, 0.05, 0.20, 0.45, 0.10, 0.15}; // Sum to 1.0
+        double[] columnWidths = {0.03, 0.05, 0.20, 0.10, 0.15, 0.15}; // Sum to 1.0
         int[] alignments = {
             SwingConstants.CENTER,  // Checkbox
             SwingConstants.CENTER,  // #
-            SwingConstants.CENTER,  // LRN
             SwingConstants.LEFT,    // NAME
             SwingConstants.CENTER,  // SEX
+            SwingConstants.CENTER,  // GRADE & SECTION
             SwingConstants.CENTER   // Actions
         };
         boolean includeCheckbox = true;
@@ -131,7 +131,7 @@ public class StudentMangementGUI extends Form {
 
         studentDataTable = new GTable(
             initialData,
-            new String[]{" ", "#", "LRN", "NAME", "SEX", "Actions"},
+            new String[]{" ", "#", "LRN", "NAME", "SEX", "GRADE & SECTION", "Actions"},
             columnTypes,
             editableColumns,
             columnWidths,
@@ -237,12 +237,18 @@ public class StudentMangementGUI extends Form {
             int rowNum = 1;
             for (Student studentData : studentsDataList) {
                 String fullName = studentData.getStudentFirstname() + " " + studentData.getStudentLastname();
+                String gradeAndSection = "";
+                if (studentData.getSchoolForm() != null) {
+                    gradeAndSection = studentData.getSchoolForm().getSF_GRADE_LEVEL() + " " + 
+                                    studentData.getSchoolForm().getSF_SECTION();
+                }
                 model.addRow(new Object[] {
                     false,  // Checkbox column
                     rowNum++,
                     studentData.getStudentLrn(),
                     fullName,
                     studentData.getStudentSex(),
+                    gradeAndSection,
                     null // Actions column handled by TableActionManager
                 });
             }
@@ -255,6 +261,8 @@ public class StudentMangementGUI extends Form {
 
     private void handlePrintGoodMoral() {
         List<Student> selectedStudents = new ArrayList<>();
+        List<Student> studentsWithActiveViolations = new ArrayList<>();
+        
         for (int i = 0; i < studentDataTable.getRowCount(); i++) {
             Boolean isSelected = (Boolean) studentDataTable.getValueAt(i, 0);
             if (isSelected != null && isSelected) {
@@ -262,7 +270,16 @@ public class StudentMangementGUI extends Form {
                 try {
                     Student student = studentsDataCRUD.getStudentDataByLrn(lrn);
                     if (student != null) {
-                        selectedStudents.add(student);
+                        // Check for active violations using student's UID
+                        List<Violation> violations = violationDAO.getViolationsByStudentUID(student.getStudentUid());
+                        boolean hasActiveViolation = violations.stream()
+                                .anyMatch(v -> v.getStatus().equals("Active"));
+                        
+                        if (hasActiveViolation) {
+                            studentsWithActiveViolations.add(student);
+                        } else {
+                            selectedStudents.add(student);
+                        }
                     }
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -270,30 +287,15 @@ public class StudentMangementGUI extends Form {
             }
         }
 
-        if (selectedStudents.isEmpty()) {
+        if (selectedStudents.isEmpty() && studentsWithActiveViolations.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please select at least one student.", "No Selection",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Check for active violations
-        List<Student> studentsWithViolations = new ArrayList<>();
-        for (Student student : selectedStudents) {
-            try {
-                List<Violation> violations = violationDAO.getViolationsByStudentId(student.getStudentId());
-                boolean hasActiveViolation = violations.stream()
-                        .anyMatch(v -> v.getStatus().equals("Active"));
-                if (hasActiveViolation) {
-                    studentsWithViolations.add(student);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (!studentsWithViolations.isEmpty()) {
+        if (!studentsWithActiveViolations.isEmpty()) {
             StringBuilder message = new StringBuilder("The following students have active violations and cannot receive a good moral certificate:\n\n");
-            for (Student student : studentsWithViolations) {
+            for (Student student : studentsWithActiveViolations) {
                 message.append("- ").append(student.getStudentFirstname())
                        .append(" ").append(student.getStudentLastname())
                        .append(" (LRN: ").append(student.getStudentLrn()).append(")\n");

@@ -1,4 +1,4 @@
-package lyfjshs.gomis.components.notification;
+package lyfjshs;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -16,6 +16,9 @@ import javax.swing.UIManager;
 
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
+import lyfjshs.gomis.components.notification.NotificationCallback;
+import lyfjshs.gomis.components.notification.NotificationManager;
+import lyfjshs.gomis.components.notification.NotificationPopup;
 import net.miginfocom.swing.MigLayout;
 
 /**

@@ -4,7 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.Toolkit;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -16,7 +16,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
@@ -30,16 +29,15 @@ import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.DAO.ViolationDAO;
-import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.Database.entity.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
-import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.utils.IncidentReportGenerator;
 import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.appointment.AppointmentOverview;
@@ -50,6 +48,7 @@ import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentFullData;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
+import lyfjshs.gomis.view.violation.ViewViolationDetails;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
@@ -120,7 +119,7 @@ public class MainDashboard extends Form {
 																								// Status" to "Status"
 		Class<?>[] columnTypes = { String.class, String.class, String.class, String.class, Object.class };
 		boolean[] editableColumns = { false, false, false, false, true };
-		double[] columnWidths = { 0.15, 0.20, 0.17, 0.10, 0.38 }; // Adjusted widths to ensure total is 1 and "Actions"
+		double[] columnWidths = { 0.15, 0.20, 0.17, 0.10, 0.48 }; // Adjusted widths to ensure total is 1 and "Actions"
 																	// column is wide enough
 		int[] alignments = { SwingConstants.CENTER, // LRN
 				SwingConstants.LEFT, // Full Name
@@ -214,86 +213,51 @@ public class MainDashboard extends Form {
 
 	private void showViolationDetails(String lrn) {
 		try {
-			ViolationDAO ViolationDAO = new ViolationDAO(connection);
-			Violation violation = ViolationDAO.getViolationByLRN(lrn);
+			ViolationDAO violationDAO = new ViolationDAO(connection);
+			Violation violation = violationDAO.getViolationByLRN(lrn);
 
 			if (violation != null) {
-				// Create panel with proper styling
-				JPanel detailPanel = new JPanel(new MigLayout("fillx, insets 20", "[30%][70%]", "[][][][][][][][]"));
-				detailPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-				// Fetch related data
-				ParticipantsDAO participantsDAO = new ParticipantsDAO(connection);
-				StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
-				Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
-				Student student = participant != null && participant.getStudentUid() != null
-						? studentsDataDAO.getStudentById(participant.getStudentUid())
-						: null;
-
-				// Create header section
-				JLabel headerLabel = new JLabel("Violation Information");
-				headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-				detailPanel.add(headerLabel, "span, center, gapbottom 15");
-
-				// Add student information
-				if (student != null) {
-					createSection(detailPanel, "Student Information", new String[][] {
-							{ "Student LRN:", student.getStudentLrn() },
-							{ "Student Name:", student.getStudentFirstname() + " " + student.getStudentLastname() }
-					});
+				String modalId = "violation_details_" + violation.getViolationId();
+				
+				// Check if modal is already open
+				if (ModalDialog.isIdExist(modalId)) {
+					return;
 				}
 
-				// Add violation information
-				createSection(detailPanel, "Violation Details", new String[][] {
-						{ "Violation Type:", violation.getViolationType() },
-						{ "Description:", violation.getViolationDescription() },
-						{ "Status:", violation.getStatus() },
-						{ "Date:", violation.getUpdatedAt().toString() }
-				});
+				ViewViolationDetails detailsPanel = new ViewViolationDetails(
+					connection, 
+					violation, 
+					new StudentsDataDAO(connection),
+					new ParticipantsDAO(connection)
+				);
 
-				// Add text areas with improved styling
-				createTextAreaField(detailPanel, "Session Summary:", violation.getSessionSummary(), 5);
-				createTextAreaField(detailPanel, "Reinforcement:", violation.getReinforcement(), 5);
-
-				// Add resolution status message if resolved
-				if ("Resolved".equals(violation.getStatus())) {
-					JLabel resolutionLabel = new JLabel("This violation has been resolved.");
-					resolutionLabel.setForeground(new Color(0, 150, 136)); // Green color
-					resolutionLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-					detailPanel.add(resolutionLabel, "span, gaptop 10, gapbottom 5");
-				}
-
-				// Configure modal options based on violation status
-				SimpleModalBorder.Option[] options;
-				if (!"Resolved".equals(violation.getStatus())) {
-					options = new SimpleModalBorder.Option[] {
-							new SimpleModalBorder.Option("Resolve", SimpleModalBorder.YES_OPTION),
-							new SimpleModalBorder.Option("Close", SimpleModalBorder.NO_OPTION)
-					};
-				} else {
-					options = new SimpleModalBorder.Option[] {
-							new SimpleModalBorder.Option("Close", SimpleModalBorder.NO_OPTION)
-					};
-				}
+				// Configure modal options
+				ModalDialog.getDefaultOption()
+					.setOpacity(0.3f)
+					.setAnimationOnClose(false)
+					.getBorderOption()
+					.setBorderWidth(0f)
+					.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
 
 				// Show modal with proper configuration
 				ModalDialog.showModal(this,
-						new SimpleModalBorder(detailPanel, "Violation Details", options,
-								(controller, action) -> {
-									if (action == SimpleModalBorder.YES_OPTION) {
-										resolveViolation(lrn);
-										controller.close();
-									} else if (action == SimpleModalBorder.NO_OPTION ||
-											action == SimpleModalBorder.CLOSE_OPTION) {
-										controller.close();
-									}
-									refreshTable();
-								}),
-						"ViolationDetails");
+					new SimpleModalBorder(detailsPanel, "Violation Details",
+						new SimpleModalBorder.Option[] {
+							new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+						},
+						(controller, action) -> {
+							if (action == SimpleModalBorder.CLOSE_OPTION) {
+								controller.close();
+							}
+							refreshTable();
+						}),
+					modalId);
 
-				// Configure modal appearance
-				ModalDialog.getDefaultOption().getLayoutOption()
-						.setSize(800, 600);
+				// Set size for the modal
+				Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+				int width = Math.min(800, (int)(screenSize.width * 0.8));
+				int height = Math.min(600, (int)(screenSize.height * 0.8));
+				ModalDialog.getDefaultOption().getLayoutOption().setSize(width, height);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -301,40 +265,6 @@ public class MainDashboard extends Form {
 		}
 	}
 
-	private void createSection(JPanel panel, String title, String[][] fields) {
-		JLabel sectionLabel = new JLabel(title);
-		sectionLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-		panel.add(sectionLabel, "span, gaptop 10, gapbottom 5");
-
-		for (String[] field : fields) {
-			addDetailField(panel, field[0], field[1]);
-		}
-	}
-
-	private void createTextAreaField(JPanel panel, String label, String text, int rows) {
-		JLabel fieldLabel = new JLabel(label);
-		fieldLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-		panel.add(fieldLabel, "span, gaptop 10");
-
-		JTextArea textArea = new JTextArea(text);
-		textArea.setRows(rows);
-		textArea.setLineWrap(true);
-		textArea.setWrapStyleWord(true);
-		textArea.setEditable(false);
-		textArea.setBackground(new Color(245, 245, 245));
-		textArea.setBorder(BorderFactory.createCompoundBorder(
-				BorderFactory.createLineBorder(new Color(200, 200, 200)),
-				BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-
-		JScrollPane scrollPane = new JScrollPane(textArea);
-		scrollPane.setPreferredSize(new Dimension(0, rows * 20));
-		panel.add(scrollPane, "span, growx, gapbottom 10");
-	}
-
-	private void addDetailField(JPanel panel, String label, String value) {
-		panel.add(new JLabel(label), "cell 0 " + panel.getComponentCount() / 2);
-		panel.add(new JLabel(value != null ? value : ""), "cell 1 " + panel.getComponentCount() / 2);
-	}
 
 	private void resolveViolation(String lrn) {
 		try {

@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "NativeNotificationExample",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.components.notification.NativeNotificationExample",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "TestModal",
             "request": "launch",
             "mainClass": "test.TestModal",

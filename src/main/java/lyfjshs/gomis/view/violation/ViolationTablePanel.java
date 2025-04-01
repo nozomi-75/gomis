@@ -58,6 +58,7 @@ public class ViolationTablePanel extends JPanel {
                 if (violation != null) {
                     ViewViolationDetails.showDialog(
                         SwingUtilities.getWindowAncestor(this), 
+                        connect,
                         violation, 
                         new StudentsDataDAO(connect),
                         new ParticipantsDAO(connect)
@@ -73,12 +74,12 @@ public class ViolationTablePanel extends JPanel {
     }
 
     private void initializeTable() {
-        String[] columnNames = { "Student LRN", "Name", "Violation Type", "Reinforcement", "Status", "Actions" };
+        String[] columnNames = { "Student LRN", "Name", "Violation Type", "Status", "Date Recorded", "Actions" };
         Class<?>[] columnTypes = { String.class, String.class, String.class, String.class, String.class, Object.class };
         boolean[] editableColumns = { false, false, false, false, false, true };
-        double[] columnWidths = { 0.15, 0.20, 0.15, 0.20, 0.10, 0.20 }; // Increased Actions column width
-        int[] alignments = { SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.LEFT, SwingConstants.LEFT,
-                SwingConstants.CENTER, SwingConstants.CENTER };
+        double[] columnWidths = { 0.15, 0.25, 0.15, 0.10, 0.15, 0.20 }; // Adjusted widths for new column
+        int[] alignments = { SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.LEFT,
+                SwingConstants.CENTER, SwingConstants.CENTER, SwingConstants.CENTER };
 
         actionManager = setupTableActions();
 
@@ -198,8 +199,8 @@ public class ViolationTablePanel extends JPanel {
                         lrn,
                         fullName.trim(), // Trim to remove extra spaces
                         violation.getViolationType(),
-                        violation.getReinforcement(),
                         violation.getStatus(),
+                        violation.getUpdatedAt(),
                         null // Placeholder for the Actions column
                 });
 
