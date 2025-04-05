@@ -1,8 +1,8 @@
 package lyfjshs.gomis.view;
 
 
-import java.awt.Font;
 import java.awt.Component;
+import java.awt.Font;
 import java.sql.Connection;
 import java.util.Map;
 
@@ -19,7 +19,7 @@ import lyfjshs.gomis.components.settings.SettingsManager;
 import lyfjshs.gomis.components.settings.SettingsState;
 import net.miginfocom.swing.MigLayout;
 
-@SuppressWarnings({ "unused", "serial" })
+@SuppressWarnings("unused")
 public class SettingsPanel extends Form {
 	private final FlatToggleSwitch notificationsToggle = new FlatToggleSwitch();
 	private JComboBox<Integer> fontSizeComboBox;

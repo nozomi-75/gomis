@@ -35,7 +35,6 @@ import lyfjshs.gomis.view.violation.Violation_Record;
 /**
  * 
  */
-@SuppressWarnings("unused")
 public class Main {
 
 	/** Database connection instance */
@@ -191,7 +190,7 @@ public class Main {
 			initDB();
 			
 			// Create main frame with proper size and visibility
-			gFrame = new GFrame(1380, 750, false, "GOMIS", null, conn);
+			gFrame = new GFrame(java.awt.Toolkit.getDefaultToolkit().getScreenSize().width, 750, false, "GOMIS", null, conn);
 			gFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
 			
 			// Initialize notifications

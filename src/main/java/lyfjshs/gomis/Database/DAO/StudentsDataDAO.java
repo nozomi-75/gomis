@@ -126,24 +126,36 @@ public class StudentsDataDAO {
 
         // Dynamically add filters
         List<Object> params = new ArrayList<>();
+        
+        // LRN search - exact prefix match
         if (lrn != null && !lrn.trim().isEmpty()) {
             query.append(" AND s.STUDENT_LRN LIKE ?");
-            params.add(lrn + "%"); // Searching by LRN prefix
+            params.add(lrn + "%");
         }
+        
+        // First name search - case insensitive partial match
         if (firstName != null && !firstName.trim().isEmpty()) {
-            query.append(" AND s.STUDENT_FIRSTNAME LIKE ?");
-            params.add("%" + firstName + "%");
+            query.append(" AND LOWER(s.STUDENT_FIRSTNAME) LIKE LOWER(?)");
+            params.add("%" + firstName.trim() + "%");
         }
+        
+        // Last name search - case insensitive partial match
         if (lastName != null && !lastName.trim().isEmpty()) {
-            query.append(" AND s.STUDENT_LASTNAME LIKE ?");
-            params.add("%" + lastName + "%");
+            query.append(" AND LOWER(s.STUDENT_LASTNAME) LIKE LOWER(?)");
+            params.add("%" + lastName.trim() + "%");
         }
+        
+        // Gender/Sex search - exact match (case sensitive)
         if (sex != null && !sex.trim().isEmpty()) {
             query.append(" AND s.STUDENT_SEX = ?");
-            params.add(sex);
+            params.add(sex.trim());
         }
 
+        // Add ORDER BY clause for consistent results
+        query.append(" ORDER BY s.STUDENT_LASTNAME, s.STUDENT_FIRSTNAME");
+
         try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
+            // Set all parameters
             for (int i = 0; i < params.size(); i++) {
                 stmt.setObject(i + 1, params.get(i));
             }

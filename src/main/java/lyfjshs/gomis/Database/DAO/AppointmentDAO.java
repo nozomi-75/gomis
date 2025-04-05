@@ -184,7 +184,7 @@ public class AppointmentDAO {
                     "LEFT JOIN APPOINTMENT_PARTICIPANTS ap ON a.APPOINTMENT_ID = ap.APPOINTMENT_ID " +
                     "LEFT JOIN PARTICIPANTS p ON ap.PARTICIPANT_ID = p.PARTICIPANT_ID " +
                     "WHERE DATE(a.APPOINTMENT_DATE_TIME) = ? " +
-                    "AND a.APPOINTMENT_STATUS != 'Ended' " +
+                    "AND a.APPOINTMENT_STATUS NOT IN ('Ended', 'Cancelled') " +
                     "ORDER BY a.APPOINTMENT_DATE_TIME";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -195,7 +195,7 @@ public class AppointmentDAO {
 
     // Get a single appointment excluding ended ones
     public Appointment getAppointmentByIdExcludingEnded(int appointmentId) throws SQLException {
-        String sql = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_ID = ? AND APPOINTMENT_STATUS != 'Ended'";
+        String sql = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_ID = ? AND APPOINTMENT_STATUS NOT IN ('Ended', 'Cancelled')";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, appointmentId);
             try (ResultSet rs = stmt.executeQuery()) {

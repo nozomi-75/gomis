@@ -28,8 +28,20 @@ public class ParticipantsDAO {
         this.connection = connection;
     }
 
-    // Create a new participant
+    // Create a new participant or get existing one
     public int createParticipant(Participants participant) throws SQLException {
+        // First check if participant already exists
+        Participants existingParticipant = findParticipantByNameAndType(
+            participant.getParticipantFirstName(), 
+            participant.getParticipantLastName(), 
+            participant.getParticipantType()
+        );
+        
+        if (existingParticipant != null) {
+            System.out.println("✔ Using existing participant with ID: " + existingParticipant.getParticipantId());
+            return existingParticipant.getParticipantId();
+        }
+
         String sql = "INSERT INTO PARTICIPANTS (STUDENT_UID, PARTICIPANT_TYPE, PARTICIPANT_LASTNAME, " +
                 "PARTICIPANT_FIRSTNAME, PARTICIPANT_SEX, CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -47,7 +59,7 @@ public class ParticipantsDAO {
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         participant.setParticipantId(generatedKeys.getInt(1));
-                        System.out.println("✔ Participant created with ID: " + participant.getParticipantId());
+                        System.out.println("✔ New participant created with ID: " + participant.getParticipantId());
                     }
                 }
             } else {

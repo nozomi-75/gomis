@@ -23,7 +23,6 @@ public class IncidentDB_TEST {
             Incident newIncident = new Incident(); // Using the default constructor
             newIncident.setIncidentId(0); // Set a valid incidentId (0 or any valid int)
             newIncident.setParticipantId(1);
-            newIncident.setViolationId(1);
             newIncident.setIncidentDate(Timestamp.valueOf(LocalDateTime.now()));
             newIncident.setIncidentDescription("Description of incident");
             newIncident.setActionTaken("Action taken");

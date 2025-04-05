@@ -25,24 +25,21 @@ public class SchoolFormsReader {
 
     public List<List<String>> readSF1Data() {
         List<List<String>> records = new ArrayList<>();
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             int startRow = 19;
             int endMaleRow = findRow(sheet, startRow, "<=== TOTAL MALE");
             int startFemaleRow = endMaleRow + 1;
             int endFemaleRow = findRow(sheet, startFemaleRow, "<=== TOTAL FEMALE");
-            
-            int[][] columnRanges = {
-                {0, 1}, {2, 9}, {10, 10}, {11, 13}, {14, 15}, {16, 19}, {20, 24},
-                {25, 29}, {30, 31}, {32, 35}, {36, 40}, {41, 42}, {43, 46}, {47, 48},
-                {49, 50}, {51, 52}, {53, 60}
-            };
-            
-            String[] columnNames = {"LRN", "Name", "Sex", "Birth Date", "Age", "Religion", "Address",
-                "Barangay", "Municipality", "Province", "Father's Name", "Mother's Name",
-                "Guardian Name", "Relationship", "Contact Number", "Learning Modality", "Remarks"};
-            
+
+            int[][] columnRanges = { { 0, 1 }, { 2, 9 }, { 10, 10 }, { 11, 13 }, { 14, 15 }, { 16, 19 }, { 20, 24 },
+                    { 25, 29 }, { 30, 31 }, { 32, 35 }, { 36, 40 }, { 41, 42 }, { 43, 46 }, { 47, 48 }, { 49, 50 },
+                    { 51, 52 }, { 53, 60 } };
+
+            String[] columnNames = { "LRN", "Name", "Sex", "Birth Date", "Age", "Religion", "Address", "Barangay",
+                    "Municipality", "Province", "Father's Name", "Mother's Name", "Guardian Name", "Relationship",
+                    "Contact Number", "Learning Modality", "Remarks" };
+
             extractData(sheet, startRow, endMaleRow, columnRanges, columnNames, records);
             extractData(sheet, startFemaleRow, endFemaleRow, columnRanges, columnNames, records);
         } catch (IOException e) {
@@ -52,37 +49,71 @@ public class SchoolFormsReader {
         return records;
     }
 
-    private void extractData(Sheet sheet, int startRow, int endRow, int[][] columnRanges, 
-                           String[] columnNames, List<List<String>> records) {
+    private void extractData(Sheet sheet, int startRow, int endRow, int[][] columnRanges, String[] columnNames,
+            List<List<String>> records) {
         for (int rowIndex = startRow; rowIndex < endRow; rowIndex++) {
             Row row = sheet.getRow(rowIndex);
-            if (row == null) continue;
-            
+            if (row == null)
+                continue;
+
             List<String> record = new ArrayList<>();
-            
+
             // Handle LRN (first column)
             record.add(getCellValueAsString(row.getCell(columnRanges[0][0])));
-            
-            // Handle Name - split into Last, First, Middle
+
+            // Handle Name with better suffix detection
             String fullName = getMergedCellValue(row, columnRanges[1]);
             String[] nameParts = fullName.split(",", 2);
-            // Last name
-            record.add(nameParts[0].trim());
+
+            // Last name and suffix handling
+            String lastName = nameParts[0].trim();
+            String suffix = "";
+
+            // Enhanced suffix detection with common patterns
+            String[] suffixPatterns = { "JR\\.", "SR\\.", "Jr\\.", "Sr\\.", "II", "III", "IV", "V", "VI" };
+            for (String pattern : suffixPatterns) {
+                if (lastName.toUpperCase().endsWith(" " + pattern.toUpperCase())) {
+                    int lastSpaceIndex = lastName.lastIndexOf(" ");
+                    suffix = lastName.substring(lastSpaceIndex + 1);
+                    lastName = lastName.substring(0, lastSpaceIndex).trim();
+                    break;
+                }
+            }
+
+            record.add(lastName); // Last name
+
+            // Handle first name and middle name
             if (nameParts.length > 1) {
-                // Split first and middle name
-                String[] firstMiddle = nameParts[1].trim().split("\\s+", 2);
-                record.add(firstMiddle[0].trim()); // First name
-                record.add(firstMiddle.length > 1 ? firstMiddle[1].trim() : ""); // Middle name
+                String[] remainingParts = nameParts[1].trim().split("\\s+");
+                StringBuilder firstName = new StringBuilder();
+                String middleName = "";
+
+                // Check if there are enough parts for middle name
+                if (remainingParts.length > 0) {
+                    // Last part is middle name
+                    middleName = remainingParts[remainingParts.length - 1];
+                    
+                    // Everything else is first name
+                    for (int i = 0; i < remainingParts.length - 1; i++) {
+                        if (i > 0) firstName.append(" ");
+                        firstName.append(remainingParts[i]);
+                    }
+                }
+
+                record.add(firstName.toString().trim()); // First name
+                record.add(suffix); // Name Extension/Suffix
+                record.add(middleName); // Middle name
             } else {
                 record.add(""); // Empty first name
+                record.add(suffix); // Name Extension/Suffix
                 record.add(""); // Empty middle name
             }
-            
-            // Add remaining fields starting from Sex (index 2 in columnRanges)
+
+            // Add remaining fields starting from Sex
             for (int i = 2; i < columnRanges.length; i++) {
                 record.add(getMergedCellValue(row, columnRanges[i]));
             }
-            
+
             records.add(record);
         }
     }
@@ -115,12 +146,13 @@ public class SchoolFormsReader {
     }
 
     private String getCellValueAsString(Cell cell) {
-        if (cell == null) return "";
-        
+        if (cell == null)
+            return "";
+
         try {
             // Try to get the formatted value first
             String formattedValue = cell.toString().trim();
-            
+
             // For numeric cells, preserve the raw number format
             if (cell.getCellType() == CellType.NUMERIC) {
                 // Check if it's a date
@@ -135,7 +167,7 @@ public class SchoolFormsReader {
                     return String.valueOf(value); // Keep decimals if present
                 }
             }
-            
+
             return formattedValue;
         } catch (Exception e) {
             // Fallback to basic string conversion
@@ -147,15 +179,16 @@ public class SchoolFormsReader {
     private String findValueNextToLabel(Sheet sheet, String label) {
         for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
             Row row = sheet.getRow(rowIndex);
-            if (row == null) continue;
-            
+            if (row == null)
+                continue;
+
             for (int colIndex = 0; colIndex < row.getLastCellNum(); colIndex++) {
                 Cell cell = row.getCell(colIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 String cellValue = cell.toString().trim();
-                
+
                 if (cellValue.equalsIgnoreCase(label.trim())) {
                     int startValueCol = colIndex + 1;
-                    
+
                     // Check for merged regions containing the label
                     CellRangeAddress labelMergedRegion = getMergedRegion(sheet, rowIndex, colIndex);
                     if (labelMergedRegion != null) {
@@ -181,49 +214,51 @@ public class SchoolFormsReader {
 
     private String searchForValue(Sheet sheet, int rowIndex, int startCol) {
         Row row = sheet.getRow(rowIndex);
-        if (row == null) return "";
+        if (row == null)
+            return "";
 
         for (int col = startCol; col < Math.min(startCol + 5, row.getLastCellNum()); col++) {
             Cell valueCell = row.getCell(col, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-            
+
             // Check for merged regions
             CellRangeAddress mergedRegion = getMergedRegion(sheet, rowIndex, col);
             if (mergedRegion != null) {
-                valueCell = sheet.getRow(mergedRegion.getFirstRow())
-                    .getCell(mergedRegion.getFirstColumn(), Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                valueCell = sheet.getRow(mergedRegion.getFirstRow()).getCell(mergedRegion.getFirstColumn(),
+                        Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
             }
 
             // Convert cell value to string based on cell type
             String value = "";
             switch (valueCell.getCellType()) {
-                case STRING:
-                    value = valueCell.getStringCellValue();
-                    break;
-                case NUMERIC:
-                    if (DateUtil.isCellDateFormatted(valueCell)) {
-                        value = new SimpleDateFormat("MM/dd/yyyy").format(valueCell.getDateCellValue());
+            case STRING:
+                value = valueCell.getStringCellValue();
+                break;
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(valueCell)) {
+                    value = new SimpleDateFormat("MM/dd/yyyy").format(valueCell.getDateCellValue());
+                } else {
+                    // Format numeric values without scientific notation and unnecessary decimal
+                    // places
+                    double numericValue = valueCell.getNumericCellValue();
+                    if (numericValue == (long) numericValue) {
+                        value = String.format("%.0f", numericValue);
                     } else {
-                        // Format numeric values without scientific notation and unnecessary decimal places
-                        double numericValue = valueCell.getNumericCellValue();
-                        if (numericValue == (long) numericValue) {
-                            value = String.format("%.0f", numericValue);
-                        } else {
-                            value = String.valueOf(numericValue);
-                        }
+                        value = String.valueOf(numericValue);
                     }
-                    break;
-                case BOOLEAN:
-                    value = String.valueOf(valueCell.getBooleanCellValue());
-                    break;
-                case FORMULA:
-                    try {
-                        value = String.valueOf(valueCell.getNumericCellValue());
-                    } catch (Exception e) {
-                        value = valueCell.getStringCellValue();
-                    }
-                    break;
-                default:
-                    value = valueCell.toString();
+                }
+                break;
+            case BOOLEAN:
+                value = String.valueOf(valueCell.getBooleanCellValue());
+                break;
+            case FORMULA:
+                try {
+                    value = String.valueOf(valueCell.getNumericCellValue());
+                } catch (Exception e) {
+                    value = valueCell.getStringCellValue();
+                }
+                break;
+            default:
+                value = valueCell.toString();
             }
 
             value = value.trim();
@@ -246,8 +281,7 @@ public class SchoolFormsReader {
     }
 
     public String readSchoolName() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "School Name");
         } catch (IOException e) {
@@ -257,8 +291,7 @@ public class SchoolFormsReader {
     }
 
     public String readSemester() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "Semester");
         } catch (IOException e) {
@@ -268,8 +301,7 @@ public class SchoolFormsReader {
     }
 
     public String readSchoolID() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "School ID");
         } catch (IOException e) {
@@ -279,8 +311,7 @@ public class SchoolFormsReader {
     }
 
     public String readSchoolYear() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "School Year");
         } catch (IOException e) {
@@ -290,8 +321,7 @@ public class SchoolFormsReader {
     }
 
     public String readSection() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "Section");
         } catch (IOException e) {
@@ -301,8 +331,7 @@ public class SchoolFormsReader {
     }
 
     public String readCourse() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "Course (for TVL only)");
         } catch (IOException e) {
@@ -312,8 +341,7 @@ public class SchoolFormsReader {
     }
 
     public String readTrackAndStrand() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "Track and Strand");
         } catch (IOException e) {
@@ -323,8 +351,7 @@ public class SchoolFormsReader {
     }
 
     public String readGradeLevel() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "Grade Level");
         } catch (IOException e) {
@@ -334,8 +361,7 @@ public class SchoolFormsReader {
     }
 
     public String readDivision() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "Division");
         } catch (IOException e) {
@@ -345,8 +371,7 @@ public class SchoolFormsReader {
     }
 
     public String readRegion() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "Region");
         } catch (IOException e) {
@@ -356,8 +381,7 @@ public class SchoolFormsReader {
     }
 
     public String readDistrict() {
-        try (FileInputStream fis = new FileInputStream(excelFile);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
             return findValueNextToLabel(sheet, "District");
         } catch (IOException e) {

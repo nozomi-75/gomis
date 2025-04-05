@@ -1,5 +1,6 @@
 {
     "java.debug.settings.onBuildFailureProceed": true,
     "docwriter.hotkey.windows": "Alt + .",
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.format.settings.url": ".vscode/java-formatter.xml"
 }

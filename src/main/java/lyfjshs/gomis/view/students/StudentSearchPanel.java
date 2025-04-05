@@ -28,7 +28,13 @@ import lyfjshs.gomis.Database.entity.Student;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 import raven.modal.ModalDialog;
+import raven.modal.Toast;
+import raven.modal.toast.option.ToastDirection;
+import raven.modal.toast.option.ToastLocation;
+import raven.modal.toast.option.ToastOption;
 import raven.modal.component.Modal;
+
+import javax.swing.SwingUtilities;
 
 public abstract class StudentSearchPanel extends Modal {
     private JPanel advancedPanel;
@@ -138,8 +144,7 @@ public abstract class StudentSearchPanel extends Modal {
             if (!firstName.isEmpty() || !middleName.isEmpty() || !lastName.isEmpty()) {
                 searchByNameAndGender(firstName, middleName, lastName, sex);
             } else {
-                JOptionPane.showMessageDialog(StudentSearchPanel.this, "Please enter at least one name field",
-                        "Warning", JOptionPane.WARNING_MESSAGE);
+                showToast("Please enter at least one name field", Toast.Type.WARNING);
             }
         });
     }
@@ -190,30 +195,40 @@ public abstract class StudentSearchPanel extends Modal {
     private void searchByNameAndGender(String firstName, String middleName, String lastName, String sex) {
         StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
         try {
-            // Convert "Male"/"Female" to "M"/"F" for database query
-            String dbSex = sex.equals("Male") ? "M" : "F";
+            // First get results by first name, last name and gender
+            List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, sex);
             
-            List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, dbSex);
             panelResult.removeAll();
             resultPanels.clear();
 
-            if (!students.isEmpty()) {
-                for (Student student : students) {
-                    // Create result panel with full student info including LRN
-                    StudentResult resultPanel = new StudentResult(
-                        String.format("%s %s (%s)", 
+            if (students != null && !students.isEmpty()) {
+                // If middle name is provided, filter results
+                if (!middleName.isEmpty()) {
+                    students.removeIf(student -> 
+                        student.getStudentMiddlename() == null || 
+                        !student.getStudentMiddlename().toLowerCase().contains(middleName.toLowerCase()));
+                }
+
+                if (!students.isEmpty()) {
+                    for (Student student : students) {
+                        // Create result panel with full student info including middle name
+                        String displayName = String.format("%s %s %s",
                             student.getStudentFirstname(),
-                            student.getStudentLastname(),
-                            student.getStudentLrn() // Add LRN to display
-                        ),
-                        student.getStudentLrn()
-                    );
-                    setupResultPanel(student, resultPanel);
-                    panelResult.add(resultPanel);
+                            student.getStudentMiddlename() != null ? student.getStudentMiddlename() : "",
+                            student.getStudentLastname()
+                        ).replaceAll("\\s+", " ").trim();
+
+                        StudentResult resultPanel = new StudentResult(displayName, student.getStudentLrn());
+                        setupResultPanel(student, resultPanel);
+                        panelResult.add(resultPanel);
+                    }
+                } else {
+                    showToast("No students found ", Toast.Type.INFO);
                 }
             } else {
-                showNoResultsMessage("");
+                showToast("No students found matching the search criteria", Toast.Type.INFO);
             }
+            
             panelResult.revalidate();
             panelResult.repaint();
         } catch (SQLException e) {
@@ -225,15 +240,25 @@ public abstract class StudentSearchPanel extends Modal {
         String message = searchTerm.isEmpty() ? 
             "No students found" : 
             "No students found with LRN prefix: " + searchTerm;
-        JOptionPane.showMessageDialog(this, message, "Info", JOptionPane.INFORMATION_MESSAGE);
+        showToast(message, Toast.Type.INFO);
     }
 
     private void handleSearchError(SQLException e) {
         e.printStackTrace();
-        JOptionPane.showMessageDialog(this,
-            "Error searching students: " + e.getMessage(),
-            "Error",
-            JOptionPane.ERROR_MESSAGE);
+        showToast("Error searching students: " + e.getMessage(), Toast.Type.ERROR);
+    }
+    
+    private void showToast(String message, Toast.Type type) {
+        // Create toast option
+        ToastOption toastOption = Toast.createOption();
+        
+        // Set location and direction
+        toastOption.getLayoutOption()
+                .setMargin(0, 0, 50, 0)
+                .setDirection(ToastDirection.TOP_TO_BOTTOM);
+        
+        // Show toast
+        Toast.show(this, type, message, ToastLocation.BOTTOM_CENTER, toastOption);
     }
 
     // Add this method to clear all selections
@@ -267,9 +292,15 @@ public abstract class StudentSearchPanel extends Modal {
                 } else {
                     onStudentSelected(student);
                 }
-                // Close the modal properly using ModalDialog
+                // Close the modal properly using ModalDialog, with a small delay to ensure it exists
                 if (modalId != null) {
-                    ModalDialog.closeModal(modalId);
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            ModalDialog.closeModal(modalId);
+                        } catch (IllegalArgumentException e) {
+                            System.err.println("Warning: Could not close modal " + modalId + ": " + e.getMessage());
+                        }
+                    });
                 }
             }
         });

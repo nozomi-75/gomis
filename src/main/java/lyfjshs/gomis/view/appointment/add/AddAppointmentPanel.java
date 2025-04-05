@@ -301,8 +301,9 @@ public class AddAppointmentPanel extends Modal {
 				participant.setParticipantLastName(temp.getLastName());
 				participant.setSex(temp.getSex());
 				participant.setContactNumber(temp.getContactNumber());
-				// Save participant
-				participantsDAO.createParticipant(participant);
+				// Save participant and get the generated ID
+				int participantId = participantsDAO.createParticipant(participant);
+				participant.setParticipantId(participantId);
 				savedParticipants.add(participant);
 			}
 

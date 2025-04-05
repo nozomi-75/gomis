@@ -1,12 +1,17 @@
 package lyfjshs.gomis.components.table;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -29,6 +34,19 @@ public class GTable extends FlatTable {
     private int[] columnAlignments;
     private boolean hasCheckbox;
     private TableActionManager actionManager;
+    
+    // Pagination fields
+    private int pageSize = 10;
+    private int currentPage = 1;
+    private int totalRows = 0;
+    private List<Object[]> allData = new ArrayList<>();
+    private JPanel paginationPanel;
+    private JLabel pageInfoLabel;
+    private JButton prevPageButton;
+    private JButton nextPageButton;
+    private JButton firstPageButton;
+    private JButton lastPageButton;
+    private boolean paginationEnabled = false;
 
     public GTable(Object[][] data, String[] columnNames, Class<?>[] columnTypes,
             boolean[] editableColumns, double[] columnWidths, int[] alignments,
@@ -52,11 +70,22 @@ public class GTable extends FlatTable {
         this.columnProportions = columnWidths.clone();
         this.columnAlignments = alignments.clone();
         this.actionManager = actionManager;
+        
+        // Store all data for pagination
+        if (data != null) {
+            for (Object[] row : data) {
+                allData.add(row);
+            }
+            totalRows = allData.size();
+        }
 
         configureTable();
         applyColumnWidths();
         applyColumnAlignments();
         updateRowHeightFromSettings();
+        
+        // Create pagination panel
+        createPaginationPanel();
 
         // Add listener to update column widths on parent resize
         addComponentListener(new ComponentAdapter() {
@@ -65,6 +94,248 @@ public class GTable extends FlatTable {
                 applyColumnWidths();
             }
         });
+    }
+    
+    /**
+     * Creates the pagination panel with navigation buttons and page info
+     */
+    private void createPaginationPanel() {
+        paginationPanel = new JPanel(new BorderLayout());
+        
+        // Create navigation buttons
+        firstPageButton = new JButton("<<");
+        prevPageButton = new JButton("<");
+        nextPageButton = new JButton(">");
+        lastPageButton = new JButton(">>");
+        pageInfoLabel = new JLabel("Page 1 of 1");
+        
+        // Add action listeners
+        firstPageButton.addActionListener(e -> goToFirstPage());
+        prevPageButton.addActionListener(e -> goToPreviousPage());
+        nextPageButton.addActionListener(e -> goToNextPage());
+        lastPageButton.addActionListener(e -> goToLastPage());
+        
+        // Add buttons to panel
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(firstPageButton);
+        buttonPanel.add(prevPageButton);
+        buttonPanel.add(pageInfoLabel);
+        buttonPanel.add(nextPageButton);
+        buttonPanel.add(lastPageButton);
+        
+        paginationPanel.add(buttonPanel, BorderLayout.CENTER);
+        
+        // Initially hide pagination panel
+        paginationPanel.setVisible(false);
+    }
+    
+    /**
+     * Enables or disables pagination
+     * @param enabled Whether pagination should be enabled
+     * @param pageSize Number of rows per page (if enabled)
+     */
+    public void setPaginationEnabled(boolean enabled, int pageSize) {
+        this.paginationEnabled = enabled;
+        this.pageSize = pageSize;
+        
+        if (enabled) {
+            paginationPanel.setVisible(true);
+            updatePagination();
+            displayCurrentPage();
+        } else {
+            paginationPanel.setVisible(false);
+            displayAllData();
+        }
+    }
+    
+    /**
+     * Gets the pagination panel to be added to the parent component
+     * @return The pagination panel
+     */
+    public JPanel getPaginationPanel() {
+        return paginationPanel;
+    }
+    
+    /**
+     * Updates the pagination controls based on current state
+     */
+    private void updatePagination() {
+        int totalPages = (int) Math.ceil((double) totalRows / pageSize);
+        
+        // Update page info
+        pageInfoLabel.setText("Page " + currentPage + " of " + totalPages);
+        
+        // Enable/disable buttons based on current page
+        firstPageButton.setEnabled(currentPage > 1);
+        prevPageButton.setEnabled(currentPage > 1);
+        nextPageButton.setEnabled(currentPage < totalPages);
+        lastPageButton.setEnabled(currentPage < totalPages);
+    }
+    
+    /**
+     * Displays the current page of data
+     */
+    private void displayCurrentPage() {
+        DefaultTableModel model = (DefaultTableModel) getModel();
+        model.setRowCount(0);
+        
+        int startIndex = (currentPage - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, totalRows);
+        
+        for (int i = startIndex; i < endIndex; i++) {
+            model.addRow(allData.get(i));
+        }
+    }
+    
+    /**
+     * Displays all data without pagination
+     */
+    private void displayAllData() {
+        DefaultTableModel model = (DefaultTableModel) getModel();
+        model.setRowCount(0);
+        
+        for (Object[] row : allData) {
+            model.addRow(row);
+        }
+    }
+    
+    /**
+     * Sets the data for the table and updates pagination if enabled
+     * @param data The new data to display
+     */
+    public void setData(Object[][] data) {
+        allData.clear();
+        if (data != null) {
+            for (Object[] row : data) {
+                allData.add(row);
+            }
+        }
+        totalRows = allData.size();
+        
+        if (paginationEnabled) {
+            currentPage = 1;
+            updatePagination();
+            displayCurrentPage();
+        } else {
+            displayAllData();
+        }
+    }
+    
+    /**
+     * Adds a row to the table data
+     * @param rowData The row data to add
+     */
+    public void addRow(Object[] rowData) {
+        allData.add(rowData);
+        totalRows = allData.size();
+        
+        if (paginationEnabled) {
+            updatePagination();
+            displayCurrentPage();
+        } else {
+            DefaultTableModel model = (DefaultTableModel) getModel();
+            model.addRow(rowData);
+        }
+    }
+    
+    /**
+     * Clears all data from the table
+     */
+    public void clearData() {
+        allData.clear();
+        totalRows = 0;
+        
+        if (paginationEnabled) {
+            currentPage = 1;
+            updatePagination();
+            displayCurrentPage();
+        } else {
+            DefaultTableModel model = (DefaultTableModel) getModel();
+            model.setRowCount(0);
+        }
+    }
+    
+    /**
+     * Navigates to the first page
+     */
+    private void goToFirstPage() {
+        if (currentPage > 1) {
+            currentPage = 1;
+            updatePagination();
+            displayCurrentPage();
+        }
+    }
+    
+    /**
+     * Navigates to the previous page
+     */
+    private void goToPreviousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePagination();
+            displayCurrentPage();
+        }
+    }
+    
+    /**
+     * Navigates to the next page
+     */
+    private void goToNextPage() {
+        int totalPages = (int) Math.ceil((double) totalRows / pageSize);
+        if (currentPage < totalPages) {
+            currentPage++;
+            updatePagination();
+            displayCurrentPage();
+        }
+    }
+    
+    /**
+     * Navigates to the last page
+     */
+    private void goToLastPage() {
+        int totalPages = (int) Math.ceil((double) totalRows / pageSize);
+        if (currentPage < totalPages) {
+            currentPage = totalPages;
+            updatePagination();
+            displayCurrentPage();
+        }
+    }
+    
+    /**
+     * Gets the current page size
+     * @return The number of rows per page
+     */
+    public int getPageSize() {
+        return pageSize;
+    }
+    
+    /**
+     * Sets the page size
+     * @param pageSize The new page size
+     */
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+        if (paginationEnabled) {
+            currentPage = 1;
+            updatePagination();
+            displayCurrentPage();
+        }
+    }
+    
+    /**
+     * Gets the current page number
+     * @return The current page number
+     */
+    public int getCurrentPage() {
+        return currentPage;
+    }
+    
+    /**
+     * Gets the total number of rows
+     * @return The total number of rows
+     */
+    public int getTotalRows() {
+        return totalRows;
     }
 
     @Override

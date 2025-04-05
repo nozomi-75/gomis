@@ -10,12 +10,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -53,8 +50,6 @@ public class StudentInfoFullForm extends Form {
     private Connection connection;
     private JScrollPane scrollPane;
     private JPanel panel_1;
-    private int studentUid;
-    private Map<Integer, Map<String, String>> participantDetails = new HashMap<>();
 
     public StudentInfoFullForm(Connection conn) {
         this.connection = conn;
@@ -561,34 +556,4 @@ public class StudentInfoFullForm extends Form {
         courseField.setText("");
     }
 
-    private void showViolationDetails(int participantId) {
-        Map<String, String> details = participantDetails.get(participantId);
-        if (details == null) {
-            JOptionPane.showMessageDialog(this, "Participant details not found", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        JDialog detailDialog = new JDialog((java.awt.Frame)this.getTopLevelAncestor(), "Participant Details", false);
-        detailDialog.setLayout(new MigLayout("wrap 2, fillx, insets 10", "[][grow]", "[]10[]10[]10[]"));
-
-        detailDialog.add(new JLabel("Full Name:"), "cell 0 0");
-        detailDialog.add(new JLabel(details.get("fullName")), "cell 1 0");
-        detailDialog.add(new JLabel("Contact Number:"), "cell 0 1");
-        detailDialog.add(new JLabel(details.get("contact")), "cell 1 1");
-        detailDialog.add(new JLabel("Type:"), "cell 0 2");
-        detailDialog.add(new JLabel(details.get("type")), "cell 1 2");
-
-        // Add close button
-        JButton closeButton = new JButton("Close");
-        closeButton.addActionListener(e -> detailDialog.dispose());
-        detailDialog.add(closeButton, "cell 0 3 2 1, alignx center");
-
-        detailDialog.pack();
-        detailDialog.setLocationRelativeTo(this);
-        detailDialog.setVisible(true);
-    }
-
-    public void setStudentUid(int studentUid) {
-        this.studentUid = studentUid;
-    }
 }

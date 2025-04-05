@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
@@ -123,6 +124,31 @@ public class GuidanceCounselorDAO {
         }
         return false;
         }
+
+    // Method to get all guidance counselors
+    public List<GuidanceCounselor> getAllGuidanceCounselors() throws SQLException {
+        List<GuidanceCounselor> counselors = new ArrayList<>();
+        String sql = "SELECT * FROM GUIDANCE_COUNSELORS ORDER BY LAST_NAME, FIRST_NAME";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                counselors.add(new GuidanceCounselor(
+                    rs.getInt("GUIDANCE_COUNSELOR_ID"),
+                    rs.getString("LAST_NAME"),
+                    rs.getString("FIRST_NAME"),
+                    rs.getString("MIDDLE_NAME"),
+                    rs.getString("SUFFIX"),
+                    rs.getString("GENDER"),
+                    rs.getString("SPECIALIZATION"),
+                    rs.getString("CONTACT_NUM"),
+                    rs.getString("EMAIL"),
+                    rs.getString("POSITION"),
+                    rs.getBytes("PROFILE_PICTURE")
+                ));
+            }
+        }
+        return counselors;
+    }
 
     // Error Handling Method
     private void handleSQLException(SQLException e, String operation) {

@@ -162,8 +162,4 @@ public class Incident {
 		this.student = student;
 	}
 
-    public void setViolationId(int i) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setViolationId'");
-    }
 }

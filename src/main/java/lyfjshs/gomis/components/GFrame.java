@@ -99,9 +99,6 @@ public class GFrame extends JFrame implements FlatStyleableComponent, Notificati
 		System.setProperty("flatlaf.menuBarEmbedded", "true");
 		System.setProperty("flatlaf.useWindowDecorations", "true");
 
-		// Ensure frame is packed before applying settings
-		pack();
-
 		// Now apply settings after frame is fully initialized
 		SwingUtilities.invokeLater(() -> {
 			try {

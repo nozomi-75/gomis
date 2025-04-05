@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "SessionSearchPanel",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.sessions.SessionSearchPanel",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "NativeNotificationExample",
             "request": "launch",
             "mainClass": "lyfjshs.gomis.components.notification.NativeNotificationExample",

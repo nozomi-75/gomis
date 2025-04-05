@@ -86,10 +86,11 @@ public class SessionFullData extends Form {
 	private JButton endSessionBtn;
 	private final Sessions sessionData;
 
-	public SessionFullData(Sessions sessionData, GuidanceCounselor counselor, List<Participants> participants, Connection conn) {
+	public SessionFullData(Sessions sessionData, GuidanceCounselor counselor, List<Participants> participants,
+			Connection conn) {
 		this.sessionData = sessionData;
 		this.conn = conn;
-		
+
 		// Panel setup
 		setLayout(new MigLayout("fill, insets 30", "[grow]", "[][][][][][]"));
 		setBackground(CONTAINER_BG);
@@ -122,12 +123,13 @@ public class SessionFullData extends Form {
 		sessionGrid.setBackground(CONTAINER_BG);
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		String sessionDateTime = sessionData.getSessionDateTime() != null ? 
-			sessionData.getSessionDateTime().toLocalDateTime().format(formatter) : "N/A";
-		String updatedAt = sessionData.getUpdatedAt() != null ? 
-			sessionData.getUpdatedAt().toLocalDateTime().format(formatter) : "N/A";
-		String counselorName = counselor != null ? 
-			counselor.getFirstName() + " " + counselor.getLastName() : "N/A";
+		String sessionDateTime = sessionData.getSessionDateTime() != null
+				? sessionData.getSessionDateTime().toLocalDateTime().format(formatter)
+				: "N/A";
+		String updatedAt = sessionData.getUpdatedAt() != null
+				? sessionData.getUpdatedAt().toLocalDateTime().format(formatter)
+				: "N/A";
+		String counselorName = counselor != null ? counselor.getFirstName() + " " + counselor.getLastName() : "N/A";
 
 		// Add all session data in a grid layout
 		sessionGrid.add(createSessionCard("SESSION DATE/TIME", sessionDateTime), "grow");
@@ -217,16 +219,11 @@ public class SessionFullData extends Form {
 	}
 
 	private JScrollPane createParticipantsTable(List<Participants> participants) {
-		String[] columnNames = {"#", "Participant Name", "Participant Type", "Actions"};
-		Class<?>[] columnTypes = {Integer.class, String.class, String.class, Object.class};
-		boolean[] editableColumns = {false, false, false, true};
-		double[] columnWidths = {0.1, 0.4, 0.3, 0.2};
-		int[] alignments = {
-			SwingConstants.CENTER,
-			SwingConstants.LEFT,
-			SwingConstants.LEFT,
-			SwingConstants.CENTER
-		};
+		String[] columnNames = { "#", "Participant Name", "Participant Type", "Actions" };
+		Class<?>[] columnTypes = { Integer.class, String.class, String.class, Object.class };
+		boolean[] editableColumns = { false, false, false, true };
+		double[] columnWidths = { 0.1, 0.4, 0.3, 0.2 };
+		int[] alignments = { SwingConstants.CENTER, SwingConstants.LEFT, SwingConstants.LEFT, SwingConstants.CENTER };
 
 		// Create initial data array
 		Object[][] initialData = new Object[0][4];
@@ -235,34 +232,21 @@ public class SessionFullData extends Form {
 			for (int i = 0; i < participants.size(); i++) {
 				Participants participant = participants.get(i);
 				String fullName = participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
-				initialData[i] = new Object[]{
-					i + 1,
-					fullName,
-					participant.getParticipantType(),
-					"Actions"
-				};
+				initialData[i] = new Object[] { i + 1, fullName, participant.getParticipantType(), "Actions" };
 			}
 		}
 
 		// Create action manager
 		TableActionManager actionManager = new DefaultTableActionManager();
-		((DefaultTableActionManager)actionManager).addAction("View", (table, row) -> {
+		((DefaultTableActionManager) actionManager).addAction("View", (table, row) -> {
 			String fullName = (String) table.getValueAt(row, 1);
 			String type = (String) table.getValueAt(row, 2);
 			showParticipantDetailsDialog(fullName, type);
 		}, new Color(0x518b6f), new FlatSVGIcon("icons/view.svg", 0.5f));
 
 		// Create GTable with proper parameters
-		participantsTable = new GTable(
-			initialData,
-			columnNames,
-			columnTypes,
-			editableColumns,
-			columnWidths,
-			alignments,
-			false,
-			actionManager
-		);
+		participantsTable = new GTable(initialData, columnNames, columnTypes, editableColumns, columnWidths, alignments,
+				false, actionManager);
 
 		participantsTable.setRowHeight(40);
 		participantsTable.getTableHeader().setBackground(TABLE_HEADER_BG);
@@ -293,7 +277,7 @@ public class SessionFullData extends Form {
 		violationsSection.setBorder(BorderFactory.createTitledBorder("Violations"));
 
 		// Create table for violations
-		String[] columnNames = {"Violation Type", "Description", "Status", "Date"};
+		String[] columnNames = { "Violation Type", "Description", "Status", "Date" };
 		DefaultTableModel violationsModel = new DefaultTableModel(columnNames, 0) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
@@ -312,14 +296,11 @@ public class SessionFullData extends Form {
 		try {
 			ViolationDAO violationDAO = new ViolationDAO(conn);
 			List<Violation> violations = violationDAO.getViolationsByParticipantName(fullName);
-			
+
 			for (Violation violation : violations) {
-				violationsModel.addRow(new Object[] {
-					violation.getViolationType(),
-					violation.getViolationDescription(),
-					violation.getStatus(),
-					violation.getUpdatedAt().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-				});
+				violationsModel.addRow(new Object[] { violation.getViolationType(), violation.getViolationDescription(),
+						violation.getStatus(), violation.getUpdatedAt().toLocalDateTime()
+								.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) });
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "Error fetching violations", e);
@@ -331,17 +312,16 @@ public class SessionFullData extends Form {
 		modalContent.add(violationsSection, "growx, wrap");
 
 		// Show modal using ModalDialog
-		ModalDialog.showModal(
-			SwingUtilities.getWindowAncestor(this),
-			new SimpleModalBorder(modalContent, "Participant Details", new SimpleModalBorder.Option[] {
-				new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
-			}, (controller, action) -> {
-				if (action == SimpleModalBorder.CLOSE_OPTION) {
-					controller.close();
-				}
-			}),
-			"input"
-		);
+		ModalDialog.showModal(SwingUtilities.getWindowAncestor(this),
+				new SimpleModalBorder(modalContent, "Participant Details",
+						new SimpleModalBorder.Option[] {
+								new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION) },
+						(controller, action) -> {
+							if (action == SimpleModalBorder.CLOSE_OPTION) {
+								controller.close();
+							}
+						}),
+				"input");
 		ModalDialog.getDefaultOption().getLayoutOption().setSize(800, 600);
 	}
 
@@ -391,16 +371,16 @@ public class SessionFullData extends Form {
 			// Get all participants from the table
 			DefaultTableModel model = (DefaultTableModel) participantsTable.getModel();
 			List<Participants> participants = new ArrayList<>();
-			
+
 			for (int i = 0; i < model.getRowCount(); i++) {
 				String fullName = (String) model.getValueAt(i, 1);
 				String type = (String) model.getValueAt(i, 2);
-				
+
 				// Split full name into first and last name
 				String[] nameParts = fullName.split(" ", 2);
 				String firstName = nameParts[0];
 				String lastName = nameParts.length > 1 ? nameParts[1] : "";
-				
+
 				Participants participant = new Participants();
 				participant.setParticipantFirstName(firstName);
 				participant.setParticipantLastName(lastName);
@@ -412,12 +392,10 @@ public class SessionFullData extends Form {
 			IncidentFillUpForm incidentForm = new IncidentFillUpForm(conn);
 			incidentForm.populateFromSession(sessionData, participants);
 			FormManager.showForm(incidentForm);
-			
+
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, 
-				"Error creating incident report: " + e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Error creating incident report: " + e.getMessage(), "Error",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -441,19 +419,15 @@ public class SessionFullData extends Form {
 			FormManager.showForm(sessionsForm);
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "Error opening edit form", e);
-			JOptionPane.showMessageDialog(this, 
-				"Error opening edit form: " + e.getMessage(), 
-				"Error", 
-				JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Error opening edit form: " + e.getMessage(), "Error",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
 	private void endSession() {
 		int confirm = JOptionPane.showConfirmDialog(this,
-			"Are you sure you want to end this session? This action cannot be undone.",
-			"Confirm End Session",
-			JOptionPane.YES_NO_OPTION,
-			JOptionPane.WARNING_MESSAGE);
+				"Are you sure you want to end this session? This action cannot be undone.", "Confirm End Session",
+				JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
 		if (confirm == JOptionPane.YES_OPTION) {
 			try {
@@ -461,19 +435,15 @@ public class SessionFullData extends Form {
 				SessionsDAO sessionsDAO = new SessionsDAO(conn);
 				sessionsDAO.updateSession(sessionData);
 
-				JOptionPane.showMessageDialog(this, 
-					"Session has been ended successfully.", 
-					"Success", 
-					JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(this, "Session has been ended successfully.", "Success",
+						JOptionPane.INFORMATION_MESSAGE);
 
 				// Update the view
 				updateSessionView(sessionData);
 			} catch (SQLException e) {
 				LOGGER.log(Level.SEVERE, "Error ending session", e);
-				JOptionPane.showMessageDialog(this, 
-					"Error ending session: " + e.getMessage(), 
-					"Error", 
-					JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this, "Error ending session: " + e.getMessage(), "Error",
+						JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
@@ -481,7 +451,8 @@ public class SessionFullData extends Form {
 	private void updateSessionView(Sessions updatedSession) {
 		// Update the session data
 		this.sessionData.setSessionStatus(updatedSession.getSessionStatus());
-		this.sessionData.setSessionSummary(updatedSession.getSessionSummary() != null ? updatedSession.getSessionSummary() : "");
+		this.sessionData.setSessionSummary(
+				updatedSession.getSessionSummary() != null ? updatedSession.getSessionSummary() : "");
 		this.sessionData.setSessionNotes(updatedSession.getSessionNotes());
 		this.sessionData.setAppointmentType(updatedSession.getAppointmentType());
 		this.sessionData.setConsultationType(updatedSession.getConsultationType());
@@ -535,10 +506,9 @@ public class SessionFullData extends Form {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d'th' 'day of' MMMM, yyyy");
 			String formattedDate = LocalDateTime.now().format(formatter);
 			JOptionPane.showMessageDialog(this,
-					"Printing Session Report for Session Date/Time: " + 
-					(sessionData.getSessionDateTime() != null ? 
-						sessionData.getSessionDateTime().toLocalDateTime().format(formatter) : "N/A") + 
-					" on " + formattedDate);
+					"Printing Session Report for Session Date/Time: " + (sessionData.getSessionDateTime() != null
+							? sessionData.getSessionDateTime().toLocalDateTime().format(formatter)
+							: "N/A") + " on " + formattedDate);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Failed to print session report: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
