@@ -453,19 +453,66 @@ public class SFtoDB extends JFrame {
             @Override
             protected Void doInBackground() throws Exception {
                 publish(new ProgressUpdate("Starting database save...", 0));
-                int sfId = saveSchoolForm();
+                int sfId = -1;
                 
+                try {
+                    System.out.println("==== STARTING DATABASE SAVE ====");
+                    System.out.println("School Name: " + schoolNameField.getText());
+                    System.out.println("School ID: " + schoolIDField.getText());
+                    System.out.println("Total Students: " + model.getRowCount());
+                    
+                    // First, save the school form
+                    sfId = saveSchoolForm();
+                    System.out.println("Created school form with ID: " + sfId);
+                    
+                    if (sfId <= 0) {
+                        throw new SQLException("Invalid school form ID returned: " + sfId);
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Error saving school form: " + e.getMessage());
+                    e.printStackTrace();
+                    publish(new ProgressUpdate("Failed to save school form: " + e.getMessage(), 0));
+                    throw e;
+                }
+                
+                // Now save each student
                 int totalRows = model.getRowCount();
+                int successCount = 0;
+                int failCount = 0;
+                
                 for (int i = 0; i < totalRows; i++) {
-                    if (isCancelled()) break;
+                    if (isCancelled()) {
+                        System.out.println("Operation cancelled by user");
+                        break;
+                    }
                     
                     publish(new ProgressUpdate(
                         "Saving student " + (i + 1) + " of " + totalRows,
                         (i + 1) * 100 / totalRows
                     ));
-                    saveStudentData(i, sfId);
+                    
+                    try {
+                        System.out.println("Saving student " + (i + 1) + " of " + totalRows);
+                        Map<String, String> rowData = cleanRowData(i);
+                        System.out.println("  LRN: " + rowData.get("lrn"));
+                        System.out.println("  Name: " + rowData.get("firstName") + " " + rowData.get("lastName"));
+                        
+                        saveStudentData(i, sfId);
+                        successCount++;
+                    } catch (SQLException e) {
+                        failCount++;
+                        System.err.println("Error saving student #" + (i+1) + ": " + e.getMessage());
+                        System.err.println("  Continuing with next student...");
+                        // Continue with next student instead of failing the entire batch
+                    }
                     Thread.sleep(50);
                 }
+                
+                System.out.println("==== DATABASE SAVE COMPLETED ====");
+                System.out.println("Total students: " + totalRows);
+                System.out.println("Successfully saved: " + successCount);
+                System.out.println("Failed to save: " + failCount);
+                
                 return null;
             }
 
@@ -495,7 +542,23 @@ public class SFtoDB extends JFrame {
     private void saveStudentData(int rowIndex, int sfId) throws SQLException {
         Map<String, String> rowData = cleanRowData(rowIndex);
         
+        if (sfId <= 0) {
+            throw new SQLException("Invalid school form ID: " + sfId);
+        }
+        
+        // Validate required fields
+        if (rowData.get("lrn") == null || rowData.get("lrn").trim().isEmpty()) {
+            throw new SQLException("LRN is required but was empty for row " + rowIndex);
+        }
+        
+        if (rowData.get("firstName") == null || rowData.get("firstName").trim().isEmpty() ||
+            rowData.get("lastName") == null || rowData.get("lastName").trim().isEmpty()) {
+            throw new SQLException("First name and last name are required but were empty for row " + rowIndex);
+        }
+        
         try {
+            System.out.println("Creating related entities for student in row " + rowIndex);
+            
             // Create entities using the DAO pattern
             Address address = new Address(
                 0,
@@ -532,12 +595,16 @@ public class SFtoDB extends JFrame {
             );
 
             // Create records using DAOs first to get the IDs
+            System.out.println("Saving address, contact, parents, and guardian records");
             int addressId = addressDAO.createAddress(address);
             int contactId = contactDAO.createContact(contact);
             int parentId = parentsDAO.createParents(parents);
             int guardianId = guardianDAO.createGuardian(guardian);
 
-            // Create SchoolForm object for the student
+            // Debug log to show the sfId value
+            System.out.println("Using School Form ID: " + sfId + " for student in row " + rowIndex);
+            
+            // Create SchoolForm object for the student - use full constructor
             SchoolForm schoolForm = new SchoolForm(
                 sfId,
                 schoolNameField.getText(),
@@ -552,7 +619,7 @@ public class SFtoDB extends JFrame {
                 trackStrandField.getText(),
                 courseField.getText()
             );
-
+            
             // Create Student using the full constructor
             Student student = new Student(
                 0, // studentUid will be generated
@@ -560,7 +627,7 @@ public class SFtoDB extends JFrame {
                 guardianId,
                 addressId,
                 contactId,
-                sectionField.getText(), // schoolSection
+                sectionField.getText(), // school section
                 rowData.get("lrn"),
                 rowData.get("lastName"),
                 rowData.get("firstName"),
@@ -578,11 +645,27 @@ public class SFtoDB extends JFrame {
                 schoolForm
             );
             
+            // Explicitly set the SF_ID for database insertion
+            student.setSF_ID(sfId);
+            System.out.println("Student object created with SF_ID=" + student.getSF_ID());
+            
             // Save the student record
-            studentsDAO.createStudentData(student);
+            System.out.println("Calling createStudentData for student in row " + rowIndex);
+            boolean success = studentsDAO.createStudentData(student);
+            
+            if (!success) {
+                throw new SQLException("Failed to save student record - database operation returned false");
+            }
+            
+            System.out.println("Successfully saved student in row " + rowIndex + " with LRN " + rowData.get("lrn"));
             
         } catch (SQLException e) {
+            System.err.println("Error during createStudentData for row " + rowIndex + ": " + e.getMessage());
             throw new SQLException("Error saving student data: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unexpected error saving student in row " + rowIndex + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new SQLException("Unexpected error: " + e.getMessage());
         }
     }
 
@@ -624,7 +707,14 @@ public class SFtoDB extends JFrame {
             courseField.getText()
         );
 
-        return schoolFormDAO.createSchoolForm(schoolForm);
+        int sfId = schoolFormDAO.createSchoolForm(schoolForm);
+        
+        if (sfId <= 0) {
+            throw new SQLException("Failed to create school form record - invalid ID returned: " + sfId);
+        }
+        
+        System.out.println("Successfully created school form with ID: " + sfId);
+        return sfId;
     }
 
     private Map<String, String> parseName(String fullName) {

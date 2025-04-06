@@ -2,20 +2,18 @@ package lyfjshs.gomis.view.students;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -26,23 +24,19 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Student;
 import net.miginfocom.swing.MigLayout;
-import raven.datetime.DatePicker;
 import raven.modal.ModalDialog;
 import raven.modal.Toast;
+import raven.modal.component.Modal;
 import raven.modal.toast.option.ToastDirection;
 import raven.modal.toast.option.ToastLocation;
 import raven.modal.toast.option.ToastOption;
-import raven.modal.component.Modal;
-
-import javax.swing.SwingUtilities;
 
 public abstract class StudentSearchPanel extends Modal {
     private JPanel advancedPanel;
     private JTextField firstNameField = new JTextField(20);
     private JTextField middleNameField = new JTextField(20);
     private JTextField lastNameField = new JTextField(20);
-    private JFormattedTextField dobField;
-    private DatePicker datePicker;
+    private JTextField ageField = new JTextField(5);
     protected final Connection connection;
     private JPanel panelResult;
     private Student selectedStudent; 
@@ -90,19 +84,16 @@ public abstract class StudentSearchPanel extends Modal {
         advancedPanel.add(new JLabel("Gender:"), "flowx,cell 3 0");
         advancedPanel.add(new JLabel("Middle Name:"), "cell 0 1");
         advancedPanel.add(middleNameField, "cell 1 1");
-        advancedPanel.add(new JLabel("Date of Birth:"), "flowx,cell 3 1");
+        advancedPanel.add(new JLabel("Age:"), "flowx,cell 3 1");
         advancedPanel.add(new JLabel("Last Name:"), "cell 0 2");
         advancedPanel.add(lastNameField, "cell 1 2");
 
-        datePicker = new DatePicker();
         add(advancedPanel, "cell 0 1 2 1,alignx center,growy");
         JComboBox<String> genderBox = new JComboBox<>(new String[] { "Male", "Female" });
         advancedPanel.add(genderBox, "cell 3 0");
 
-        dobField = new JFormattedTextField(new SimpleDateFormat("yyyy-MM-dd"));
-        dobField.setColumns(10);
-        datePicker.setEditor(dobField);
-        advancedPanel.add(dobField, "cell 3 1");
+        // Add age field
+        advancedPanel.add(ageField, "cell 3 1");
 
         JButton searchByNameButton = new JButton("Search by Name and Gender");
         advancedPanel.add(searchByNameButton, "cell 3 2");
@@ -141,8 +132,9 @@ public abstract class StudentSearchPanel extends Modal {
             String middleName = middleNameField.getText().trim();
             String lastName = lastNameField.getText().trim();
             String sex = (String) genderBox.getSelectedItem();
+            String age = ageField.getText().trim();
             if (!firstName.isEmpty() || !middleName.isEmpty() || !lastName.isEmpty()) {
-                searchByNameAndGender(firstName, middleName, lastName, sex);
+                searchByNameAndGender(firstName, middleName, lastName, sex, age);
             } else {
                 showToast("Please enter at least one name field", Toast.Type.WARNING);
             }
@@ -192,7 +184,7 @@ public abstract class StudentSearchPanel extends Modal {
         }
     }
 
-    private void searchByNameAndGender(String firstName, String middleName, String lastName, String sex) {
+    private void searchByNameAndGender(String firstName, String middleName, String lastName, String sex, String age) {
         StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
         try {
             // First get results by first name, last name and gender
@@ -207,6 +199,19 @@ public abstract class StudentSearchPanel extends Modal {
                     students.removeIf(student -> 
                         student.getStudentMiddlename() == null || 
                         !student.getStudentMiddlename().toLowerCase().contains(middleName.toLowerCase()));
+                }
+                
+                // If age is provided, filter results
+                if (!age.isEmpty()) {
+                    try {
+                        int searchAge = Integer.parseInt(age);
+                        students.removeIf(student -> {
+                            Integer studentAge = student.getStudentAge();
+                            return studentAge == null || studentAge != searchAge;
+                        });
+                    } catch (NumberFormatException e) {
+                        showToast("Please enter a valid age number", Toast.Type.WARNING);
+                    }
                 }
 
                 if (!students.isEmpty()) {

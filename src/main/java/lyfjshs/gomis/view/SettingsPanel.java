@@ -10,7 +10,10 @@ import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeListener;
 
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.components.FlatToggleSwitch;
@@ -22,9 +25,12 @@ import net.miginfocom.swing.MigLayout;
 @SuppressWarnings("unused")
 public class SettingsPanel extends Form {
 	private final FlatToggleSwitch notificationsToggle = new FlatToggleSwitch();
+	private final FlatToggleSwitch notifyOnMissedToggle = new FlatToggleSwitch();
+	private final FlatToggleSwitch notifyOnStartToggle = new FlatToggleSwitch();
 	private JComboBox<Integer> fontSizeComboBox;
 	private JComboBox<String> fontComboBox;
 	private JComboBox<String> themeComboBox;
+	private JSpinner notificationTimeSpinner;
 	private final Map<String, String> themeMap = Map.of("Dark Theme", "FlatDarkLaf", "Light Theme", "FlatLightLaf",
 			"Mac Dark Theme", "FlatMacDarkLaf", "Mac Light Theme", "FlatMacLightLaf", "Darcula Theme", "FlatDarculaLaf",
 			"IntelliJ Theme", "FlatIntelliJLaf");
@@ -38,7 +44,7 @@ public class SettingsPanel extends Form {
 		// Main Panel
 		JPanel panel = new JPanel(new MigLayout("", "[grow]", "[][][][][]"));
 		panel.setBorder(BorderFactory.createTitledBorder("Theme & Appearance"));
-		this.add(panel, "cell 0 0,grow");
+		this.add(panel, "cell 0 0, grow, wrap");
 
 		// Dark Mode Panel
 		JPanel darkModePanel = new JPanel(new MigLayout("fill", "[grow][]", "[][]"));
@@ -76,12 +82,95 @@ public class SettingsPanel extends Form {
 
 		// Initialize remaining components
 		initializeRemainingComponents(panel);
+		
+		// Add appointment notification settings panel
+		addAppointmentNotificationSettings(panel);
 
 		// Initialize settings and listeners
 		removeAllListeners();
 		updateUIComponents(Main.settings.getSettingsState());
 		SettingsManager.addSettingsListener(this::updateUIComponents);
 		addComponentListeners();
+	}
+
+	private void addAppointmentNotificationSettings(JPanel panel) {
+		// Appointment notifications panel
+		JPanel appointmentNotificationsPanel = new JPanel(new MigLayout("fill", "[grow]", "[]10[]10[]"));
+		appointmentNotificationsPanel.putClientProperty("FlatLaf.style", 
+			"arc:20; [light]background:shade($Panel.background,10%); [dark]background:tint($Panel.background,10%)");
+		appointmentNotificationsPanel.setBorder(BorderFactory.createTitledBorder("Appointment Notifications"));
+		panel.add(appointmentNotificationsPanel, "cell 0 4, growx");
+		
+		// Notification time settings
+		JPanel notificationTimePanel = new JPanel(new MigLayout("fill", "[grow][]", "[][]"));
+		notificationTimePanel.setOpaque(false);
+		
+		JLabel lblNotificationTime = new JLabel("Notification Time");
+		lblNotificationTime.setFont(new Font("SansSerif", Font.BOLD, 14));
+		notificationTimePanel.add(lblNotificationTime, "cell 0 0");
+		
+		SpinnerNumberModel spinnerModel = new SpinnerNumberModel(10, 1, 60, 1);
+		notificationTimeSpinner = new JSpinner(spinnerModel);
+		notificationTimePanel.add(notificationTimeSpinner, "cell 1 0");
+		
+		JLabel lblNotificationTimeDesc = new JLabel("Minutes before appointment to show notification");
+		notificationTimePanel.add(lblNotificationTimeDesc, "cell 0 1");
+		
+		appointmentNotificationsPanel.add(notificationTimePanel, "growx, wrap");
+		
+		// Notify on missed toggle
+		JPanel notifyMissedPanel = new JPanel(new MigLayout("fill", "[grow][]", "[][]"));
+		notifyMissedPanel.setOpaque(false);
+		
+		JLabel lblNotifyMissed = new JLabel("Notify on Missed Appointments");
+		lblNotifyMissed.setFont(new Font("SansSerif", Font.BOLD, 14));
+		notifyMissedPanel.add(lblNotifyMissed, "cell 0 0");
+		
+		JPanel missedTogglePanel = new JPanel(new MigLayout("insets 0", "[][]", "[grow]"));
+		missedTogglePanel.setOpaque(false);
+		
+		JLabel lblMissedOnOff = new JLabel("Off");
+		missedTogglePanel.add(lblMissedOnOff, "cell 0 0, growx, aligny center");
+		
+		notifyOnMissedToggle.addActionListener(e -> {
+			boolean isOn = notifyOnMissedToggle.isSelected();
+			lblMissedOnOff.setText(isOn ? "On" : "Off");
+		});
+		
+		missedTogglePanel.add(notifyOnMissedToggle, "cell 1 0, growx, aligny center");
+		notifyMissedPanel.add(missedTogglePanel, "cell 1 0 1 2, grow");
+		
+		JLabel lblNotifyMissedDesc = new JLabel("Show notifications when appointments are missed");
+		notifyMissedPanel.add(lblNotifyMissedDesc, "cell 0 1");
+		
+		appointmentNotificationsPanel.add(notifyMissedPanel, "growx, wrap");
+		
+		// Notify on start toggle
+		JPanel notifyStartPanel = new JPanel(new MigLayout("fill", "[grow][]", "[][]"));
+		notifyStartPanel.setOpaque(false);
+		
+		JLabel lblNotifyStart = new JLabel("Notify on Appointment Start");
+		lblNotifyStart.setFont(new Font("SansSerif", Font.BOLD, 14));
+		notifyStartPanel.add(lblNotifyStart, "cell 0 0");
+		
+		JPanel startTogglePanel = new JPanel(new MigLayout("insets 0", "[][]", "[grow]"));
+		startTogglePanel.setOpaque(false);
+		
+		JLabel lblStartOnOff = new JLabel("Off");
+		startTogglePanel.add(lblStartOnOff, "cell 0 0, growx, aligny center");
+		
+		notifyOnStartToggle.addActionListener(e -> {
+			boolean isOn = notifyOnStartToggle.isSelected();
+			lblStartOnOff.setText(isOn ? "On" : "Off");
+		});
+		
+		startTogglePanel.add(notifyOnStartToggle, "cell 1 0, growx, aligny center");
+		notifyStartPanel.add(startTogglePanel, "cell 1 0 1 2, grow");
+		
+		JLabel lblNotifyStartDesc = new JLabel("Show notifications when appointments start");
+		notifyStartPanel.add(lblNotifyStartDesc, "cell 0 1");
+		
+		appointmentNotificationsPanel.add(notifyStartPanel, "growx");
 	}
 
 	private void initializeRemainingComponents(JPanel panel) {
@@ -152,6 +241,12 @@ public class SettingsPanel extends Form {
 	        fontComboBox.setSelectedItem(state.fontStyle);
 	    } else if ("notifications".equals(key)) {
 	        notificationsToggle.setSelected(state.notifications);
+	    } else if ("notification_time_minutes".equals(key)) {
+	        notificationTimeSpinner.setValue(state.notificationTimeMinutes);
+	    } else if ("notify_on_missed".equals(key)) {
+	        notifyOnMissedToggle.setSelected(state.notifyOnMissed);
+	    } else if ("notify_on_start".equals(key)) {
+	        notifyOnStartToggle.setSelected(state.notifyOnStart);
 	    }
 	}
 
@@ -169,14 +264,15 @@ public class SettingsPanel extends Form {
             fontComboBox.setSelectedItem(state.fontStyle);
             notificationsToggle.setSelected(state.notifications);
             
-            // Update the On/Off label
-            Component[] components = ((JPanel)notificationsToggle.getParent()).getComponents();
-            for (Component c : components) {
-                if (c instanceof JLabel && (((JLabel)c).getText().equals("On") || ((JLabel)c).getText().equals("Off"))) {
-                    ((JLabel)c).setText(state.notifications ? "On" : "Off");
-                    break;
-                }
-            }
+            // Update appointment notification settings
+            notificationTimeSpinner.setValue(state.notificationTimeMinutes);
+            notifyOnMissedToggle.setSelected(state.notifyOnMissed);
+            notifyOnStartToggle.setSelected(state.notifyOnStart);
+            
+            // Update the On/Off labels
+            updateToggleLabel(notificationsToggle, state.notifications);
+            updateToggleLabel(notifyOnMissedToggle, state.notifyOnMissed);
+            updateToggleLabel(notifyOnStartToggle, state.notifyOnStart);
             
             // Re-add listeners
             addComponentListeners();
@@ -185,6 +281,16 @@ public class SettingsPanel extends Form {
             revalidate();
             repaint();
         });
+    }
+    
+    private void updateToggleLabel(FlatToggleSwitch toggle, boolean isOn) {
+        Component[] components = ((JPanel)toggle.getParent()).getComponents();
+        for (Component c : components) {
+            if (c instanceof JLabel && (((JLabel)c).getText().equals("On") || ((JLabel)c).getText().equals("Off"))) {
+                ((JLabel)c).setText(isOn ? "On" : "Off");
+                break;
+            }
+        }
     }
 
     private void removeAllListeners() {
@@ -199,6 +305,16 @@ public class SettingsPanel extends Form {
         }
         for (java.awt.event.ActionListener al : notificationsToggle.getActionListeners()) {
             notificationsToggle.removeActionListener(al);
+        }
+        for (java.awt.event.ActionListener al : notifyOnMissedToggle.getActionListeners()) {
+            notifyOnMissedToggle.removeActionListener(al);
+        }
+        for (java.awt.event.ActionListener al : notifyOnStartToggle.getActionListeners()) {
+            notifyOnStartToggle.removeActionListener(al);
+        }
+        
+        for (ChangeListener cl : notificationTimeSpinner.getChangeListeners()) {
+            notificationTimeSpinner.removeChangeListener(cl);
         }
     }
     
@@ -244,6 +360,21 @@ public class SettingsPanel extends Form {
         notificationsToggle.addActionListener(e -> {
             SettingsManager.updateSetting("notifications", 
                 String.valueOf(notificationsToggle.isSelected()));
+        });
+        
+        notifyOnMissedToggle.addActionListener(e -> {
+            SettingsManager.updateSetting("notify_on_missed", 
+                String.valueOf(notifyOnMissedToggle.isSelected()));
+        });
+        
+        notifyOnStartToggle.addActionListener(e -> {
+            SettingsManager.updateSetting("notify_on_start", 
+                String.valueOf(notifyOnStartToggle.isSelected()));
+        });
+        
+        notificationTimeSpinner.addChangeListener(e -> {
+            SettingsManager.updateSetting("notification_time_minutes", 
+                String.valueOf(notificationTimeSpinner.getValue()));
         });
     }
 }

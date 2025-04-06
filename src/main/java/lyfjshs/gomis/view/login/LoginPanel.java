@@ -135,6 +135,21 @@ public class LoginPanel extends JPanel {
 		if (unTField != null) {
 			unTField.requestFocusInWindow();
 		}
+		
+		// Disable login button briefly to prevent rapid clicking
+		if (loginBtn != null) {
+			loginBtn.setEnabled(false);
+			// Re-enable after a short delay
+			new javax.swing.Timer(1000, e -> {
+				if (loginBtn != null) {
+					loginBtn.setEnabled(true);
+				}
+			}) {{
+				setRepeats(false);
+				start();
+			}};
+		}
+		
 		// Refresh the panel
 		this.revalidate();
 		this.repaint();

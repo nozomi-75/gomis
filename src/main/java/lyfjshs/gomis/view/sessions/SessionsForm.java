@@ -12,8 +12,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -43,6 +47,7 @@ import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.DropPanel;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.utils.EventBus;
 import lyfjshs.gomis.view.appointment.AppointmentSearchPanel;
 import lyfjshs.gomis.view.appointment.add.NonStudentPanel;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
@@ -80,6 +85,7 @@ public class SessionsForm extends Form {
 	private DropPanel nonStudentDropPanel;
 	private JButton searchStudentButton;
 	private List<TempParticipant> tempParticipants = new ArrayList<>();
+	private static final Logger logger = Logger.getLogger(SessionsForm.class.getName());
 
 	// Violation type arrays
 	private String[] violations = { "Absence/Late", "Minor Property Damage", "Threatening/Intimidating",
@@ -89,13 +95,26 @@ public class SessionsForm extends Form {
 
 	private JTextField recordedByField;
 	private JFormattedTextField sessionDateField;
+	private JFormattedTextField reSchedField;
+	private DatePicker reSchedulePicker;
+	private TimePicker reScheduleTimePicker;
+	private JFormattedTextField reSchedTimeField;
+	private JPanel reschedPanel;
 
 	public SessionsForm(Connection conn) {
-		this.connect = conn;
-		this.mainPanel = new JPanel(); // Initialize mainPanel here
-		initializeComponents();
-		layoutComponents();
-		populateRecordedByField(); // Call the method to populate the recordedByField
+		try {
+			this.connect = conn;
+			this.mainPanel = new JPanel(); // Initialize mainPanel here
+			initializeComponents();
+			layoutComponents();
+			populateRecordedByField(); // Call the method to populate the recordedByField
+		} catch (Exception e) {
+			Logger.getLogger(SessionsForm.class.getName()).log(Level.SEVERE, "Error initializing SessionsForm", e);
+			JOptionPane.showMessageDialog(null, 
+				"Error initializing session form: " + e.getMessage(), 
+				"Initialization Error", 
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	private void initializeComponents() {
@@ -147,6 +166,11 @@ public class SessionsForm extends Form {
 				if ("Active".equals(currentStatus) && "Ended".equals(newStatus)) {
 					saveButton.setEnabled(true);
 					saveButton.setText("Save Status Change");
+					
+					// Hide reschedule panel when ending a session
+					if (reschedPanel != null) {
+						reschedPanel.setVisible(false);
+					}
 					return;
 				}
 
@@ -159,6 +183,14 @@ public class SessionsForm extends Form {
 
 			// For Active status or new sessions
 			boolean isActive = !"Select Status".equals(newStatus);
+			boolean isActiveStatus = "Active".equals(newStatus);
+            
+            // Show reschedule panel only for Active status and when it comes from an appointment
+            if (reschedPanel != null) {
+                boolean shouldShowReschedPanel = isActiveStatus && selectedAppointmentId != null;
+                reschedPanel.setVisible(shouldShowReschedPanel);
+            }
+            
 			enableFieldsBasedOnStatus(isActive);
 		});
 
@@ -211,6 +243,7 @@ public class SessionsForm extends Form {
 		String status = (String) sessionStatusComboBox.getSelectedItem();
 		boolean isWalkIn = "Walk-in".equals(appointmentType);
 		boolean isEnded = "Ended".equals(status);
+		boolean isActiveStatus = "Active".equals(status);
 
 		notesArea.setEditable(isActive);
 		sessionSummaryArea.setEditable(isActive);
@@ -221,6 +254,11 @@ public class SessionsForm extends Form {
 		consultationTypeComboBox.setEnabled(isActive);
 		appointmentTypeComboBox.setEnabled(isActive);
 		searchBtn.setEnabled(isActive);
+		
+		// Show/hide reschedule panel based on status
+		if (reschedPanel != null) {
+			reschedPanel.setVisible(isActiveStatus);
+		}
 
 		// Keep save button enabled for walk-in sessions even when ended
 		if (isWalkIn && isEnded) {
@@ -245,13 +283,22 @@ public class SessionsForm extends Form {
 		consultationTypeComboBox.setSelectedIndex(0);
 		appointmentTypeComboBox.setSelectedIndex(0);
 		violationField.setSelectedIndex(0);
+		sessionStatusComboBox.setSelectedIndex(0);
+		
+		// Reset reschedule field and hide panel
+		if (reSchedulePicker != null) {
+			reSchedulePicker.setSelectedDate(LocalDate.now().plusDays(7));
+		}
+		if (reschedPanel != null) {
+			reschedPanel.setVisible(false);
+		}
 
 		participantTableModel.setRowCount(0);
 		participantDetails.clear();
 		pendingParticipants.clear();
+		tempParticipants.clear();
 		tempIdCounter = -1; // Reset for next session
 		selectedAppointmentId = null;
-		sessionSummaryArea.setText("");
 	}
 
 	private void updateParticipantsTable() {
@@ -269,16 +316,20 @@ public class SessionsForm extends Form {
 				student.getStudentLastname(), "Student", student.getStudentSex(),
 				student.getContact() != null ? student.getContact().getContactNumber() : "", true);
 
-		// Check for duplicates
-		boolean isDuplicate = tempParticipants.stream().anyMatch(p -> p.isStudent() && p.getStudentUid() != null
-				&& p.getStudentUid().equals(participant.getStudentUid()));
+		// Check for duplicates by student ID and by name
+		boolean isDuplicate = tempParticipants.stream().anyMatch(p -> 
+			(p.isStudent() && p.getStudentUid() != null && p.getStudentUid().equals(participant.getStudentUid())) ||
+			(!p.isStudent() && p.getFullName().equalsIgnoreCase(participant.getFullName()))
+		);
 
 		if (!isDuplicate) {
 			tempParticipants.add(participant);
 			updateParticipantsTable();
 		} else {
-			JOptionPane.showMessageDialog(this, "This student is already added as a participant.", "Duplicate Entry",
-					JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(this, 
+				"This participant is already added to the session.", 
+				"Duplicate Entry",
+				JOptionPane.WARNING_MESSAGE);
 		}
 	}
 
@@ -384,7 +435,7 @@ public class SessionsForm extends Form {
 		topFields.add(consultationTypeComboBox, "cell 3 1, growx");
 
 		// Bottom row of fields
-		JPanel bottomFields = new JPanel(new MigLayout("insets 0", "[grow]10[grow]", "[][][]"));
+		JPanel bottomFields = new JPanel(new MigLayout("insets 0", "[grow]10[grow]", "[][][grow]"));
 
 		// Violation Type
 		bottomFields.add(new JLabel("Violation Type"), "cell 0 0");
@@ -417,6 +468,24 @@ public class SessionsForm extends Form {
 
 		sessionInfoCard.add(topFields, "cell 0 0, growx");
 		sessionInfoCard.add(bottomFields, "cell 0 1, growx");
+		reschedPanel = new JPanel();
+		reschedPanel.setVisible(false); // Hide by default
+		bottomFields.add(reschedPanel, "cell 1 2,grow");
+		reschedPanel.setLayout(new MigLayout("", "[][grow]", "[][]"));
+		JLabel lblNewLabel = new JLabel("Reschedule Date:");
+		reschedPanel.add(lblNewLabel, "cell 0 0,alignx trailing");
+		reSchedulePicker = new DatePicker();
+		reSchedField = new JFormattedTextField();
+		reSchedulePicker.setEditor(reSchedField);
+		reschedPanel.add(reSchedField, "cell 1 0,growx");
+		
+		// Add time picker for rescheduling
+		JLabel lblRescheduleTime = new JLabel("Reschedule Time:");
+		reschedPanel.add(lblRescheduleTime, "cell 0 1,alignx trailing");
+		reScheduleTimePicker = new TimePicker();
+		reSchedTimeField = new JFormattedTextField();
+		reScheduleTimePicker.setEditor(reSchedTimeField);
+		reschedPanel.add(reSchedTimeField, "cell 1 1,growx");
 
 		sessionDetailsPanel.add(sessionInfoCard, "cell 0 0, grow");
 
@@ -495,6 +564,20 @@ public class SessionsForm extends Form {
 		nonStudentDropPanel.setDropdownPadding(10, 10, 10, 10);
 		NonStudentPanel nonStudentForm = new NonStudentPanel();
 		nonStudentForm.setNonStudentListener(participant -> {
+			// First check if this non-student already exists by name
+			String fullName = participant.getFirstName() + " " + participant.getLastName();
+			boolean isDuplicate = tempParticipants.stream().anyMatch(p -> 
+				p.getFullName().equalsIgnoreCase(fullName)
+			);
+
+			if (isDuplicate) {
+				JOptionPane.showMessageDialog(this, 
+					"This participant is already added to the session.", 
+					"Duplicate Entry",
+					JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+
 			TempParticipant sessionParticipant = new TempParticipant(null,
 					participant.getFirstName(),
 					participant.getLastName(),
@@ -671,12 +754,20 @@ public class SessionsForm extends Form {
 				participantTableModel.setRowCount(0);
 
 				if (appointment.getParticipants() != null) {
+					Set<String> addedParticipants = new HashSet<>(); // Track added participants
+					
 					for (Participants participant : appointment.getParticipants()) {
+						String fullName = participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
+						
+						// Skip if this participant is already added
+						if (addedParticipants.contains(fullName.toLowerCase())) {
+							continue;
+						}
+						
 						Map<String, String> details = new HashMap<>();
 						details.put("firstName", participant.getParticipantFirstName());
 						details.put("lastName", participant.getParticipantLastName());
-						details.put("fullName",
-								participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
+						details.put("fullName", fullName);
 						String participantType = participant.getStudentUid() != null && participant.getStudentUid() > 0
 								? "Student"
 								: "Non-Student";
@@ -688,6 +779,8 @@ public class SessionsForm extends Form {
 						int rowNumber = participantTableModel.getRowCount() + 1;
 						participantTableModel.addRow(new Object[] { rowNumber, details.get("fullName"), participantType,
 								"View | Remove", participant.getParticipantId() });
+								
+						addedParticipants.add(fullName.toLowerCase()); // Track this participant
 					}
 				}
 			}
@@ -725,12 +818,50 @@ public class SessionsForm extends Form {
 
 				sessionsDAO.updateSession(currentSession);
 
-				if ("Ended".equals(sessionStatus) && currentSession.getAppointmentId() != null) {
+				// Always update the appointment status based on session status if an appointment is linked
+				if (currentSession.getAppointmentId() != null) {
 					AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
 					Appointment appointment = appointmentDAO.getAppointmentById(currentSession.getAppointmentId());
 					if (appointment != null) {
-						appointment.setAppointmentStatus("Ended");
+						// Update appointment status based on session status
+						if ("Ended".equals(sessionStatus)) {
+							appointment.setAppointmentStatus("Completed");
+						} else if ("Active".equals(sessionStatus)) {
+							// Check if rescheduling is set
+							if (reschedPanel != null && reschedPanel.isVisible() && reSchedulePicker.getSelectedDate() != null) {
+								// Set appointment status to Rescheduled
+								appointment.setAppointmentStatus("Rescheduled");
+								
+								// Update the appointment date and time
+								LocalDate reschedDate = reSchedulePicker.getSelectedDate();
+								LocalTime reschedTime = reScheduleTimePicker.getSelectedTime();
+								LocalDateTime newDateTime = reschedDate.atTime(reschedTime != null ? reschedTime : 
+									appointment.getAppointmentDateTime().toLocalDateTime().toLocalTime());
+								
+								// Update the appointment with the new date and time
+								appointment.setAppointmentDateTime(java.sql.Timestamp.valueOf(newDateTime));
+								
+								// Add note about rescheduling
+								String existingNotes = appointment.getAppointmentNotes();
+								String rescheduleNote = "Session conducted on " + 
+									java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd").format(parseDateTime().toLocalDateTime()) + 
+									". Rescheduled to " + 
+									java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(newDateTime) + ".";
+								
+								if (existingNotes != null && !existingNotes.isEmpty()) {
+									appointment.setAppointmentNotes(existingNotes + "\n\n" + rescheduleNote);
+								} else {
+									appointment.setAppointmentNotes(rescheduleNote);
+								}
+							} else {
+								// Keep as In Progress if no rescheduling
+								appointment.setAppointmentStatus("In Progress");
+							}
+						}
 						appointmentDAO.updateAppointment(appointment);
+						
+						// Notify the appointment management to refresh views
+						EventBus.publish("appointment_status_changed", appointment.getAppointmentId());
 					}
 				}
 
@@ -761,6 +892,53 @@ public class SessionsForm extends Form {
 				int sessionId = sessionsDAO.addSession(session);
 
 				if (sessionId > 0) {
+					// If this session is created from an appointment, update appointment status
+					if (appointmentId != null) {
+						AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
+						Appointment appointment = appointmentDAO.getAppointmentById(appointmentId);
+						if (appointment != null) {
+							// Update appointment status based on session status
+							if ("Ended".equals(sessionStatus)) {
+								appointment.setAppointmentStatus("Completed");
+							} else if ("Active".equals(sessionStatus)) {
+								// Check if rescheduling is set
+								if (reschedPanel != null && reschedPanel.isVisible() && reSchedulePicker.getSelectedDate() != null) {
+									// Set appointment status to Rescheduled
+									appointment.setAppointmentStatus("Rescheduled");
+									
+									// Update the appointment date and time
+									LocalDate reschedDate = reSchedulePicker.getSelectedDate();
+									LocalTime reschedTime = reScheduleTimePicker.getSelectedTime();
+									LocalDateTime newDateTime = reschedDate.atTime(reschedTime != null ? reschedTime : 
+										appointment.getAppointmentDateTime().toLocalDateTime().toLocalTime());
+									
+									// Update the appointment with the new date and time
+									appointment.setAppointmentDateTime(java.sql.Timestamp.valueOf(newDateTime));
+									
+									// Add note about rescheduling
+									String existingNotes = appointment.getAppointmentNotes();
+									String rescheduleNote = "Session conducted on " + 
+										java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd").format(parseDateTime().toLocalDateTime()) + 
+										". Rescheduled to " + 
+										java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(newDateTime) + ".";
+									
+									if (existingNotes != null && !existingNotes.isEmpty()) {
+										appointment.setAppointmentNotes(existingNotes + "\n\n" + rescheduleNote);
+									} else {
+										appointment.setAppointmentNotes(rescheduleNote);
+									}
+								} else {
+									// Keep as In Progress if no rescheduling
+									appointment.setAppointmentStatus("In Progress");
+								}
+							}
+							appointmentDAO.updateAppointment(appointment);
+							
+							// Notify the appointment management to refresh views
+							EventBus.publish("appointment_status_changed", appointment.getAppointmentId());
+						}
+					}
+					
 					ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
 					Map<Integer, Integer> idMapping = new HashMap<>();
 
@@ -832,15 +1010,6 @@ public class SessionsForm extends Form {
 						}
 					}
 
-					if ("Ended".equals(sessionStatus) && appointmentId != null) {
-						AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
-						Appointment appointment = appointmentDAO.getAppointmentById(appointmentId);
-						if (appointment != null) {
-							appointment.setAppointmentStatus("Ended");
-							appointmentDAO.updateAppointment(appointment);
-						}
-					}
-
 					if (violation != null && !violation.equals("-- Select Violation --")
 							&& !violation.equals("No Violation")) {
 						ViolationDAO ViolationDAO = new ViolationDAO(connect);
@@ -871,6 +1040,7 @@ public class SessionsForm extends Form {
 					JOptionPane.showMessageDialog(this, "Failed to save session.", "Error", JOptionPane.ERROR_MESSAGE);
 				}
 			}
+
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
@@ -887,22 +1057,72 @@ public class SessionsForm extends Form {
 		}
 
 		String consultationType = (String) consultationTypeComboBox.getSelectedItem();
-		if (consultationType == null || consultationType.trim().isEmpty()) {
+		if (consultationType == null || "".equals(consultationType)) {
 			errors.append("- Please select a consultation type\n");
 		}
 
 		String appointmentType = (String) appointmentTypeComboBox.getSelectedItem();
-		if (appointmentType == null || appointmentType.trim().isEmpty()) {
+		if (appointmentType == null || "".equals(appointmentType)) {
 			errors.append("- Please select an appointment type\n");
+		}
+
+		// Validate session date and time
+		try {
+			LocalDate selectedDate = sessionDatePicker.getSelectedDate();
+			LocalTime selectedTime = sessionTimePicker.getSelectedTime();
+			
+			if (selectedDate == null) {
+				errors.append("- Please select a valid session date\n");
+			}
+			
+			if (selectedTime == null) {
+				errors.append("- Please select a valid session time\n");
+			}
+		} catch (Exception e) {
+			errors.append("- Please enter a valid session date and time\n");
+		}
+		
+		// Validate reschedule date if visible and status is Active
+		if ("Active".equals(status) && reschedPanel != null && reschedPanel.isVisible()) {
+			try {
+				LocalDate reschedDate = reSchedulePicker.getSelectedDate();
+				LocalTime reschedTime = reScheduleTimePicker.getSelectedTime();
+				
+				if (reschedDate == null) {
+					errors.append("- Please select a valid reschedule date\n");
+				} else {
+					// Ensure reschedule date is in the future
+					LocalDate today = LocalDate.now();
+					if (reschedDate.isBefore(today)) {
+						errors.append("- Reschedule date must be in the future\n");
+					}
+				}
+				
+				if (reschedTime == null) {
+					errors.append("- Please select a valid reschedule time\n");
+				}
+			} catch (Exception e) {
+				errors.append("- Please enter a valid reschedule date and time\n");
+			}
 		}
 
 		String summary = sessionSummaryArea.getText().trim();
 		if (summary.isEmpty()) {
 			errors.append("- Please enter a session summary\n");
+		} else if (summary.length() < 10) {
+			errors.append("- Session summary is too short (minimum 10 characters)\n");
+		}
+
+		// Check notes
+		String notes = notesArea.getText().trim();
+		if (notes.isEmpty()) {
+			errors.append("- Please enter session notes\n");
 		}
 
 		String violation = (String) violationField.getSelectedItem();
-		if ("Others".equals(violation)) {
+		if (violation == null || "-- Select Violation --".equals(violation)) {
+			errors.append("- Please select a violation type (or 'No Violation')\n");
+		} else if ("Others".equals(violation)) {
 			String customViolation = customViolationField.getText().trim();
 			if (customViolation.isEmpty()) {
 				errors.append("- Please enter a custom violation type\n");
@@ -958,19 +1178,101 @@ public class SessionsForm extends Form {
 
 	public void populateFromAppointment(Appointment appointment) {
 		if (appointment != null) {
+			// Reset the form
+			clearFields();
+			
+			// Set appointment type to "Scheduled" for appointments
 			appointmentTypeComboBox.setSelectedItem("Scheduled");
+			
+			// Store the appointment ID for reference
 			selectedAppointmentId = appointment.getAppointmentId();
+			
+			// Transfer consultation type
 			consultationTypeComboBox.setSelectedItem(appointment.getConsultationType());
-			populateParticipantsFromAppointment(appointment.getAppointmentId());
-
+			
+			// Set the session date and time to match the appointment
 			if (appointment.getAppointmentDateTime() != null) {
 				java.time.LocalDateTime dateTime = appointment.getAppointmentDateTime().toLocalDateTime();
 				sessionDatePicker.setSelectedDate(dateTime.toLocalDate());
 				sessionTimePicker.setSelectedTime(dateTime.toLocalTime());
+				
+				// Set a default reschedule date and time (7 days from appointment date, same time)
+				LocalDate suggestedRescheduleDate = dateTime.toLocalDate().plusDays(7);
+				reSchedulePicker.setSelectedDate(suggestedRescheduleDate);
+				reScheduleTimePicker.setSelectedTime(dateTime.toLocalTime());
+			} else {
+				// If no appointment date, set reschedule to 7 days from today, current time
+				reSchedulePicker.setSelectedDate(LocalDate.now().plusDays(7));
+				reScheduleTimePicker.setSelectedTime(LocalTime.now());
 			}
-
-			if (appointment.getAppointmentNotes() != null) {
+			
+			// Transfer notes
+			if (appointment.getAppointmentNotes() != null && !appointment.getAppointmentNotes().isEmpty()) {
 				notesArea.setText(appointment.getAppointmentNotes());
+			}
+			
+			// Set default session status to "Active"
+			sessionStatusComboBox.setSelectedItem("Active");
+			
+			// Show reschedule panel for appointments
+			if (reschedPanel != null) {
+				reschedPanel.setVisible(true);
+			}
+			
+			// Transfer participants
+			transferParticipantsFromAppointment(appointment);
+			
+			// Prepare session summary template
+			String summaryTemplate = "Session created from appointment: " + appointment.getAppointmentTitle() + 
+					"\nConsultation Type: " + appointment.getConsultationType() +
+					"\nDate: " + appointment.getAppointmentDateTime();
+			sessionSummaryArea.setText(summaryTemplate);
+		}
+	}
+	
+	private void transferParticipantsFromAppointment(Appointment appointment) {
+		// Clear existing participants
+		participantTableModel.setRowCount(0);
+		participantDetails.clear();
+		tempParticipants.clear();
+		pendingParticipants.clear();
+		
+		// Add all participants from the appointment
+		if (appointment.getParticipants() != null && !appointment.getParticipants().isEmpty()) {
+			for (Participants participant : appointment.getParticipants()) {
+				Map<String, String> details = new HashMap<>();
+				details.put("firstName", participant.getParticipantFirstName());
+				details.put("lastName", participant.getParticipantLastName());
+				details.put("fullName", participant.getFullName());
+				details.put("type", participant.getParticipantType());
+				details.put("contact", participant.getContactNumber());
+				
+				// Store in participant details map
+				if (participant.getParticipantId() > 0) {
+					participantDetails.put(participant.getParticipantId(), details);
+				}
+				
+				// Create temp participant for table
+				TempParticipant tempParticipant = new TempParticipant(
+					participant.getStudentUid(),
+					participant.getParticipantFirstName(),
+					participant.getParticipantLastName(),
+					participant.getParticipantType(),
+					participant.getSex(),
+					participant.getContactNumber(),
+					participant.getStudentUid() != null
+				);
+				tempParticipants.add(tempParticipant);
+				
+				// Add to table
+				int rowNumber = participantTableModel.getRowCount() + 1;
+				participantTableModel.addRow(new Object[] { 
+					rowNumber, 
+					participant.getFullName(),
+					participant.getParticipantType(), 
+					"View | Remove", 
+					participant.getParticipantId() 
+				});
 			}
 		}
 	}
@@ -1077,6 +1379,93 @@ public class SessionsForm extends Form {
 
 		public boolean isStudent() {
 			return isStudent;
+		}
+	}
+
+	/**
+	 * Override the dispose method to warn about unsaved changes
+	 */
+	@Override
+	public void dispose() {
+		// Check if there are unsaved changes
+		if (hasUnsavedChanges()) {
+			int option = JOptionPane.showConfirmDialog(
+				this,
+				"You have unsaved changes in this session. What would you like to do?",
+				"Unsaved Changes",
+				JOptionPane.YES_NO_CANCEL_OPTION,
+				JOptionPane.WARNING_MESSAGE
+			);
+			
+			if (option == JOptionPane.YES_OPTION) {
+				// Save changes and then dispose
+				saveSessionToDatabase();
+				super.dispose();
+			} else if (option == JOptionPane.NO_OPTION) {
+				// Discard changes and dispose
+				super.dispose();
+			}
+			// If CANCEL_OPTION, do nothing and return to the form
+			return;
+		}
+		
+		// No unsaved changes, proceed with normal disposal
+		super.dispose();
+	}
+
+	/**
+	 * Checks if there are unsaved changes in the form
+	 */
+	private boolean hasUnsavedChanges() {
+		// If creating a new session
+		if (!isEditing && selectedAppointmentId != null) {
+			return true;
+		}
+		
+		// If editing an existing session
+		if (isEditing && currentSession != null) {
+			String currentStatus = (String) sessionStatusComboBox.getSelectedItem();
+			String currentNotes = notesArea.getText();
+			String currentSummary = sessionSummaryArea.getText();
+			
+			return !currentStatus.equals(currentSession.getSessionStatus()) ||
+				   !currentNotes.equals(currentSession.getSessionNotes()) ||
+				   !currentSummary.equals(currentSession.getSessionSummary()) ||
+				   participantTableModel.getRowCount() > 0;  // Any participants added
+		}
+		
+		return false;
+	}
+
+	/**
+	 * Sets the session to edit and populates form fields from the session data
+	 * 
+	 * @param sessionId The session ID to edit
+	 */
+	public void setSessionToEdit(Integer sessionId) {
+		try {
+			if (sessionId == null) {
+				return;
+			}
+			
+			SessionsDAO sessionsDAO = new SessionsDAO(connect);
+			Sessions session = sessionsDAO.getSessionById(sessionId);
+			
+			if (session != null) {
+				isEditing = true;
+				currentSession = session;
+				populateFormFromSession(session);
+				
+				// If the session has an appointment, store its ID
+				if (session.getAppointmentId() != null) {
+					selectedAppointmentId = session.getAppointmentId();
+				}
+			}
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(this, 
+				"Error loading session data: " + e.getMessage(), 
+				"Database Error", 
+				JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }

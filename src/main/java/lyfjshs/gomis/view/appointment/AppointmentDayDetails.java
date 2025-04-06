@@ -133,6 +133,9 @@ public class AppointmentDayDetails extends JPanel {
         datePicker.setDateSelectionMode(DatePicker.DateSelectionMode.SINGLE_DATE_SELECTED);
         datePicker.setDateFormat("yyyy-MM-dd");
         
+        // Allow viewing of any date initially, don't restrict to future dates
+        datePicker.setDateSelectionAble(date -> true);
+        
         timePicker = new TimePicker();
 
         // Main container with smooth scrolling
@@ -187,11 +190,6 @@ public class AppointmentDayDetails extends JPanel {
             // Set a custom DateSelectionAble to prevent selecting past dates
             datePicker.setDateSelectionAble(date -> !date.isBefore(LocalDate.now()));
             
-            // Add a date selection listener to validate time when date changes
-            datePicker.addDateSelectionListener(event -> {
-                validateDate();
-            });
-
             // Set the appointment date
             LocalDate appointmentDate = appointment.getAppointmentDateTime()
                     .toLocalDateTime().toLocalDate();
@@ -208,11 +206,6 @@ public class AppointmentDayDetails extends JPanel {
             timePicker.setEditor(timeField);
             timePicker.setEnabled(false);
             
-            // Add a time selection listener to validate time when it changes
-            timePicker.addTimeSelectionListener(event -> {
-                validateDate();
-            });
-
             // Set the appointment time
             LocalTime appointmentTime = appointment.getAppointmentDateTime()
                     .toLocalDateTime().toLocalTime();
@@ -224,7 +217,7 @@ public class AppointmentDayDetails extends JPanel {
             // Status
             JLabel statusLabel = new JLabel("Status");
             statusLabel.setFont(new Font("Arial", Font.BOLD, 12));
-            String[] statuses = { "On-going", "Ended", "Rescheduled", "Cancelled" };
+            String[] statuses = { "Scheduled", "Rescheduled", "Completed", "Missed", "Cancelled" };
             statusComboBox = new JComboBox<>(statuses);
             statusComboBox.setSelectedItem(appointment.getAppointmentStatus());
             statusComboBox.setEnabled(false);
@@ -359,8 +352,14 @@ public class AppointmentDayDetails extends JPanel {
         // Handle date and time pickers if they are initialized
         if (datePicker != null) {
             datePicker.setEnabled(editMode);
-            // Update date selection validation when toggling edit mode
-            datePicker.setDateSelectionAble(date -> !date.isBefore(LocalDate.now()));
+            // Only restrict date selection when in edit mode
+            if (editMode) {
+                // Update date selection validation when in edit mode to prevent past dates
+                datePicker.setDateSelectionAble(date -> !date.isBefore(LocalDate.now()));
+            } else {
+                // Allow viewing of any date in view mode
+                datePicker.setDateSelectionAble(date -> true);
+            }
         }
         if (dateField != null) dateField.setEditable(editMode);
         if (timePicker != null) {
@@ -380,37 +379,8 @@ public class AppointmentDayDetails extends JPanel {
         if (updateButton != null) updateButton.setVisible(editMode);
     }
 
-    private void validateDate() {
-        LocalDate selectedDate = datePicker.getSelectedDate();
-        LocalTime selectedTime = timePicker.getSelectedTime();
-        
-        if (selectedDate != null && selectedTime != null) {
-            LocalDateTime selectedDateTime = LocalDateTime.of(selectedDate, selectedTime);
-            LocalDateTime now = LocalDateTime.now();
-            
-            if (selectedDateTime.isBefore(now)) {
-                // If selected date is today, set time to current time + 1 hour
-                if (selectedDate.equals(LocalDate.now())) {
-                    LocalTime newTime = LocalTime.now().plusHours(1);
-                    timePicker.setSelectedTime(newTime);
-                    JOptionPane.showMessageDialog(this,
-                            "Cannot select a time in the past. Time has been adjusted to " + newTime.format(java.time.format.DateTimeFormatter.ofPattern("hh:mm a")),
-                            "Invalid Time",
-                            JOptionPane.WARNING_MESSAGE);
-                } else {
-                    // If selected date is in the past, set to today
-                    datePicker.setSelectedDate(LocalDate.now());
-                    JOptionPane.showMessageDialog(this,
-                            "Cannot select a date in the past. Date has been adjusted to today.",
-                            "Invalid Date",
-                            JOptionPane.WARNING_MESSAGE);
-                }
-            }
-        }
-    }
-
     private void saveChanges(Appointment appointment) {
-        // Validate date and time
+        // Validate date and time only when saving
         LocalDate selectedDate = datePicker.getSelectedDate();
         LocalTime selectedTime = timePicker.getSelectedTime();
 
@@ -430,18 +400,15 @@ public class AppointmentDayDetails extends JPanel {
             return;
         }
 
-        LocalDateTime newDateTime = LocalDateTime.of(selectedDate, selectedTime);
-        if (newDateTime.isBefore(LocalDateTime.now())) {
-            JOptionPane.showMessageDialog(this,
-                    "Cannot set appointment date/time in the past.",
-                    "Validation Error",
-                    JOptionPane.WARNING_MESSAGE);
+        // Call validation method that doesn't auto-adjust times
+        if (!validateDateTime(selectedDate, selectedTime)) {
             return;
         }
 
+        LocalDateTime newDateTime = LocalDateTime.of(selectedDate, selectedTime);
+        
         // Update appointment object
         appointment.setAppointmentDateTime(Timestamp.valueOf(newDateTime));
-        // ...rest of existing save logic...
         appointment.setAppointmentTitle(titleField.getText());
         appointment.setConsultationType((String) typeComboBox.getSelectedItem());
         appointment.setAppointmentStatus((String) statusComboBox.getSelectedItem());
@@ -465,6 +432,29 @@ public class AppointmentDayDetails extends JPanel {
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
+    }
+    
+    /**
+     * Validates the selected date and time without auto-adjusting values.
+     * Only displays error messages and returns false if validation fails.
+     * 
+     * @param selectedDate The date to validate
+     * @param selectedTime The time to validate
+     * @return true if the date/time is valid, false otherwise
+     */
+    private boolean validateDateTime(LocalDate selectedDate, LocalTime selectedTime) {
+        LocalDateTime selectedDateTime = LocalDateTime.of(selectedDate, selectedTime);
+        LocalDateTime now = LocalDateTime.now();
+        
+        if (selectedDateTime.isBefore(now)) {
+            JOptionPane.showMessageDialog(this,
+                    "Cannot set appointment date/time in the past. Please choose a future date and time.",
+                    "Validation Error",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        return true;
     }
 
     private JPanel createSectionHeader(String title, String badge) {

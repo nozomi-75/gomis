@@ -186,10 +186,21 @@ public class AppointmentCalendar extends JPanel {
 
         List<Appointment> appointments = null;
         try {
-            appointments = appointmentDao.getAppointmentsForDateExcludingEnded(date);
+            // Get all appointments for this date and filter client-side
+            appointments = appointmentDao.getAppointmentsForDate(date);
+            
+            // Filter for active-like statuses only
+            if (appointments != null) {
+                appointments = appointments.stream()
+                    .filter(a -> "Scheduled".equals(a.getAppointmentStatus()) || 
+                                "In Progress".equals(a.getAppointmentStatus()) ||
+                                "Rescheduled".equals(a.getAppointmentStatus()))  // Add Rescheduled status
+                    .toList();
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        
         if (appointments != null && !appointments.isEmpty()) {
             JPanel appointmentsContainer = new JPanel(new MigLayout("wrap 1, insets 0, gap 2", "[grow,fill]"));
             appointmentsContainer.setOpaque(false);
@@ -212,16 +223,40 @@ public class AppointmentCalendar extends JPanel {
 
             for (Appointment appt : appointments) {
                 JPanel appointmentPanel = new JPanel(new MigLayout("fill, insets 2", "[grow][]"));
-                Color[] colors = appointmentColors.getOrDefault(appt.getConsultationType(), 
+                
+                // Get the base colors for the appointment type
+                Color[] baseColors = appointmentColors.getOrDefault(appt.getConsultationType(), 
                     new Color[]{new Color(100, 100, 100), Color.WHITE});
+                
+                // Determine final colors based on status
+                final Color[] colors;
+                if ("Rescheduled".equals(appt.getAppointmentStatus())) {
+                    // Add a slight orange tint to indicate rescheduled status
+                    colors = new Color[]{
+                        new Color(
+                            Math.min(255, baseColors[0].getRed() + 40),
+                            Math.min(255, baseColors[0].getGreen() + 20),
+                            baseColors[0].getBlue()
+                        ),
+                        Color.WHITE
+                    };
+                } else {
+                    colors = baseColors;
+                }
                 
                 appointmentPanel.setBackground(colors[0]);
                 appointmentPanel.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60), 1));
 
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
                 String timeDisplay = appt.getAppointmentDateTime().toLocalDateTime().format(timeFormatter);
+                
+                // Add rescheduled indicator to the title if needed
+                String titleText = timeDisplay + " - " + appt.getAppointmentTitle();
+                if ("Rescheduled".equals(appt.getAppointmentStatus())) {
+                    titleText = "🔄 " + titleText;  // Add rescheduled icon
+                }
 
-                JLabel appLabel = new JLabel(timeDisplay + " - " + appt.getAppointmentTitle());
+                JLabel appLabel = new JLabel(titleText);
                 appLabel.setForeground(colors[1]);
                 appointmentPanel.add(appLabel, "grow");
 
@@ -282,11 +317,60 @@ public class AppointmentCalendar extends JPanel {
         }
 
         try {
-            // First check if the appointment is not ended
-            Appointment currentAppointment = appointmentDao.getAppointmentByIdExcludingEnded(appointment.getAppointmentId());
-            if (currentAppointment == null) {
-                // If the appointment is ended, don't show it
+            // Check if the appointment is active-like status
+            boolean isActiveStatus = "Scheduled".equals(appointment.getAppointmentStatus()) || 
+                                    "In Progress".equals(appointment.getAppointmentStatus()) ||
+                                    "Rescheduled".equals(appointment.getAppointmentStatus());
+            
+            // If it's not active-like, don't show details
+            if (!isActiveStatus) {
                 return;
+            }
+            
+            // Get full appointment with participants
+            Appointment currentAppointment = appointmentDao.getAppointmentById(appointment.getAppointmentId());
+            
+            if (currentAppointment == null) {
+                // If the appointment is not found, don't show it
+                return;
+            }
+
+            // Check if appointment is today and within 30 minutes of current time
+            LocalDateTime appointmentTime = currentAppointment.getAppointmentDateTime().toLocalDateTime();
+            LocalDateTime now = LocalDateTime.now();
+            boolean isToday = appointmentTime.toLocalDate().equals(now.toLocalDate());
+            long minutesDifference = java.time.temporal.ChronoUnit.MINUTES.between(now, appointmentTime);
+            
+            // If appointment is today and within 30 minutes (before or after scheduled time)
+            if (isToday && Math.abs(minutesDifference) <= 30) {
+                int response = JOptionPane.showConfirmDialog(
+                    this,
+                    "This appointment is scheduled for today and is within 30 minutes of the current time.\n" +
+                    "Would you like to start a session for this appointment now?",
+                    "Start Session",
+                    JOptionPane.YES_NO_OPTION
+                );
+                
+                if (response == JOptionPane.YES_OPTION) {
+                    // Switch to sessions form and populate it with this appointment
+                    DrawerBuilder.switchToSessionsForm();
+                    Form[] forms = FormManager.getForms();
+                    for (Form form : forms) {
+                        if (form instanceof SessionsForm) {
+                            SessionsForm sessionsForm = (SessionsForm) form;
+                            sessionsForm.populateFromAppointment(currentAppointment);
+                            // Set the appointment status to "In Progress"
+                            currentAppointment.setAppointmentStatus("In Progress");
+                            appointmentDao.updateAppointment(currentAppointment);
+                            // Refresh views
+                            updateCalendar();
+                            if (getParent() instanceof AppointmentManagement) {
+                                ((AppointmentManagement) getParent()).refreshViews();
+                            }
+                            return;
+                        }
+                    }
+                }
             }
 
             AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(
@@ -316,17 +400,24 @@ public class AppointmentCalendar extends JPanel {
     private void showAppointmentDetailsPopup(LocalDate selectedDate) {
         AppointmentDayDetails appointmentDetails = new AppointmentDayDetails(connection, null, null);
         try {
-            // Only get non-ended appointments
-            List<Appointment> appointments = appointmentDao.getAppointmentsForDateExcludingEnded(selectedDate);
+            // Get all appointments for the selected date
+            List<Appointment> appointments = appointmentDao.getAppointmentsForDate(selectedDate);
+            
+            // Filter for active-like statuses
+            List<Appointment> activeAppointments = appointments.stream()
+                .filter(a -> "Active".equals(a.getAppointmentStatus()) || 
+                           "Scheduled".equals(a.getAppointmentStatus()) || 
+                           "Rescheduled".equals(a.getAppointmentStatus()))
+                .toList();
             
             // If there are no active appointments, show empty state
-            if (appointments == null || appointments.isEmpty()) {
+            if (activeAppointments == null || activeAppointments.isEmpty()) {
                 appointmentDetails = new AppointmentDayDetails(connection, null, null);
                 // Initialize with empty state
                 appointmentDetails.loadAppointmentDetails(null);
             } else {
                 // Load the first active appointment
-                appointmentDetails.loadAppointmentDetails(appointments.get(0));
+                appointmentDetails.loadAppointmentDetails(activeAppointments.get(0));
             }
             
             createAndShowModalDialog(appointmentDetails, "appointment_details_date_" + selectedDate.toString(), selectedDate);
@@ -362,9 +453,14 @@ public class AppointmentCalendar extends JPanel {
             // Check if there is a current appointment
             Appointment currentAppointment = detailsPanel.getCurrentAppointment();
             
-            // Set options based on whether there's an appointment
+            // Set options based on whether there's an appointment with active-like status
             SimpleModalBorder.Option[] options;
-            if (currentAppointment != null && !"Ended".equals(currentAppointment.getAppointmentStatus())) {
+            boolean isActiveAppointment = currentAppointment != null && 
+                                         ("Active".equals(currentAppointment.getAppointmentStatus()) || 
+                                          "Scheduled".equals(currentAppointment.getAppointmentStatus()) || 
+                                          "Rescheduled".equals(currentAppointment.getAppointmentStatus()));
+            
+            if (isActiveAppointment) {
                 // If there's an active appointment, show "Set a Session" option
                 options = new SimpleModalBorder.Option[] {
                     new SimpleModalBorder.Option("Set a Session", SimpleModalBorder.YES_OPTION),
@@ -384,7 +480,7 @@ public class AppointmentCalendar extends JPanel {
                             options,
                             (controller, action) -> {
                                 if (action == SimpleModalBorder.YES_OPTION) {
-                                    if (currentAppointment != null && !"Ended".equals(currentAppointment.getAppointmentStatus())) {
+                                    if (isActiveAppointment) {
                                         // Handle "Set a Session" action
                                         DrawerBuilder.switchToSessionsForm();
                                         Form[] forms = FormManager.getForms();
@@ -393,7 +489,7 @@ public class AppointmentCalendar extends JPanel {
                                                 SessionsForm sessionsForm = (SessionsForm) form;
                                                 try {
                                                     AppointmentDAO appointmentDAO = new AppointmentDAO(connection);
-                                                    Appointment fullAppointment = appointmentDAO.getAppointmentByIdExcludingEnded(
+                                                    Appointment fullAppointment = appointmentDAO.getAppointmentById(
                                                         currentAppointment.getAppointmentId());
                                                     if (fullAppointment != null) {
                                                         sessionsForm.populateFromAppointment(fullAppointment);
@@ -455,7 +551,7 @@ public class AppointmentCalendar extends JPanel {
             AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDao, connection);
 
             // Show modal with proper size and validation
-            AddAppointmentModal.getInstance().showModal( connection,
+            AddAppointmentModal.getInstance().showModal(connection,
                 this, 
                 addAppointmentPanel,
                 appointmentDao,
@@ -468,16 +564,32 @@ public class AppointmentCalendar extends JPanel {
                         AppointmentDayDetails detailsPanel = new AppointmentDayDetails(connection, null, null);
                         detailsPanel.loadAppointmentsForDate(selectedDate);
                         
-                        // Close and recreate modal with updated content
-                        if (ModalDialog.isIdExist("appointment_details_date_" + selectedDate.toString())) {
-                            ModalDialog.closeModal("appointment_details_date_" + selectedDate.toString());
-                            createAndShowModalDialog(detailsPanel, "appointment_details_date_" + selectedDate.toString(), selectedDate);
+                        // Close and recreate modal with updated content if it exists
+                        String modalId = "appointment_details_date_" + selectedDate.toString();
+                        if (ModalDialog.isIdExist(modalId)) {
+                            ModalDialog.closeModal(modalId);
+                            createAndShowModalDialog(detailsPanel, modalId, selectedDate);
                         }
                         
                         // Refresh calendar view
                         updateCalendar();
+                        
+                        // Refresh parent views if applicable
+                        if (getParent() != null) {
+                            java.awt.Component parent = getParent();
+                            while (parent != null && !(parent instanceof AppointmentManagement)) {
+                                parent = parent.getParent();
+                            }
+                            if (parent instanceof AppointmentManagement) {
+                                ((AppointmentManagement) parent).refreshViews();
+                            }
+                        }
                     } catch (SQLException e) {
                         e.printStackTrace();
+                        JOptionPane.showMessageDialog(this,
+                            "Error updating calendar: " + e.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     }
                 }   
             );

@@ -62,6 +62,9 @@ public class SettingsManager {
 				"INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) ON DUPLICATE KEY UPDATE PREF_VALUE = ?",
 				"INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) ON DUPLICATE KEY UPDATE PREF_VALUE = ?",
 				"INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) ON DUPLICATE KEY UPDATE PREF_VALUE = ?",
+				"INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) ON DUPLICATE KEY UPDATE PREF_VALUE = ?",
+				"INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) ON DUPLICATE KEY UPDATE PREF_VALUE = ?",
+				"INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) ON DUPLICATE KEY UPDATE PREF_VALUE = ?",
 				"INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) ON DUPLICATE KEY UPDATE PREF_VALUE = ?"
 			};
 
@@ -69,7 +72,10 @@ public class SettingsManager {
 				{"theme", state.theme},
 				{"font_style", state.fontStyle},
 				{"font_size", String.valueOf(state.fontSize)},
-				{"notifications", String.valueOf(state.notifications)}
+				{"notifications", String.valueOf(state.notifications)},
+				{"notification_time_minutes", String.valueOf(state.notificationTimeMinutes)},
+				{"notify_on_missed", String.valueOf(state.notifyOnMissed)},
+				{"notify_on_start", String.valueOf(state.notifyOnStart)}
 			};
 
 			for (int i = 0; i < queries.length; i++) {
@@ -106,7 +112,14 @@ public class SettingsManager {
 		String fontStyle = settings.getOrDefault("font_style", "FlatRobotoFont");
 		int fontSize = Integer.parseInt(settings.getOrDefault("font_size", "13"));
 		boolean notifications = Boolean.parseBoolean(settings.getOrDefault("notifications", "true"));
-		return new SettingsState(theme, fontStyle, fontSize, notifications);
+		
+		// Add new notification settings
+		int notificationTimeMinutes = Integer.parseInt(settings.getOrDefault("notification_time_minutes", "10"));
+		boolean notifyOnMissed = Boolean.parseBoolean(settings.getOrDefault("notify_on_missed", "true"));
+		boolean notifyOnStart = Boolean.parseBoolean(settings.getOrDefault("notify_on_start", "true"));
+		
+		return new SettingsState(theme, fontStyle, fontSize, notifications, 
+			notificationTimeMinutes, notifyOnMissed, notifyOnStart);
 	}
 	
 	   /**
@@ -132,6 +145,15 @@ public class SettingsManager {
 				break;
 			case "notifications":
 				currentState.notifications = Boolean.parseBoolean(value);
+				break;
+			case "notification_time_minutes":
+				currentState.notificationTimeMinutes = Integer.parseInt(value);
+				break;
+			case "notify_on_missed":
+				currentState.notifyOnMissed = Boolean.parseBoolean(value);
+				break;
+			case "notify_on_start":
+				currentState.notifyOnStart = Boolean.parseBoolean(value);
 				break;
 		}
 
@@ -232,6 +254,15 @@ public class SettingsManager {
 						break;
 					case "notifications":
 						state.notifications = Boolean.parseBoolean(value);
+						break;
+					case "notification_time_minutes":
+						state.notificationTimeMinutes = Integer.parseInt(value);
+						break;
+					case "notify_on_missed":
+						state.notifyOnMissed = Boolean.parseBoolean(value);
+						break;
+					case "notify_on_start":
+						state.notifyOnStart = Boolean.parseBoolean(value);
 						break;
 				}
 			}

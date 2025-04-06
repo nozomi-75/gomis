@@ -184,7 +184,7 @@ public class AppointmentDAO {
                     "LEFT JOIN APPOINTMENT_PARTICIPANTS ap ON a.APPOINTMENT_ID = ap.APPOINTMENT_ID " +
                     "LEFT JOIN PARTICIPANTS p ON ap.PARTICIPANT_ID = p.PARTICIPANT_ID " +
                     "WHERE DATE(a.APPOINTMENT_DATE_TIME) = ? " +
-                    "AND a.APPOINTMENT_STATUS NOT IN ('Ended', 'Cancelled') " +
+                    "AND a.APPOINTMENT_STATUS = 'Active' " +
                     "ORDER BY a.APPOINTMENT_DATE_TIME";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -439,7 +439,7 @@ public class AppointmentDAO {
         String sql;
         
         if ("all".equalsIgnoreCase(status)) {
-            sql = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_STATUS IN ('Ended', 'Cancelled') ORDER BY APPOINTMENT_DATE_TIME DESC";
+            sql = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_STATUS IN ('Ended', 'Cancelled', 'Missed') ORDER BY APPOINTMENT_DATE_TIME DESC";
         } else {
             sql = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_STATUS = ? ORDER BY APPOINTMENT_DATE_TIME DESC";
         }
@@ -468,6 +468,128 @@ public class AppointmentDAO {
             stmt.setInt(1, guidanceCounselorId);
             return fetchAppointmentsWithParticipants(stmt);
         }
+    }
+
+    public List<Appointment> getAppointmentsByParticipant(String participantName) throws SQLException {
+        String sql = "SELECT a.* FROM APPOINTMENTS a " +
+                     "JOIN APPOINTMENT_PARTICIPANTS ap ON a.APPOINTMENT_ID = ap.APPOINTMENT_ID " +
+                     "JOIN PARTICIPANTS p ON ap.PARTICIPANT_ID = p.PARTICIPANT_ID " +
+                     "WHERE CONCAT(p.PARTICIPANT_FIRSTNAME, ' ', p.PARTICIPANT_LASTNAME) = ?";
+        List<Appointment> appointments = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, participantName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    appointments.add(mapResultSetToAppointment(rs));
+                }
+            }
+        }
+        return appointments;
+    }
+
+    /**
+     * Checks for and updates appointments that should be marked as missed.
+     * This method finds appointments that are in the past and still marked as Scheduled or Rescheduled,
+     * and updates their status to Missed.
+     * 
+     * @return The number of appointments that were marked as missed
+     * @throws SQLException if a database error occurs
+     */
+    public int checkAndUpdateMissedAppointments() throws SQLException {
+        int updatedCount = 0;
+        
+        // Find appointments that are in the past, still scheduled or rescheduled
+        String query = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_DATE_TIME < ? " +
+                       "AND (APPOINTMENT_STATUS = 'Scheduled' OR APPOINTMENT_STATUS = 'Rescheduled')";
+        
+        try (PreparedStatement pst = connection.prepareStatement(query)) {
+            pst.setTimestamp(1, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+            
+            try (ResultSet rs = pst.executeQuery()) {
+                // Update query to mark appointments as missed
+                String updateQuery = "UPDATE APPOINTMENTS SET APPOINTMENT_STATUS = 'Missed' WHERE APPOINTMENT_ID = ?";
+                
+                try (PreparedStatement updatePst = connection.prepareStatement(updateQuery)) {
+                    while (rs.next()) {
+                        int appointmentId = rs.getInt("APPOINTMENT_ID");
+                        updatePst.setInt(1, appointmentId);
+                        updatePst.executeUpdate();
+                        updatedCount++;
+                    }
+                }
+            }
+        }
+        
+        return updatedCount;
+    }
+
+    /**
+     * Gets appointments that are about to be marked as missed (within the 2-minute grace period)
+     * @return List of appointments in their grace period
+     */
+    public List<Appointment> getAppointmentsInGracePeriod() throws SQLException {
+        List<Appointment> appointments = new ArrayList<>();
+        
+        // Find appointments that are 0-2 minutes past their scheduled time and still active
+        String query = "SELECT * FROM APPOINTMENTS WHERE " +
+                      "APPOINTMENT_DATE_TIME BETWEEN DATE_SUB(NOW(), INTERVAL 2 MINUTE) AND NOW() " +
+                      "AND (APPOINTMENT_STATUS = 'Scheduled' OR APPOINTMENT_STATUS = 'Rescheduled')";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Appointment appointment = mapResultSetToAppointment(rs);
+                    appointment.setParticipants(getParticipantsForAppointment(appointment.getAppointmentId()));
+                    appointments.add(appointment);
+                }
+            }
+        }
+        
+        return appointments;
+    }
+
+    /**
+     * Checks for and updates appointment statuses, with a 2-minute grace period
+     * @return The number of appointments that were marked as missed
+     */
+    public int checkAndUpdateMissedWithoutSessions() throws SQLException {
+        int updatedCount = 0;
+        
+        // Get appointments that are more than 2 minutes past their scheduled time
+        String query = "SELECT * FROM APPOINTMENTS WHERE " +
+                      "APPOINTMENT_DATE_TIME < DATE_SUB(NOW(), INTERVAL 2 MINUTE) " +
+                      "AND (APPOINTMENT_STATUS = 'Scheduled' OR APPOINTMENT_STATUS = 'Rescheduled')";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int appointmentId = rs.getInt("APPOINTMENT_ID");
+                    
+                    // Check if there's a session associated with this appointment
+                    boolean hasSession = false;
+                    try (PreparedStatement sessionCheck = connection.prepareStatement(
+                            "SELECT COUNT(*) FROM SESSIONS WHERE APPOINTMENT_ID = ?")) {
+                        sessionCheck.setInt(1, appointmentId);
+                        ResultSet sessionRs = sessionCheck.executeQuery();
+                        if (sessionRs.next() && sessionRs.getInt(1) > 0) {
+                            hasSession = true;
+                        }
+                    }
+                    
+                    // Only mark as missed if no session is associated
+                    if (!hasSession) {
+                        try (PreparedStatement updateStmt = connection.prepareStatement(
+                                "UPDATE APPOINTMENTS SET APPOINTMENT_STATUS = 'Missed' WHERE APPOINTMENT_ID = ?")) {
+                            updateStmt.setInt(1, appointmentId);
+                            updateStmt.executeUpdate();
+                            updatedCount++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return updatedCount;
     }
 }
 

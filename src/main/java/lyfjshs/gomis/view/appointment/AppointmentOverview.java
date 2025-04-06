@@ -235,10 +235,12 @@ private void loadAppointments(LocalDate date) {
         List<Appointment> loadedAppointments = null;
         try {
             loadedAppointments = appointmentDAO.getAppointmentsForDate(date);
-            // Filter out ended appointments
+            // Filter out completed, missed, or cancelled appointments
             if (loadedAppointments != null) {
                 loadedAppointments = loadedAppointments.stream()
-                    .filter(appt -> !"Ended".equals(appt.getAppointmentStatus()))
+                    .filter(appt -> "Scheduled".equals(appt.getAppointmentStatus()) || 
+                                     "In Progress".equals(appt.getAppointmentStatus()) ||
+                                     "Rescheduled".equals(appt.getAppointmentStatus()))  // Add Rescheduled status
                     .toList();
             }
         } catch (SQLException e) {

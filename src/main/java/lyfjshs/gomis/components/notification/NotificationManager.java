@@ -13,9 +13,12 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
@@ -35,11 +38,15 @@ public class NotificationManager {
     private final int interactiveNotificationDuration;
     private final List<NotificationPopup> notificationPopups;
     private final List<Notification> notifications;
+    private final Set<String> shownNotificationIds;
+    private static final Set<Integer> notifiedAppointments = new HashSet<>();
     
     private static final Color DEFAULT_ICON_COLOR = new Color(0, 120, 215); // Windows blue
     private static final int ICON_SIZE = 16;
+    private static final long NOTIFICATION_COOLDOWN = 60000; // 1 minute cooldown between identical notifications
 
     public static class Notification {
+        private final String id;
         private final String title;
         private final String message;
         private final String type;
@@ -47,6 +54,7 @@ public class NotificationManager {
         private boolean unread;
 
         public Notification(String title, String message, String type) {
+            this.id = UUID.randomUUID().toString();
             this.title = title;
             this.message = message;
             this.type = type;
@@ -54,12 +62,77 @@ public class NotificationManager {
             this.unread = true;
         }
 
+        public String getId() { return id; }
         public String getTitle() { return title; }
         public String getMessage() { return message; }
         public String getType() { return type; }
         public long getTimestamp() { return timestamp; }
         public boolean isUnread() { return unread; }
         public void markAsRead() { this.unread = false; }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Notification that = (Notification) obj;
+            return title.equals(that.title) && message.equals(that.message) && type.equals(that.type);
+        }
+        
+        @Override
+        public int hashCode() {
+            int result = title.hashCode();
+            result = 31 * result + message.hashCode();
+            result = 31 * result + type.hashCode();
+            return result;
+        }
+    }
+
+    /**
+     * Checks if an appointment has already been notified
+     * @param appointmentId The ID of the appointment
+     * @return true if the appointment has already been notified
+     */
+    public static boolean isAppointmentNotified(Integer appointmentId) {
+        if (appointmentId == null) {
+            return false;
+        }
+        return notifiedAppointments.contains(appointmentId);
+    }
+
+    /**
+     * Marks an appointment as notified to prevent duplicate notifications
+     * @param appointmentId The ID of the appointment
+     */
+    public static void markAppointmentAsNotified(Integer appointmentId) {
+        if (appointmentId != null) {
+            notifiedAppointments.add(appointmentId);
+        }
+    }
+
+    /**
+     * Clears the list of notified appointments, typically done at midnight
+     */
+    public static void clearNotifiedAppointments() {
+        notifiedAppointments.clear();
+    }
+
+    /**
+     * Sets up daily cleanup at midnight to reset the notifications
+     */
+    public void setupDailyCleanup() {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        calendar.set(java.util.Calendar.MINUTE, 0);
+        calendar.set(java.util.Calendar.SECOND, 0);
+        calendar.add(java.util.Calendar.DAY_OF_MONTH, 1);
+        
+        java.util.Timer timer = new java.util.Timer(true);
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                clearNotifiedAppointments();
+            }
+        }, calendar.getTime(), 24 * 60 * 60 * 1000); // Daily
     }
 
     private NotificationManager() {
@@ -78,6 +151,7 @@ public class NotificationManager {
         this.systemTray = SystemTray.getSystemTray();
         this.notificationPopups = new ArrayList<>();
         this.notifications = new ArrayList<>();
+        this.shownNotificationIds = new HashSet<>();
         
         Image icon = loadIcon();
         PopupMenu popup = setupTrayMenu();
@@ -89,6 +163,9 @@ public class NotificationManager {
         } catch (AWTException e) {
             throw new RuntimeException("Failed to initialize notification system", e);
         }
+        
+        // Setup daily cleanup
+        setupDailyCleanup();
     }
 
     public static synchronized NotificationManager getInstance() {
@@ -149,6 +226,14 @@ public class NotificationManager {
     }
 
     public void cleanup() {
+        cleanup(true); // Default behavior is to exit
+    }
+    
+    /**
+     * Cleans up all notification resources and optionally exits the application
+     * @param exitApplication Whether to exit the application after cleanup
+     */
+    public void cleanup(boolean exitApplication) {
         // Clean up all active notifications
         activeNotifications.forEach((icon, timer) -> {
             timer.cancel();
@@ -156,10 +241,18 @@ public class NotificationManager {
         });
         activeNotifications.clear();
         
-        // Remove main tray icon and exit
+        // Remove main tray icon
         SwingUtilities.invokeLater(() -> {
-            systemTray.remove(mainTrayIcon);
-            System.exit(0);
+            try {
+                systemTray.remove(mainTrayIcon);
+                
+                // Only exit if specifically requested
+                if (exitApplication) {
+                    System.exit(0);
+                }
+            } catch (Exception e) {
+                System.err.println("Error removing tray icon: " + e.getMessage());
+            }
         });
     }
 
@@ -198,11 +291,46 @@ public class NotificationManager {
         });
     }
 
+    /**
+     * Adds a notification to the list and prevents duplicates
+     */
     private void addNotification(Notification notification) {
+        // Check for duplicate recent notifications (with same title, message, and type)
+        boolean isDuplicate = false;
+        
+        for (Notification existing : notifications) {
+            // If we find an identical notification that's less than 1 minute old
+            if (existing.equals(notification) && 
+                (System.currentTimeMillis() - existing.getTimestamp() < NOTIFICATION_COOLDOWN)) {
+                isDuplicate = true;
+                break;
+            }
+        }
+        
+        if (isDuplicate) {
+            // Don't add duplicate recent notifications
+            System.out.println("Skipping duplicate notification: " + notification.getTitle());
+            return;
+        }
+        
         // Add to the beginning of the list
         notifications.add(0, notification);
+        
+        // Track the notification ID to prevent duplicate displays
+        shownNotificationIds.add(notification.getId());
+        
+        // Schedule cleanup of old IDs after cooldown period
+        Timer cleanupTimer = new Timer(true);
+        cleanupTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                shownNotificationIds.remove(notification.getId());
+            }
+        }, NOTIFICATION_COOLDOWN);
+        
         // Notify all popups about the new notification
         notifyPopups(notification);
+        
         // Notify that a new notification is being displayed
         for (NotificationPopup popup : notificationPopups) {
             NotificationCallback callback = popup.getCallback();
@@ -306,6 +434,22 @@ public class NotificationManager {
             task.run();
         } else {
             SwingUtilities.invokeLater(task);
+        }
+    }
+
+    public TrayIcon getMainTrayIcon() {
+        return mainTrayIcon;
+    }
+    
+    public boolean isNotificationsEnabled() {
+        // Check settings if available
+        try {
+            lyfjshs.gomis.components.settings.SettingsState state = 
+                lyfjshs.gomis.components.settings.SettingsManager.getCurrentState();
+            return state != null && state.notifications;
+        } catch (Exception e) {
+            // If settings aren't available, default to true
+            return true;
         }
     }
 }

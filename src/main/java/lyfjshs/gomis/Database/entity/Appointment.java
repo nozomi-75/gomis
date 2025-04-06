@@ -14,6 +14,7 @@ public class Appointment {
     private String appointmentNotes;
     private Timestamp updatedAt;
     private List<Participants> participants;
+    private boolean reminderShown = false;
 
     public Appointment() {
         this.participants = new ArrayList<>();
@@ -140,6 +141,14 @@ public class Appointment {
             }
         }
         return ids;
+    }
+
+    public boolean isReminderShown() {
+        return reminderShown;
+    }
+
+    public void setReminderShown(boolean reminderShown) {
+        this.reminderShown = reminderShown;
     }
 
     @Override

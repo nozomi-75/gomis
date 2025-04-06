@@ -20,6 +20,7 @@ import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.notification.NotificationManager;
+import lyfjshs.gomis.utils.EventBus;
 
 /**
  * The LoginController class provides methods for interacting with the 'users' table in the database.
@@ -199,6 +200,11 @@ public class LoginController {
         return ps;
     }
 
+    // Add helper method for showing error messages
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
     public void login(JTextField usernameTF, JPasswordField passwordTF, JFrame view) {
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -239,42 +245,57 @@ public class LoginController {
                             );
 
                             // Debug: Print counselor details
-                            System.out.println("Counselor Details while LOGING IN: " + counselor.getFirstName() + " " + counselor.getLastName() + ", " + counselor.getPosition());
+                            System.out.println("Counselor Details while LOGGING IN: " + counselor.getFirstName() + " " + counselor.getLastName() + ", " + counselor.getPosition());
                             
-                            // First set the counselor details
-                            Main.formManager.setCounselorDetails(counselor);
-                            Main.formManager.setCounselorID(counselor.getGuidanceCounselorId());
-                            
-                            // Debug: Verify details set in FormManager
-                            System.out.println("Set in FormManager: " + Main.formManager.getCounselorFullName() + ", " + Main.formManager.getCounselorPosition());
-                            
-                            // Check for upcoming appointments
-                            checkUpcomingAppointments(counselor.getGuidanceCounselorId());
-                            
-                            // Then call login() which will create the drawer with the updated details
-                            FormManager.login(connection);							
-                            // Close the counselor resources
-                            counselorRs.close();
-                            counselorPs.close();
+                            try {
+                                // First set the counselor details
+                                FormManager.setCounselorObject(counselor);
+                                System.out.println("Set in FormManager: " + counselor.getFirstName() + " " + counselor.getLastName() + ", " + counselor.getPosition());
+                                
+                                // Make view invisible first to prevent it from being shown alongside the main form
+                                view.setVisible(false);
+                                
+                                // Show the main dashboard with all features
+                                FormManager.login(connection);
+                                
+                                // Notify subscribers that a counselor has logged in
+                                EventBus.publish("counselor_logged_in", counselor);
+                                
+                                // Ensure the main frame is visible and focused
+                                JFrame mainFrame = FormManager.getFrame();
+                                if (mainFrame != null) {
+                                    mainFrame.setVisible(true);
+                                    mainFrame.setExtendedState(JFrame.NORMAL);
+                                    mainFrame.toFront();
+                                    mainFrame.requestFocus();
+                                }
+                            } catch (Exception ex) {
+                                System.err.println("Error loading main dashboard: " + ex.getMessage());
+                                ex.printStackTrace();
+                                showError("Error loading main dashboard: " + ex.getMessage());
+                            }
                         } else {
-                            JOptionPane.showMessageDialog(view, "Counselor details not found", "Error",
-                                    JOptionPane.ERROR_MESSAGE);
+                            showError("Counselor information not found.");
                         }
+                        counselorRs.close();
+                        counselorPs.close();
                     } else {
-                        JOptionPane.showMessageDialog(view, "User is not a guidance counselor", "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        showError("This account is not linked to a counselor.");
                     }
                 } else {
-                    JOptionPane.showMessageDialog(view, "Invalid username or password", "Error",
-                            JOptionPane.ERROR_MESSAGE);
+                    showError("User information not found.");
                 }
             } else {
-                JOptionPane.showMessageDialog(view, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
+                showError("Invalid username or password.");
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(view, "Database error: " + e.getMessage(), "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException ex) {
+            System.err.println("Database error during login: " + ex.getMessage());
+            ex.printStackTrace();
+            showError("Database error: " + ex.getMessage());
+        } catch (Exception ex) {
+            System.err.println("General error during login: " + ex.getMessage());
+            ex.printStackTrace();
+            showError("Error: " + ex.getMessage());
         } finally {
             try {
                 if (rs != null) rs.close();

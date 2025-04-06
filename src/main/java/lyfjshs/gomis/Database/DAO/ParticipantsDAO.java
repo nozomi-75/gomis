@@ -11,16 +11,6 @@ import java.util.List;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 
-/* CREATE TABLE PARTICIPANTS (
-    PARTICIPANT_ID INT PRIMARY KEY AUTO_INCREMENT,
-    STUDENT_UID INT NULL,
-    PARTICIPANT_TYPE VARCHAR(50),
-    PARTICIPANT_LASTNAME VARCHAR(100),
-    PARTICIPANT_FIRSTNAME VARCHAR(100),
-    PARTICIPANT_SEX VARCHAR(100),
-    CONTACT_NUMBER VARCHAR(20),
-    FOREIGN KEY (STUDENT_UID) REFERENCES STUDENT (STUDENT_UID)
-); */
 public class ParticipantsDAO {
     private final Connection connection;
 
@@ -217,5 +207,50 @@ public class ParticipantsDAO {
             }
         }
         return null;
+    }
+    
+    /**
+     * Adds a new participant to the database
+     * 
+     * @param participant The participant to add
+     * @return The ID of the new participant
+     * @throws SQLException If there is a database error
+     */
+    public int addParticipant(Participants participant) throws SQLException {
+        String sql = "INSERT INTO PARTICIPANTS (STUDENT_UID, PARTICIPANT_TYPE, PARTICIPANT_LASTNAME, " +
+                "PARTICIPANT_FIRSTNAME, PARTICIPANT_SEX, CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setObject(1, participant.getStudentUid());
+            stmt.setString(2, participant.getParticipantType());
+            stmt.setString(3, participant.getParticipantLastName());
+            stmt.setString(4, participant.getParticipantFirstName());
+            stmt.setString(5, participant.getSex());
+            stmt.setString(6, participant.getContactNumber());
+
+            int affectedRows = stmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1);
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+    
+    /**
+     * Gets a participant by their details
+     * 
+     * @param firstName The participant's first name
+     * @param lastName The participant's last name
+     * @param type The participant's type
+     * @return The participant, or null if not found
+     * @throws SQLException If there is a database error
+     */
+    public Participants getParticipantByDetails(String firstName, String lastName, String type) throws SQLException {
+        return findParticipantByNameAndType(firstName, lastName, type);
     }
 }

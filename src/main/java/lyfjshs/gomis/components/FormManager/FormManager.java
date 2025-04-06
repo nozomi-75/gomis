@@ -140,6 +140,37 @@ public class FormManager {
         return login;
     }
 
+    // Static counselor object accessible application-wide
+    private static GuidanceCounselor staticCounselorObject;
+    
+    /**
+     * Sets the counselor object at the class level for static access
+     * @param counselor The GuidanceCounselor object to set
+     */
+    public static void setCounselorObject(GuidanceCounselor counselor) {
+        if (counselor == null) {
+            System.err.println("Warning: Attempting to set null counselor");
+            return;
+        }
+        staticCounselorObject = counselor;
+        counselorFIRST_NAME = counselor.getFirstName();
+        counselorLAST_NAME = counselor.getLastName();
+        counselorPosition = counselor.getPosition();
+        counselorID = counselor.getGuidanceCounselorId();
+        System.out.println(
+                "Counselor Details Set: " + counselorFIRST_NAME + " " + counselorLAST_NAME + ", " + counselorPosition);
+                
+        // Create instance of FormManager if not already
+        if (Main.formManager == null) {
+            Main.formManager = new FormManager();
+        }
+        
+        // Also set in the instance for backward compatibility
+        if (Main.formManager != null) {
+            Main.formManager.setCounselorDetails(counselor);
+        }
+    }
+
     private GuidanceCounselor counselorObjedct;
 
     public void setCounselorDetails(GuidanceCounselor counselor) {
