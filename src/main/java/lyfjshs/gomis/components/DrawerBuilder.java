@@ -21,7 +21,7 @@ import lyfjshs.gomis.view.incident.IncidentList;
 import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
-import lyfjshs.gomis.view.students.create.StudentInfoFullForm;
+import lyfjshs.gomis.view.students.create.CreateStudentData;
 import lyfjshs.gomis.view.violation.Violation_Record;
 import raven.extras.AvatarIcon;
 import raven.modal.Drawer;
@@ -145,22 +145,23 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 
 		MenuItem items[] = new MenuItem[] {
 				new Item.Label("Dashboard"),
-				new Item("Home", "home.svg", MainDashboard.class),
+				new Item("Home", "home.svg", MainDashboard.class), //menu [1]
 				new Item.Label("Management"),
-				new Item("Appointments", "calendar.svg", AppointmentManagement.class),
-				new Item("Sessions", "gavel.svg")
+				new Item("Appointments", "calendar.svg", AppointmentManagement.class), //menu [2]
+				new Item("Sessions", "gavel.svg") //menu [3]	
 						.subMenu("Session Fill-Up Form", SessionsForm.class)
 						.subMenu("Session Records", SessionRecords.class),
 
-				new Item("Students Management", "article_person.svg")
-						.subMenu("Create Student", StudentInfoFullForm.class)
+				new Item("Students Management", "article_person.svg") //menu [4]
+						.subMenu("Create Student", CreateStudentData.class)
+						.subMenu("Import School Form", lyfjshs.gomis.view.students.schoolForm.ImportSF.class)
 						.subMenu("Students Data", StudentMangementGUI.class),
-				new Item("Incident Management", "assignment.svg")
+				new Item("Incident Management", "assignment.svg") //menu [5]
 						.subMenu("Incident Fill-Up Form", IncidentFillUpForm.class)
 						.subMenu("Incident Records", IncidentList.class),
-				new Item("Violation Records", "forms.svg", Violation_Record.class),
-				new Item("Setting", "setting.svg", SettingsPanel.class),
-				new Item("Logout", "logout.svg")
+				new Item("Violation Records", "forms.svg", Violation_Record.class), //menu [6]
+				new Item("Setting", "setting.svg", SettingsPanel.class), //menu [7]
+				new Item("Logout", "logout.svg") //menu [8]
 		};
 
 		simpleMenuOption.setMenuStyle(new MenuStyle() {
@@ -186,7 +187,7 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 					FormManager.logout();
 					return;
 				}
-
+				
 				if (itemClass == null || !Form.class.isAssignableFrom(itemClass)) {
 					action.consume();
 					return;

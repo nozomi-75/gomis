@@ -307,7 +307,7 @@ public class GoodMoralGenerator {
         };
 
         // Create main panel with BorderLayout
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        JPanel mainPanel = new JPanel();
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Create content panel with MigLayout
@@ -317,8 +317,9 @@ public class GoodMoralGenerator {
         // Create smooth scrolling pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Smooth scrolling
+        mainPanel.setLayout(new MigLayout("", "[661px]", "[grow][100px]"));
         scrollPane.setBorder(null);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(scrollPane, "cell 0 0,grow");
 
         // Purpose section
         contentPanel.add(new JLabel("Purpose:"), "cell 0 0");
@@ -350,7 +351,7 @@ public class GoodMoralGenerator {
         datePicker.addDateSelectionListener(e -> {
             updateBatchFormattedDateLabel(formattedDateLabel, datePicker.getSelectedDate());
         });
-        
+//        
         contentPanel.add(formattedDateLabel, "cell 0 2 2 1,alignx center");
 
         // Signer section
@@ -412,7 +413,7 @@ public class GoodMoralGenerator {
         listScrollPane.getVerticalScrollBar().setUnitIncrement(16); // Smooth scrolling
         studentsPanel.add(listScrollPane, "cell 0 0,grow,height 150:200:250");
 
-        mainPanel.add(studentsPanel, BorderLayout.SOUTH);
+        mainPanel.add(studentsPanel, "cell 0 1,growx,aligny top");
 
         // Show modal with unique ID
         ModalDialog.showModal(parent, 

@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,21 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
@@ -47,7 +38,6 @@ import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
 import raven.modal.ModalDialog;
-import raven.modal.component.SimpleModalBorder;
 import raven.modal.option.Location;
 import raven.modal.option.Option;
 
@@ -70,24 +60,12 @@ public class StudentMangementGUI extends Form {
 	private JComboBox<Integer> pageSizeComboBox;
 	private JButton filterButton;
 	private Map<String, String> activeFilters;
-	private JPanel appliedFiltersPanel;
-
-	// Filter dialog components
-	private JTextField lrnFilterField;
-	private JTextField nameFilterField;
-	private JComboBox<String> gradeLevelComboBox;
-	private JComboBox<String> sectionComboBox;
-	private JComboBox<String> trackStrandComboBox;
-	private JCheckBox maleCheckbox;
-	private JCheckBox femaleCheckbox;
-	private JSpinner minAgeSpinner;
-	private JSpinner maxAgeSpinner;
-	private JLabel filterCountLabel;
-	private JPanel appliedFiltersSection;
+	private Map<String, Object> savedFilterState;
 
 	public StudentMangementGUI(Connection conn) {
 		this.connection = conn;
 		this.activeFilters = new HashMap<>();
+		this.savedFilterState = new HashMap<>();
 		studentsDataCRUD = new StudentsDataDAO(conn);
 		this.violationDAO = new ViolationDAO(conn);
 		initializeComponents();
@@ -112,6 +90,12 @@ public class StudentMangementGUI extends Form {
 			currentDetailPanel = null;
 			backBtn.setVisible(false);
 			headerSearchPanel.setVisible(true); // Show search panel when returning to main view
+			
+			// Clear the filter dialog saved state to start fresh when returning to main panel
+			if (savedFilterState != null) {
+				savedFilterState.clear();
+			}
+			
 			FlatAnimatedLafChange.hideSnapshotWithAnimation();
 		});
 
@@ -126,24 +110,37 @@ public class StudentMangementGUI extends Form {
 	 * Sets up the filter components
 	 */
 	private void setupFilterComponents() {
-		// Create the main filter panel
-		filterPanel = new JPanel(new MigLayout("insets 10", "[grow]", "[]"));
-		filterPanel.setBorder(BorderFactory.createTitledBorder("Filter Students"));
+		// Create a more modern filter panel without border title
+		filterPanel = new JPanel(new MigLayout("insets 5 10 5 10", "[grow]", "[]"));
+		filterPanel.setBackground(null); // Use default background
 
-		// Create the filter button
-		filterButton = new JButton("Filter Students", new FlatSVGIcon("icons/filter.svg", 0.4f));
-		filterButton.addActionListener(e -> showFilterDialog());
-		filterPanel.add(filterButton, "cell 0 0, growx");
-
-		// Create the applied filters panel
-		appliedFiltersPanel = new JPanel(new MigLayout("insets 5", "[grow]", "[]"));
-		appliedFiltersPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		filterPanel.add(appliedFiltersPanel, "cell 0 1, growx");
-
-		// Add a label for when no filters are applied
-		JLabel noFiltersLabel = new JLabel("No filters applied");
-		noFiltersLabel.setForeground(Color.GRAY);
-		appliedFiltersPanel.add(noFiltersLabel, "cell 0 0");
+		// Create a more stylish filter button
+		filterButton = new JButton("Filter");
+		filterButton.putClientProperty(FlatClientProperties.STYLE, "" +
+				"background:$Component.accentColor;" +
+				"foreground:#FFFFFF;" +  // Use hex color instead of 'white'
+				"borderWidth:0;" +
+				"focusWidth:0;" +
+				"arc:8;" +
+				"margin:5,10,5,10");
+		
+		// Add action to show filter dialog
+		filterButton.addActionListener(e -> {
+			// Only show the filter dialog if it's not already visible
+			if (!ModalDialog.isIdExist("student-filter")) {
+				StudentFilterModal.getInstance().showModal(
+					connection,
+					this,
+					this,
+					activeFilters,
+					400,  // width
+					600   // height
+				);
+			}
+		});
+		
+		// Add the filter button to the panel
+		filterPanel.add(filterButton, "cell 0 0, alignx right");
 
 		// Initialize comboboxes with data from database
 		populateComboBoxesFromDatabase();
@@ -197,11 +194,6 @@ public class StudentMangementGUI extends Form {
 				}
 			}
 
-			// Initialize comboboxes with the retrieved data
-			gradeLevelComboBox = new JComboBox<>(gradeLevels.toArray(new String[0]));
-			sectionComboBox = new JComboBox<>(sections.toArray(new String[0]));
-			trackStrandComboBox = new JComboBox<>(tracks.toArray(new String[0]));
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this, 
@@ -214,302 +206,21 @@ public class StudentMangementGUI extends Form {
 	/**
 	 * Shows the filter dialog
 	 */
-	private void showFilterDialog() {
-		// Create the filter dialog panel with scrollpane
-		JPanel filterDialogPanel = new JPanel(new BorderLayout());
-		JPanel contentPanel = createFilterDialogPanel();
-		
-		// Create and configure the filter count label
-		filterCountLabel = new JLabel("0 filters applied");
-		filterCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		filterCountLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-		filterCountLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-
-		// Add components to the panel using proper BorderLayout constraints
-		filterDialogPanel.add(contentPanel, BorderLayout.CENTER);
-		filterDialogPanel.add(filterCountLabel, BorderLayout.SOUTH);
-
-		// Define options for the SimpleModalBorder with explicit close button
-		SimpleModalBorder.Option[] modalOptions = new SimpleModalBorder.Option[] {
-				new SimpleModalBorder.Option("Apply", SimpleModalBorder.YES_OPTION),
-				new SimpleModalBorder.Option("Reset", SimpleModalBorder.NO_OPTION),
-				new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
-		};
-
-		// Create option for the modal dialog
-		raven.modal.option.Option option = ModalDialog.getDefaultOption();
-		
-		// Show the modal dialog
-		ModalDialog.showModal(this,
-				new SimpleModalBorder(filterDialogPanel, "Filter Students", modalOptions, (controller, action) -> {
-					if (action == SimpleModalBorder.YES_OPTION) {
-						// Collect filter values
-						Map<String, String> filters = new HashMap<>();
-
-						// LRN filter
-						String lrnValue = lrnFilterField.getText().trim();
-						if (!lrnValue.isEmpty()) {
-							filters.put("lrn", lrnValue);
-						}
-
-						// Name filter
-						String nameValue = nameFilterField.getText().trim();
-						if (!nameValue.isEmpty()) {
-							filters.put("name", nameValue);
-						}
-
-						// Grade Level filter
-						String gradeLevelValue = (String) gradeLevelComboBox.getSelectedItem();
-						if (gradeLevelValue != null && !gradeLevelValue.isEmpty()) {
-							filters.put("gradeLevel", gradeLevelValue);
-						}
-
-						// Section filter
-						String sectionValue = (String) sectionComboBox.getSelectedItem();
-						if (sectionValue != null && !sectionValue.isEmpty()) {
-							filters.put("section", sectionValue);
-						}
-
-						// Track & Strand filter
-						String trackStrandValue = (String) trackStrandComboBox.getSelectedItem();
-						if (trackStrandValue != null && !trackStrandValue.isEmpty()) {
-							filters.put("trackStrand", trackStrandValue);
-						}
-
-						// Sex filter
-						if (maleCheckbox.isSelected() && !femaleCheckbox.isSelected()) {
-							filters.put("sex", "Male");
-						} else if (!maleCheckbox.isSelected() && femaleCheckbox.isSelected()) {
-							filters.put("sex", "Female");
-						}
-
-						// Age range filter
-						int minAge = (Integer) minAgeSpinner.getValue();
-						int maxAge = (Integer) maxAgeSpinner.getValue();
-						if (minAge > 12 || maxAge < 25) {
-							filters.put("ageRange", minAge + "-" + maxAge);
-						}
-
-						// Update active filters and UI
-						activeFilters = filters;
-						updateAppliedFiltersPanel();
-						applyFilters();
-						controller.close();
-
-					} else if (action == SimpleModalBorder.NO_OPTION) {
-						resetFilterFields();
-						updateFilterCount(0);
-						controller.consume();
-					} else {
-						controller.close();
-					}
-				}), option, "filter-dialog");
-
-		// Set size for the modal
-		option.getLayoutOption().setSize(600, 500);
-
-		// Initialize the filter count
-		updateCurrentFilterCount();
-		
-		// Add listeners for real-time updates
-		addFilterChangeListeners();
-	}
-
-	private JPanel createFilterDialogPanel() {
-		JPanel panel = new JPanel(new BorderLayout());
-		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-		// Body panel with scroll pane
-		JPanel bodyPanel = new JPanel(new MigLayout("insets 0", "[grow]", "[]"));
-		JScrollPane scrollPane = new JScrollPane(bodyPanel);
-		scrollPane.setBorder(null);
-		panel.add(scrollPane, BorderLayout.CENTER);
-
-		// Applied filters section
-		appliedFiltersSection = new JPanel(new MigLayout("insets 5", "[grow]", "[]"));
-		appliedFiltersSection.setBorder(BorderFactory.createTitledBorder("Applied Filters"));
-
-		JLabel noFiltersLabel = new JLabel("No filters applied");
-		noFiltersLabel.setForeground(Color.GRAY);
-		appliedFiltersSection.add(noFiltersLabel, "cell 0 0");
-
-		bodyPanel.add(appliedFiltersSection, "cell 0 0, growx, wrap");
-
-		// Filter form
-		JPanel filterForm = new JPanel(new MigLayout("insets 5", "[grow]", "[]"));
-		filterForm.setBorder(BorderFactory.createTitledBorder("Filter Options"));
-
-		// LRN filter
-		JPanel lrnFilterGroup = createFilterGroup("LRN", "🔍");
-		lrnFilterField = new JTextField(15);
-		lrnFilterGroup.add(lrnFilterField, "cell 0 1, growx");
-		filterForm.add(lrnFilterGroup, "cell 0 0, growx, wrap");
-
-		// Name filter
-		JPanel nameFilterGroup = createFilterGroup("Name", "👤");
-		nameFilterField = new JTextField(20);
-		nameFilterGroup.add(nameFilterField, "cell 0 1, growx");
-		filterForm.add(nameFilterGroup, "cell 0 1, growx, wrap");
-
-		// Grade Level filter
-		JPanel gradeLevelFilterGroup = createFilterGroup("Grade Level", "🎓");
-		gradeLevelFilterGroup.add(gradeLevelComboBox, "cell 0 1, growx");
-		filterForm.add(gradeLevelFilterGroup, "cell 0 2, growx, wrap");
-
-		// Section filter
-		JPanel sectionFilterGroup = createFilterGroup("Section", "👥");
-		sectionFilterGroup.add(sectionComboBox, "cell 0 1, growx");
-		filterForm.add(sectionFilterGroup, "cell 0 3, growx, wrap");
-
-		// Track & Strand filter
-		JPanel trackStrandFilterGroup = createFilterGroup("Track & Strand", "🔍");
-		trackStrandFilterGroup.add(trackStrandComboBox, "cell 0 1, growx");
-		filterForm.add(trackStrandFilterGroup, "cell 0 4, growx, wrap");
-
-		// Sex filter
-		JPanel sexFilterGroup = createFilterGroup("Sex", "👤");
-		JPanel sexCheckboxPanel = new JPanel(new MigLayout("insets 0", "[][]", "[]"));
-		maleCheckbox = new JCheckBox("Male");
-		femaleCheckbox = new JCheckBox("Female");
-		maleCheckbox.setSelected(true);
-		femaleCheckbox.setSelected(true);
-		sexCheckboxPanel.add(maleCheckbox, "cell 0 0");
-		sexCheckboxPanel.add(femaleCheckbox, "cell 1 0");
-		sexFilterGroup.add(sexCheckboxPanel, "cell 0 1, growx");
-		filterForm.add(sexFilterGroup, "cell 0 5, growx, wrap");
-
-		// Age Range filter
-		JPanel ageFilterGroup = createFilterGroup("Age Range", "📊");
-		JPanel ageRangePanel = new JPanel(new MigLayout("insets 0", "[][grow][][grow]", "[]"));
-
-		JLabel minAgeLabel = new JLabel("Min Age:");
-		minAgeSpinner = new JSpinner(new SpinnerNumberModel(12, 12, 25, 1));
-
-		JLabel maxAgeLabel = new JLabel("Max Age:");
-		maxAgeSpinner = new JSpinner(new SpinnerNumberModel(25, 12, 25, 1));
-
-		ageRangePanel.add(minAgeLabel, "cell 0 0");
-		ageRangePanel.add(minAgeSpinner, "cell 1 0, growx");
-		ageRangePanel.add(maxAgeLabel, "cell 2 0");
-		ageRangePanel.add(maxAgeSpinner, "cell 3 0, growx");
-
-		ageFilterGroup.add(ageRangePanel, "cell 0 1, growx");
-		filterForm.add(ageFilterGroup, "cell 0 6, growx, wrap");
-
-		bodyPanel.add(filterForm, "cell 0 1, growx, wrap");
-
-		return panel;
-	}
-
-	/**
-	 * Creates a filter group with label and icon
-	 */
-	private JPanel createFilterGroup(String label, String icon) {
-		JPanel panel = new JPanel(new MigLayout("insets 5", "[grow]", "[]"));
-		panel.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
-
-		JLabel filterLabel = new JLabel(icon + " " + label);
-		filterLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-		panel.add(filterLabel, "cell 0 0");
-
-		return panel;
-	}
-
-	/**
-	 * Updates the filter count label
-	 */
-	private void updateFilterCount(int count) {
-		if (filterCountLabel != null) {
-			filterCountLabel.setText(count + " filter" + (count != 1 ? "s" : "") + " applied");
+	public void showFilterDialog() {
+		// If the filter dialog is already open, don't do anything
+		if (ModalDialog.isIdExist("student-filter")) {
+			return;
 		}
-	}
-
-	/**
-	 * Updates the applied filters section
-	 */
-	private void updateAppliedFiltersSection(JPanel panel, Map<String, String> filters) {
-		panel.removeAll();
-
-		if (filters.isEmpty()) {
-			JLabel noFiltersLabel = new JLabel("No filters applied");
-			noFiltersLabel.setForeground(Color.GRAY);
-			panel.add(noFiltersLabel, "cell 0 0");
-		} else {
-			int row = 0;
-			for (Map.Entry<String, String> entry : filters.entrySet()) {
-				JPanel filterPill = new JPanel(new MigLayout("insets 5", "[grow][]", "[]"));
-				filterPill.setBackground(new Color(232, 245, 233)); // Light green
-				filterPill.setBorder(
-						BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(200, 230, 201)),
-								BorderFactory.createEmptyBorder(2, 5, 2, 5)));
-
-				JLabel filterLabel = new JLabel(entry.getValue());
-				filterLabel.setForeground(new Color(46, 125, 50)); // Dark green
-				filterPill.add(filterLabel, "cell 0 0");
-
-				JButton removeButton = new JButton("×");
-				removeButton.setForeground(new Color(102, 102, 102));
-				removeButton.setBackground(new Color(232, 245, 233));
-				removeButton.setBorderPainted(false);
-				removeButton.setFocusPainted(false);
-				removeButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-				removeButton.addActionListener(e -> {
-					filters.remove(entry.getKey());
-					updateAppliedFiltersSection(panel, filters);
-					updateFilterCount(filters.size());
-				});
-				filterPill.add(removeButton, "cell 1 0");
-
-				panel.add(filterPill, "cell 0 " + row++ + ", growx, wrap");
-			}
-		}
-
-		panel.revalidate();
-		panel.repaint();
-	}
-
-	/**
-	 * Updates the applied filters panel in the main UI
-	 */
-	private void updateAppliedFiltersPanel() {
-		appliedFiltersPanel.removeAll();
-
-		if (activeFilters.isEmpty()) {
-			JLabel noFiltersLabel = new JLabel("No filters applied");
-			noFiltersLabel.setForeground(Color.GRAY);
-			appliedFiltersPanel.add(noFiltersLabel, "cell 0 0");
-		} else {
-			int row = 0;
-			for (Map.Entry<String, String> entry : activeFilters.entrySet()) {
-				JPanel filterPill = new JPanel(new MigLayout("insets 5", "[grow][]", "[]"));
-				filterPill.setBackground(new Color(232, 245, 233)); // Light green
-				filterPill.setBorder(
-						BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(200, 230, 201)),
-								BorderFactory.createEmptyBorder(2, 5, 2, 5)));
-
-				JLabel filterLabel = new JLabel(entry.getValue());
-				filterLabel.setForeground(new Color(46, 125, 50)); // Dark green
-				filterPill.add(filterLabel, "cell 0 0");
-
-				JButton removeButton = new JButton("×");
-				removeButton.setForeground(new Color(102, 102, 102));
-				removeButton.setBackground(new Color(232, 245, 233));
-				removeButton.setBorderPainted(false);
-				removeButton.setFocusPainted(false);
-				removeButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-				removeButton.addActionListener(e -> {
-					activeFilters.remove(entry.getKey());
-					updateAppliedFiltersPanel();
-					applyFilters();
-				});
-				filterPill.add(removeButton, "cell 1 0");
-
-				appliedFiltersPanel.add(filterPill, "cell 0 " + row++ + ", growx, wrap");
-			}
-		}
-
-		appliedFiltersPanel.revalidate();
-		appliedFiltersPanel.repaint();
+		
+		// Show the filter modal
+		StudentFilterModal.getInstance().showModal(
+			connection,
+			this,
+			this,
+			activeFilters,
+			400,  // width
+			600   // height
+		);
 	}
 
 	/**
@@ -520,8 +231,8 @@ public class StudentMangementGUI extends Form {
 
 		// Page size selector
 		paginationPanel.add(new JLabel("Rows per page:"), "cell 0 0");
-		pageSizeComboBox = new JComboBox<>(new Integer[] { 5, 10, 25, 50, 100 });
-		pageSizeComboBox.setSelectedItem(10);
+		pageSizeComboBox = new JComboBox<>(new Integer[] { 15, 25, 50, 100 });
+		pageSizeComboBox.setSelectedItem(15);
 		pageSizeComboBox.addActionListener(e -> {
 			int pageSize = (Integer) pageSizeComboBox.getSelectedItem();
 			studentDataTable.setPageSize(pageSize);
@@ -576,7 +287,7 @@ public class StudentMangementGUI extends Form {
 				editableColumns, columnWidths, alignments, includeCheckbox, actionManager);
 
 		// Enable pagination with default page size
-		studentDataTable.setPaginationEnabled(true, 10);
+		studentDataTable.setPaginationEnabled(true, 15 );
 	}
 
 	private void setupLayout() {
@@ -588,13 +299,12 @@ public class StudentMangementGUI extends Form {
 
 		headerPanel.add(headerLabel, "cell 1 0,alignx center,growy");
 
-		headerSearchPanel = new JPanel(new MigLayout("fill", "[grow]", "[grow]"));
+		headerSearchPanel = new JPanel(new MigLayout("fill", "[grow][][][]", "[grow]"));
 		JButton searchButton = createSearchButton("Search Student", " ");
 		searchButton.addActionListener(e -> showSearchPanel());
 		headerSearchPanel.add(searchButton, "cell 0 0,grow");
 
-		JButton filterButton = new JButton("Filter Students", new FlatSVGIcon("icons/filter.svg", 0.4f));
-		filterButton.addActionListener(e -> showFilterDialog());
+		// Use the new filter button
 		headerSearchPanel.add(filterButton, "cell 1 0,gapleft 10");
 
 		JButton printGoodMoralButton = new JButton("Print Good Moral Certificate");
@@ -605,11 +315,15 @@ public class StudentMangementGUI extends Form {
 		headerPanel.add(backBtn, "cell 5 0");
 		add(headerPanel, BorderLayout.NORTH);
 
-		// Add filter panel below header
-		add(filterPanel, BorderLayout.CENTER);
-
-		// Add table panel
-		add(slidePane, BorderLayout.CENTER);
+		// Create a central container with proper layout
+		JPanel centralContainer = new JPanel(new BorderLayout());
+		
+		// We don't need to add the filter panel anymore since we've moved the button to the header
+		// Just add the slide pane to the central container
+		centralContainer.add(slidePane, BorderLayout.CENTER);
+		
+		// Add the central container to the main layout
+		add(centralContainer, BorderLayout.CENTER);
 
 		// Add pagination panel at the bottom
 		JPanel bottomPanel = new JPanel(new BorderLayout());
@@ -669,6 +383,13 @@ public class StudentMangementGUI extends Form {
 
 	private JPanel createStudentTablePanel() {
 		JScrollPane scrollPane = new JScrollPane(studentDataTable);
+		
+		// Improve scroll pane performance
+		scrollPane.getVerticalScrollBar().setUnitIncrement(20); // Faster scrolling
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		scrollPane.getVerticalScrollBar().putClientProperty("JScrollBar.showButtons", true);
+		scrollPane.getVerticalScrollBar().putClientProperty("JScrollBar.fastWheelScrolling", true);
+		
 		JPanel panel = new JPanel(new MigLayout("", "[grow]", "[grow]"));
 		panel.add(scrollPane, "cell 0 0,grow");
 		return panel;
@@ -714,93 +435,129 @@ public class StudentMangementGUI extends Form {
 	/**
 	 * Applies the filters to the student data
 	 */
-	private void applyFilters() {
+	public void applyFilters() {
 		try {
-			// If no filters are active, load all data
-			if (activeFilters.isEmpty()) {
-				loadStudentData();
-				return;
+			StringBuilder query = new StringBuilder(
+				"SELECT DISTINCT s.*, sf.SF_GRADE_LEVEL, sf.SF_SECTION, sf.SF_TRACK_AND_STRAND " +
+				"FROM STUDENT s " +
+				"LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID " +
+				"WHERE 1=1");
+				
+			List<Object> params = new ArrayList<>();
+
+			// Process the active filters
+			if (activeFilters != null && !activeFilters.isEmpty()) {
+				if (activeFilters.containsKey("name") && !activeFilters.get("name").isEmpty()) {
+					String name = activeFilters.get("name");
+					query.append(" AND (LOWER(s.STUDENT_FIRSTNAME) LIKE LOWER(?) OR LOWER(s.STUDENT_LASTNAME) LIKE LOWER(?) OR LOWER(CONCAT(s.STUDENT_FIRSTNAME, ' ', s.STUDENT_LASTNAME)) LIKE LOWER(?))");
+					params.add("%" + name + "%");
+					params.add("%" + name + "%");
+					params.add("%" + name + "%");
+				}
+
+				if (activeFilters.containsKey("gradeLevel") && !activeFilters.get("gradeLevel").isEmpty()) {
+					String gradeLevel = activeFilters.get("gradeLevel");
+					// Handle both formats: "Grade 12" and "12"
+					if (gradeLevel.startsWith("Grade ")) {
+						gradeLevel = "Grade " + gradeLevel.replace("Grade ", "").trim();
+					} else {
+						gradeLevel = "Grade " + gradeLevel.trim();
+					}
+					query.append(" AND sf.SF_GRADE_LEVEL = ?");
+					params.add(gradeLevel);
+				}
+
+				if (activeFilters.containsKey("section") && !activeFilters.get("section").isEmpty()) {
+					query.append(" AND UPPER(sf.SF_SECTION) = UPPER(?)");
+					params.add(activeFilters.get("section"));
+				}
+
+				if (activeFilters.containsKey("trackStrand") && !activeFilters.get("trackStrand").isEmpty()) {
+					query.append(" AND UPPER(sf.SF_TRACK_AND_STRAND) = UPPER(?)");
+					params.add(activeFilters.get("trackStrand"));
+				}
+
+				if (activeFilters.containsKey("sex")) {
+					String sexFilter = activeFilters.get("sex");
+					if (sexFilter != null && !sexFilter.isEmpty()) {
+						String[] sexes = sexFilter.split(",");
+						if (sexes.length > 0) {
+							query.append(" AND (");
+							for (int i = 0; i < sexes.length; i++) {
+								if (i > 0) query.append(" OR ");
+								query.append("s.STUDENT_SEX IN (?, ?)");
+								String sex = sexes[i];
+								params.add(sex.substring(0, 1)); // M or F
+								params.add(sex); // Male or Female
+							}
+							query.append(")");
+						}
+					}
+				}
+
+				if (activeFilters.containsKey("minAge") && !activeFilters.get("minAge").isEmpty()) {
+					query.append(" AND CAST(s.STUDENT_AGE AS INTEGER) >= ?");
+					params.add(Integer.parseInt(activeFilters.get("minAge")));
+				}
+
+				if (activeFilters.containsKey("maxAge") && !activeFilters.get("maxAge").isEmpty()) {
+					query.append(" AND CAST(s.STUDENT_AGE AS INTEGER) <= ?");
+					params.add(Integer.parseInt(activeFilters.get("maxAge")));
+				}
 			}
 
-			// Get filter values
-			String lrn = activeFilters.get("lrn");
-			String name = activeFilters.get("name");
-			String sex = activeFilters.get("sex");
-			String gradeLevel = activeFilters.get("gradeLevel");
-			String section = activeFilters.get("section");
-			String trackStrand = activeFilters.get("trackStrand");
-			String ageRange = activeFilters.get("ageRange");
+			query.append(" ORDER BY s.STUDENT_LASTNAME ASC, s.STUDENT_FIRSTNAME ASC");
 
-			// First get students based on basic filters (LRN, name, sex)
-			List<Student> filteredStudents = studentsDataCRUD.getStudentsByFilters(lrn, name, null, sex);
+			System.out.println("Query: " + query.toString()); // Debug print
+			System.out.println("Params: " + params); // Debug print
 
-			// Then apply additional filters
-			if (gradeLevel != null || section != null || trackStrand != null || ageRange != null) {
-				filteredStudents = applyAdditionalFilters(filteredStudents, gradeLevel, section, trackStrand, ageRange);
+			// Prepare and execute the query
+			PreparedStatement statement = connection.prepareStatement(query.toString());
+			for (int i = 0; i < params.size(); i++) {
+				statement.setObject(i + 1, params.get(i));
 			}
 
-			// Update the table with filtered results
-			updateTableWithStudentData(filteredStudents);
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, 
-				"Error applying filters: " + e.getMessage(),
-				"Database Error",
-				JOptionPane.ERROR_MESSAGE);
+			ResultSet resultSet = statement.executeQuery();
+			updateTableWithResults(resultSet);
+			
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Error querying database: " + ex.getMessage(),
+					"Database Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
-	/**
-	 * Applies additional filters that aren't supported by the DAO
-	 */
-	private List<Student> applyAdditionalFilters(List<Student> students, String gradeLevel, String section,
-			String trackStrand, String ageRange) {
-		List<Student> filteredStudents = new ArrayList<>(students);
+	private void updateTableWithResults(ResultSet resultSet) throws SQLException {
+		studentDataTable.clearData();
 
-		// Filter by grade level
-		if (gradeLevel != null && !gradeLevel.isEmpty()) {
-			String grade = gradeLevel.replace("Grade ", "").trim();
-			filteredStudents.removeIf(student -> 
-				student.getSchoolForm() == null || 
-				!grade.equals(student.getSchoolForm().getSF_GRADE_LEVEL()));
+		int rowNum = 1;
+		while (resultSet.next()) {
+			String fullName = resultSet.getString("STUDENT_FIRSTNAME") + " " + resultSet.getString("STUDENT_LASTNAME");
+			String gradeAndSection = "";
+			
+			String gradeLevel = resultSet.getString("SF_GRADE_LEVEL");
+			String section = resultSet.getString("SF_SECTION");
+			
+			if (gradeLevel != null && section != null) {
+				gradeAndSection = "Grade " + gradeLevel + " " + section;
+			}
+			
+			String sex = resultSet.getString("STUDENT_SEX");
+			// Convert database sex values to display values
+			if (sex != null) {
+				sex = sex.equals("M") ? "Male" : "Female";
+			}
+			
+			studentDataTable.addRow(new Object[] { 
+				false, // Checkbox column
+				rowNum++, 
+				resultSet.getString("STUDENT_LRN"), 
+				fullName, 
+				sex, 
+				gradeAndSection, 
+				null // Actions column handled by TableActionManager
+			});
 		}
-
-		// Filter by section
-		if (section != null && !section.isEmpty()) {
-			filteredStudents.removeIf(student -> 
-				student.getSchoolForm() == null || 
-				!section.equals(student.getSchoolForm().getSF_SECTION()));
-		}
-
-		// Filter by track and strand
-		if (trackStrand != null && !trackStrand.isEmpty()) {
-			filteredStudents.removeIf(student -> 
-				student.getSchoolForm() == null || 
-				!trackStrand.equals(student.getSchoolForm().getSF_TRACK_AND_STRAND()));
-		}
-
-		// Filter by age range
-		if (ageRange != null && !ageRange.isEmpty()) {
-			String[] range = ageRange.split("-");
-			int minAge = Integer.parseInt(range[0]);
-			int maxAge = Integer.parseInt(range[1]);
-
-			filteredStudents.removeIf(student -> 
-				student.getStudentAge() < minAge || 
-				student.getStudentAge() > maxAge);
-		}
-
-		return filteredStudents;
-	}
-
-	/**
-	 * Resets all filters and reloads all student data
-	 */
-	private void resetFilters() {
-		activeFilters.clear();
-		updateAppliedFiltersPanel();
-		loadStudentData();
 	}
 
 	private void handlePrintGoodMoral() {
@@ -863,82 +620,39 @@ public class StudentMangementGUI extends Form {
 	 * @param filters The map of active filters
 	 */
 	public void setActiveFilters(Map<String, String> filters) {
-		this.activeFilters = filters;
+		if (filters == null) {
+			this.activeFilters = new HashMap<>();
+			this.savedFilterState = new HashMap<>();
+		} else {
+			this.activeFilters = new HashMap<>(filters);
+			// Save the filter state
+			this.savedFilterState = new HashMap<>();
+			for (Map.Entry<String, String> entry : filters.entrySet()) {
+				this.savedFilterState.put(entry.getKey(), entry.getValue());
+			}
+		}
+		
+		// Apply the filters immediately
 		applyFilters();
 	}
 
 	/**
-	 * Resets all filter fields to their default values
+	 * Gets the saved filter state
 	 */
-	private void resetFilterFields() {
-		lrnFilterField.setText("");
-		nameFilterField.setText("");
-		gradeLevelComboBox.setSelectedIndex(0);
-		sectionComboBox.setSelectedIndex(0);
-		trackStrandComboBox.setSelectedIndex(0);
-		maleCheckbox.setSelected(true);
-		femaleCheckbox.setSelected(true);
-		minAgeSpinner.setValue(12);
-		maxAgeSpinner.setValue(25);
-		activeFilters.clear();
-		updateAppliedFiltersPanel();
+	public Map<String, Object> getSavedFilterState() {
+		return savedFilterState;
 	}
 
-	// Add action listeners to update filter count in real-time
-	private void addFilterChangeListeners() {
-		DocumentListener documentListener = new DocumentListener() {
-			@Override
-			public void insertUpdate(DocumentEvent e) {
-				updateCurrentFilterCount();
-			}
-
-			@Override
-			public void removeUpdate(DocumentEvent e) {
-				updateCurrentFilterCount();
-			}
-
-			@Override
-			public void changedUpdate(DocumentEvent e) {
-				updateCurrentFilterCount();
-			}
-		};
-
-		lrnFilterField.getDocument().addDocumentListener(documentListener);
-		nameFilterField.getDocument().addDocumentListener(documentListener);
-
-		ActionListener comboBoxListener = e -> updateCurrentFilterCount();
-		gradeLevelComboBox.addActionListener(comboBoxListener);
-		sectionComboBox.addActionListener(comboBoxListener);
-		trackStrandComboBox.addActionListener(comboBoxListener);
-
-		ActionListener checkBoxListener = e -> updateCurrentFilterCount();
-		maleCheckbox.addActionListener(checkBoxListener);
-		femaleCheckbox.addActionListener(checkBoxListener);
-
-		ChangeListener spinnerListener = e -> updateCurrentFilterCount();
-		minAgeSpinner.addChangeListener(spinnerListener);
-		maxAgeSpinner.addChangeListener(spinnerListener);
-	}
-
-	private void updateCurrentFilterCount() {
-		int count = 0;
-		
-		// Count active filters
-		if (!lrnFilterField.getText().trim().isEmpty()) count++;
-		if (!nameFilterField.getText().trim().isEmpty()) count++;
-		if (gradeLevelComboBox.getSelectedIndex() > 0) count++;
-		if (sectionComboBox.getSelectedIndex() > 0) count++;
-		if (trackStrandComboBox.getSelectedIndex() > 0) count++;
-		
-		// Count sex filter
-		if (maleCheckbox.isSelected() != femaleCheckbox.isSelected()) count++;
-		
-		// Count age range filter
-		int minAge = (Integer) minAgeSpinner.getValue();
-		int maxAge = (Integer) maxAgeSpinner.getValue();
-		if (minAge > 12 || maxAge < 25) count++;
-
-		updateFilterCount(count);
+	@Override
+	public void dispose() {
+		// Clear the saved filter state when this form is disposed
+		if (savedFilterState != null) {
+			savedFilterState.clear();
+		}
+		if (activeFilters != null) {
+			activeFilters.clear();
+		}
+		super.dispose();
 	}
 
 }

@@ -24,7 +24,8 @@ import lyfjshs.gomis.view.login.LoginView;
 import lyfjshs.gomis.view.sessions.SessionRecords;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import lyfjshs.gomis.view.students.StudentMangementGUI;
-import lyfjshs.gomis.view.students.create.StudentInfoFullForm;
+import lyfjshs.gomis.view.students.create.CreateStudentData;
+import lyfjshs.gomis.view.students.schoolForm.ImportSF;
 import lyfjshs.gomis.view.violation.Violation_Record;
 
 /**
@@ -119,7 +120,8 @@ public class Main {
 	public static AppointmentManagement appointmentCalendar;
 	private static SessionsForm sessionFillUp;
 	private static SessionRecords sessionRecords;
-	private static StudentInfoFullForm createStudent;
+	private static CreateStudentData createStudent;
+	public static ImportSF importSF;
 
 	private static void initiPanels() {
 		try {
@@ -144,7 +146,7 @@ public class Main {
 			sessionRecords = new SessionRecords(conn);
 			validateComponent(sessionRecords, "SessionRecords");
 
-			createStudent = new StudentInfoFullForm(conn);
+			createStudent = new CreateStudentData(conn);
 			validateComponent(createStudent, "StudentInfoFullForm");
 
 			incidentFillUp = new IncidentFillUpForm(conn);
@@ -155,6 +157,9 @@ public class Main {
 
 			studManagement = new StudentMangementGUI(conn);
 			validateComponent(studManagement, "StudentManagementGUI");
+			
+			importSF = new ImportSF(conn);
+			validateComponent(importSF, "ImportSF");
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -190,7 +195,7 @@ public class Main {
 			initDB();
 			
 			// Create main frame with proper size and visibility
-			gFrame = new GFrame(java.awt.Toolkit.getDefaultToolkit().getScreenSize().width, 750, false, "GOMIS", null, conn);
+			gFrame = new GFrame(java.awt.Toolkit.getDefaultToolkit().getScreenSize().width, 850, false, "GOMIS", null, conn);
 			gFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
 			
 			// Initialize notifications

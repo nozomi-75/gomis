@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TestAlerts",
+            "request": "launch",
+            "mainClass": "test.TestAlerts",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "SFImportDemo",
+            "request": "launch",
+            "mainClass": "lyfjshs.SFImportDemo",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "SessionSearchPanel",
             "request": "launch",
             "mainClass": "lyfjshs.gomis.view.sessions.SessionSearchPanel",

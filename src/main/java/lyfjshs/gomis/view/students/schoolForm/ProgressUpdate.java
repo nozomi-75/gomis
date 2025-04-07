@@ -1,4 +1,4 @@
-package lyfjshs;
+package lyfjshs.gomis.view.students.schoolForm;
 
 public class ProgressUpdate {
     final String message;

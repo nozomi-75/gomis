@@ -233,8 +233,24 @@ CREATE TABLE SESSIONS_PARTICIPANTS (
 
 CREATE TABLE IF NOT EXISTS PREFERENCES (
     PREF_KEY VARCHAR(100) PRIMARY KEY,
-    PREF_VALUE VARCHAR(255)
+    PREF_VALUE VARCHAR(255),  
+    PREF_FILE BLOB
 );
+
+/*
+data in PREFERENCE table
+
+a data to save Signer and its work Position FOR good moral certificate if user saved it from others field
+
+a data to save Image parameters for good moral certificate:
+deped matatag
+deped logo
+school logo 
+school footer
+
+
+
+*/
 
 -- -- Add a trigger to ensure at least one participant per appointment
 -- DELIMITER //

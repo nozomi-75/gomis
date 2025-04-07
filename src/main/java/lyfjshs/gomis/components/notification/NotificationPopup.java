@@ -1,149 +1,163 @@
 package lyfjshs.gomis.components.notification;
 
+import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Point;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.border.MatteBorder;
 
-import lyfjshs.gomis.components.FormManager.MainForm;
+import com.formdev.flatlaf.FlatClientProperties;
+
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.Modal;
-import raven.modal.option.Option;
 
 public class NotificationPopup extends Modal {
-	private final JPanel notificationsContainer;
-	private final NotificationManager notificationManager;
-	private final JPanel parent;
-	private final NotificationCallback callback;
-	private static final String MODAL_ID = "notifications";
+    private final JPanel notificationsContainer;
+    private final NotificationManager notificationManager;
+    private final NotificationCallback callback;
+    private static final String MODAL_ID = "notifications";
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM d, HH:mm");
 
-	public NotificationPopup(JPanel parent, NotificationCallback callback) {
-		this.parent = parent;
-		this.callback = callback;
-		this.notificationManager = NotificationManager.getInstance();
-		notificationManager.registerPopup(this);
+    public NotificationPopup(JPanel parent, NotificationCallback callback) {
+        this.callback = callback;
+        this.notificationManager = NotificationManager.getInstance();
+        notificationManager.registerPopup(this);
 
-		// Main content pane with theme-aware background
-		setLayout(new MigLayout("insets 0, fillx", "[grow]", "[][grow]"));
-		setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        // Main layout setup with title
+        setLayout(new MigLayout("insets 0,wrap,fillx,hidemode 3", "[fill]"));
+        
+        // Add title panel
+        JPanel titlePanel = new JPanel(new MigLayout("insets 15 20 15 20, fillx", "[grow]"));
+        titlePanel.setBorder(new MatteBorder(0, 0, 1, 0, UIManager.getColor("Separator.foreground")));
+        JLabel titleLabel = new JLabel("Notifications");
+        titleLabel.putClientProperty(FlatClientProperties.STYLE, "font:bold +2");
+        titlePanel.add(titleLabel);
+        add(titlePanel);
 
-		// Header panel with theme-aware background
-		JPanel headerPanel = new JPanel(new MigLayout("insets 15 20 15 20, fillx", "[grow][]", "[]"));
-		headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("Separator.foreground")));
+        // Create main container panel
+        JPanel mainPanel = new JPanel(new MigLayout("insets 0,wrap,fillx", "[fill]"));
+        mainPanel.putClientProperty(FlatClientProperties.STYLE, "" +
+                "[light]background:shade($Panel.background,3%);" +
+                "[dark]background:tint($Panel.background,3%);");
 
-		// Title with modern font
-		JLabel titleLabel = new JLabel("Notifications");
-		titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-		titleLabel.setForeground(UIManager.getColor("Label.foreground"));
-		headerPanel.add(titleLabel, "cell 0 0");
+        // Create scrollable notifications panel
+        notificationsContainer = new JPanel(new MigLayout("wrap,fillx,insets 0", "[fill]"));
+        notificationsContainer.putClientProperty(FlatClientProperties.STYLE, "" +
+                "[light]background:shade($Panel.background,3%);" +
+                "[dark]background:tint($Panel.background,3%);");
 
-		// Add header to content pane
-		add(headerPanel, "cell 0 0, growx, wrap");
+        // Setup scroll pane
+        JScrollPane scrollPane = new JScrollPane(notificationsContainer);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+        scrollPane.getVerticalScrollBar().putClientProperty(FlatClientProperties.STYLE, "" +
+                "track:$Panel.background;" +
+                "thumb:$Component.accentColor;" +
+                "thumbArc:999;" +
+                "trackArc:999;" +
+                "width:8");
+        
+        mainPanel.add(scrollPane, "height 350!");
+        add(mainPanel);
 
-		// Notifications container with theme-aware background
-		notificationsContainer = new JPanel(new MigLayout("insets 0, fillx", "[grow]", ""));
+        // Add "Show all" button at bottom
+        JPanel bottomPanel = new JPanel(new MigLayout("insets 10", "[center]"));
+        JButton showAllButton = new JButton("Show all");
+        showAllButton.putClientProperty(FlatClientProperties.STYLE, "" +
+                "background:null;" +
+                "borderWidth:0;" +
+                "focusWidth:0;" +
+                "innerFocusWidth:0");
+        showAllButton.addActionListener(e -> {
+            hide();
+            // Add your show all logic here
+        });
+        bottomPanel.add(showAllButton);
+        add(bottomPanel);
 
-		// Load existing notifications
-		updateNotifications();
+        // Set preferred size
+        setPreferredSize(new Dimension(360, 480));
+        
+        // Load initial notifications
+        updateNotifications();
+    }
 
-		// Scroll pane for notifications
-		JScrollPane scrollPane = new JScrollPane(notificationsContainer);
-		scrollPane.setBorder(null);
-		scrollPane.getViewport().setBackground(UIManager.getColor("Panel.background"));
-		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+    /**
+     * Format timestamp for display in notification
+     */
+    private String formatTime(long timestamp) {
+        return DATE_FORMAT.format(new Date(timestamp));
+    }
 
-		// Add scroll pane to content
-		add(scrollPane, "cell 0 1, grow");
+    public void show(Component invoker) {
+        if (ModalDialog.isIdExist(MODAL_ID)) {
+            ModalDialog.closeModal(MODAL_ID);
+            return;
+        }
 
-		// Set size
-		setPreferredSize(new Dimension(360, 480));
+        Point p = invoker.getLocationOnScreen();
+        
+        raven.modal.option.Option option = new raven.modal.option.Option();
+        option.setOpacity(0.2f)
+              .setAnimationEnabled(true);
+        
+        option.getLayoutOption()
+              .setMargin(0, 0, 0, 0)
+              .setLocation(
+                  p.x - getPreferredSize().width + invoker.getWidth(),
+                  p.y + invoker.getHeight());
 
-		// Add component listener to parent to update position when parent moves
-		parent.addComponentListener(new java.awt.event.ComponentAdapter() {
-			@Override
-			public void componentMoved(java.awt.event.ComponentEvent e) {
-				if (isShowing()) {
-					updatePosition();
-				}
-			}
+        ModalDialog.showModal(invoker, this, option, MODAL_ID);
+    }
 
-			@Override
-			public void componentHidden(java.awt.event.ComponentEvent e) {
-				hide();
-			}
-		});
-	}
+    public void hide() {
+        if (ModalDialog.isIdExist(MODAL_ID)) {
+            ModalDialog.closeModal(MODAL_ID);
+        }
+    }
 
-	private void updatePosition() {
-		Point location = parent.getLocationOnScreen();
-		JButton notificationButton = MainForm.getNotificationButton();
-		if (notificationButton != null) {
-			location = notificationButton.getLocationOnScreen();
+    public NotificationCallback getCallback() {
+        return callback;
+    }
 
-			// Close existing modal if it exists
-			if (ModalDialog.isIdExist(MODAL_ID)) {
-				ModalDialog.closeModal(MODAL_ID);
-			}
+    public void addNotification(NotificationManager.Notification notification) {
+        SwingUtilities.invokeLater(() -> {
+            NotificationItem item = new NotificationItem(
+                notification.getTitle(),
+                notification.getMessage(), 
+                formatTime(notification.getTimestamp())
+            );
+            notificationsContainer.add(item, "wrap, growx", 0);
+            notificationsContainer.revalidate();
+            notificationsContainer.repaint();
+        });
+    }
 
-			Option option = ModalDialog.createOption();
-			option.setOpacity(0.2f);
-			option.setAnimationEnabled(false);
-			option.getLayoutOption()
-					.setMargin(0, 0, 0, 0)
-					.setLocation(
-							location.x - getPreferredSize().width + notificationButton.getWidth(),
-							location.y + notificationButton.getHeight());
-
-			ModalDialog.showModal(parent, this, option, MODAL_ID);
-		}
-	}
-
-
-	public void addNotification(NotificationManager.Notification notification) {
-		SwingUtilities.invokeLater(() -> {
-			// Add new notification at the top
-			ClickableNotification clickableNotification = new ClickableNotification(notification, callback);
-			clickableNotification.setUnread(notification.isUnread());
-			notificationsContainer.add(clickableNotification, "wrap, growx", 0); // Add at index 0
-			notificationsContainer.revalidate();
-			notificationsContainer.repaint();
-		});
-	}
-
-	public void updateNotifications() {
-		SwingUtilities.invokeLater(() -> {
-			notificationsContainer.removeAll();
-			for (NotificationManager.Notification notification : notificationManager.getNotifications()) {
-				ClickableNotification clickableNotification = new ClickableNotification(notification, callback);
-				clickableNotification.setUnread(notification.isUnread());
-				notificationsContainer.add(clickableNotification, "wrap, growx");
-			}
-			notificationsContainer.revalidate();
-			notificationsContainer.repaint();
-		});
-	}
-
-	public NotificationCallback getCallback() {
-		return callback;
-	}
-
-	public void show() {
-		updatePosition();
-		setVisible(true);
-	}
-
-	public void hide() {
-		if (ModalDialog.isIdExist(MODAL_ID)) {
-			ModalDialog.closeModal(MODAL_ID);
-		}
-	}
+    public void updateNotifications() {
+        SwingUtilities.invokeLater(() -> {
+            notificationsContainer.removeAll();
+            for (NotificationManager.Notification notification : notificationManager.getNotifications()) {
+                NotificationItem item = new NotificationItem(
+                    notification.getTitle(),
+                    notification.getMessage(),
+                    formatTime(notification.getTimestamp())
+                );
+                notificationsContainer.add(item, "wrap, growx");
+            }
+            notificationsContainer.revalidate();
+            notificationsContainer.repaint();
+        });
+    }
 }

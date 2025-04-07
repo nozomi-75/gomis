@@ -1,4 +1,4 @@
-package lyfjshs;
+package lyfjshs.gomis.view.students.schoolForm;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,13 +17,9 @@ import java.util.Map;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.InputMap;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -31,7 +28,6 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
@@ -41,8 +37,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
-import com.formdev.flatlaf.themes.FlatMacLightLaf;
-
+import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.AddressDAO;
 import lyfjshs.gomis.Database.DAO.ContactDAO;
@@ -55,14 +50,18 @@ import lyfjshs.gomis.Database.entity.Address;
 import lyfjshs.gomis.Database.entity.Contact;
 import lyfjshs.gomis.Database.entity.Guardian;
 import lyfjshs.gomis.Database.entity.Parents;
-import lyfjshs.gomis.Database.entity.SchoolForm;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.LoadingDialog;
+import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.utils.SchoolFormsReader;
 import lyfjshs.gomis.utils.TableEditHistory;
 import lyfjshs.gomis.utils.TableEditHistory.TableEdit;
-import net.miginfocom.swing.MigLayout;
+import raven.modal.Toast;
+import raven.modal.toast.option.ToastDirection;
+import raven.modal.toast.option.ToastLocation;
+import raven.modal.toast.option.ToastOption;
 
-public class SFtoDB extends JFrame {
+public class ImportSF extends Form {
     private DefaultTableModel model;
     private JTable table;
     private JTextField schoolNameField, semesterField, schoolIDField, schoolYearField;
@@ -74,6 +73,7 @@ public class SFtoDB extends JFrame {
     private JProgressBar progressBar;
     private JButton cancelButton;
     private SwingWorker<Void, ProgressUpdate> currentWorker;
+    private JFrame parentFrame;
 
     private StudentsDataDAO studentsDAO;
     private GuardianDAO guardianDAO;
@@ -87,29 +87,25 @@ public class SFtoDB extends JFrame {
     private TableEditHistory editHistory;
     private Object lastCellValue;
 
-    public SFtoDB() {
+    public ImportSF(Connection conn) {
+        this.connection = conn;
+        this.parentFrame = Main.gFrame;
         editHistory = new TableEditHistory();
-        initializeFrame();
-        initializeDatabase();
+        initializePanel();
         initializeDAOs();
         setupKeyBindings();
-        setLocationRelativeTo(null);
     }
 
-    private void initializeFrame() {
-        setTitle("School Forms Data Import");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 800);
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    private void initializePanel() {
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         JPanel topPanel = createMetadataPanel();
         JPanel centerPanel = createTablePanel();
         JPanel bottomPanel = createBottomPanel();
-        mainPanel.add(topPanel, BorderLayout.NORTH);
-        mainPanel.add(centerPanel, BorderLayout.CENTER);
-        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
-        setContentPane(mainPanel);
-        loadingDialog = new LoadingDialog(this, "Processing");
+        add(topPanel, BorderLayout.NORTH);
+        add(centerPanel, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
+        loadingDialog = new LoadingDialog(parentFrame, "Processing");
     }
 
     private JPanel createBottomPanel() {
@@ -121,22 +117,6 @@ public class SFtoDB extends JFrame {
         bottomPanel.add(buttonPanel, BorderLayout.NORTH);
         bottomPanel.add(progressPanel, BorderLayout.SOUTH);
         return bottomPanel;
-    }
-
-    private void initializeDatabase() {
-        try {
-            connection = DBConnection.getConnection();
-            if (connection == null) {
-                throw new SQLException("Failed to get database connection");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, 
-                "Failed to connect to database: " + e.getMessage() + 
-                "\nMake sure MariaDB is running and configured correctly.", 
-                "Database Error", 
-                JOptionPane.ERROR_MESSAGE);
-        }
     }
 
     private void initializeDAOs() {
@@ -282,28 +262,21 @@ public class SFtoDB extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         saveButton = new JButton("Save to Database");
         importButton = new JButton("Import SF Forms");
-        JButton searchButton = new JButton("Search"); // Add search button
         
         Dimension buttonSize = new Dimension(200, 40);
         Font buttonFont = new Font(Font.DIALOG, Font.BOLD, 14);
         
         saveButton.setPreferredSize(buttonSize);
         importButton.setPreferredSize(buttonSize);
-        searchButton.setPreferredSize(buttonSize);
         
         importButton.setFont(buttonFont);
         saveButton.setFont(buttonFont);
-        searchButton.setFont(buttonFont);
-        
+
         importButton.addActionListener(e -> importFiles());
         saveButton.addActionListener(e -> saveToDatabase());
-        searchButton.addActionListener(e -> showSearchDialog());
         
         panel.add(importButton);
-        panel.add(Box.createHorizontalStrut(20));
         panel.add(saveButton);
-        panel.add(Box.createHorizontalStrut(20));
-        panel.add(searchButton);
         
         return panel;
     }
@@ -335,6 +308,20 @@ public class SFtoDB extends JFrame {
         fileChooser.setDialogTitle("Select School Form Files");
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File[] selectedFiles = fileChooser.getSelectedFiles();
+            if (selectedFiles.length == 0) {
+                showToast(Toast.Type.WARNING, "No files selected", ToastLocation.BOTTOM_CENTER);
+                return;
+            }
+            
+            // Validate file extensions
+            for (File file : selectedFiles) {
+                String fileName = file.getName().toLowerCase();
+                if (!fileName.endsWith(".xlsx") && !fileName.endsWith(".xls")) {
+                    showToast(Toast.Type.ERROR, "Invalid file format: " + fileName + ". Only Excel files (.xlsx, .xls) are supported.", ToastLocation.BOTTOM_CENTER);
+                    return;
+                }
+            }
+            
             model.setRowCount(0);
             cancelButton.setEnabled(true);
             currentWorker = new SwingWorker<Void, ProgressUpdate>() {
@@ -348,14 +335,31 @@ public class SFtoDB extends JFrame {
                             "Processing file " + currentFile + " of " + totalFiles + ": " + file.getName(),
                             (currentFile * 100) / totalFiles
                         ));
-                        SchoolFormsReader reader = new SchoolFormsReader(file);
-                        List<List<String>> records = reader.readSF1Data();
-                        SwingUtilities.invokeLater(() -> {
-                            updateMetadataFields(reader);
-                            for (List<String> record : records) {
-                                model.addRow(record.toArray());
+                        
+                        try {
+                            SchoolFormsReader reader = new SchoolFormsReader(file, connection);
+                            List<List<String>> records = reader.readSF1Data();
+                            if (records.isEmpty()) {
+                                throw new Exception("No data found in file: " + file.getName());
                             }
-                        });
+                            
+                            SwingUtilities.invokeLater(() -> {
+                                updateMetadataFields(reader);
+                                for (List<String> record : records) {
+                                    model.addRow(record.toArray());
+                                }
+                            });
+                        } catch (Exception ex) {
+                            // Log the error but continue with next file
+                            System.err.println("Error processing file " + file.getName() + ": " + ex.getMessage());
+                            ex.printStackTrace();
+                            publish(new ProgressUpdate(
+                                "Error processing file: " + file.getName() + " - " + ex.getMessage(),
+                                (currentFile * 100) / totalFiles
+                            ));
+                            Thread.sleep(1000); // Show the error message for a moment
+                        }
+                        
                         Thread.sleep(100);
                         currentFile++;
                     }
@@ -373,10 +377,14 @@ public class SFtoDB extends JFrame {
                     try {
                         get();
                         if (!isCancelled()) {
-                            showSuccessMessage("Import completed successfully!");
+                            if (model.getRowCount() > 0) {
+                                showToast(Toast.Type.SUCCESS, "Import completed successfully! Loaded " + model.getRowCount() + " records.", ToastLocation.BOTTOM_CENTER);
+                            } else {
+                                showToast(Toast.Type.WARNING, "No records were imported. Please check the files and try again.", ToastLocation.BOTTOM_CENTER);
+                            }
                         }
                     } catch (Exception e) {
-                        showErrorMessage("Error during import: " + e.getMessage());
+                        showToast(Toast.Type.ERROR, "Error during import: " + e.getMessage(), ToastLocation.BOTTOM_CENTER);
                     }
                     progressBar.setValue(0);
                     progressBar.setString("");
@@ -388,22 +396,44 @@ public class SFtoDB extends JFrame {
                     progressBar.setValue(0);
                     progressBar.setString("Operation cancelled");
                     cancelButton.setEnabled(false);
+                    showToast(Toast.Type.INFO, "Import operation cancelled", ToastLocation.BOTTOM_CENTER);
                 }
             });
             currentWorker.execute();
         }
     }
 
+    /**
+     * Shows a toast notification with the specified message
+     * 
+     * @param type     The type of toast (SUCCESS, ERROR, WARNING, INFO)
+     * @param message  The message to display
+     * @param location The location where the toast should appear
+     */
+    private void showToast(Toast.Type type, String message, ToastLocation location) {
+        // Create toast option
+        ToastOption toastOption = Toast.createOption();
+        
+        // Set layout options
+        toastOption.getLayoutOption()
+            .setMargin(0, 0, 50, 0)
+            .setDirection(ToastDirection.TOP_TO_BOTTOM);
+        
+        // Show toast
+        Toast.show(this, type, message, location, toastOption);
+    }
+
+    private void showErrorMessage(String message) {
+        showToast(Toast.Type.ERROR, message, ToastLocation.BOTTOM_CENTER);
+    }
+
     private void saveToDatabase() {
-        if (model.getRowCount() == 0) {
-            showErrorMessage("No data to save. Please import school forms first.");
+        if (model.getRowCount() <= 0) {
+            showToast(Toast.Type.WARNING, "No records to save. Please import data first.", ToastLocation.BOTTOM_CENTER);
             return;
         }
 
-        // Create and show the confirmation dialog with modified data
-        StringBuilder message = new StringBuilder();
-        message.append("The following modifications will be saved:\n\n");
-        message.append("School Information:\n");
+        StringBuilder message = new StringBuilder("Do you want to save the following data to the database?\n\n");
         message.append("School Name: ").append(schoolNameField.getText()).append("\n");
         message.append("School ID: ").append(schoolIDField.getText()).append("\n");
         message.append("District: ").append(districtField.getText()).append("\n");
@@ -412,107 +442,64 @@ public class SFtoDB extends JFrame {
         message.append("Section: ").append(sectionField.getText()).append("\n");
         message.append("\nStudent Records: ").append(model.getRowCount()).append(" total\n");
 
-        // Create a custom dialog with a scrollable text area
-        JDialog confirmDialog = new JDialog(this, "Confirm Save", true);
-        confirmDialog.setLayout(new BorderLayout());
+        // Use JOptionPane for confirmation
+        int choice = JOptionPane.showConfirmDialog(
+            this, 
+            message.toString(), 
+            "Confirm Save", 
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.INFORMATION_MESSAGE
+        );
         
-        JTextArea textArea = new JTextArea(message.toString());
-        textArea.setEditable(false);
-        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(600, 400));
-        
-        JPanel buttonPanel = new JPanel();
-        JButton confirmButton = new JButton("Confirm");
-        JButton cancelButton = new JButton("Cancel");
-        
-        confirmButton.addActionListener(e -> {
-            confirmDialog.dispose();
+        if (choice == JOptionPane.YES_OPTION) {
             proceedWithSave();
-        });
-        
-        cancelButton.addActionListener(e -> {
-            confirmDialog.dispose();
-        });
-        
-        buttonPanel.add(confirmButton);
-        buttonPanel.add(cancelButton);
-        
-        confirmDialog.add(scrollPane, BorderLayout.CENTER);
-        confirmDialog.add(buttonPanel, BorderLayout.SOUTH);
-        confirmDialog.pack();
-        confirmDialog.setLocationRelativeTo(this);
-        confirmDialog.setVisible(true);
+        }
     }
 
     private void proceedWithSave() {
         progressBar.setValue(0);
         cancelButton.setEnabled(true);
         currentWorker = new SwingWorker<Void, ProgressUpdate>() {
+            private int successCount = 0;
+            private int errorCount = 0;
+            private List<String> errorMessages = new ArrayList<>();
+            
             @Override
             protected Void doInBackground() throws Exception {
-                publish(new ProgressUpdate("Starting database save...", 0));
-                int sfId = -1;
-                
                 try {
-                    System.out.println("==== STARTING DATABASE SAVE ====");
-                    System.out.println("School Name: " + schoolNameField.getText());
-                    System.out.println("School ID: " + schoolIDField.getText());
-                    System.out.println("Total Students: " + model.getRowCount());
+                    publish(new ProgressUpdate("Creating school form record...", 0));
                     
-                    // First, save the school form
-                    sfId = saveSchoolForm();
-                    System.out.println("Created school form with ID: " + sfId);
-                    
+                    // Create school form first and ensure it succeeds
+                    int sfId = saveSchoolForm();
                     if (sfId <= 0) {
-                        throw new SQLException("Invalid school form ID returned: " + sfId);
+                        throw new SQLException("Failed to create school form record");
+                    }
+                    
+                    // Create student records
+                    int totalRows = model.getRowCount();
+                    for (int i = 0; i < totalRows; i++) {
+                        if (isCancelled()) break;
+                        
+                        publish(new ProgressUpdate(
+                            "Saving student " + (i + 1) + " of " + totalRows,
+                            (i + 1) * 100 / totalRows
+                        ));
+                        
+                        try {
+                            saveStudentData(i, sfId);
+                            successCount++;
+                        } catch (SQLException e) {
+                            // Log the error but continue with next student
+                            errorCount++;
+                            String errorMsg = "Error saving student at row " + (i + 1) + ": " + e.getMessage();
+                            System.err.println(errorMsg);
+                            errorMessages.add(errorMsg);
+                        }
+                        Thread.sleep(50);
                     }
                 } catch (SQLException e) {
-                    System.err.println("Error saving school form: " + e.getMessage());
-                    e.printStackTrace();
-                    publish(new ProgressUpdate("Failed to save school form: " + e.getMessage(), 0));
-                    throw e;
+                    throw new Exception("Database error: " + e.getMessage(), e);
                 }
-                
-                // Now save each student
-                int totalRows = model.getRowCount();
-                int successCount = 0;
-                int failCount = 0;
-                
-                for (int i = 0; i < totalRows; i++) {
-                    if (isCancelled()) {
-                        System.out.println("Operation cancelled by user");
-                        break;
-                    }
-                    
-                    publish(new ProgressUpdate(
-                        "Saving student " + (i + 1) + " of " + totalRows,
-                        (i + 1) * 100 / totalRows
-                    ));
-                    
-                    try {
-                        System.out.println("Saving student " + (i + 1) + " of " + totalRows);
-                        Map<String, String> rowData = cleanRowData(i);
-                        System.out.println("  LRN: " + rowData.get("lrn"));
-                        System.out.println("  Name: " + rowData.get("firstName") + " " + rowData.get("lastName"));
-                        
-                        saveStudentData(i, sfId);
-                        successCount++;
-                    } catch (SQLException e) {
-                        failCount++;
-                        System.err.println("Error saving student #" + (i+1) + ": " + e.getMessage());
-                        System.err.println("  Continuing with next student...");
-                        // Continue with next student instead of failing the entire batch
-                    }
-                    Thread.sleep(50);
-                }
-                
-                System.out.println("==== DATABASE SAVE COMPLETED ====");
-                System.out.println("Total students: " + totalRows);
-                System.out.println("Successfully saved: " + successCount);
-                System.out.println("Failed to save: " + failCount);
-                
                 return null;
             }
 
@@ -527,10 +514,40 @@ public class SFtoDB extends JFrame {
                 try {
                     get();
                     if (!isCancelled()) {
-                        showSuccessMessage("Data saved successfully!");
+                        StringBuilder resultMessage = new StringBuilder();
+                        resultMessage.append("Successfully saved ").append(successCount).append(" students");
+                        
+                        if (errorCount > 0) {
+                            resultMessage.append(". ").append(errorCount).append(" students failed to save.");
+                            
+                            // Show detailed errors in a separate dialog if there were any
+                            if (!errorMessages.isEmpty()) {
+                                StringBuilder errorDetails = new StringBuilder("The following errors occurred:\n\n");
+                                for (int i = 0; i < Math.min(errorMessages.size(), 5); i++) {
+                                    errorDetails.append("- ").append(errorMessages.get(i)).append("\n");
+                                }
+                                if (errorMessages.size() > 5) {
+                                    errorDetails.append("- And ").append(errorMessages.size() - 5).append(" more errors...");
+                                }
+                                
+                                // Show error details using JOptionPane
+                                SwingUtilities.invokeLater(() -> {
+                                    JOptionPane.showMessageDialog(
+                                        parentFrame, 
+                                        errorDetails.toString(), 
+                                        "Save Errors", 
+                                        JOptionPane.ERROR_MESSAGE
+                                    );
+                                });
+                            }
+                            
+                            showToast(Toast.Type.WARNING, resultMessage.toString(), ToastLocation.BOTTOM_CENTER);
+                        } else {
+                            showToast(Toast.Type.SUCCESS, resultMessage.toString(), ToastLocation.BOTTOM_CENTER);
+                        }
                     }
                 } catch (Exception e) {
-                    showErrorMessage("Error saving to database: " + e.getMessage());
+                    showToast(Toast.Type.ERROR, "Error saving to database: " + e.getMessage(), ToastLocation.BOTTOM_CENTER);
                 }
                 progressBar.setValue(0);
                 progressBar.setString("");
@@ -540,141 +557,98 @@ public class SFtoDB extends JFrame {
     }
 
     private void saveStudentData(int rowIndex, int sfId) throws SQLException {
+        if (sfId <= 0) {
+            throw new SQLException("Invalid school form ID");
+        }
+
         Map<String, String> rowData = cleanRowData(rowIndex);
         
-        if (sfId <= 0) {
-            throw new SQLException("Invalid school form ID: " + sfId);
-        }
-        
-        // Validate required fields
-        if (rowData.get("lrn") == null || rowData.get("lrn").trim().isEmpty()) {
-            throw new SQLException("LRN is required but was empty for row " + rowIndex);
-        }
-        
-        if (rowData.get("firstName") == null || rowData.get("firstName").trim().isEmpty() ||
-            rowData.get("lastName") == null || rowData.get("lastName").trim().isEmpty()) {
-            throw new SQLException("First name and last name are required but were empty for row " + rowIndex);
-        }
-        
         try {
-            System.out.println("Creating related entities for student in row " + rowIndex);
+            connection.setAutoCommit(false); // Start transaction
             
-            // Create entities using the DAO pattern
-            Address address = new Address(
-                0,
-                rowData.get("address").split(",")[0].trim(),
-                rowData.get("address").split(",").length > 1 ? rowData.get("address").split(",")[1].trim() : "",
-                regionField.getText(),
-                rowData.get("province"),
-                rowData.get("municipality"),
-                rowData.get("barangay"),
-                ""  // zip code
-            );
-            
-            Contact contact = new Contact(0, rowData.get("contactNumber"));
-            
-            Parents parents = new Parents(
-                0,
-                rowData.get("fatherFirstName"),
-                rowData.get("fatherLastName"),
-                rowData.get("fatherMiddleName"),
-                "",  // father contact
-                rowData.get("motherFirstName"),
-                rowData.get("motherLastName"),
-                rowData.get("motherMiddleName"),
-                ""  // mother contact
-            );
-            
-            Guardian guardian = new Guardian(
-                0,
-                rowData.get("guardianLastName"),
-                rowData.get("guardianFirstName"),
-                rowData.get("guardianMiddleName"),
-                rowData.get("relationship"),
-                ""  // guardian contact
-            );
+            try {
+                // Create all related records
+                Address address = new Address(
+                    0,
+                    rowData.get("address").split(",")[0].trim(),
+                    rowData.get("address").split(",").length > 1 ? rowData.get("address").split(",")[1].trim() : "",
+                    regionField.getText(),
+                    rowData.get("province"),
+                    rowData.get("municipality"),
+                    rowData.get("barangay"),
+                    ""  // zip code
+                );
+                int addressId = addressDAO.createAddress(address);
+                
+                Contact contact = new Contact(0, rowData.get("contactNumber"));
+                int contactId = contactDAO.createContact(contact);
+                
+                Parents parents = new Parents(
+                    0,
+                    rowData.get("fatherFirstName"),
+                    rowData.get("fatherLastName"),
+                    rowData.get("fatherMiddleName"),
+                    "",  // father contact
+                    rowData.get("motherFirstName"),
+                    rowData.get("motherLastName"),
+                    rowData.get("motherMiddleName"),
+                    ""  // mother contact
+                );
+                int parentId = parentsDAO.createParents(parents);
+                
+                Guardian guardian = new Guardian(
+                    0,
+                    rowData.get("guardianLastName"),
+                    rowData.get("guardianFirstName"),
+                    rowData.get("guardianMiddleName"),
+                    rowData.get("relationship"),
+                    ""  // guardian contact
+                );
+                int guardianId = guardianDAO.createGuardian(guardian);
 
-            // Create records using DAOs first to get the IDs
-            System.out.println("Saving address, contact, parents, and guardian records");
-            int addressId = addressDAO.createAddress(address);
-            int contactId = contactDAO.createContact(contact);
-            int parentId = parentsDAO.createParents(parents);
-            int guardianId = guardianDAO.createGuardian(guardian);
-
-            // Debug log to show the sfId value
-            System.out.println("Using School Form ID: " + sfId + " for student in row " + rowIndex);
-            
-            // Create SchoolForm object for the student - use full constructor
-            SchoolForm schoolForm = new SchoolForm(
-                sfId,
-                schoolNameField.getText(),
-                schoolIDField.getText(),
-                districtField.getText(),
-                divisionField.getText(),
-                regionField.getText(),
-                semesterField.getText(),
-                schoolYearField.getText(),
-                gradeLevelField.getText(),
-                sectionField.getText(),
-                trackStrandField.getText(),
-                courseField.getText()
-            );
-            
-            // Create Student using the full constructor
-            Student student = new Student(
-                0, // studentUid will be generated
-                parentId,
-                guardianId,
-                addressId,
-                contactId,
-                sectionField.getText(), // school section
-                rowData.get("lrn"),
-                rowData.get("lastName"),
-                rowData.get("firstName"),
-                rowData.get("middleName"),
-                rowData.get("sex"),
-                null, // birthDate - you might want to parse this from rowData
-                rowData.get("mothertongue"),
-                Integer.parseInt(rowData.get("age")),
-                "", // ipType - not in SF form
-                rowData.get("religion"),
-                address,
-                contact,
-                parents,
-                guardian,
-                schoolForm
-            );
-            
-            // Explicitly set the SF_ID for database insertion
-            student.setSF_ID(sfId);
-            System.out.println("Student object created with SF_ID=" + student.getSF_ID());
-            
-            // Save the student record
-            System.out.println("Calling createStudentData for student in row " + rowIndex);
-            boolean success = studentsDAO.createStudentData(student);
-            
-            if (!success) {
-                throw new SQLException("Failed to save student record - database operation returned false");
+                // Create Student with the correct school form ID
+                Student student = new Student(
+                    0, // studentUid (will be generated)
+                    parentId,
+                    guardianId,
+                    addressId,
+                    contactId,
+                    sectionField.getText(), // schoolSection
+                    rowData.get("lrn"), // studentLrn
+                    rowData.get("lastName"), // studentLastname
+                    rowData.get("firstName"), // studentFirstname
+                    rowData.get("middleName"), // studentMiddlename
+                    rowData.get("sex"), // studentSex
+                    null, // studentBirthdate - No birth date parsing implemented
+                    rowData.get("mothertongue"), // studentMothertongue
+                    Integer.parseInt(rowData.get("age")), // studentAge
+                    "", // studentIpType
+                    rowData.get("religion"), // studentReligion
+                    address, // address object
+                    contact, // contact object
+                    parents, // parents object
+                    guardian, // guardian object
+                    new lyfjshs.gomis.Database.entity.SchoolForm() // Create empty SchoolForm and set ID later
+                );
+                
+                // Set SchoolForm ID directly
+                student.setSF_ID(sfId);
+                
+                // Save the student record
+                studentsDAO.createStudentData(student);
+                
+                connection.commit(); // Commit transaction
+                
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback on error
+                throw e; // Re-throw the exception
+            } finally {
+                connection.setAutoCommit(true); // Reset auto-commit
             }
             
-            System.out.println("Successfully saved student in row " + rowIndex + " with LRN " + rowData.get("lrn"));
-            
         } catch (SQLException e) {
-            System.err.println("Error during createStudentData for row " + rowIndex + ": " + e.getMessage());
-            throw new SQLException("Error saving student data: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Unexpected error saving student in row " + rowIndex + ": " + e.getMessage());
-            e.printStackTrace();
-            throw new SQLException("Unexpected error: " + e.getMessage());
+            throw new SQLException("Error saving student data: " + e.getMessage(), e);
         }
-    }
-
-    private void showSuccessMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Success", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void showErrorMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     private void updateMetadataFields(SchoolFormsReader reader) {
@@ -692,7 +666,7 @@ public class SFtoDB extends JFrame {
     }
 
     private int saveSchoolForm() throws SQLException {
-        SchoolForm schoolForm = new SchoolForm(
+        lyfjshs.gomis.Database.entity.SchoolForm schoolForm = new lyfjshs.gomis.Database.entity.SchoolForm(
             0, // ID will be generated
             schoolNameField.getText(),
             schoolIDField.getText(),
@@ -707,14 +681,7 @@ public class SFtoDB extends JFrame {
             courseField.getText()
         );
 
-        int sfId = schoolFormDAO.createSchoolForm(schoolForm);
-        
-        if (sfId <= 0) {
-            throw new SQLException("Failed to create school form record - invalid ID returned: " + sfId);
-        }
-        
-        System.out.println("Successfully created school form with ID: " + sfId);
-        return sfId;
+        return schoolFormDAO.createSchoolForm(schoolForm);
     }
 
     private Map<String, String> parseName(String fullName) {
@@ -820,126 +787,61 @@ public class SFtoDB extends JFrame {
     }
 
     private void showSearchDialog() {
-        SearchDialog dialog = new SearchDialog(this);
-        dialog.setVisible(true);
+        // Only proceed if there's data to search
+        if (model.getRowCount() == 0) {
+            showToast(Toast.Type.WARNING, "Please import a school form first before searching.", ToastLocation.BOTTOM_CENTER);
+            return;
+        }
+        
+        // Create and show the Excel highlighter dialog - passing the current table
+        SFExcelHighlighter excelHighlighter = new SFExcelHighlighter(parentFrame, connection, table);
+        excelHighlighter.setLocationRelativeTo(parentFrame);
+        
+        // Add a cell selected listener to handle when a cell is selected
+        excelHighlighter.addCellSelectedListener((row, col, value) -> {
+            // Search for the value in the current table
+            searchValueInTable(value);
+        });
+        
+        excelHighlighter.setVisible(true);
     }
 
-    private class SearchDialog extends JDialog {
-        private JComboBox<String> columnComboBox;
-        private JTextField searchField;
-        private JButton searchButton;
-        private JComboBox<String> additionalColumnComboBox;  // Added
-        private JTextField additionalSearchField;  // Added
-        private JCheckBox enableSecondSearch;  // Added
-
-        public SearchDialog(JFrame parent) {
-            super(parent, "Search Records", true);
-            initializeComponents();
-            setupLayout();
-            setLocationRelativeTo(parent);
-            pack();
+    private void searchValueInTable(String searchValue) {
+        if (searchValue == null || searchValue.trim().isEmpty()) {
+            return;
         }
-
-        private void initializeComponents() {
-            String[] columnNames = new String[model.getColumnCount()];
-            for (int i = 0; i < model.getColumnCount(); i++) {
-                columnNames[i] = model.getColumnName(i);
-            }
-
-            columnComboBox = new JComboBox<>(columnNames);
-            searchField = new JTextField(20);
-            
-            // Add components for second search criteria
-            additionalColumnComboBox = new JComboBox<>(columnNames);
-            additionalSearchField = new JTextField(20);
-            enableSecondSearch = new JCheckBox("Add second search criteria");
-            
-            // Initially disable second search components
-            additionalColumnComboBox.setEnabled(false);
-            additionalSearchField.setEnabled(false);
-            
-            // Enable/disable second search components based on checkbox
-            enableSecondSearch.addActionListener(e -> {
-                boolean isEnabled = enableSecondSearch.isSelected();
-                additionalColumnComboBox.setEnabled(isEnabled);
-                additionalSearchField.setEnabled(isEnabled);
-            });
-
-            searchButton = new JButton("Search");
-            searchButton.addActionListener(e -> performSearch());
-        }
-
-        private void setupLayout() {
-            setLayout(new MigLayout("fillx, insets 10", "[right][grow]", "[][]"));
-            
-            // First search criteria
-            add(new JLabel("Search Column:"));
-            add(columnComboBox, "growx, wrap");
-            
-            add(new JLabel("Search Value:"));
-            add(searchField, "growx, wrap");
-            
-            // Checkbox for enabling second search
-            add(enableSecondSearch, "skip 1, wrap");
-            
-            // Second search criteria
-            add(new JLabel("Additional Column:"));
-            add(additionalColumnComboBox, "growx, wrap");
-            
-            add(new JLabel("Additional Value:"));
-            add(additionalSearchField, "split 2, growx");
-            add(searchButton, "wrap");
-            
-            // Cancel button
-            JButton cancelButton = new JButton("Cancel");
-            cancelButton.addActionListener(e -> dispose());
-            add(cancelButton, "skip 1, align right");
-        }
-
-        private void performSearch() {
-            String searchValue = searchField.getText().trim().toLowerCase();
-            int selectedColumn = columnComboBox.getSelectedIndex();
-            boolean useSecondCriteria = enableSecondSearch.isSelected();
-            String additionalValue = additionalSearchField.getText().trim().toLowerCase();
-            int additionalColumn = additionalColumnComboBox.getSelectedIndex();
-            boolean found = false;
-
-            // Clear any existing selection
-            table.clearSelection();
-
-            // Search through all rows
-            for (int row = 0; row < model.getRowCount(); row++) {
-                String cellValue = model.getValueAt(row, selectedColumn).toString().toLowerCase();
-                boolean matchesFirst = cellValue.contains(searchValue);
-                
-                boolean matchesSecond = true;
-                if (useSecondCriteria) {
-                    String additionalCellValue = model.getValueAt(row, additionalColumn).toString().toLowerCase();
-                    matchesSecond = additionalCellValue.contains(additionalValue);
-                }
-
-                if (matchesFirst && matchesSecond) {
-                    // Select and scroll to the matching row
-                    table.addRowSelectionInterval(row, row);
-                    table.scrollRectToVisible(table.getCellRect(row, selectedColumn, true));
+        
+        searchValue = searchValue.trim().toLowerCase();
+        boolean found = false;
+        
+        // Search all cells in the table
+        for (int row = 0; row < model.getRowCount(); row++) {
+            for (int col = 0; col < model.getColumnCount(); col++) {
+                String cellValue = String.valueOf(model.getValueAt(row, col)).toLowerCase();
+                if (cellValue.contains(searchValue)) {
+                    // Select and scroll to the matching cell
+                    table.setRowSelectionInterval(row, row);
+                    table.setColumnSelectionInterval(col, col);
+                    table.scrollRectToVisible(table.getCellRect(row, col, true));
                     found = true;
+                    break;
                 }
             }
-
-            if (!found) {
-                JOptionPane.showMessageDialog(this,
-                    "No matches found for the specified criteria",
-                    "Search Result",
-                    JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                dispose(); // Close dialog if matches were found
-            }
+            if (found) break;
         }
+        
+        if (!found) {
+            showToast(Toast.Type.INFO, "Value '" + searchValue + "' not found in current table view", ToastLocation.BOTTOM_CENTER);
+        }
+    }
+
+    private void showInfoMessage(String message) {
+        showToast(Toast.Type.INFO, message, ToastLocation.BOTTOM_CENTER);
     }
 
     private void setupKeyBindings() {
-        InputMap inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap actionMap = getRootPane().getActionMap();
+        InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getActionMap();
 
         // Setup Undo (Ctrl+Z)
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK), "undo");
@@ -961,26 +863,6 @@ public class SFtoDB extends JFrame {
                     editHistory.redo(model);
                 }
             }
-        });
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                FlatMacLightLaf.setup();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            SFtoDB frame = new SFtoDB();
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-            frame.addWindowListener(new java.awt.event.WindowAdapter() {
-                @Override
-                public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                    frame.cleanup();
-                    DBConnection.closeAllConnections();
-                }
-            });
         });
     }
 }

@@ -2,9 +2,10 @@ package lyfjshs.gomis.view.sessions;
 
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -14,22 +15,19 @@ import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.SwingConstants;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
@@ -40,18 +38,13 @@ import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.Database.entity.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
-import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
-import raven.modal.option.Location;
-import raven.modal.option.Option;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 public class SessionFullData extends Form {
 	private static final Logger LOGGER = Logger.getLogger(SessionFullData.class.getName());

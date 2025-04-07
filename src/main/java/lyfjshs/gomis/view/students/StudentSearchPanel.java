@@ -188,7 +188,17 @@ public abstract class StudentSearchPanel extends Modal {
         StudentsDataDAO studentsDataDAO = new StudentsDataDAO(connection);
         try {
             // First get results by first name, last name and gender
-            List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, sex);
+            // Convert sex value from UI format to database format (M/F)
+            String dbSexValue = null;
+            if (sex != null && !sex.isEmpty()) {
+                if (sex.equals("Male")) {
+                    dbSexValue = "M";
+                } else if (sex.equals("Female")) {
+                    dbSexValue = "F";
+                }
+            }
+            
+            List<Student> students = studentsDataDAO.getStudentsByFilters(null, firstName, lastName, dbSexValue);
             
             panelResult.removeAll();
             resultPanels.clear();
@@ -228,7 +238,7 @@ public abstract class StudentSearchPanel extends Modal {
                         panelResult.add(resultPanel);
                     }
                 } else {
-                    showToast("No students found ", Toast.Type.INFO);
+                    showToast("No students found matching the search criteria", Toast.Type.INFO);
                 }
             } else {
                 showToast("No students found matching the search criteria", Toast.Type.INFO);

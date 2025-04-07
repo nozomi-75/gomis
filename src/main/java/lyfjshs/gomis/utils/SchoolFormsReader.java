@@ -1,8 +1,9 @@
-package lyfjshs;
+package lyfjshs.gomis.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,13 +15,20 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class SchoolFormsReader {
     private final File excelFile;
+    private Connection connection;
 
     public SchoolFormsReader(File excelFile) {
         this.excelFile = excelFile;
+    }
+    
+    public SchoolFormsReader(File excelFile, Connection connection) {
+        this.excelFile = excelFile;
+        this.connection = connection;
     }
 
     public List<List<String>> readSF1Data() {
@@ -32,20 +40,6 @@ public class SchoolFormsReader {
             int startFemaleRow = endMaleRow + 1;
             int endFemaleRow = findRow(sheet, startFemaleRow, "<=== TOTAL FEMALE");
 
-            if (endMaleRow < startRow) {
-                System.err.println("Warning: Could not find end of male section in " + excelFile.getName());
-                endMaleRow = sheet.getLastRowNum() / 2; // Fallback to half the sheet
-            }
-
-            if (endFemaleRow < startFemaleRow) {
-                System.err.println("Warning: Could not find end of female section in " + excelFile.getName());
-                endFemaleRow = sheet.getLastRowNum(); // Fallback to end of sheet
-            }
-
-            System.out.println("File: " + excelFile.getName() + 
-                " - Male rows: " + (startRow) + " to " + (endMaleRow-1) + 
-                ", Female rows: " + (startFemaleRow) + " to " + (endFemaleRow-1));
-
             int[][] columnRanges = { { 0, 1 }, { 2, 9 }, { 10, 10 }, { 11, 13 }, { 14, 15 }, { 16, 19 }, { 20, 24 },
                     { 25, 29 }, { 30, 31 }, { 32, 35 }, { 36, 40 }, { 41, 42 }, { 43, 46 }, { 47, 48 }, { 49, 50 },
                     { 51, 52 }, { 53, 60 } };
@@ -56,9 +50,6 @@ public class SchoolFormsReader {
 
             extractData(sheet, startRow, endMaleRow, columnRanges, columnNames, records);
             extractData(sheet, startFemaleRow, endFemaleRow, columnRanges, columnNames, records);
-            
-            // Validate the extracted data
-            validateData(records);
         } catch (IOException e) {
             System.err.println("Error reading Excel file: " + e.getMessage());
             e.printStackTrace();
@@ -407,51 +398,20 @@ public class SchoolFormsReader {
         }
     }
 
-    private void validateData(List<List<String>> records) {
-        int invalidCount = 0;
-        for (int i = 0; i < records.size(); i++) {
-            List<String> record = records.get(i);
-            boolean isValid = true;
-            
-            // Check LRN
-            if (record.size() > 0 && (record.get(0) == null || record.get(0).trim().isEmpty())) {
-                System.err.println("Warning: Row " + (i+1) + " has empty LRN");
-                isValid = false;
+    public String getCellValueByReference(String cellRef) {
+        try (FileInputStream fis = new FileInputStream(excelFile); 
+             Workbook workbook = new XSSFWorkbook(fis)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            CellReference cellReference = new CellReference(cellRef);
+            Row row = sheet.getRow(cellReference.getRow());
+            if (row != null) {
+                Cell cell = row.getCell(cellReference.getCol(), Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                return getCellValueAsString(cell);
             }
-            
-            // Check Name (Last, First, Middle)
-            if (record.size() > 1 && (record.get(1) == null || record.get(1).trim().isEmpty())) {
-                System.err.println("Warning: Row " + (i+1) + " has empty Last Name");
-                isValid = false;
-            }
-            
-            if (record.size() > 2 && (record.get(2) == null || record.get(2).trim().isEmpty())) {
-                System.err.println("Warning: Row " + (i+1) + " has empty First Name");
-                isValid = false;
-            }
-            
-            // Ensure every record has the correct number of fields
-            int expectedFields = 17; // Total fields based on column names array
-            if (record.size() < expectedFields) {
-                System.err.println("Warning: Row " + (i+1) + " has incomplete data. Expected " 
-                    + expectedFields + " fields but got " + record.size());
-                
-                // Pad the record with empty strings if it's missing fields
-                while (record.size() < expectedFields) {
-                    record.add("");
-                }
-                isValid = false;
-            }
-            
-            if (!isValid) {
-                invalidCount++;
-            }
-        }
-        
-        if (invalidCount > 0) {
-            System.err.println("Validation completed with " + invalidCount + " records having issues out of " + records.size());
-        } else {
-            System.out.println("All " + records.size() + " records passed validation");
+            return "";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
         }
     }
 }
