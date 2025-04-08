@@ -361,7 +361,9 @@ public class SchoolFormsReader {
     public String readGradeLevel() {
         try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0);
-            return findValueNextToLabel(sheet, "Grade Level");
+            String gradeLevel = findValueNextToLabel(sheet, "Grade Level");
+            // Remove "Grade" and trim any whitespace
+            return gradeLevel.replaceAll("(?i)grade\\s*", "").trim();
         } catch (IOException e) {
             e.printStackTrace();
             return "";

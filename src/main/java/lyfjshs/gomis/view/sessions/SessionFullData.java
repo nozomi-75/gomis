@@ -30,8 +30,10 @@ import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
+import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.DAO.ViolationDAO;
+import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
@@ -41,6 +43,7 @@ import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.utils.EventBus;
 import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
@@ -424,15 +427,44 @@ public class SessionFullData extends Form {
 
 		if (confirm == JOptionPane.YES_OPTION) {
 			try {
-				sessionData.setSessionStatus("Ended");
-				SessionsDAO sessionsDAO = new SessionsDAO(conn);
-				sessionsDAO.updateSession(sessionData);
+				// Start transaction
+				conn.setAutoCommit(false);
+				try {
+					// Update session status
+					sessionData.setSessionStatus("Ended");
+					SessionsDAO sessionsDAO = new SessionsDAO(conn);
+					sessionsDAO.updateSession(sessionData);
 
-				JOptionPane.showMessageDialog(this, "Session has been ended successfully.", "Success",
-						JOptionPane.INFORMATION_MESSAGE);
+					// Update related appointment if it exists
+					if (sessionData.getAppointmentId() != null) {
+						AppointmentDAO appointmentDAO = new AppointmentDAO(conn);
+						Appointment appointment = appointmentDAO.getAppointmentById(sessionData.getAppointmentId());
+						if (appointment != null) {
+							appointment.setAppointmentStatus("Completed");
+							appointmentDAO.updateAppointment(appointment);
+							
+							// Notify the appointment management to refresh views
+							EventBus.publish("appointment_status_changed", appointment.getAppointmentId());
+						}
+					}
 
-				// Update the view
-				updateSessionView(sessionData);
+					// Commit transaction
+					conn.commit();
+
+					JOptionPane.showMessageDialog(this, "Session has been ended successfully.", "Success",
+							JOptionPane.INFORMATION_MESSAGE);
+
+					// Update the view
+					updateSessionView(sessionData);
+
+				} catch (SQLException e) {
+					// Rollback on error
+					conn.rollback();
+					throw e;
+				} finally {
+					// Reset auto-commit
+					conn.setAutoCommit(true);
+				}
 			} catch (SQLException e) {
 				LOGGER.log(Level.SEVERE, "Error ending session", e);
 				JOptionPane.showMessageDialog(this, "Error ending session: " + e.getMessage(), "Error",

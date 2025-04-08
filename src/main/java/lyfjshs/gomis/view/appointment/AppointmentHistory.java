@@ -64,8 +64,13 @@ public class AppointmentHistory extends JPanel {
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         headerPanel.add(titleLabel);
 
-        // Status Filter
-        statusFilterComboBox = new JComboBox<>(new String[] { "All", "Scheduled", "In Progress", "Completed", "Missed", "Cancelled", "Draft" });
+        // Status Filter with proper capitalization
+        statusFilterComboBox = new JComboBox<>(new String[] { 
+            "All", 
+            "Completed", 
+            "Missed", 
+            "Cancelled",
+        });
         statusFilterComboBox.addActionListener(e -> filterAppointments((String) statusFilterComboBox.getSelectedItem()));
         headerPanel.add(statusFilterComboBox, "wrap");
 
@@ -189,23 +194,51 @@ public class AppointmentHistory extends JPanel {
     }
 
     private Color getStatusColor(String status) {
-        return switch (status.toLowerCase()) {
-            case "ended", "completed" -> new Color(40, 167, 69);
-            case "cancelled" -> new Color(220, 53, 69);
-            case "missed" -> new Color(255, 193, 7);
-            case "rescheduled" -> new Color(255, 165, 0); // Orange color for rescheduled
-            default -> Color.GRAY;
-        };
+        if (status == null) return Color.GRAY;
+        
+        switch (status.toLowerCase()) {
+            case "ended":
+            case "completed":
+                return new Color(40, 167, 69);  // Green
+            case "cancelled":
+                return new Color(220, 53, 69);  // Red
+            case "missed":
+                return new Color(255, 193, 7);  // Yellow
+            default:
+                return Color.GRAY;
+        }
     }
 
     private void filterAppointments(String status) {
         try {
             List<Appointment> appointments;
-            if ("all".equalsIgnoreCase(status)) {
-                appointments = appointmentDAO.getAppointmentsByStatus("all");
+            // Convert status to lowercase and handle "All" filter
+            String filterStatus = status.toLowerCase();
+            if (filterStatus.equals("all")) {
+                // Get all appointments without status filter
+                appointments = appointmentDAO.getAllAppointments();
             } else {
-                appointments = appointmentDAO.getAppointmentsByStatus(status);
+                // For specific status, normalize common variations
+                switch (filterStatus) {
+                    case "completed":
+                    case "ended":
+                        appointments = appointmentDAO.getAppointmentsByStatus("Completed");
+                        break;
+                    case "cancelled":
+                        appointments = appointmentDAO.getAppointmentsByStatus("Cancelled");
+                        break;
+                    case "missed":
+                        appointments = appointmentDAO.getAppointmentsByStatus("Missed");
+                        break;
+                 
+                    default:
+                        appointments = appointmentDAO.getAppointmentsByStatus(status);
+                }
             }
+
+            // Clean up old appointments before displaying
+            cleanupOldAppointments();
+
             appointmentsListPanel.removeAll();
 
             if (appointments.isEmpty()) {
@@ -216,6 +249,9 @@ public class AppointmentHistory extends JPanel {
                 noAppointmentsLabel.setFont(new Font("Arial", Font.PLAIN, 16));
                 appointmentsListPanel.add(noAppointmentsLabel, "grow, push");
             } else {
+                // Sort appointments by date before displaying
+                appointments.sort((a1, a2) -> a2.getAppointmentDateTime().compareTo(a1.getAppointmentDateTime()));
+                
                 for (Appointment appointment : appointments) {
                     appointmentsListPanel.add(createAppointmentCard(appointment), "growx");
                 }
@@ -227,6 +263,10 @@ public class AppointmentHistory extends JPanel {
             // Reset selected appointment
             selectedAppointment = null;
             deleteButton.setEnabled(false);
+            
+            // Store the active filter
+            activeFilter = status;
+            
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, 
@@ -513,6 +553,18 @@ public class AppointmentHistory extends JPanel {
                     JOptionPane.ERROR_MESSAGE
                 );
             }
+        }
+    }
+
+    /**
+     * Cleans up appointments that are older than 10 days
+     */
+    private void cleanupOldAppointments() {
+        try {
+            appointmentDAO.cleanupOldAppointments();
+        } catch (SQLException e) {
+            // Log the error but don't show to user since this is a background operation
+            e.printStackTrace();
         }
     }
 }

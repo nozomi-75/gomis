@@ -28,7 +28,9 @@ import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
+import lyfjshs.gomis.Database.SQLExceptionPane;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
+import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
 import net.miginfocom.swing.MigLayout;
@@ -301,35 +303,36 @@ public class AppointmentDayDetails extends JPanel {
     private void handleCancelAppointment(Appointment appointment) {
         try {
             int confirm = JOptionPane.showConfirmDialog(this,
-                    "Are you sure you want to cancel this appointment?",
-                    "Confirm Cancellation",
-                    JOptionPane.YES_NO_OPTION);
+                    "Are you sure you want to delete this appointment?\nThis cannot be undone.",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    // Update the appointment status to "Cancelled"
-                    appointment.setAppointmentStatus("Cancelled");
-                    if (appointmentDAO.updateAppointment(appointment)) {
+                    // First, delete any related sessions
+                    SessionsDAO sessionsDAO = new SessionsDAO(connection);
+                    sessionsDAO.deleteSessionsByAppointmentId(appointment.getAppointmentId());
+                    
+                    // Then delete the appointment
+                    boolean success = appointmentDAO.deleteAppointment(appointment.getAppointmentId());
+                    
+                    if (success) {
                         JOptionPane.showMessageDialog(this,
-                                "Appointment cancelled successfully.",
+                                "Appointment deleted successfully.",
                                 "Success",
                                 JOptionPane.INFORMATION_MESSAGE);
-                        
-                        // Update the status in the UI
-                        if (statusComboBox != null) {
-                            statusComboBox.setSelectedItem("Cancelled");
-                        }
-                        
                         // Notify any listeners about the change
                         if (onEditAppointment != null) {
                             onEditAppointment.accept(appointment);
                         }
+                    } else {
+                        JOptionPane.showMessageDialog(this,
+                                "Failed to delete appointment.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (SQLException ex) {
-                    String message = "Error cancelling appointment: " + ex.getMessage();
-                    JOptionPane.showMessageDialog(this,
-                            message,
-                            "Cannot Cancel Appointment",
-                            JOptionPane.WARNING_MESSAGE);
+                } catch (SQLException e) {
+                    SQLExceptionPane.showSQLException(e, "Deleting Appointment");
                 }
             }
         } catch (Exception ex) {

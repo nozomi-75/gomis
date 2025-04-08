@@ -6,6 +6,27 @@
     "configurations": [
         {
             "type": "java",
+            "name": "AdvancedAlarm",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.components.alarm.AdvancedAlarm",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "AdvancedAlarm",
+            "request": "launch",
+            "mainClass": "test.alerts.AdvancedAlarm",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "CompileJasper",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.utils.CompileJasper",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "TestAlerts",
             "request": "launch",
             "mainClass": "test.TestAlerts",

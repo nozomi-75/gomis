@@ -202,15 +202,6 @@ public class SessionsForm extends Form {
 			violationField.addItem(violation);
 		}
 
-		// Add listener to update violation type label and show/hide custom field
-		violationField.addActionListener(e -> {
-			String selected = (String) violationField.getSelectedItem();
-			if (selected == null || selected.equals("-- Select Violation --") || selected.equals("No Violation")) {
-			} else if (selected.equals("Others")) {
-			} else {
-			}
-		});
-
 		// Initialize text areas with better styling
 		notesArea = new JTextArea(4, 20);
 		notesArea.setLineWrap(true);
@@ -399,7 +390,7 @@ public class SessionsForm extends Form {
 		contentPanel.add(headerPanel, "cell 0 0, growx");
 
 		// === Main Panel ===
-		mainPanel = new JPanel(new MigLayout("insets 20", "[grow]", "[][][]"));
+		mainPanel = new JPanel(new MigLayout("insets 20", "[grow]", "[][grow][]"));
 		contentPanel.add(mainPanel, "cell 0 1, grow");
 		mainPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10),
 				BorderFactory.createLineBorder(new Color(200, 200, 200))));
@@ -461,6 +452,7 @@ public class SessionsForm extends Form {
 		violationField.addActionListener(e -> {
 			String selected = (String) violationField.getSelectedItem();
 			otherViolationPanel.setVisible("Others".equals(selected));
+			customViolationField.setEnabled("Others".equals(selected));
 			if (!"Others".equals(selected)) {
 				customViolationField.setText(""); // Clear the text when hidden
 			}
@@ -507,7 +499,9 @@ public class SessionsForm extends Form {
 
 		// === Participants Panel ===
 		JPanel participantsPanel = new JPanel(new MigLayout("insets 10", "[grow]", "[][grow][grow]"));
-		tabbedPane.addTab("Participants", null, participantsPanel, "Click to view/add to Participants List");
+		JScrollPane participantScroll = new JScrollPane(participantsPanel);		
+		//set participantScroll SPEED
+		tabbedPane.addTab("Participants", null, participantScroll, "Click to view/add to Participants List");
 
 		// Button Panel for adding participants
 		JPanel buttonPanel = new JPanel(new MigLayout("insets 0", "[grow][grow]", "[]"));
@@ -720,12 +714,29 @@ public class SessionsForm extends Form {
 								if (action == SimpleModalBorder.YES_OPTION) {
 									Integer selectedId = searchPanel.getSelectedAppointmentId();
 									if (selectedId != null) {
-										String consultationType = searchPanel.getSelectedConsultationType();
-										appointmentTypeComboBox.setSelectedItem("From Appointment");
-										consultationTypeComboBox.setSelectedItem(consultationType);
-										selectedAppointmentId = selectedId;
-										populateParticipantsFromAppointment(selectedId);
-										controller.close();
+										try {
+											AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
+											Appointment selectedAppointment = appointmentDAO.getAppointmentById(selectedId);
+											
+											if (selectedAppointment != null && selectedAppointment.getAppointmentDateTime() != null) {
+												// Set the date and time in the pickers
+												LocalDateTime appointmentDateTime = selectedAppointment.getAppointmentDateTime().toLocalDateTime();
+												sessionDatePicker.setSelectedDate(appointmentDateTime.toLocalDate());
+												sessionTimePicker.setSelectedTime(appointmentDateTime.toLocalTime());
+											}
+											
+											String consultationType = searchPanel.getSelectedConsultationType();
+											appointmentTypeComboBox.setSelectedItem("From Appointment");
+											consultationTypeComboBox.setSelectedItem(consultationType);
+											selectedAppointmentId = selectedId;
+											populateParticipantsFromAppointment(selectedId);
+											controller.close();
+										} catch (SQLException e) {
+											JOptionPane.showMessageDialog(SessionsForm.this,
+												"Error loading appointment details: " + e.getMessage(),
+												"Database Error",
+												JOptionPane.ERROR_MESSAGE);
+										}
 									} else {
 										JOptionPane.showMessageDialog(this, "Please select an appointment.", "Warning",
 												JOptionPane.WARNING_MESSAGE);
@@ -807,244 +818,162 @@ public class SessionsForm extends Form {
 			String violationText = "Others".equals(violation) ? customViolationField.getText().trim() : violation;
 
 			SessionsDAO sessionsDAO = new SessionsDAO(connect);
+			ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
 
-			if (isEditing && currentSession != null) {
-				currentSession.setAppointmentType(appointmentType);
-				currentSession.setConsultationType(consultationType);
-				currentSession.setSessionDateTime(parseDateTime());
-				currentSession.setSessionNotes(notes);
-				currentSession.setSessionSummary(summary);
-				currentSession.setSessionStatus(sessionStatus);
+			// Start transaction
+			connect.setAutoCommit(false);
+			try {
+				int sessionId;
+				if (isEditing && currentSession != null) {
+					// Update existing session
+					currentSession.setAppointmentType(appointmentType);
+					currentSession.setConsultationType(consultationType);
+					currentSession.setSessionDateTime(parseDateTime());
+					currentSession.setSessionNotes(notes);
+					currentSession.setSessionSummary(summary);
+					currentSession.setSessionStatus(sessionStatus);
 
-				sessionsDAO.updateSession(currentSession);
+					sessionsDAO.updateSession(currentSession);
+					sessionId = currentSession.getSessionId();
 
-				// Always update the appointment status based on session status if an appointment is linked
-				if (currentSession.getAppointmentId() != null) {
-					AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
-					Appointment appointment = appointmentDAO.getAppointmentById(currentSession.getAppointmentId());
-					if (appointment != null) {
-						// Update appointment status based on session status
-						if ("Ended".equals(sessionStatus)) {
-							appointment.setAppointmentStatus("Completed");
-						} else if ("Active".equals(sessionStatus)) {
-							// Check if rescheduling is set
-							if (reschedPanel != null && reschedPanel.isVisible() && reSchedulePicker.getSelectedDate() != null) {
-								// Set appointment status to Rescheduled
-								appointment.setAppointmentStatus("Rescheduled");
-								
-								// Update the appointment date and time
-								LocalDate reschedDate = reSchedulePicker.getSelectedDate();
-								LocalTime reschedTime = reScheduleTimePicker.getSelectedTime();
-								LocalDateTime newDateTime = reschedDate.atTime(reschedTime != null ? reschedTime : 
-									appointment.getAppointmentDateTime().toLocalDateTime().toLocalTime());
-								
-								// Update the appointment with the new date and time
-								appointment.setAppointmentDateTime(java.sql.Timestamp.valueOf(newDateTime));
-								
-								// Add note about rescheduling
-								String existingNotes = appointment.getAppointmentNotes();
-								String rescheduleNote = "Session conducted on " + 
-									java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd").format(parseDateTime().toLocalDateTime()) + 
-									". Rescheduled to " + 
-									java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(newDateTime) + ".";
-								
-								if (existingNotes != null && !existingNotes.isEmpty()) {
-									appointment.setAppointmentNotes(existingNotes + "\n\n" + rescheduleNote);
-								} else {
-									appointment.setAppointmentNotes(rescheduleNote);
-								}
-							} else {
-								// Keep as In Progress if no rescheduling
-								appointment.setAppointmentStatus("In Progress");
-							}
-						}
-						appointmentDAO.updateAppointment(appointment);
-						
-						// Notify the appointment management to refresh views
-						EventBus.publish("appointment_status_changed", appointment.getAppointmentId());
+					// Clear existing participants for the session
+					participantsDAO.removeAllParticipantsFromSession(sessionId);
+				} else {
+					// Create new session
+					int guidanceCounselorId;
+					if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
+						guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
+					} else {
+						throw new SQLException("No guidance counselor is currently logged in.");
+					}
+
+					Sessions session = new Sessions(0, appointmentId, guidanceCounselorId, null, appointmentType,
+							consultationType, parseDateTime(), notes, summary, sessionStatus,
+							new java.sql.Timestamp(System.currentTimeMillis()));
+
+					sessionId = sessionsDAO.addSession(session);
+					if (sessionId <= 0) {
+						throw new SQLException("Failed to create new session.");
 					}
 				}
 
-				JOptionPane.showMessageDialog(this, "Session updated successfully!", "Success",
-						JOptionPane.INFORMATION_MESSAGE);
+				// Process all participants
+				for (TempParticipant tempParticipant : tempParticipants) {
+					int participantId;
+					
+					if (tempParticipant.isStudent() && tempParticipant.getStudentUid() != null) {
+						// Check if a participant record already exists for this student
+						Participants existingParticipant = participantsDAO.getParticipantByStudentId(tempParticipant.getStudentUid());
+						if (existingParticipant != null) {
+							participantId = existingParticipant.getParticipantId();
+						} else {
+							// Create new participant record for student
+							Participants newParticipant = new Participants();
+							newParticipant.setStudentUid(tempParticipant.getStudentUid());
+							newParticipant.setParticipantFirstName(tempParticipant.getFirstName());
+							newParticipant.setParticipantLastName(tempParticipant.getLastName());
+							newParticipant.setParticipantType("Student");
+							newParticipant.setSex(tempParticipant.getSex());
+							newParticipant.setContactNumber(tempParticipant.getContactNumber());
+							participantId = participantsDAO.createParticipant(newParticipant);
+						}
+					} else {
+						// Create new participant record for non-student
+						Participants newParticipant = new Participants();
+						newParticipant.setParticipantFirstName(tempParticipant.getFirstName());
+						newParticipant.setParticipantLastName(tempParticipant.getLastName());
+						newParticipant.setParticipantType("Non-Student");
+						newParticipant.setSex(tempParticipant.getSex());
+						newParticipant.setContactNumber(tempParticipant.getContactNumber());
+						participantId = participantsDAO.createParticipant(newParticipant);
+					}
+
+					if (participantId <= 0) {
+						throw new SQLException("Failed to create/get participant record.");
+					}
+
+					// Add participant to session
+					sessionsDAO.addParticipantToSession(sessionId, participantId);
+
+					// Create violation record if needed
+					if (violation != null && !violation.equals("-- Select Violation --") && !violation.equals("No Violation")) {
+						ViolationDAO violationDAO = new ViolationDAO(connect);
+						boolean success = violationDAO.addViolation(participantId, violationText, violationText,
+								summary, notes, "Active", new java.sql.Timestamp(System.currentTimeMillis()));
+						if (!success) {
+							throw new SQLException("Failed to create violation record for participant ID: " + participantId);
+						}
+					}
+				}
+
+				// Update appointment status if needed
+				if (appointmentId != null) {
+					AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
+					Appointment appointment = appointmentDAO.getAppointmentById(appointmentId);
+					if (appointment != null) {
+						updateAppointmentStatus(appointment, sessionStatus);
+						appointmentDAO.updateAppointment(appointment);
+						EventBus.publish("appointment_status_changed", appointmentId);
+					}
+				}
+
+				// Commit transaction
+				connect.commit();
+
+				JOptionPane.showMessageDialog(this, 
+					isEditing ? "Session updated successfully!" : "Session and participants saved successfully!", 
+					"Success", 
+					JOptionPane.INFORMATION_MESSAGE);
+
+				refreshViolations();
 
 				if (saveCallback != null) {
 					saveCallback.run();
 				}
 
-				if ("Ended".equals(sessionStatus)) {
-					disableFieldsForEndedSession();
-				}
-			} else {
-				int guidanceCounselorId;
-				if (Main.formManager != null && Main.formManager.getCounselorObject() != null) {
-					guidanceCounselorId = Main.formManager.getCounselorObject().getGuidanceCounselorId();
-				} else {
-					JOptionPane.showMessageDialog(this, "No guidance counselor is currently logged in.", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-
-				Sessions session = new Sessions(0, appointmentId, guidanceCounselorId, null, appointmentType,
-						consultationType, parseDateTime(), notes, summary, sessionStatus,
-						new java.sql.Timestamp(System.currentTimeMillis()));
-
-				int sessionId = sessionsDAO.addSession(session);
-
-				if (sessionId > 0) {
-					// If this session is created from an appointment, update appointment status
-					if (appointmentId != null) {
-						AppointmentDAO appointmentDAO = new AppointmentDAO(connect);
-						Appointment appointment = appointmentDAO.getAppointmentById(appointmentId);
-						if (appointment != null) {
-							// Update appointment status based on session status
-							if ("Ended".equals(sessionStatus)) {
-								appointment.setAppointmentStatus("Completed");
-							} else if ("Active".equals(sessionStatus)) {
-								// Check if rescheduling is set
-								if (reschedPanel != null && reschedPanel.isVisible() && reSchedulePicker.getSelectedDate() != null) {
-									// Set appointment status to Rescheduled
-									appointment.setAppointmentStatus("Rescheduled");
-									
-									// Update the appointment date and time
-									LocalDate reschedDate = reSchedulePicker.getSelectedDate();
-									LocalTime reschedTime = reScheduleTimePicker.getSelectedTime();
-									LocalDateTime newDateTime = reschedDate.atTime(reschedTime != null ? reschedTime : 
-										appointment.getAppointmentDateTime().toLocalDateTime().toLocalTime());
-									
-									// Update the appointment with the new date and time
-									appointment.setAppointmentDateTime(java.sql.Timestamp.valueOf(newDateTime));
-									
-									// Add note about rescheduling
-									String existingNotes = appointment.getAppointmentNotes();
-									String rescheduleNote = "Session conducted on " + 
-										java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd").format(parseDateTime().toLocalDateTime()) + 
-										". Rescheduled to " + 
-										java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(newDateTime) + ".";
-									
-									if (existingNotes != null && !existingNotes.isEmpty()) {
-										appointment.setAppointmentNotes(existingNotes + "\n\n" + rescheduleNote);
-									} else {
-										appointment.setAppointmentNotes(rescheduleNote);
-									}
-								} else {
-									// Keep as In Progress if no rescheduling
-									appointment.setAppointmentStatus("In Progress");
-								}
-							}
-							appointmentDAO.updateAppointment(appointment);
-							
-							// Notify the appointment management to refresh views
-							EventBus.publish("appointment_status_changed", appointment.getAppointmentId());
-						}
-					}
-					
-					ParticipantsDAO participantsDAO = new ParticipantsDAO(connect);
-					Map<Integer, Integer> idMapping = new HashMap<>();
-
-					// Handle both old pendingParticipants and new tempParticipants
-					// First, process the table model entries
-					for (int i = 0; i < participantTableModel.getRowCount(); i++) {
-						int id = (int) participantTableModel.getValueAt(i, 4);
-
-						if (id < 0) {
-							// This could be from pendingParticipants or derived from tempParticipants
-							Participants participant = pendingParticipants.get(id);
-							if (participant != null) {
-								int realId = participantsDAO.createParticipant(participant);
-								sessionsDAO.addParticipantToSession(sessionId, realId);
-								idMapping.put(id, realId);
-							} else {
-								// Try to find the corresponding tempParticipant and create a Participants
-								// object
-								for (TempParticipant tempParticipant : tempParticipants) {
-									if (!tempParticipant.isStudent()) { // For non-students with negative IDs
-										Participants newParticipant = new Participants();
-										newParticipant.setParticipantFirstName(tempParticipant.getFirstName());
-										newParticipant.setParticipantLastName(tempParticipant.getLastName());
-										newParticipant.setParticipantType(tempParticipant.getType());
-										newParticipant.setSex(tempParticipant.getSex());
-										newParticipant.setContactNumber(tempParticipant.getContactNumber());
-
-										int realId = participantsDAO.createParticipant(newParticipant);
-										sessionsDAO.addParticipantToSession(sessionId, realId);
-										idMapping.put(id, realId);
-										break;
-									}
-								}
-							}
-						} else {
-							// This is an existing participant
-							sessionsDAO.addParticipantToSession(sessionId, id);
-							idMapping.put(id, id);
-						}
-					}
-
-					// Now handle tempParticipants that are students (they have positive IDs)
-					for (TempParticipant tempParticipant : tempParticipants) {
-						if (tempParticipant.isStudent() && tempParticipant.getStudentUid() != null) {
-							// Check if this student is already processed
-							boolean alreadyProcessed = false;
-							for (int i = 0; i < participantTableModel.getRowCount(); i++) {
-								int id = (int) participantTableModel.getValueAt(i, 4);
-								if (id > 0 && id == tempParticipant.getStudentUid()) {
-									alreadyProcessed = true;
-									break;
-								}
-							}
-
-							if (!alreadyProcessed) {
-								// Create a new participant for this student
-								Participants newParticipant = new Participants();
-								newParticipant.setStudentUid(tempParticipant.getStudentUid());
-								newParticipant.setParticipantFirstName(tempParticipant.getFirstName());
-								newParticipant.setParticipantLastName(tempParticipant.getLastName());
-								newParticipant.setParticipantType(tempParticipant.getType());
-								newParticipant.setSex(tempParticipant.getSex());
-								newParticipant.setContactNumber(tempParticipant.getContactNumber());
-
-								int realId = participantsDAO.createParticipant(newParticipant);
-								sessionsDAO.addParticipantToSession(sessionId, realId);
-								idMapping.put(tempParticipant.getStudentUid(), realId);
-							}
-						}
-					}
-
-					if (violation != null && !violation.equals("-- Select Violation --")
-							&& !violation.equals("No Violation")) {
-						ViolationDAO ViolationDAO = new ViolationDAO(connect);
-
-						// Process violations for all participants
-						for (Integer participantId : idMapping.values()) {
-							boolean success = ViolationDAO.addViolation(participantId, violationText, violationText,
-									summary, notes, "Active", new java.sql.Timestamp(System.currentTimeMillis()));
-
-							if (!success) {
-								throw new Exception(
-										"Failed to save violation record for participant ID: " + participantId);
-							}
-						}
-					}
-
-					JOptionPane.showMessageDialog(this, "Session and participants saved successfully!", "Success",
-							JOptionPane.INFORMATION_MESSAGE);
-
-					refreshViolations();
-
-					if (saveCallback != null) {
-						saveCallback.run();
-					}
-
+				if (!isEditing) {
 					clearFields();
-				} else {
-					JOptionPane.showMessageDialog(this, "Failed to save session.", "Error", JOptionPane.ERROR_MESSAGE);
 				}
+
+			} catch (Exception e) {
+				connect.rollback();
+				throw e;
+			} finally {
+				connect.setAutoCommit(true);
 			}
 
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Error saving session: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
+		}
+	}
+
+	private void updateAppointmentStatus(Appointment appointment, String sessionStatus) {
+		if ("Ended".equals(sessionStatus)) {
+			appointment.setAppointmentStatus("Completed");
+		} else if ("Active".equals(sessionStatus)) {
+			if (reschedPanel != null && reschedPanel.isVisible() && reSchedulePicker.getSelectedDate() != null) {
+				appointment.setAppointmentStatus("Rescheduled");
+				
+				LocalDate reschedDate = reSchedulePicker.getSelectedDate();
+				LocalTime reschedTime = reScheduleTimePicker.getSelectedTime();
+				LocalDateTime newDateTime = reschedDate.atTime(reschedTime != null ? reschedTime : 
+					appointment.getAppointmentDateTime().toLocalDateTime().toLocalTime());
+				
+				appointment.setAppointmentDateTime(java.sql.Timestamp.valueOf(newDateTime));
+				
+				String existingNotes = appointment.getAppointmentNotes();
+				String rescheduleNote = "Session conducted on " + 
+					java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd").format(parseDateTime().toLocalDateTime()) + 
+					". Rescheduled to " + 
+					java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(newDateTime) + ".";
+				
+				appointment.setAppointmentNotes(existingNotes != null && !existingNotes.isEmpty() ? 
+					existingNotes + "\n\n" + rescheduleNote : rescheduleNote);
+			} else {
+				appointment.setAppointmentStatus("In Progress");
+			}
 		}
 	}
 

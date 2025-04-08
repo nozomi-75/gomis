@@ -189,12 +189,13 @@ public class AppointmentCalendar extends JPanel {
             // Get all appointments for this date and filter client-side
             appointments = appointmentDao.getAppointmentsForDate(date);
             
-            // Filter for active-like statuses only
+            // Include missed appointments in the display
             if (appointments != null) {
                 appointments = appointments.stream()
                     .filter(a -> "Scheduled".equals(a.getAppointmentStatus()) || 
                                 "In Progress".equals(a.getAppointmentStatus()) ||
-                                "Rescheduled".equals(a.getAppointmentStatus()))  // Add Rescheduled status
+                                "Rescheduled".equals(a.getAppointmentStatus()) ||
+                                "Missed".equals(a.getAppointmentStatus()))  // Add Missed status
                     .toList();
             }
         } catch (SQLException e) {
@@ -220,6 +221,8 @@ public class AppointmentCalendar extends JPanel {
             appointmentColors.put("Personal Counseling", new Color[]{new Color(15, 145, 100), Color.WHITE});
             appointmentColors.put("Behavioral Counseling", new Color[]{new Color(180, 120, 10), Color.WHITE});
             appointmentColors.put("Group Counseling", new Color[]{new Color(190, 45, 45), Color.WHITE});
+            // Add color for missed appointments
+            appointmentColors.put("Missed", new Color[]{new Color(180, 180, 0), Color.WHITE}); // Dark yellow for missed
 
             for (Appointment appt : appointments) {
                 JPanel appointmentPanel = new JPanel(new MigLayout("fill, insets 2", "[grow][]"));
@@ -240,6 +243,9 @@ public class AppointmentCalendar extends JPanel {
                         ),
                         Color.WHITE
                     };
+                } else if ("Missed".equals(appt.getAppointmentStatus())) {
+                    // Use the missed appointment color
+                    colors = appointmentColors.get("Missed");
                 } else {
                     colors = baseColors;
                 }
@@ -250,10 +256,13 @@ public class AppointmentCalendar extends JPanel {
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
                 String timeDisplay = appt.getAppointmentDateTime().toLocalDateTime().format(timeFormatter);
                 
-                // Add rescheduled indicator to the title if needed
+                // Add status indicator to the title
                 String titleText = timeDisplay + " - " + appt.getAppointmentTitle();
                 if ("Rescheduled".equals(appt.getAppointmentStatus())) {
-                    titleText = "🔄 " + titleText;  // Add rescheduled icon
+                    titleText = "Rescheduled: " + titleText;  // Add rescheduled icon
+                } else if ("Missed".equals(appt.getAppointmentStatus())) {
+                    // Use the warning icon from resources instead of emoji
+                    titleText = "<html><img src='" + getClass().getResource("/icons/warning.svg") + "' width='16' height='16' /> " + titleText + "</html>";
                 }
 
                 JLabel appLabel = new JLabel(titleText);
@@ -317,12 +326,13 @@ public class AppointmentCalendar extends JPanel {
         }
 
         try {
-            // Check if the appointment is active-like status
+            // Check if the appointment is active-like status or missed
             boolean isActiveStatus = "Scheduled".equals(appointment.getAppointmentStatus()) || 
                                     "In Progress".equals(appointment.getAppointmentStatus()) ||
-                                    "Rescheduled".equals(appointment.getAppointmentStatus());
+                                    "Rescheduled".equals(appointment.getAppointmentStatus()) ||
+                                    "Missed".equals(appointment.getAppointmentStatus());
             
-            // If it's not active-like, don't show details
+            // If it's not active-like or missed, don't show details
             if (!isActiveStatus) {
                 return;
             }
@@ -403,11 +413,12 @@ public class AppointmentCalendar extends JPanel {
             // Get all appointments for the selected date
             List<Appointment> appointments = appointmentDao.getAppointmentsForDate(selectedDate);
             
-            // Filter for active-like statuses
+            // Filter for active-like statuses and missed appointments
             List<Appointment> activeAppointments = appointments.stream()
                 .filter(a -> "Active".equals(a.getAppointmentStatus()) || 
                            "Scheduled".equals(a.getAppointmentStatus()) || 
-                           "Rescheduled".equals(a.getAppointmentStatus()))
+                           "Rescheduled".equals(a.getAppointmentStatus()) ||
+                           "Missed".equals(a.getAppointmentStatus()))
                 .toList();
             
             // If there are no active appointments, show empty state
@@ -453,17 +464,26 @@ public class AppointmentCalendar extends JPanel {
             // Check if there is a current appointment
             Appointment currentAppointment = detailsPanel.getCurrentAppointment();
             
-            // Set options based on whether there's an appointment with active-like status
+            // Set options based on whether there's an appointment with active-like status or missed
             SimpleModalBorder.Option[] options;
             boolean isActiveAppointment = currentAppointment != null && 
                                          ("Active".equals(currentAppointment.getAppointmentStatus()) || 
                                           "Scheduled".equals(currentAppointment.getAppointmentStatus()) || 
                                           "Rescheduled".equals(currentAppointment.getAppointmentStatus()));
             
+            boolean isMissedAppointment = currentAppointment != null && 
+                                         "Missed".equals(currentAppointment.getAppointmentStatus());
+            
             if (isActiveAppointment) {
                 // If there's an active appointment, show "Set a Session" option
                 options = new SimpleModalBorder.Option[] {
                     new SimpleModalBorder.Option("Set a Session", SimpleModalBorder.YES_OPTION),
+                    new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
+                };
+            } else if (isMissedAppointment) {
+                // If there's a missed appointment, show "Reschedule" option
+                options = new SimpleModalBorder.Option[] {
+                    new SimpleModalBorder.Option("Reschedule", SimpleModalBorder.YES_OPTION),
                     new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
                 };
             } else {
@@ -502,6 +522,9 @@ public class AppointmentCalendar extends JPanel {
                                                 break;
                                             }
                                         }
+                                    } else if (isMissedAppointment) {
+                                        // Handle "Reschedule" action for missed appointments
+                                        rescheduleMissedAppointment(currentAppointment);
                                     } else {
                                         // Handle "Add a Appointment" action
                                         showAddAppointmentDialog(selectedDate);
@@ -526,6 +549,85 @@ public class AppointmentCalendar extends JPanel {
             JOptionPane.showMessageDialog(this, 
                 "Error opening appointment details: " + e.getMessage(),
                 "Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // New method to handle rescheduling of missed appointments
+    private void rescheduleMissedAppointment(Appointment missedAppointment) {
+        try {
+            // Verify counselor is logged in
+            if (Main.formManager == null || Main.formManager.getCounselorObject() == null) {
+                JOptionPane.showMessageDialog(this,
+                    "Please log in as a counselor to reschedule appointments.",
+                    "Authentication Required",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Create a new appointment based on the missed one
+            Appointment newAppointment = new Appointment();
+            // Copy relevant details from the missed appointment
+            newAppointment.setAppointmentTitle(missedAppointment.getAppointmentTitle());
+            newAppointment.setAppointmentNotes(missedAppointment.getAppointmentNotes());
+            newAppointment.setConsultationType(missedAppointment.getConsultationType());
+            newAppointment.setGuidanceCounselorId(missedAppointment.getGuidanceCounselorId());
+            
+            // Set the appointment date to today at current time
+            newAppointment.setAppointmentDateTime(Timestamp.valueOf(LocalDateTime.now()));
+            // Set status to Rescheduled
+            newAppointment.setAppointmentStatus("Rescheduled");
+
+            // Create and configure the appointment panel
+            AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDao, connection);
+
+            // Show modal with proper size and validation
+            AddAppointmentModal.getInstance().showModal(connection,
+                this, 
+                addAppointmentPanel,
+                appointmentDao,
+                750,  // width 
+                800,   // height
+                () -> {
+                    // Callback for successful appointment creation
+                    try {
+                        // Update the original missed appointment to mark it as rescheduled
+                        missedAppointment.setAppointmentStatus("Rescheduled");
+                        appointmentDao.updateAppointment(missedAppointment);
+                        
+                        // Refresh calendar view
+                        updateCalendar();
+                        
+                        // Refresh parent views if applicable
+                        if (getParent() != null) {
+                            java.awt.Component parent = getParent();
+                            while (parent != null && !(parent instanceof AppointmentManagement)) {
+                                parent = parent.getParent();
+                            }
+                            if (parent instanceof AppointmentManagement) {
+                                ((AppointmentManagement) parent).refreshViews();
+                            }
+                        }
+                        
+                        JOptionPane.showMessageDialog(this,
+                            "Appointment has been successfully rescheduled.",
+                            "Reschedule Successful",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(this,
+                            "Error updating appointment: " + e.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                }   
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Error rescheduling appointment: " + e.getMessage(),
+                "Error",
                 JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -600,6 +702,33 @@ public class AppointmentCalendar extends JPanel {
                 "Error creating appointment: " + e.getMessage(),
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private Color getTypeColor(String type, boolean isDarkTheme) {
+        // First check if it's a missed appointment - this takes precedence over type
+        if ("Missed".equals(type)) {
+            return isDarkTheme ? new Color(220, 53, 69) : new Color(220, 38, 38); // Red for both themes
+        }
+        
+        if (isDarkTheme) {
+            switch (type) {
+                case "Academic Consultation": return new Color(59, 130, 246);  // Bright blue
+                case "Career Guidance": return new Color(147, 51, 234);       // Purple
+                case "Personal Counseling": return new Color(16, 185, 129);   // Green
+                case "Behavioral Counseling": return new Color(202, 138, 4);  // Orange
+                case "Group Counseling": return new Color(239, 68, 68);       // Red
+                default: return new Color(156, 163, 175);                     // Gray
+            }
+        } else {
+            switch (type) {
+                case "Academic Consultation": return new Color(37, 99, 235);   // Slightly darker blue
+                case "Career Guidance": return new Color(126, 34, 206);       // Darker purple
+                case "Personal Counseling": return new Color(5, 150, 105);    // Darker green
+                case "Behavioral Counseling": return new Color(180, 120, 10); // Darker orange
+                case "Group Counseling": return new Color(220, 38, 38);       // Darker red
+                default: return new Color(107, 114, 128);                     // Darker gray
+            }
         }
     }
 }

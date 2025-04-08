@@ -8,7 +8,9 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
@@ -60,11 +62,14 @@ public class AppointmentManagement extends Form {
 	private SettingsManager settingsManager;
 	private static final Logger logger = Logger.getLogger(AppointmentManagement.class.getName());
 	private ScheduledExecutorService scheduler;
+	private final Map<Integer, AppointmentAlarm> activeAlarms;
+	private static AppointmentAlarm currentActiveAlarm; // Track the currently active alarm
 
 	public AppointmentManagement(Connection connection) {
 		this.connection = connection;
 		this.appointmentDAO = new AppointmentDAO(connection);
 		this.settingsManager = Main.settings;
+		this.activeAlarms = new HashMap<>();
 		setLayout(new MigLayout("wrap 1, fill, insets 0", "[grow]", "[pref!][grow]"));
 
 		// Header panel
@@ -107,22 +112,17 @@ public class AppointmentManagement extends Form {
 		// Initialize the toolbar with buttons for managing appointments
 		initializeToolbar();
 		
-		// Subscribe to appointment status changes
-		EventBus.subscribe(this, "appointment_status_changed", data -> {
-			if (data instanceof Integer) {
-				logger.info("Received appointment status change event for appointment: " + data);
-				refreshViews();
-			}
+		// Subscribe to appointment events
+		EventBus.subscribe(this, "appointment_created", this::handleAppointmentCreated);
+		EventBus.subscribe(this, "appointment_updated", this::handleAppointmentUpdated);
+		EventBus.subscribe(this, "appointment_deleted", this::handleAppointmentDeleted);
+		EventBus.subscribe(this, "counselor_logged_in", data -> {
+			startNotificationTimer();
+			startStatusUpdateScheduler();
 		});
 		
-		// Subscribe to login events to start timers
-		EventBus.subscribe(this, "counselor_logged_in", data -> {
-		// Start notification timer
-		startNotificationTimer();
-
-		// Start status update scheduler
-		startStatusUpdateScheduler();
-		});
+		// Initialize alarms for existing appointments
+		initializeExistingAppointments();
 	}
 
 	private void startNotificationTimer() {
@@ -132,9 +132,10 @@ public class AppointmentManagement extends Form {
 			return;
 		}
 		
-		// Cancel existing timer if any
+		// Skip if timer is already running
 		if (notificationTimer != null) {
-			notificationTimer.cancel();
+			logger.info("Notification timer already running. Skipping start.");
+			return;
 		}
 		
 		// Start a new timer
@@ -166,7 +167,7 @@ public class AppointmentManagement extends Form {
 				// Only show notification if this appointment hasn't been notified yet
 				Integer appointmentId = appointment.getAppointmentId();
 				if (!NotificationManager.isAppointmentNotified(appointmentId)) {
-					String title = "⚠️ URGENT: Appointment About to be Marked as Missed";
+					String title = "Appointment About to be Marked as Missed";
 					String message = String.format(
 						"Appointment '%s' is past its scheduled time. Create a session now to prevent it from being marked as missed.",
 						appointment.getAppointmentTitle()
@@ -473,9 +474,13 @@ public class AppointmentManagement extends Form {
 		}
 		if (scheduler != null) {
 			scheduler.shutdown();
+			scheduler = null;
 		}
 		
-		// Unsubscribe from EventBus - unsubscribes all handlers for this instance
+		// Clean up alarms
+		shutdown();
+		
+		// Unsubscribe from EventBus
 		EventBus.unsubscribeAll(this);
 		
 		super.dispose();
@@ -642,5 +647,136 @@ public class AppointmentManagement extends Form {
 				"Error",
 				JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	private void initializeExistingAppointments() {
+		try {
+			// Cancel any existing alarms first
+			shutdown();
+			
+			List<Appointment> upcomingAppointments = appointmentDAO.getUpcomingAppointments();
+			// Sort appointments by date/time to ensure we handle them in order
+			upcomingAppointments.sort((a1, a2) -> 
+				a1.getAppointmentDateTime().compareTo(a2.getAppointmentDateTime()));
+			
+			// Only set alarm for the next upcoming appointment
+			if (!upcomingAppointments.isEmpty()) {
+				Appointment nextAppointment = upcomingAppointments.get(0);
+				createAlarmForAppointment(nextAppointment);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void handleAppointmentCreated(Object appointmentId) {
+		try {
+			int id = (Integer) appointmentId;
+			Appointment appointment = appointmentDAO.getAppointmentById(id);
+			if (appointment != null) {
+				// Check if this should be the next active alarm
+				if (currentActiveAlarm == null || 
+					appointment.getAppointmentDateTime().before(
+						currentActiveAlarm.getAppointment().getAppointmentDateTime())) {
+					// Cancel current alarm if it exists
+					if (currentActiveAlarm != null) {
+						currentActiveAlarm.stop();
+					}
+					createAlarmForAppointment(appointment);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void handleAppointmentUpdated(Object appointmentId) {
+		try {
+			int id = (Integer) appointmentId;
+			// Remove existing alarm if any
+			removeAlarmForAppointment(id);
+			
+			// Create new alarm with updated appointment data
+			Appointment appointment = appointmentDAO.getAppointmentById(id);
+			if (appointment != null) {
+				// Only create new alarm if this is the next upcoming appointment
+				if (currentActiveAlarm == null || 
+					appointment.getAppointmentDateTime().before(
+						currentActiveAlarm.getAppointment().getAppointmentDateTime())) {
+					createAlarmForAppointment(appointment);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void handleAppointmentDeleted(Object appointmentId) {
+		int id = (Integer) appointmentId;
+		removeAlarmForAppointment(id);
+		
+		// Find and set the next upcoming appointment alarm
+		try {
+			List<Appointment> upcomingAppointments = appointmentDAO.getUpcomingAppointments();
+			if (!upcomingAppointments.isEmpty()) {
+				// Sort by date/time
+				upcomingAppointments.sort((a1, a2) -> 
+					a1.getAppointmentDateTime().compareTo(a2.getAppointmentDateTime()));
+				createAlarmForAppointment(upcomingAppointments.get(0));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void createAlarmForAppointment(Appointment appointment) {
+		// Only create alarm for future appointments
+		if (appointment.getAppointmentDateTime().toLocalDateTime().isAfter(LocalDateTime.now())) {
+			// Cancel any existing alarm first
+			if (currentActiveAlarm != null) {
+				currentActiveAlarm.stop();
+				currentActiveAlarm = null;
+			}
+
+			AppointmentAlarm alarm = new AppointmentAlarm(appointment, () -> {
+				try {
+					// Switch to sessions form
+					DrawerBuilder.switchToSessionsForm();
+					Form[] forms = FormManager.getForms();
+					for (Form form : forms) {
+						if (form instanceof SessionsForm) {
+							SessionsForm sessionsForm = (SessionsForm) form;
+							sessionsForm.populateFromAppointment(appointment);
+							break;
+						}
+					}
+				} catch (Exception e) {
+					logger.log(Level.SEVERE, "Error creating session from alarm", e);
+				}
+			});
+			
+			activeAlarms.put(appointment.getAppointmentId(), alarm);
+			currentActiveAlarm = alarm;
+			logger.info("Created alarm for appointment: " + appointment.getAppointmentId());
+		}
+	}
+
+	private void removeAlarmForAppointment(int appointmentId) {
+		AppointmentAlarm alarm = activeAlarms.remove(appointmentId);
+		if (alarm != null) {
+			alarm.stop();
+			if (currentActiveAlarm == alarm) {
+				currentActiveAlarm = null;
+			}
+		}
+	}
+
+	public void shutdown() {
+		// Clean up all active alarms
+		for (AppointmentAlarm alarm : activeAlarms.values()) {
+			alarm.stop();
+		}
+		activeAlarms.clear();
+		currentActiveAlarm = null;
 	}
 }

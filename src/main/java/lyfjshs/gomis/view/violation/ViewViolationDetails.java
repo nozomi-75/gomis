@@ -12,7 +12,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -56,14 +55,25 @@ public class ViewViolationDetails extends JPanel {
         this.incidentsDAO = new IncidentsDAO(conn);
         this.sessionsDAO = new SessionsDAO(conn);
         
-        // Fetch incidents and sessions data
+        // Fetch related data
         try {
+            // Get incidents related to this violation's participant
             this.incidents = incidentsDAO.getIncidentsByParticipant(violation.getParticipantId());
-            this.sessions = sessionsDAO.getAllSessions().stream()
-                .filter(s -> s.getViolationId() != null && s.getViolationId() == violation.getViolationId())
-                .collect(Collectors.toList());
+            
+            // Get the session that created this violation
+            this.sessions = sessionsDAO.getSessionsByViolationId(violation.getViolationId());
+            
+            if (this.sessions == null || this.sessions.isEmpty()) {
+                // If no direct session found, try getting sessions by participant
+                this.sessions = sessionsDAO.getSessionsByParticipantId(violation.getParticipantId());
+            }
+            
+            System.out.println("Found " + (this.incidents != null ? this.incidents.size() : 0) + " incidents");
+            System.out.println("Found " + (this.sessions != null ? this.sessions.size() : 0) + " sessions");
+            
         } catch (SQLException e) {
             e.printStackTrace();
+            System.err.println("Error fetching related data: " + e.getMessage());
         }
 
         // Main panel layout with single column that grows
@@ -100,8 +110,16 @@ public class ViewViolationDetails extends JPanel {
         mainPanel.add(statusDatePanel, "growx");
         mainPanel.add(createStudentInfoSection(), "growx");
         mainPanel.add(createViolationInfoSection(), "growx");
-        mainPanel.add(createIncidentDetailsSection(), "growx");
-        mainPanel.add(createCounselingSessionsSection(), "growx");
+        
+        // Only add incident section if there are incidents or the violation is active
+        if ((incidents != null && !incidents.isEmpty()) || "Active".equalsIgnoreCase(violation.getStatus())) {
+            mainPanel.add(createIncidentDetailsSection(), "growx");
+        }
+        
+        // Only add sessions section if there are related sessions
+        if (sessions != null && !sessions.isEmpty()) {
+            mainPanel.add(createCounselingSessionsSection(), "growx");
+        }
 
         JScrollPane scrollPane = new JScrollPane(mainPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -383,7 +401,7 @@ public class ViewViolationDetails extends JPanel {
         );
 
         Option option = ModalDialog.createOption();
-        option.setOpacity(0.3f)
+        option.setOpacity(0.4f)
               .setAnimationOnClose(false)
               .getBorderOption()
               .setBorderWidth(0f)
@@ -396,8 +414,8 @@ public class ViewViolationDetails extends JPanel {
 
         // Set dialog size with proper dimensions
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int width = Math.min(600, screenSize.width - 100);
-        int height = Math.min(700, screenSize.height - 100);
+        int width = Math.min(850, screenSize.width - 100);
+        int height = Math.min(650, screenSize.height - 100);
         option.getLayoutOption().setSize(width, height);
 
         ModalDialog.showModal(

@@ -41,8 +41,13 @@ import lyfjshs.gomis.Database.entity.GuidanceCounselor;
 import lyfjshs.gomis.components.settings.SettingsManager;
 import lyfjshs.gomis.utils.ImageCropper;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.Toast;
+import raven.modal.toast.option.ToastDirection;
+import raven.modal.toast.option.ToastLocation;
+import raven.modal.toast.option.ToastOption;
 
 public class SignUpPanel extends JPanel {
+	private JLabel passwordMatchLabel;
 	private JLabel passwordStrengthLabel;
 	private ButtonGroup groupGender;
 	private Connection connDB;
@@ -122,7 +127,10 @@ public class SignUpPanel extends JPanel {
 			}
 		});
 
-		
+		passwordMatchLabel = new JLabel();
+		passwordMatchLabel.setForeground(Color.RED);
+		passwordMatchLabel.setVisible(false);
+
 		btnSignUp.putClientProperty(FlatClientProperties.STYLE, "[light]background:darken(@background,10%);"
 				+ "[dark]background:lighten(@background,10%);" + "borderWidth:0; focusWidth:0; innerFocusWidth:0;");
 
@@ -231,7 +239,8 @@ public class SignUpPanel extends JPanel {
 		add(passwordStrengthLabel, "cell 0 13,gapy 5");
 		add(new JLabel("Confirm Password"), "cell 0 14,gapy 5");
 		add(txtConfirmPassword, "cell 0 15");
-		add(btnSignUp, "cell 0 16,gapy 20");
+		add(passwordMatchLabel, "cell 0 16,gapy 5");
+		add(btnSignUp, "cell 0 17,gapy 20");
 
 		JPanel panel = new JPanel();
 		panel.setOpaque(false); // Transparent background
@@ -249,7 +258,7 @@ public class SignUpPanel extends JPanel {
 		panel.add(haveAccountLabel);
 		panel.add(loginLabel);
 
-		add(panel, "cell 0 17,grow");
+		add(panel, "cell 0 18,grow");
 
 		txtContact.addKeyListener(new KeyAdapter() {
 			public void keyTyped(KeyEvent e) {
@@ -261,6 +270,13 @@ public class SignUpPanel extends JPanel {
 		});
 
 		btnSignUp.addActionListener(e -> handleSignUp());
+
+		// Add password matching listener
+		txtConfirmPassword.getDocument().addDocumentListener(new DocumentListener() {
+			public void insertUpdate(DocumentEvent e) { checkPasswordMatch(); }
+			public void removeUpdate(DocumentEvent e) { checkPasswordMatch(); }
+			public void changedUpdate(DocumentEvent e) { checkPasswordMatch(); }
+		});
 	}
 
 	private void handleSignUp() {
@@ -286,8 +302,11 @@ public class SignUpPanel extends JPanel {
 				try {
 					loginController.createUser(username, password, generatedId).executeUpdate();
 
-					JOptionPane.showMessageDialog(this, "Account created successfully!", "Success",
-							JOptionPane.INFORMATION_MESSAGE);
+					ToastOption toastOption = Toast.createOption();
+					toastOption.getLayoutOption()
+						.setMargin(0, 0, 50, 0)
+						.setDirection(ToastDirection.TOP_TO_BOTTOM);
+					Toast.show(this, Toast.Type.SUCCESS, "Account created successfully!", ToastLocation.BOTTOM_CENTER, toastOption);
 
 					clearFields();
 					parent.switchToLoginPanel();
@@ -297,13 +316,19 @@ public class SignUpPanel extends JPanel {
 					throw e;
 				}
 			} else {
-				JOptionPane.showMessageDialog(this, "Failed to create account: Could not generate counselor ID",
-						"Error", JOptionPane.ERROR_MESSAGE);
+				ToastOption toastOption = Toast.createOption();
+				toastOption.getLayoutOption()
+					.setMargin(0, 0, 50, 0)
+					.setDirection(ToastDirection.TOP_TO_BOTTOM);
+				Toast.show(this, Toast.Type.ERROR, "Failed to create account: Could not generate counselor ID", ToastLocation.BOTTOM_CENTER, toastOption);
 			}
 
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, "Error creating account: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
+			ToastOption toastOption = Toast.createOption();
+			toastOption.getLayoutOption()
+				.setMargin(0, 0, 50, 0)
+				.setDirection(ToastDirection.TOP_TO_BOTTOM);
+			Toast.show(this, Toast.Type.ERROR, "Error creating account: " + e.getMessage(), ToastLocation.BOTTOM_CENTER, toastOption);
 			e.printStackTrace();
 		}
 	}
@@ -316,22 +341,31 @@ public class SignUpPanel extends JPanel {
 				|| txtContact.getText().isEmpty() || txtSpecialization.getText().isEmpty()
 				|| txtWorkPosition.getText().isEmpty()) {
 
-			JOptionPane.showMessageDialog(this, "Please fill in all required fields", "Validation Error",
-					JOptionPane.ERROR_MESSAGE);
+			ToastOption toastOption = Toast.createOption();
+			toastOption.getLayoutOption()
+				.setMargin(0, 0, 50, 0)
+				.setDirection(ToastDirection.TOP_TO_BOTTOM);
+			Toast.show(this, Toast.Type.ERROR, "Please fill in all required fields", ToastLocation.BOTTOM_CENTER, toastOption);
 			return false;
 		}
 
 		// Validate password match
 		if (!new String(txtPassword.getPassword()).equals(new String(txtConfirmPassword.getPassword()))) {
-			JOptionPane.showMessageDialog(this, "Passwords do not match", "Validation Error",
-					JOptionPane.ERROR_MESSAGE);
+			ToastOption toastOption = Toast.createOption();
+			toastOption.getLayoutOption()
+				.setMargin(0, 0, 50, 0)
+				.setDirection(ToastDirection.TOP_TO_BOTTOM);
+			Toast.show(this, Toast.Type.ERROR, "Passwords do not match", ToastLocation.BOTTOM_CENTER, toastOption);
 			return false;
 		}
 
 		// Validate email format
 		if (!txtEmail.getText().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-			JOptionPane.showMessageDialog(this, "Please enter a valid email address", "Validation Error",
-					JOptionPane.ERROR_MESSAGE);
+			ToastOption toastOption = Toast.createOption();
+			toastOption.getLayoutOption()
+				.setMargin(0, 0, 50, 0)
+				.setDirection(ToastDirection.TOP_TO_BOTTOM);
+			Toast.show(this, Toast.Type.ERROR, "Please enter a valid email address", ToastLocation.BOTTOM_CENTER, toastOption);
 			return false;
 		}
 
@@ -472,6 +506,20 @@ public class SignUpPanel extends JPanel {
 					"Error loading image: " + ex.getMessage(),
 					"Error",
 					JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	}
+
+	private void checkPasswordMatch() {
+		String password = new String(txtPassword.getPassword());
+		String confirmPassword = new String(txtConfirmPassword.getPassword());
+		
+		if (!confirmPassword.isEmpty()) {
+			if (!password.equals(confirmPassword)) {
+				passwordMatchLabel.setText("Passwords do not match");
+				passwordMatchLabel.setVisible(true);
+			} else {
+				passwordMatchLabel.setVisible(false);
 			}
 		}
 	}

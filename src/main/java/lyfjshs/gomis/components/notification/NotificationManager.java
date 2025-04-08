@@ -13,8 +13,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -43,7 +45,9 @@ public class NotificationManager {
     
     private static final Color DEFAULT_ICON_COLOR = new Color(0, 120, 215); // Windows blue
     private static final int ICON_SIZE = 16;
-    private static final long NOTIFICATION_COOLDOWN = 60000; // 1 minute cooldown between identical notifications
+    private static final long NOTIFICATION_COOLDOWN = 300000; // 5 minutes cooldown between identical notifications
+    private static final Set<String> recentNotifications = new HashSet<>();
+    private static final Map<Integer, Long> appointmentNotificationTimes = new HashMap<>();
 
     public static class Notification {
         private final String id;

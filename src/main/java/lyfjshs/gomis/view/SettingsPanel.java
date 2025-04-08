@@ -21,6 +21,10 @@ import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.settings.SettingsManager;
 import lyfjshs.gomis.components.settings.SettingsState;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.Toast;
+import raven.modal.toast.option.ToastDirection;
+import raven.modal.toast.option.ToastLocation;
+import raven.modal.toast.option.ToastOption;
 
 @SuppressWarnings("unused")
 public class SettingsPanel extends Form {
@@ -262,9 +266,9 @@ public class SettingsPanel extends Form {
             themeComboBox.setSelectedItem(displayName);
             fontSizeComboBox.setSelectedItem(state.fontSize);
             fontComboBox.setSelectedItem(state.fontStyle);
-            notificationsToggle.setSelected(state.notifications);
             
-            // Update appointment notification settings
+            // Update notification settings
+            notificationsToggle.setSelected(state.notifications);
             notificationTimeSpinner.setValue(state.notificationTimeMinutes);
             notifyOnMissedToggle.setSelected(state.notifyOnMissed);
             notifyOnStartToggle.setSelected(state.notifyOnStart);
@@ -322,7 +326,7 @@ public class SettingsPanel extends Form {
     public void formOpen() {
         super.formOpen();
         // Reload settings when form opens
-        SettingsState currentState = SettingsManager.getCurrentState();
+        SettingsState currentState = Main.settings.getSettingsState();
         if (currentState != null) {
             updateUIComponents(currentState);
         }
@@ -335,6 +339,7 @@ public class SettingsPanel extends Form {
                 String themeId = themeMap.get(selectedName);
                 if (themeId != null) {
                     SettingsManager.updateSetting("theme", themeId);
+                    showSettingsSavedToast();
                 }
             }
         });
@@ -344,6 +349,7 @@ public class SettingsPanel extends Form {
                 Object selected = fontSizeComboBox.getSelectedItem();
                 if (selected != null) {
                     SettingsManager.updateSetting("font_size", selected.toString());
+                    showSettingsSavedToast();
                 }
             }
         });
@@ -353,28 +359,44 @@ public class SettingsPanel extends Form {
                 String selected = (String) fontComboBox.getSelectedItem();
                 if (selected != null) {
                     SettingsManager.updateSetting("font_style", selected);
+                    showSettingsSavedToast();
                 }
             }
         });
 
         notificationsToggle.addActionListener(e -> {
-            SettingsManager.updateSetting("notifications", 
-                String.valueOf(notificationsToggle.isSelected()));
+            boolean isSelected = notificationsToggle.isSelected();
+            SettingsManager.updateSetting("notifications", String.valueOf(isSelected));
+            updateToggleLabel(notificationsToggle, isSelected);
+            showSettingsSavedToast();
         });
         
         notifyOnMissedToggle.addActionListener(e -> {
-            SettingsManager.updateSetting("notify_on_missed", 
-                String.valueOf(notifyOnMissedToggle.isSelected()));
+            boolean isSelected = notifyOnMissedToggle.isSelected();
+            SettingsManager.updateSetting("notify_on_missed", String.valueOf(isSelected));
+            updateToggleLabel(notifyOnMissedToggle, isSelected);
+            showSettingsSavedToast();
         });
         
         notifyOnStartToggle.addActionListener(e -> {
-            SettingsManager.updateSetting("notify_on_start", 
-                String.valueOf(notifyOnStartToggle.isSelected()));
+            boolean isSelected = notifyOnStartToggle.isSelected();
+            SettingsManager.updateSetting("notify_on_start", String.valueOf(isSelected));
+            updateToggleLabel(notifyOnStartToggle, isSelected);
+            showSettingsSavedToast();
         });
         
         notificationTimeSpinner.addChangeListener(e -> {
-            SettingsManager.updateSetting("notification_time_minutes", 
-                String.valueOf(notificationTimeSpinner.getValue()));
+            int value = (Integer) notificationTimeSpinner.getValue();
+            SettingsManager.updateSetting("notification_time_minutes", String.valueOf(value));
+            showSettingsSavedToast();
         });
+    }
+
+    private void showSettingsSavedToast() {
+        ToastOption toastOption = Toast.createOption();
+        toastOption.getLayoutOption()
+            .setMargin(0, 0, 50, 0)
+            .setDirection(ToastDirection.TOP_TO_BOTTOM);
+        Toast.show(this, Toast.Type.SUCCESS, "Settings saved successfully", ToastLocation.BOTTOM_CENTER, toastOption);
     }
 }

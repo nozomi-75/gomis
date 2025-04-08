@@ -324,4 +324,76 @@ public class SessionsDAO {
             connection.setAutoCommit(true);
         }
     }
+
+    /**
+     * Gets all sessions related to a specific violation
+     * 
+     * @param violationId The ID of the violation
+     * @return List of sessions related to the violation
+     * @throws SQLException If there is a database error
+     */
+    public List<Sessions> getSessionsByViolationId(int violationId) throws SQLException {
+        List<Sessions> sessions = new ArrayList<>();
+        String sql = "SELECT * FROM SESSIONS WHERE VIOLATION_ID = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, violationId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Sessions session = new Sessions(
+                        rs.getInt("SESSION_ID"),
+                        rs.getObject("APPOINTMENT_ID", Integer.class),
+                        rs.getInt("GUIDANCE_COUNSELOR_ID"),
+                        rs.getObject("VIOLATION_ID", Integer.class),
+                        rs.getString("APPOINTMENT_TYPE"),
+                        rs.getString("CONSULTATION_TYPE"),
+                        rs.getTimestamp("SESSION_DATE_TIME"),
+                        rs.getString("SESSION_NOTES"),
+                        rs.getString("SESSION_SUMMARY"),
+                        rs.getString("SESSION_STATUS"),
+                        rs.getTimestamp("UPDATED_AT")
+                    );
+                    sessions.add(session);
+                }
+            }
+        }
+        return sessions;
+    }
+
+    /**
+     * Gets all sessions for a specific participant
+     * 
+     * @param participantId The ID of the participant
+     * @return List of sessions the participant was involved in
+     * @throws SQLException If there is a database error
+     */
+    public List<Sessions> getSessionsByParticipantId(int participantId) throws SQLException {
+        List<Sessions> sessions = new ArrayList<>();
+        String sql = "SELECT s.* FROM SESSIONS s " +
+                    "JOIN SESSIONS_PARTICIPANTS sp ON s.SESSION_ID = sp.SESSION_ID " +
+                    "WHERE sp.PARTICIPANT_ID = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, participantId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Sessions session = new Sessions(
+                        rs.getInt("SESSION_ID"),
+                        rs.getObject("APPOINTMENT_ID", Integer.class),
+                        rs.getInt("GUIDANCE_COUNSELOR_ID"),
+                        rs.getObject("VIOLATION_ID", Integer.class),
+                        rs.getString("APPOINTMENT_TYPE"),
+                        rs.getString("CONSULTATION_TYPE"),
+                        rs.getTimestamp("SESSION_DATE_TIME"),
+                        rs.getString("SESSION_NOTES"),
+                        rs.getString("SESSION_SUMMARY"),
+                        rs.getString("SESSION_STATUS"),
+                        rs.getTimestamp("UPDATED_AT")
+                    );
+                    sessions.add(session);
+                }
+            }
+        }
+        return sessions;
+    }
 }

@@ -591,6 +591,23 @@ public class AppointmentDAO {
         
         return updatedCount;
     }
+
+    /**
+     * Deletes appointment history older than 10 days
+     * Only deletes appointments with status 'Completed', 'Cancelled', or 'Missed'
+     */
+    public void cleanupOldAppointments() throws SQLException {
+        String query = "DELETE FROM APPOINTMENTS WHERE " +
+                      "APPOINTMENT_STATUS IN ('Completed', 'Cancelled', 'Missed') " +
+                      "AND APPOINTMENT_DATE_TIME < DATE_SUB(NOW(), INTERVAL 10 DAY)";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            int deletedCount = stmt.executeUpdate();
+            if (deletedCount > 0) {
+                System.out.println("Deleted " + deletedCount + " old appointments");
+            }
+        }
+    }
 }
 
 

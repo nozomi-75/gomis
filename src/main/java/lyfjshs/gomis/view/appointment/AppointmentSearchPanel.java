@@ -52,16 +52,13 @@ public class AppointmentSearchPanel extends JPanel {
     private JTextField participantFilter;
     private JButton newAppointmentButton;
     private JLabel currentMonthLabel;
-    private JButton clearDateButton;
     
     // Colors
     private static final Color PRIMARY_COLOR = new Color(0, 102, 204);
-    private static final Color PRIMARY_DARK = new Color(0, 77, 153);
     private static final Color SUCCESS_COLOR = new Color(40, 167, 69);
     private static final Color DANGER_COLOR = new Color(220, 53, 69);
     private static final Color WARNING_COLOR = new Color(255, 193, 7);
     private static final Color INFO_COLOR = new Color(23, 162, 184);
-    private static final Color LIGHT_COLOR = new Color(248, 249, 250);
     private static final Color DARK_COLOR = new Color(52, 58, 64);
     
     public AppointmentSearchPanel(Connection connect) {
@@ -69,7 +66,7 @@ public class AppointmentSearchPanel extends JPanel {
         setLayout(new BorderLayout());
         
         // Create main container panel
-        JPanel containerPanel = new JPanel(new MigLayout("insets 20", "[grow]", "[]"));
+        JPanel containerPanel = new JPanel(new MigLayout("insets 20", "[grow]", "[][][grow][]"));
         containerPanel.setBackground(Color.WHITE);
         
         // Initialize table first
@@ -83,9 +80,6 @@ public class AppointmentSearchPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(appointmentTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         containerPanel.add(scrollPane, "grow, wrap");
-        
-        // Add modal footer
-        containerPanel.add(createModalFooter(), "grow");
 
         // Add container to main panel
         add(containerPanel, BorderLayout.CENTER);
@@ -97,22 +91,6 @@ public class AppointmentSearchPanel extends JPanel {
         SwingUtilities.invokeLater(this::loadCurrentMonthAppointments);
     }
 
-    private JPanel createModalFooter() {
-        JPanel footerPanel = new JPanel(new MigLayout("insets 15 0 0 0", "[push][]10[]", "[]"));
-        footerPanel.setBackground(Color.WHITE);
-        footerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(238, 238, 238)));
-
-        JButton cancelButton = new JButton("Cancel");
-        styleSecondaryButton(cancelButton);
-        
-        JButton selectButton = new JButton("Select");
-        stylePrimaryButton(selectButton);
-
-        footerPanel.add(cancelButton);
-        footerPanel.add(selectButton);
-
-        return footerPanel;
-    }
 
     private void stylePrimaryButton(JButton button) {
         button.setBackground(PRIMARY_COLOR);
@@ -123,56 +101,13 @@ public class AppointmentSearchPanel extends JPanel {
         button.setFont(new Font("Segoe UI", Font.BOLD, 14));
     }
 
-    private void styleSecondaryButton(JButton button) {
-        button.setBackground(LIGHT_COLOR);
-        button.setForeground(DARK_COLOR);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createLineBorder(new Color(221, 221, 221)));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
-    }
-
-    private JPanel createHeaderPanel() {
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(238, 238, 238)));
-        
-        // Title with icon
-        JLabel titleLabel = new JLabel(" Search Appointments");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(PRIMARY_COLOR);
-        titleLabel.setIcon(new FlatSVGIcon("icons/search.svg", 0.8f));
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
-        
-        // Close button
-        JButton closeButton = new JButton("×");
-        closeButton.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        closeButton.setForeground(new Color(102, 102, 102));
-        closeButton.setBackground(Color.WHITE);
-        closeButton.setBorderPainted(false);
-        closeButton.setFocusPainted(false);
-        closeButton.setContentAreaFilled(false);
-        closeButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        closeButton.addActionListener(e -> {
-            // Close action
-            Component parent = SwingUtilities.getWindowAncestor(this);
-            if (parent != null) {
-                parent.setVisible(false);
-            }
-        });
-        
-        headerPanel.add(titleLabel, BorderLayout.WEST);
-        headerPanel.add(closeButton, BorderLayout.EAST);
-        
-        return headerPanel;
-    }
 
     private JPanel createSearchControlsPanel() {
         JPanel searchControlsPanel = new JPanel(new MigLayout("insets 0", "[grow][]", "[]"));
         searchControlsPanel.setBackground(Color.WHITE);
         
         // Create date filter panel
-        JPanel dateFilterPanel = new JPanel(new MigLayout("insets 0", "[]15[]", "[]"));
+        JPanel dateFilterPanel = new JPanel(new MigLayout("insets 0", "[]15[]15[]", "[]"));
         dateFilterPanel.setBackground(Color.WHITE);
         
         // Month selector
@@ -196,7 +131,7 @@ public class AppointmentSearchPanel extends JPanel {
         monthSelector.add(currentMonthLabel);
         
         // Date picker
-        JPanel datePickerPanel = new JPanel(new MigLayout("insets 0", "[]5[]5[]", "[]"));
+        JPanel datePickerPanel = new JPanel(new MigLayout("insets 0", "[]5[]", "[]"));
         datePickerPanel.setBackground(Color.WHITE);
         
         JLabel dateLabel = new JLabel("Select Date:");
@@ -214,25 +149,12 @@ public class AppointmentSearchPanel extends JPanel {
         datePicker.setCloseAfterSelected(true);
         datePicker.setEditor(dateEditor);
         
-        clearDateButton = new JButton("×");
-        clearDateButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        clearDateButton.setForeground(new Color(102, 102, 102));
-        clearDateButton.setBackground(LIGHT_COLOR);
-        clearDateButton.setBorderPainted(false);
-        clearDateButton.setFocusPainted(false);
-        clearDateButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        clearDateButton.addActionListener(e -> {
-            datePicker.clearSelectedDate();
-            loadCurrentMonthAppointments();
-        });
-        
         datePickerPanel.add(dateLabel);
         datePickerPanel.add(dateEditor);
-        datePickerPanel.add(clearDateButton);
         
         // Add components to date filter panel
         dateFilterPanel.add(monthSelector);
-        dateFilterPanel.add(datePickerPanel);
+        dateFilterPanel.add(datePickerPanel, "cell 2 0");
         
         // New appointment button
         newAppointmentButton = new JButton("New Appointment");

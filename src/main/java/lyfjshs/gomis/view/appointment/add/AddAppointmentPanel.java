@@ -30,6 +30,7 @@ import lyfjshs.gomis.components.DropPanel;
 import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.utils.EventBus;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
@@ -539,6 +540,9 @@ public class AddAppointmentPanel extends Modal {
 		                        "Type: " + consultationType;
 		                        
 			showToast(successMsg, Toast.Type.SUCCESS);
+			
+			// Notify AppointmentManagement about the new appointment
+			EventBus.publish("appointment_created", appointment.getAppointmentId());
 		} else {
 			showToast("Failed to create appointment", Toast.Type.ERROR);
 		}

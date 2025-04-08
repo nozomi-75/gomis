@@ -253,4 +253,42 @@ public class ParticipantsDAO {
     public Participants getParticipantByDetails(String firstName, String lastName, String type) throws SQLException {
         return findParticipantByNameAndType(firstName, lastName, type);
     }
+
+    /**
+     * Gets a participant by their student ID
+     * 
+     * @param studentUid The student's UID to search for
+     * @return The participant record if found, null otherwise
+     * @throws SQLException If there is a database error
+     */
+    public Participants getParticipantByStudentId(Integer studentUid) throws SQLException {
+        if (studentUid == null) {
+            return null;
+        }
+        
+        String sql = "SELECT * FROM PARTICIPANTS WHERE STUDENT_UID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, studentUid);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToParticipant(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Removes all participants from a session
+     * 
+     * @param sessionId The ID of the session to remove participants from
+     * @throws SQLException If there is a database error
+     */
+    public void removeAllParticipantsFromSession(int sessionId) throws SQLException {
+        String sql = "DELETE FROM SESSIONS_PARTICIPANTS WHERE SESSION_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, sessionId);
+            stmt.executeUpdate();
+        }
+    }
 }
