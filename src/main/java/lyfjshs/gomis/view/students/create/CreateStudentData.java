@@ -363,54 +363,83 @@ public class CreateStudentData extends Form {
         sectionTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +2");
         sectionPanel.add(sectionTitle, "span, growx, gapbottom 15");
 
-        JPanel contentPanel = new JPanel(new MigLayout("fill, insets 0", "[grow][grow][grow][grow]", "[][][][]"));
+        // Create two sub-panels for father and mother information
+        JPanel contentPanel = new JPanel(new MigLayout("fill, insets 0", "[grow][grow]", "[]"));
         contentPanel.setOpaque(false);
 
-        // Row 0: Labels
-        contentPanel.add(new JLabel("Father's Last Name"), "cell 0 0");
-        contentPanel.add(new JLabel("Mother's Last Name"), "cell 1 0");
-        contentPanel.add(new JLabel("Father's First Name"), "cell 2 0");
-        contentPanel.add(new JLabel("Mother's First Name"), "cell 3 0");
+        // Father's Information Panel
+        JPanel fatherPanel = new JPanel(new MigLayout("fill, insets 10", "[grow]", "[][]"));
+        fatherPanel.putClientProperty(FlatClientProperties.STYLE, "arc:8; background:tint($Panel.background,5%)");
+        fatherPanel.setOpaque(false);
 
-        // Row 1: Fields
+        JLabel fatherTitle = new JLabel("Father's Information");
+        fatherTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +1");
+        fatherPanel.add(fatherTitle, "wrap, gapbottom 10");
+
+        // Father's fields panel
+        JPanel fatherFieldsPanel = new JPanel(new MigLayout("fill, insets 0", "[grow]", "[][]"));
+        fatherFieldsPanel.setOpaque(false);
+
+        fatherFieldsPanel.add(new JLabel("Last Name"), "wrap");
         fatherLastNameField = new JTextField();
         fatherLastNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter father's last name");
-        contentPanel.add(fatherLastNameField, "cell 0 1, growx");
+        fatherFieldsPanel.add(fatherLastNameField, "growx, wrap");
 
-        motherLastNameField = new JTextField();
-        motherLastNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's last name");
-        contentPanel.add(motherLastNameField, "cell 1 1, growx");
-
+        fatherFieldsPanel.add(new JLabel("First Name"), "wrap");
         fatherFirstNameField = new JTextField();
         fatherFirstNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter father's first name");
-        contentPanel.add(fatherFirstNameField, "cell 2 1, growx");
+        fatherFieldsPanel.add(fatherFirstNameField, "growx, wrap");
 
-        motherFirstNameField = new JTextField();
-        motherFirstNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's first name");
-        contentPanel.add(motherFirstNameField, "cell 3 1, growx");
-
-        // Row 2: Labels
-        contentPanel.add(new JLabel("Father's Middle Name"), "cell 0 2");
-        contentPanel.add(new JLabel("Mother's Middle Name"), "cell 1 2");
-        contentPanel.add(new JLabel("Father's Contact"), "cell 2 2");
-        contentPanel.add(new JLabel("Mother's Contact"), "cell 3 2");
-
-        // Row 3: Fields
+        fatherFieldsPanel.add(new JLabel("Middle Name"), "wrap");
         fatherMiddleNameField = new JTextField();
         fatherMiddleNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter father's middle name");
-        contentPanel.add(fatherMiddleNameField, "cell 0 3, growx");
+        fatherFieldsPanel.add(fatherMiddleNameField, "growx, wrap");
 
-        motherMiddleNameField = new JTextField();
-        motherMiddleNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's middle name");
-        contentPanel.add(motherMiddleNameField, "cell 1 3, growx");
-
+        fatherFieldsPanel.add(new JLabel("Contact Number"), "wrap");
         fatherPhoneNumberField = new JTextField();
         fatherPhoneNumberField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter father's contact number");
-        contentPanel.add(fatherPhoneNumberField, "cell 2 3, growx");
+        fatherFieldsPanel.add(fatherPhoneNumberField, "growx");
 
+        fatherPanel.add(fatherFieldsPanel, "grow");
+
+        // Mother's Information Panel
+        JPanel motherPanel = new JPanel(new MigLayout("fill, insets 10", "[grow]", "[][]"));
+        motherPanel.putClientProperty(FlatClientProperties.STYLE, "arc:8; background:tint($Panel.background,5%)");
+        motherPanel.setOpaque(false);
+
+        JLabel motherTitle = new JLabel("Mother's Information");
+        motherTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +1");
+        motherPanel.add(motherTitle, "wrap, gapbottom 10");
+
+        // Mother's fields panel
+        JPanel motherFieldsPanel = new JPanel(new MigLayout("fill, insets 0", "[grow]", "[][]"));
+        motherFieldsPanel.setOpaque(false);
+
+        motherFieldsPanel.add(new JLabel("Last Name"), "wrap");
+        motherLastNameField = new JTextField();
+        motherLastNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's last name");
+        motherFieldsPanel.add(motherLastNameField, "growx, wrap");
+
+        motherFieldsPanel.add(new JLabel("First Name"), "wrap");
+        motherFirstNameField = new JTextField();
+        motherFirstNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's first name");
+        motherFieldsPanel.add(motherFirstNameField, "growx, wrap");
+
+        motherFieldsPanel.add(new JLabel("Middle Name"), "wrap");
+        motherMiddleNameField = new JTextField();
+        motherMiddleNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's middle name");
+        motherFieldsPanel.add(motherMiddleNameField, "growx, wrap");
+
+        motherFieldsPanel.add(new JLabel("Contact Number"), "wrap");
         motherPhoneNumberField = new JTextField();
         motherPhoneNumberField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's contact number");
-        contentPanel.add(motherPhoneNumberField, "cell 3 3, growx");
+        motherFieldsPanel.add(motherPhoneNumberField, "growx");
+
+        motherPanel.add(motherFieldsPanel, "grow");
+
+        // Add father and mother panels to the content panel
+        contentPanel.add(fatherPanel, "grow");
+        contentPanel.add(motherPanel, "grow");
 
         sectionPanel.add(contentPanel, "span, growx");
         return sectionPanel;

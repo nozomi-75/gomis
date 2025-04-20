@@ -38,7 +38,7 @@ import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
-import lyfjshs.gomis.utils.IncidentReportGenerator;
+import lyfjshs.gomis.utils.jasper.IncidentReportGenerator;
 import lyfjshs.gomis.view.appointment.AppointmentManagement;
 import lyfjshs.gomis.view.appointment.AppointmentOverview;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentModal;

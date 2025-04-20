@@ -1,7 +1,11 @@
 package lyfjshs.gomis.components.settings;
 
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.Window;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -27,6 +32,13 @@ public class SettingsManager {
 	private static Connection connection;
 	private static SettingsState currentState;
 	private static List<Consumer<SettingsState>> settingsListeners = new ArrayList<>();
+
+	// Constants for Good Moral Certificate settings
+	private static final String PREF_DEPED_SEAL = "good_moral_deped_seal";
+	private static final String PREF_DEPED_MATATAG = "good_moral_deped_matatag";
+	private static final String PREF_LYFJSHS_LOGO = "good_moral_lyfjshs_logo";
+	private static final String PREF_GOOD_MORAL_SIGNER = "good_moral_signer";
+	private static final String PREF_GOOD_MORAL_POSITION = "good_moral_position";
 
 	public SettingsManager(Connection connection) {
 		this.connection = connection;
@@ -223,7 +235,8 @@ public class SettingsManager {
 	 */
 	private static void loadSettings() {
 		currentState = getSettingsStateFromDB();
-		notifyListeners(); // Notify listeners when settings are loaded
+		loadGoodMoralSettings(); // Load Good Moral Certificate settings
+		notifyListeners();
 	}
 
 	/**
@@ -328,6 +341,159 @@ public class SettingsManager {
 		for (Consumer<SettingsState> listener : settingsListeners) {
 			listener.accept(currentState);
 		}
+	}
+
+	private static void loadGoodMoralSettings() {
+		try {
+			// Load images
+			String[] imageKeys = {PREF_DEPED_SEAL, PREF_DEPED_MATATAG, PREF_LYFJSHS_LOGO};
+			String sql = "SELECT PREF_KEY, PREF_FILE FROM PREFERENCES WHERE PREF_KEY = ?";
+			
+			for (String key : imageKeys) {
+				try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+					stmt.setString(1, key);
+					try (ResultSet rs = stmt.executeQuery()) {
+						if (rs.next()) {
+							byte[] imageBytes = rs.getBytes("PREF_FILE");
+							if (imageBytes != null) {
+								BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
+								switch (key) {
+									case PREF_DEPED_SEAL:
+										currentState.depedSealImage = image;
+										break;
+									case PREF_DEPED_MATATAG:
+										currentState.depedMatatagImage = image;
+										break;
+									case PREF_LYFJSHS_LOGO:
+										currentState.lyfjshsLogoImage = image;
+										break;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// Load signer and position
+			sql = "SELECT PREF_KEY, PREF_VALUE FROM PREFERENCES WHERE PREF_KEY IN (?, ?)";
+			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+				stmt.setString(1, PREF_GOOD_MORAL_SIGNER);
+				stmt.setString(2, PREF_GOOD_MORAL_POSITION);
+				try (ResultSet rs = stmt.executeQuery()) {
+					while (rs.next()) {
+						String key = rs.getString("PREF_KEY");
+						String value = rs.getString("PREF_VALUE");
+						if (PREF_GOOD_MORAL_SIGNER.equals(key)) {
+							currentState.goodMoralSigner = value;
+						} else if (PREF_GOOD_MORAL_POSITION.equals(key)) {
+							currentState.goodMoralPosition = value;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void saveGoodMoralImage(String key, BufferedImage image) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ImageIO.write(image, "png", baos);
+			byte[] imageBytes = baos.toByteArray();
+
+			String sql = "INSERT INTO PREFERENCES (PREF_KEY, PREF_FILE) VALUES (?, ?) " +
+						"ON DUPLICATE KEY UPDATE PREF_FILE = ?";
+			
+			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+				stmt.setString(1, key);
+				stmt.setBytes(2, imageBytes);
+				stmt.setBytes(3, imageBytes);
+				stmt.executeUpdate();
+			}
+
+			// Update current state
+			switch (key) {
+				case PREF_DEPED_SEAL:
+					currentState.depedSealImage = image;
+					break;
+				case PREF_DEPED_MATATAG:
+					currentState.depedMatatagImage = image;
+					break;
+				case PREF_LYFJSHS_LOGO:
+					currentState.lyfjshsLogoImage = image;
+					break;
+			}
+			notifyListeners();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void saveGoodMoralSigner(String signer, String position) {
+		try {
+			connection.setAutoCommit(false);
+			String sql = "INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) " +
+						"ON DUPLICATE KEY UPDATE PREF_VALUE = ?";
+			
+			// Save signer
+			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+				stmt.setString(1, PREF_GOOD_MORAL_SIGNER);
+				stmt.setString(2, signer);
+				stmt.setString(3, signer);
+				stmt.executeUpdate();
+			}
+
+			// Save position
+			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+				stmt.setString(1, PREF_GOOD_MORAL_POSITION);
+				stmt.setString(2, position);
+				stmt.setString(3, position);
+				stmt.executeUpdate();
+			}
+
+			connection.commit();
+
+			// Update current state
+			currentState.goodMoralSigner = signer;
+			currentState.goodMoralPosition = position;
+			notifyListeners();
+		} catch (Exception e) {
+			try {
+				connection.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			e.printStackTrace();
+		} finally {
+			try {
+				connection.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	// Method to get Good Moral Certificate settings
+	public static Image getGoodMoralImage(String key) {
+		switch (key) {
+			case PREF_DEPED_SEAL:
+				return currentState.depedSealImage;
+			case PREF_DEPED_MATATAG:
+				return currentState.depedMatatagImage;
+			case PREF_LYFJSHS_LOGO:
+				return currentState.lyfjshsLogoImage;
+			default:
+				return null;
+		}
+	}
+
+	public static String getGoodMoralSigner() {
+		return currentState.goodMoralSigner;
+	}
+
+	public static String getGoodMoralPosition() {
+		return currentState.goodMoralPosition;
 	}
 
 }

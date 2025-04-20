@@ -55,6 +55,10 @@ public class Main {
 			public void run() {
 				SplashScreenFrame splash = new SplashScreenFrame();
 				splash.setVisible(true); // Show the splash screen
+				
+				// Set the parent component for DBConnection dialogs
+				DBConnection.setParentComponent(splash);
+				
 				splash.runInitialization(); // Run initialization
 			}
 		});
@@ -197,6 +201,9 @@ public class Main {
 			// Create main frame with proper size and visibility
 			gFrame = new GFrame(java.awt.Toolkit.getDefaultToolkit().getScreenSize().width, 850, false, "GOMIS", null, conn);
 			gFrame.getRootPane().putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true);
+			
+			// Update parent component for DBConnection dialogs
+			DBConnection.setParentComponent(gFrame);
 			
 			// Initialize notifications
 			gFrame.initializeNotifications(conn);

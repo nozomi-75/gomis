@@ -3,5 +3,8 @@
     "docwriter.hotkey.windows": "Alt + .",
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.format.settings.url": ".vscode/java-formatter.xml",
-    "liveServer.settings.port": 5501
+    "liveServer.settings.port": 5501,
+    "java.dependency.packagePresentation": "hierarchical",
+    "java.dependency.syncWithFolderExplorer": true,
+    "java.project.explorer.showNonJavaResources": true
 }

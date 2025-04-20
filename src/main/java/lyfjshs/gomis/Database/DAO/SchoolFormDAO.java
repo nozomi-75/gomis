@@ -109,14 +109,44 @@ public class SchoolFormDAO {
         );
     }
 
-    // CREATE: Inserts a new school form and returns the generated ID
+    // CREATE: Inserts a new school form or returns existing ID if found
     public int createSchoolForm(SchoolForm schoolForm) throws SQLException {
-        String sql = "INSERT INTO SCHOOL_FORM (SF_SCHOOL_NAME, SF_SCHOOL_ID, SF_DISTRICT, " +
+        // First check if a matching school form already exists
+        String checkSql = "SELECT SF_ID FROM SCHOOL_FORM WHERE " +
+                         "SF_SCHOOL_NAME = ? AND SF_SCHOOL_ID = ? AND " +
+                         "SF_DISTRICT = ? AND SF_DIVISION = ? AND " +
+                         "SF_REGION = ? AND SF_SEMESTER = ? AND " +
+                         "SF_SCHOOL_YEAR = ? AND SF_GRADE_LEVEL = ? AND " +
+                         "SF_SECTION = ? AND SF_TRACK_AND_STRAND = ? AND " +
+                         "SF_COURSE = ?";
+
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            checkStmt.setString(1, schoolForm.getSF_SCHOOL_NAME());
+            checkStmt.setString(2, schoolForm.getSF_SCHOOL_ID());
+            checkStmt.setString(3, schoolForm.getSF_DISTRICT());
+            checkStmt.setString(4, schoolForm.getSF_DIVISION());
+            checkStmt.setString(5, schoolForm.getSF_REGION());
+            checkStmt.setString(6, schoolForm.getSF_SEMESTER());
+            checkStmt.setString(7, schoolForm.getSF_SCHOOL_YEAR());
+            checkStmt.setString(8, schoolForm.getSF_GRADE_LEVEL());
+            checkStmt.setString(9, schoolForm.getSF_SECTION());
+            checkStmt.setString(10, schoolForm.getSF_TRACK_AND_STRAND());
+            checkStmt.setString(11, schoolForm.getSF_COURSE());
+
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("SF_ID");
+                }
+            }
+        }
+
+        // If no existing form found, create a new one
+        String insertSql = "INSERT INTO SCHOOL_FORM (SF_SCHOOL_NAME, SF_SCHOOL_ID, SF_DISTRICT, " +
                     "SF_DIVISION, SF_REGION, SF_SEMESTER, SF_SCHOOL_YEAR, SF_GRADE_LEVEL, " +
                     "SF_SECTION, SF_TRACK_AND_STRAND, SF_COURSE) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, schoolForm.getSF_SCHOOL_NAME());
             stmt.setString(2, schoolForm.getSF_SCHOOL_ID());
             stmt.setString(3, schoolForm.getSF_DISTRICT());
@@ -128,10 +158,12 @@ public class SchoolFormDAO {
             stmt.setString(9, schoolForm.getSF_SECTION());
             stmt.setString(10, schoolForm.getSF_TRACK_AND_STRAND());
             stmt.setString(11, schoolForm.getSF_COURSE());
+
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
                 throw new SQLException("Creating school form failed, no rows affected.");
             }
+
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     return generatedKeys.getInt(1);

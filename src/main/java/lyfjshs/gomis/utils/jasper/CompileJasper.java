@@ -1,4 +1,4 @@
-package lyfjshs.gomis.utils;
+package lyfjshs.gomis.utils.jasper;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;

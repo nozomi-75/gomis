@@ -7,13 +7,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +36,7 @@ import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.Form;
-import lyfjshs.gomis.utils.IncidentReportGenerator;
+import lyfjshs.gomis.utils.jasper.IncidentReportGenerator;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
@@ -72,6 +68,7 @@ public class IncidentFillUpForm extends Form {
 	private Map<Integer, Map<String, String>> participantDetails = new HashMap<>();
 	private ParticipantsDAO participantsDAO;
 	private Student reporterStudent;
+	private JComboBox<String> statusCombo;
 
 	public IncidentFillUpForm(Connection connectDB) {
 		this.conn = connectDB;
@@ -105,7 +102,7 @@ public class IncidentFillUpForm extends Form {
 		datePicker.setSelectedDate(LocalDate.now());
 		datePicker.setEditor(DateField);
 		DateField.setColumns(10);
-		detailsPanel.add(DateField, "grow");
+		detailsPanel.add(DateField, "cell 5 0,grow");
 
 		detailsPanel.add(new JLabel("Grade & Section: "), "cell 0 1,alignx left");
 		detailsPanel.add(GradeSectionField = new JTextField(), "cell 1 1,growx");
@@ -116,6 +113,12 @@ public class IncidentFillUpForm extends Form {
 		timePicker.setEditor(TimeField);
 		TimeField.setColumns(10);
 		detailsPanel.add(TimeField, "cell 5 1,growx");
+
+		// Add status combo box
+		detailsPanel.add(new JLabel("Status: "), "cell 4 2,alignx trailing");
+		statusCombo = new JComboBox<>(new String[]{"Select Status", "Active", "Ended"});
+		statusCombo.setSelectedItem("Select Status");
+		detailsPanel.add(statusCombo, "cell 5 2,growx");
 
 		add(detailsPanel, "cell 0 1 2 1,grow");
 
@@ -180,7 +183,9 @@ public class IncidentFillUpForm extends Form {
 
 		participantsDAO = new ParticipantsDAO(conn);
 
-		// ...existing initialization code...
+		// Initialize status combo box with values matching SessionsForm
+		statusCombo = new JComboBox<>(new String[]{"Select Status", "Active", "Ended"});
+		statusCombo.setSelectedItem("Select Status");
 	}
 
 	private void setupParticipantPanel() {
@@ -396,7 +401,7 @@ public class IncidentFillUpForm extends Form {
 			incident.setIncidentDescription(narrativeReportField.getText());
 			incident.setActionTaken(actionsTakenField.getText());
 			incident.setRecommendation(recommendationsField.getText());
-			incident.setStatus("Pending");
+			incident.setStatus(statusCombo.getSelectedItem().toString());
 			incident.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
 
 			// Save to database
@@ -422,9 +427,16 @@ public class IncidentFillUpForm extends Form {
 	}
 
 	private boolean validateFields() {
-		// Check reporter info
-		if (reportedByField.getText().trim().isEmpty()) {
-			showError("Please select a reporter");
+		// Check reporter info - must be manually selected
+		if (reporterStudent == null || reportedByField.getText().trim().isEmpty()) {
+			showError("Please select a reporter for this incident");
+			return false;
+		}
+
+		// Check status
+		String selectedStatus = (String) statusCombo.getSelectedItem();
+		if ("Select Status".equals(selectedStatus)) {
+			showError("Please select a valid status");
 			return false;
 		}
 
@@ -438,11 +450,32 @@ public class IncidentFillUpForm extends Form {
 		if (narrativeReportField.getText().trim().isEmpty()) {
 			showError("Please enter narrative report");
 			return false;
+		} else if (narrativeReportField.getText().trim().length() < 10) {
+			showError("Narrative report is too short (minimum 10 characters)");
+			return false;
 		}
 
 		// Check actions taken
 		if (actionsTakenField.getText().trim().isEmpty()) {
 			showError("Please enter actions taken");
+			return false;
+		} else if (actionsTakenField.getText().trim().length() < 10) {
+			showError("Actions taken is too short (minimum 10 characters)");
+			return false;
+		}
+
+		// Check recommendations
+		if (recommendationsField.getText().trim().isEmpty()) {
+			showError("Please enter recommendations");
+			return false;
+		} else if (recommendationsField.getText().trim().length() < 10) {
+			showError("Recommendations is too short (minimum 10 characters)");
+			return false;
+		}
+
+		// Check participants
+		if (participantTableModel.getRowCount() == 0) {
+			showError("Please add at least one participant");
 			return false;
 		}
 
@@ -493,16 +526,19 @@ public class IncidentFillUpForm extends Form {
 		// Set the narrative report from session summary
 		if (session.getSessionSummary() != null && !session.getSessionSummary().isEmpty()) {
 			narrativeReportField.setText(session.getSessionSummary());
-		} else {
-			narrativeReportField.setText("No summary available from the session.");
 		}
 
 		// Set the actions taken from session notes
 		if (session.getSessionNotes() != null && !session.getSessionNotes().isEmpty()) {
 			actionsTakenField.setText(session.getSessionNotes());
-		} else {
-			actionsTakenField.setText("No notes available from the session.");
 		}
+
+		// Clear reporter field - must be set manually
+		reporterStudent = null;
+		reportedByField.setText("");
+
+		// Set initial status as Active
+		statusCombo.setSelectedItem("Active");
 
 		// Clear existing table data
 		participantTableModel.setRowCount(0);
@@ -510,32 +546,26 @@ public class IncidentFillUpForm extends Form {
 
 		// Add participants to the table
 		if (participants != null && !participants.isEmpty()) {
-			for (int i = 0; i < participants.size(); i++) {
-				Participants participant = participants.get(i);
+			for (Participants participant : participants) {
 				Map<String, String> details = new HashMap<>();
 				details.put("firstName", participant.getParticipantFirstName());
 				details.put("lastName", participant.getParticipantLastName());
 				details.put("fullName", participant.getParticipantFirstName() + " " + participant.getParticipantLastName());
-				details.put("type", participant.getParticipantType());
 				details.put("sex", participant.getSex());
+				details.put("type", participant.getParticipantType());
 				details.put("contact", participant.getContactNumber());
 				
 				// Store participant details
 				participantDetails.put(participant.getParticipantId(), details);
 
 				// Add to table with proper row number
-				participantTableModel.addRow(new Object[] {
-					i + 1, // Use 1-based index for row numbers
+				participantTableModel.addRow(new Object[] { 
+					participant.getParticipantId(), 
 					details.get("fullName"),
 					participant.getParticipantType(),
-					"View | Remove"
+					"View | Remove" 
 				});
 			}
-
-			// Set the first participant as reporter if available
-			Participants firstParticipant = participants.get(0);
-			String reporterName = firstParticipant.getParticipantFirstName() + " " + firstParticipant.getParticipantLastName();
-			reportedByField.setText(reporterName);
 		}
 	}
 
@@ -580,7 +610,7 @@ public class IncidentFillUpForm extends Form {
 
 		// Add Student Search Button for reporter
 		JButton studentReporterBtn = new JButton("Search Reporter Student");
-		detailsPanel.add(studentReporterBtn, "cell 1 0 3 1");
+		detailsPanel.add(studentReporterBtn, "cell 1 0");
 
 		// Add action listener to the Student Search button
 		studentReporterBtn.addActionListener(e -> openStudentReporterSearchUI());

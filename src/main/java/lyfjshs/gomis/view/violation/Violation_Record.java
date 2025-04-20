@@ -14,10 +14,10 @@ public class Violation_Record extends Form {
 
     private static final long serialVersionUID = 1L;
     private ViolationTablePanel tablePanel;
-    private ViolationDAO ViolationDAO;
+    private ViolationDAO violationDAO;
 
     public Violation_Record(Connection connect) {
-        ViolationDAO = new ViolationDAO(connect);
+        violationDAO = new ViolationDAO(connect);
 
         setLayout(new MigLayout("", "[grow]", "[pref!][grow]"));
 
@@ -36,7 +36,7 @@ public class Violation_Record extends Form {
     }
 
     private void initializeTablePanel(Connection conn) {
-        tablePanel = new ViolationTablePanel(conn, ViolationDAO);
+        tablePanel = new ViolationTablePanel(conn, violationDAO);
         add(tablePanel, "cell 0 1,grow");
         tablePanel.refreshData();
     }

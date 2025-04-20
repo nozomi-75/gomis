@@ -33,6 +33,7 @@ import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentModal;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentPanel;
+import lyfjshs.gomis.view.appointment.reschedule.AppointmentReschedModal;
 import lyfjshs.gomis.view.sessions.SessionsForm;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
@@ -565,36 +566,17 @@ public class AppointmentCalendar extends JPanel {
                 return;
             }
 
-            // Create a new appointment based on the missed one
-            Appointment newAppointment = new Appointment();
-            // Copy relevant details from the missed appointment
-            newAppointment.setAppointmentTitle(missedAppointment.getAppointmentTitle());
-            newAppointment.setAppointmentNotes(missedAppointment.getAppointmentNotes());
-            newAppointment.setConsultationType(missedAppointment.getConsultationType());
-            newAppointment.setGuidanceCounselorId(missedAppointment.getGuidanceCounselorId());
-            
-            // Set the appointment date to today at current time
-            newAppointment.setAppointmentDateTime(Timestamp.valueOf(LocalDateTime.now()));
-            // Set status to Rescheduled
-            newAppointment.setAppointmentStatus("Rescheduled");
-
-            // Create and configure the appointment panel
-            AddAppointmentPanel addAppointmentPanel = new AddAppointmentPanel(newAppointment, appointmentDao, connection);
-
-            // Show modal with proper size and validation
-            AddAppointmentModal.getInstance().showModal(connection,
-                this, 
-                addAppointmentPanel,
+            // Show the reschedule modal
+            AppointmentReschedModal.getInstance().showReschedModal(
+                connection,
+                this,
+                missedAppointment,
                 appointmentDao,
                 750,  // width 
-                800,   // height
+                800,  // height
                 () -> {
-                    // Callback for successful appointment creation
+                    // Callback for successful rescheduling
                     try {
-                        // Update the original missed appointment to mark it as rescheduled
-                        missedAppointment.setAppointmentStatus("Rescheduled");
-                        appointmentDao.updateAppointment(missedAppointment);
-                        
                         // Refresh calendar view
                         updateCalendar();
                         
@@ -613,10 +595,10 @@ public class AppointmentCalendar extends JPanel {
                             "Appointment has been successfully rescheduled.",
                             "Reschedule Successful",
                             JOptionPane.INFORMATION_MESSAGE);
-                    } catch (SQLException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                         JOptionPane.showMessageDialog(this,
-                            "Error updating appointment: " + e.getMessage(),
+                            "Error updating views: " + e.getMessage(),
                             "Error",
                             JOptionPane.ERROR_MESSAGE);
                     }

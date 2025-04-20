@@ -339,9 +339,10 @@ public class SessionFullData extends Form {
 	}
 
 	private JPanel createActionButtons() {
-		JPanel actionButtons = new JPanel(new MigLayout("fill", "[grow][]", "[]"));
+		JPanel actionButtons = new JPanel(new MigLayout("fill", "[grow][][]", "[]"));
 		actionButtons.setBackground(CONTAINER_BG);
 
+		// Create Incident Report button - always enabled
 		JButton createIncidentBtn = createButton("Create Incident Report", BLUE_BUTTON);
 		createIncidentBtn.addActionListener(e -> createIncidentReport());
 
@@ -353,11 +354,12 @@ public class SessionFullData extends Form {
 			endSessionBtn = createButton("End Session", RED_BUTTON);
 			endSessionBtn.addActionListener(e -> endSession());
 
-			actionButtons.add(editSessionBtn, "center");
+			actionButtons.add(editSessionBtn, "center, split 3");
 			actionButtons.add(endSessionBtn, "center");
+			actionButtons.add(createIncidentBtn, "center");
+		} else {
+			actionButtons.add(createIncidentBtn, "center");
 		}
-
-		actionButtons.add(createIncidentBtn, "center");
 
 		return actionButtons;
 	}
@@ -381,6 +383,21 @@ public class SessionFullData extends Form {
 				participant.setParticipantFirstName(firstName);
 				participant.setParticipantLastName(lastName);
 				participant.setParticipantType(type);
+				
+				// Get the participant from the database to ensure we have all details
+				try {
+					SessionsDAO sessionsDAO = new SessionsDAO(conn);
+					List<Participants> sessionParticipants = sessionsDAO.getParticipantsBySessionId(sessionData.getSessionId());
+					for (Participants p : sessionParticipants) {
+						if (p.getParticipantFirstName().equals(firstName) && p.getParticipantLastName().equals(lastName)) {
+							participant = p;
+							break;
+						}
+					}
+				} catch (SQLException ex) {
+					LOGGER.log(Level.WARNING, "Could not fetch participant details from database", ex);
+				}
+				
 				participants.add(participant);
 			}
 
@@ -390,6 +407,7 @@ public class SessionFullData extends Form {
 			FormManager.showForm(incidentForm);
 
 		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "Error creating incident report", e);
 			JOptionPane.showMessageDialog(this, "Error creating incident report: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}

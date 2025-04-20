@@ -1,6 +1,8 @@
 package lyfjshs.gomis.view.appointment.add;
 
 import java.awt.Color;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -366,25 +368,48 @@ public class AddAppointmentPanel extends Modal {
 		// Create action manager for the delete button
 		TableActionManager actionManager = new DefaultTableActionManager() {
 			@Override
-			public void onTableAction(GTable table, int row) {
-				removeParticipant(row);
+			public void setupTableColumn(GTable table, int actionColumnIndex) {
+				table.getColumnModel().getColumn(actionColumnIndex)
+					.setCellRenderer((t, value, isSelected, hasFocus, row, column) -> {
+						JPanel panel = new JPanel(new MigLayout("insets 0", "[]", "[]"));
+						panel.setOpaque(false);
+						
+						JButton removeBtn = new JButton("Remove");
+						removeBtn.setBackground(new Color(220, 53, 69));
+						removeBtn.setForeground(Color.WHITE);
+						
+						panel.add(removeBtn);
+						
+						return panel;
+					});
 			}
 
 			@Override
-			public void setupTableColumn(GTable table, int actionColumnIndex) {
-				table.getColumnModel().getColumn(actionColumnIndex)
-						.setCellRenderer((t, value, isSelected, hasFocus, row, column) -> {
-							JButton button = new JButton("Remove");
-							button.setBackground(new Color(220, 53, 69));
-							button.setForeground(Color.WHITE);
-							return button;
-						});
+			public void onTableAction(GTable table, int row) {
+				// This will be handled by the mouse listener
 			}
 		};
 
 		// Create table
 		participantsTable = new GTable(new Object[0][3], columnNames, columnTypes, editableColumns, columnWidths,
 				alignments, false, actionManager);
+
+		// Add mouse listener for button actions
+		participantsTable.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int row = participantsTable.rowAtPoint(e.getPoint());
+				int col = participantsTable.columnAtPoint(e.getPoint());
+				
+				if (col == 2 && row >= 0) { // Actions column
+					removeParticipant(row);
+				}
+			}
+		});
+
+		// Set minimum width for Actions column
+		participantsTable.getColumnModel().getColumn(2).setMinWidth(100);
+		participantsTable.getColumnModel().getColumn(2).setMaxWidth(120);
 
 		// Update table if there are existing participants
 		updateParticipantsTable();
@@ -419,8 +444,15 @@ public class AddAppointmentPanel extends Modal {
 
 	private void removeParticipant(int row) {
 		if (row >= 0 && row < tempParticipants.size()) {
-			tempParticipants.remove(row);
-			updateParticipantsTable();
+			int confirm = JOptionPane.showConfirmDialog(this,
+				"Are you sure you want to remove this participant?",
+				"Confirm Removal",
+				JOptionPane.YES_NO_OPTION);
+				
+			if (confirm == JOptionPane.YES_OPTION) {
+				tempParticipants.remove(row);
+				updateParticipantsTable();
+			}
 		}
 	}
 

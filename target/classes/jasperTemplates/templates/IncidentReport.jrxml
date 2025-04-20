@@ -5,10 +5,13 @@
 	<parameter name="Date" class="java.lang.String"/>
 	<parameter name="Tvisit" class="java.lang.String"/>
 	<parameter name="IniReport" class="java.lang.String"/>
+	<parameter name="deped_seal" class="java.awt.Image"/>
+	<parameter name="deped_matatag" class="java.awt.Image"/>
+	<parameter name="LYFJSHS_logo" class="java.awt.Image"/>
 	<background splitType="Stretch"/>
 	<title height="150" splitType="Stretch">
 		<element kind="image" uuid="2969f73a-90eb-4ba9-a2f2-6c03d61d5887" x="251" y="4" width="60" height="60">
-			<expression><![CDATA["images/DepEd_Seal.png"]]></expression>
+			<expression><![CDATA[$P{deped_seal}]]></expression>
 		</element>
 		<element kind="staticText" uuid="61351ad8-d78b-47c0-a7d5-78f3dd5ce4ce" x="0" y="73" width="555" height="14" fontName="Old English Text MT" fontSize="12.0" hTextAlign="Center">
 			<text><![CDATA[Republic of the Philippines]]></text>
@@ -25,59 +28,78 @@ SOUTH SQUARE VILLAGE, PASONG KAWAYAN II, GEN. TRIAS CITY, CAVITE]]></text>
 		<element kind="line" uuid="b8eca633-144b-4190-bab1-08b461b9b3f0" x="60" y="147" width="440" height="1"/>
 	</title>
 	<detail>
-		<band height="512" splitType="Stretch">
-			<element kind="staticText" uuid="75f923fc-af6c-4236-94a2-f2e054824851" x="20" y="33" width="40" height="18" bold="false">
+		<band height="547" splitType="Stretch">
+			<element kind="staticText" uuid="75f923fc-af6c-4236-94a2-f2e054824851" x="20" y="33" width="61" height="18" fontSize="13.0" bold="false">
 				<text><![CDATA[Name:]]></text>
 			</element>
-			<element kind="staticText" uuid="554726dc-6738-4615-9a07-8399e1b6847e" x="20" y="51" width="80" height="20" bold="false">
+			<element kind="staticText" uuid="554726dc-6738-4615-9a07-8399e1b6847e" x="20" y="51" width="107" height="20" fontSize="13.0" bold="false">
 				<text><![CDATA[Grade & Section: ]]></text>
 			</element>
-			<element kind="staticText" uuid="7f7cdbe9-697d-4186-9ebd-0803d144ddd2" x="334" y="34" width="78" height="17" bold="false">
+			<element kind="staticText" uuid="7f7cdbe9-697d-4186-9ebd-0803d144ddd2" x="334" y="34" width="78" height="17" fontSize="13.0" bold="false">
 				<text><![CDATA[Date of Visit:]]></text>
 			</element>
-			<element kind="staticText" uuid="86db4a45-ff56-4aad-9162-c79c3355e671" x="335" y="53" width="77" height="18" bold="false">
+			<element kind="staticText" uuid="86db4a45-ff56-4aad-9162-c79c3355e671" x="335" y="53" width="77" height="18" fontSize="13.0" bold="false">
 				<text><![CDATA[Time of Visit:]]></text>
 			</element>
-			<element kind="line" uuid="7e75842e-695f-42d6-a288-73c2ccd2b2a8" x="60" y="50" width="212" height="1"/>
-			<element kind="line" uuid="673cf3b0-9012-4166-84a2-aec3ce9fb7ec" x="100" y="69" width="190" height="1"/>
+			<element kind="line" uuid="7e75842e-695f-42d6-a288-73c2ccd2b2a8" x="60" y="50" width="230" height="1"/>
+			<element kind="line" uuid="673cf3b0-9012-4166-84a2-aec3ce9fb7ec" x="127" y="69" width="163" height="1"/>
 			<element kind="line" uuid="cbb77242-563b-4e1f-a76c-31896e77eb0c" x="411" y="50" width="110" height="1"/>
 			<element kind="line" uuid="85dd5280-7c50-420d-8c50-a02d4d7c86c7" x="413" y="69" width="109" height="1"/>
-			<element kind="staticText" uuid="ec0b3afc-3c71-4dfc-851e-87f02d939db1" x="166" y="87" width="229" height="30" fontSize="15.0" bold="true" hTextAlign="Center">
+			<element kind="staticText" uuid="ec0b3afc-3c71-4dfc-851e-87f02d939db1" x="166" y="110" width="229" height="30" fontSize="16.0" bold="true" hTextAlign="Center">
 				<text><![CDATA[INITIAL INCIDENT REPORT]]></text>
 			</element>
-			<element kind="staticText" uuid="52b964c3-d7f8-425f-9fa3-652fbd0ebe78" x="25" y="120" width="510" height="39" fontSize="11.0">
+			<element kind="staticText" uuid="52b964c3-d7f8-425f-9fa3-652fbd0ebe78" x="20" y="141" width="510" height="39" fontSize="13.0">
 				<text><![CDATA[Directions: Please state the full details of the incident and place your signature at the end of the statement]]></text>
 			</element>
-			<element kind="textField" uuid="51b2d827-6c29-4027-ac72-053f7c1c9f6c" x="61" y="34" width="211" height="21" bold="false">
+			<element kind="textField" uuid="51b2d827-6c29-4027-ac72-053f7c1c9f6c" x="60" y="33" width="211" height="21" fontSize="13.0" bold="false">
 				<expression><![CDATA[$P{VName}]]></expression>
 			</element>
-			<element kind="textField" uuid="140dc889-2d60-4411-bada-ac7d903f4b5c" x="100" y="51" width="183" height="21" bold="false">
+			<element kind="textField" uuid="140dc889-2d60-4411-bada-ac7d903f4b5c" x="127" y="51" width="156" height="21" fontSize="13.0" bold="false">
 				<expression><![CDATA[$P{VGrSec}]]></expression>
 			</element>
-			<element kind="textField" uuid="ff96c664-d06f-4720-9a87-f5150fd85b00" x="411" y="33" width="114" height="21" bold="false">
+			<element kind="textField" uuid="ff96c664-d06f-4720-9a87-f5150fd85b00" x="411" y="33" width="114" height="21" fontSize="13.0" bold="false">
 				<expression><![CDATA[$P{Date}]]></expression>
 			</element>
-			<element kind="textField" uuid="783eea98-ee69-4ae1-b363-6a3acce9256c" x="35" y="161" width="490" height="339" fontSize="11.0">
+			<element kind="textField" uuid="783eea98-ee69-4ae1-b363-6a3acce9256c" x="30" y="191" width="490" height="349" fontSize="13.0">
 				<expression><![CDATA[$P{IniReport}]]></expression>
 			</element>
-			<element kind="textField" uuid="fc2739ea-0bb5-436a-82c4-cf3a61e4c623" x="413" y="51" width="114" height="21" bold="false">
+			<element kind="textField" uuid="fc2739ea-0bb5-436a-82c4-cf3a61e4c623" x="413" y="51" width="114" height="21" fontSize="13.0" bold="false">
 				<expression><![CDATA[$P{Tvisit}]]></expression>
 			</element>
 		</band>
 	</detail>
-	<pageFooter height="99" splitType="Stretch">
-		<element kind="line" uuid="402044a5-7458-415f-b025-d38d3cad3d02" x="9" y="2" width="542" height="1"/>
-		<element kind="image" uuid="4d3eea09-13b4-453e-920d-827b6d0ab048" x="11" y="4" width="125" height="63">
-			<expression><![CDATA["images/DepEd-MATATAG_BagongPilipinas.png"]]></expression>
+	<pageFooter height="90">
+		<element kind="line" uuid="74c97698-a787-4706-be01-e9c64fb7bfad" x="9" y="2" width="542" height="1"/>
+		<element kind="image" uuid="7c7c26fb-cf7e-4644-aafb-6ccc9162b17f" x="11" y="4" width="125" height="63">
+			<expression><![CDATA[$P{deped_matatag}]]></expression>
 		</element>
-		<element kind="image" uuid="7b64e541-5496-4f45-80f9-1a7bbc107dbb" x="137" y="6" width="59" height="57">
-			<expression><![CDATA["images/LYFJSHS.png"]]></expression>
+		<element kind="image" uuid="c2d0d774-0a49-41bb-ab03-ebc68963a03e" x="137" y="6" width="59" height="57">
+			<expression><![CDATA[$P{LYFJSHS_logo}]]></expression>
 		</element>
-		<element kind="staticText" uuid="15f4ec38-1d34-4651-b8c3-3fcd58e51858" x="11" y="70" width="161" height="12" fontSize="8.0">
+		<element kind="staticText" uuid="b370a6ca-4044-4786-b2cf-842f4c50c7b0" x="197" y="7" width="64" height="58" fontSize="9.0" bold="true">
+			<text><![CDATA[Adress:
+Fb Page:
+Contact No.:
+Website:
+Email Adress:]]></text>
+		</element>
+		<element kind="staticText" uuid="4892a9a1-ac50-4483-9795-194b3d167f8e" x="234" y="8" width="304" height="18" fontSize="9.0">
+			<text><![CDATA[South Square Village, Pasong Kawayan II, City of General Trias City, Cavite]]></text>
+		</element>
+		<element kind="staticText" uuid="a3a5b85a-cb89-4526-800a-40ad4c4fdbcb" x="239" y="19" width="222" height="18" fontSize="9.0">
+			<text><![CDATA[Deped Tayo Luis Y. Ferrer Jr SHS- General Trias City]]></text>
+		</element>
+		<element kind="staticText" uuid="ddb0d050-6493-4203-bc01-1a2275663a41" x="253" y="30" width="88" height="18" fontSize="9.0">
+			<text><![CDATA[(+63)930-318-7920]]></text>
+		</element>
+		<element kind="staticText" uuid="459ce5d4-e367-4a85-a5b9-1c8fb47ab420" x="239" y="41" width="86" height="18" fontSize="9.0">
+			<text><![CDATA[http://lyfjshs.com/]]></text>
+		</element>
+		<element kind="staticText" uuid="c7b1f2f1-7c08-4085-acbc-a595a774c42d" x="260" y="52" width="98" height="18" fontSize="9.0">
+			<text><![CDATA[342285@deped.gov.ph]]></text>
+		</element>
+		<element kind="staticText" uuid="4bcb092a-b07f-41ab-ba3b-8ba446390ed3" x="9" y="74" width="161" height="12" fontSize="8.0">
 			<text><![CDATA[Generated Document using: GOMIS V1]]></text>
-		</element>
-		<element kind="image" uuid="b69214ae-661b-40c7-a635-e79b2a92e70e" x="197" y="6" width="357" height="65">
-			<expression><![CDATA["images/Footer_Text.png"]]></expression>
 		</element>
 	</pageFooter>
 </jasperReport>

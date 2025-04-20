@@ -1,7 +1,10 @@
 package lyfjshs.gomis.view.appointment.reschedule;
 
 import java.awt.Color;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +17,15 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.DropPanel;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
+import lyfjshs.gomis.components.table.TableActionManager;
 import lyfjshs.gomis.view.appointment.add.NonStudentPanel;
 import lyfjshs.gomis.view.appointment.add.TempParticipant;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
@@ -338,5 +344,228 @@ public class AppointmentReschedPanel extends JPanel {
 		if (appointment.getAppointmentNotes() != null) {
 			notesArea.setText(appointment.getAppointmentNotes());
 		}
+
+		setupParticipantsTable();
+	}
+
+	private void setupParticipantsTable() {
+		// Define table structure
+		String[] columnNames = { "Name", "Type", "Actions" };
+		Class<?>[] columnTypes = { String.class, String.class, Object.class };
+		boolean[] editableColumns = { false, false, true };
+		double[] columnWidths = { 0.5, 0.3, 0.2 };
+		int[] alignments = { SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.CENTER };
+
+		// Create action manager for the delete button
+		TableActionManager actionManager = new DefaultTableActionManager() {
+			@Override
+			public void setupTableColumn(GTable table, int actionColumnIndex) {
+				table.getColumnModel().getColumn(actionColumnIndex)
+					.setCellRenderer((t, value, isSelected, hasFocus, row, column) -> {
+						JPanel panel = new JPanel(new MigLayout("insets 0", "[]", "[]"));
+						panel.setOpaque(false);
+						
+						JButton removeBtn = new JButton("Remove");
+						removeBtn.setBackground(new Color(220, 53, 69));
+						removeBtn.setForeground(Color.WHITE);
+						
+						panel.add(removeBtn);
+						
+						return panel;
+					});
+			}
+
+			@Override
+			public void onTableAction(GTable table, int row) {
+				// This will be handled by the mouse listener
+			}
+		};
+
+		// Create table
+		participantsTable = new GTable(new Object[0][3], columnNames, columnTypes, editableColumns, columnWidths,
+				alignments, false, actionManager);
+
+		// Add mouse listener for button actions
+		participantsTable.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int row = participantsTable.rowAtPoint(e.getPoint());
+				int col = participantsTable.columnAtPoint(e.getPoint());
+				
+				if (col == 2 && row >= 0) { // Actions column
+					removeParticipant(row);
+				}
+			}
+		});
+
+		// Set minimum width for Actions column
+		participantsTable.getColumnModel().getColumn(2).setMinWidth(100);
+		participantsTable.getColumnModel().getColumn(2).setMaxWidth(120);
+
+		// Update table if there are existing participants
+		updateParticipantsTable();
+	}
+
+	public boolean saveRescheduledAppointment() throws SQLException {
+		if (!validateFields()) {
+			return false;
+		}
+
+		// Get the consultation type from the UI
+		String consultationType = getConsultationType();
+			
+		// Set the values from form to appointment
+		appointment.setAppointmentTitle(titleField.getText().trim());
+		appointment.setConsultationType(consultationType);
+		
+		// Set appointment date time
+		appointment.setAppointmentDateTime(
+				java.sql.Timestamp.valueOf(datePicker.getSelectedDate().atTime(timePicker.getSelectedTime())));
+		
+		// Ensure the appointment is not in the past
+		if (appointment.getAppointmentDateTime().toLocalDateTime().isBefore(java.time.LocalDateTime.now())) {
+			showToast("Appointment date and time cannot be in the past.", raven.modal.Toast.Type.ERROR);
+			return false;
+		}
+		
+		// Set status to Rescheduled
+		appointment.setAppointmentStatus("Rescheduled");
+		
+		appointment.setAppointmentNotes(notesArea.getText().trim());
+		
+		// Save appointment
+		boolean success = appointmentDAO.updateAppointment(appointment);
+		
+		if (success) {
+			// Format date and time for display
+			java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
+			java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a");
+			
+			String dateStr = appointment.getAppointmentDateTime().toLocalDateTime().format(dateFormatter);
+			String timeStr = appointment.getAppointmentDateTime().toLocalDateTime().format(timeFormatter);
+			
+			// Create a more detailed success message
+			String successMsg = "Appointment rescheduled successfully:\n" + 
+							   appointment.getAppointmentTitle() + "\n" +
+							   dateStr + " at " + timeStr + "\n" +
+							   "Type: " + consultationType;
+								
+			showToast(successMsg, raven.modal.Toast.Type.SUCCESS);
+			
+			// Notify AppointmentManagement about the updated appointment
+			lyfjshs.gomis.utils.EventBus.publish("appointment_updated", appointment.getAppointmentId());
+		} else {
+			showToast("Failed to reschedule appointment", raven.modal.Toast.Type.ERROR);
+		}
+		
+		return success;
+	}
+
+	private boolean validateFields() {
+		boolean isValid = true;
+		// Reset all borders first
+		titleField.putClientProperty("JTextField.borderColor", null);
+		dateField.putClientProperty("JTextField.borderColor", null);
+		timeField.putClientProperty("JTextField.borderColor", null);
+		
+		// Also reset validation for custom type field if visible
+		if (customTypeField.isEnabled()) {
+			customTypeField.putClientProperty("JTextField.borderColor", null);
+		}
+
+		// Validate title
+		if (titleField.getText().trim().isEmpty()) {
+			titleField.putClientProperty("JTextField.borderColor", new java.awt.Color(220, 53, 69));
+			showToast("Please enter an appointment title.", raven.modal.Toast.Type.ERROR);
+			isValid = false;
+		}
+
+		// Validate date and time
+		if (datePicker.getSelectedDate() == null || timePicker.getSelectedTime() == null) {
+			dateField.putClientProperty("JTextField.borderColor", new java.awt.Color(220, 53, 69));
+			timeField.putClientProperty("JTextField.borderColor", new java.awt.Color(220, 53, 69));
+			showToast("Please select both date and time.", raven.modal.Toast.Type.ERROR);
+			isValid = false;
+		} else {
+			// Validate that date is not in the past
+			java.time.LocalDateTime selectedDateTime = datePicker.getSelectedDate().atTime(timePicker.getSelectedTime());
+			java.time.LocalDateTime now = java.time.LocalDateTime.now();
+			
+			// Give a 1-minute buffer to account for the time it takes to fill the form
+			if (selectedDateTime.isBefore(now.minusMinutes(1))) {
+				dateField.putClientProperty("JTextField.borderColor", new java.awt.Color(220, 53, 69));
+				timeField.putClientProperty("JTextField.borderColor", new java.awt.Color(220, 53, 69));
+				showToast("Appointment date and time cannot be in the past.", raven.modal.Toast.Type.ERROR);
+				isValid = false;
+			}
+		}
+		
+		// Validate consultation type
+		if ("Other".equals(typeComboBox.getSelectedItem())) {
+			if ("Custom...".equals(otherTypeComboBox.getSelectedItem()) && 
+				customTypeField.getText().trim().isEmpty()) {
+				customTypeField.putClientProperty("JTextField.borderColor", new java.awt.Color(220, 53, 69));
+				showToast("Please enter a custom consultation type.", raven.modal.Toast.Type.ERROR);
+				isValid = false;
+			}
+		}
+
+		return isValid;
+	}
+
+	private void showToast(String message, raven.modal.Toast.Type type) {
+		raven.modal.toast.option.ToastOption toastOption = raven.modal.Toast.createOption();
+		
+		// Configure toast appearance and behavior
+		toastOption.getLayoutOption()
+				.setMargin(0, 0, 50, 0)
+				.setDirection(raven.modal.toast.option.ToastDirection.TOP_TO_BOTTOM);
+		
+		// Set toast delay based on message length
+		if (type == raven.modal.Toast.Type.SUCCESS) {
+			// Success messages stay visible longer
+			toastOption.setDelay(5000);  // 5 seconds
+		} else if (type == raven.modal.Toast.Type.ERROR) {
+			// Error messages stay visible a bit longer too
+			toastOption.setDelay(4500);  // 4.5 seconds
+		} else {
+			// Default delay for warnings and info
+			toastOption.setDelay(3500);  // 3.5 seconds
+		}
+		
+		// For success messages with multiple lines, show at top for better visibility
+		if (type == raven.modal.Toast.Type.SUCCESS && message.contains("\n")) {
+			// Show at top center for better visibility of important info
+			raven.modal.Toast.show(this, type, message, raven.modal.toast.option.ToastLocation.TOP_CENTER, toastOption);
+		} else {
+			// Standard position for other messages
+			raven.modal.Toast.show(this, type, message, raven.modal.toast.option.ToastLocation.BOTTOM_CENTER, toastOption);
+		}
+	}
+
+	// Simplified method to get consultation type
+	private String getConsultationType() {
+		String selectedType = (String) typeComboBox.getSelectedItem();
+		
+		if ("Other".equals(selectedType)) {
+			String otherType = (String) otherTypeComboBox.getSelectedItem();
+			
+			if ("Custom...".equals(otherType)) {
+				String customType = customTypeField.getText().trim();
+				return customType.isEmpty() ? "Other" : customType;
+			} else {
+				return otherType;
+			}
+		} else {
+			return selectedType;
+		}
+	}
+
+	private void removeParticipant(int row) {
+		// Implementation of removeParticipant method
+	}
+
+	private void updateParticipantsTable() {
+		// Implementation of updateParticipantsTable method
 	}
 }

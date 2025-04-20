@@ -15,13 +15,14 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.OverlayLayout;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
-import javax.swing.JOptionPane;
 
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
@@ -37,11 +38,27 @@ public class SplashScreenFrame extends JFrame {
     
     private PanelGradient mainPanel;
     private JPanel logoPanel;
-    private ProgressPanel progressPanel;
-    private JLabel loadingLabel;
+    private JProgressBar progressBar;
+    private JLabel statusLabel;
     private BackgroundCirclesPanel circlesPanel;
     private Timer dotAnimationTimer;
     private int dotState = 0;
+    
+    // Define initialization steps with their weights
+    private static final String[][] INIT_STEPS = {
+        {"Checking database service", "10"},
+        {"Starting database service if needed", "10"},
+        {"Connecting to database", "20"},
+        {"Initializing database schema", "15"},
+        {"Setting up UI components", "15"},
+        {"Loading application settings", "10"},
+        {"Preparing main window", "10"},
+        {"Finalizing initialization", "10"}
+    };
+    
+    private int currentStep = 0;
+    private int totalProgress = 0;
+    private SwingWorker<Void, String> worker;
     
     public SplashScreenFrame() {
     	FlatMacLightLaf.setup();
@@ -65,18 +82,12 @@ public class SplashScreenFrame extends JFrame {
         // Load logo with fallback
         JLabel logoLabel;
         try {
-            java.net.URL logoUrl = getClass().getResource("/images/GOMIS Logo.png");
+            java.net.URL logoUrl = getClass().getResource("/GOMIS Logo.png");
             if (logoUrl == null) {
-                logoUrl = getClass().getResource("/GOMIS Logo.png");
+                System.err.println("Could not find GOMIS Logo.png");
+                return;
             }
-            if (logoUrl == null) {
-                throw new Exception("Could not find logo image in resources");
-            }
-            
             ImageIcon originalIcon = new ImageIcon(logoUrl);
-            if (originalIcon.getIconWidth() <= 0) {
-                throw new Exception("Failed to load logo image");
-            }
             Image scaledImage = originalIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
             logoLabel = new JLabel(new ImageIcon(scaledImage));
         } catch (Exception e) {
@@ -94,15 +105,20 @@ public class SplashScreenFrame extends JFrame {
         logoPanel.setOpaque(false);
         logoPanel.add(logoLabel);
         
-        // Progress panel
-        progressPanel = new ProgressPanel(ACCENT_COLOR_1, ACCENT_COLOR_2);
-        progressPanel.setPreferredSize(new Dimension(300, 6));
+        // Progress bar
+        progressBar = new JProgressBar(0, 100);
+        progressBar.setValue(0);
+        progressBar.setStringPainted(true);
+        progressBar.setForeground(ACCENT_COLOR_1);
+        progressBar.setBackground(new Color(240, 240, 240));
+        progressBar.setBorderPainted(false);
+        progressBar.setPreferredSize(new Dimension(300, 10));
         
-        // Loading text
-        loadingLabel = new JLabel("LOADING");
-        loadingLabel.setForeground(Color.WHITE);
-        loadingLabel.setFont(new Font("Arial", Font.PLAIN, 24));
-        loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        // Status text
+        statusLabel = new JLabel("INITIALIZING");
+        statusLabel.setForeground(Color.WHITE);
+        statusLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         // Center panel for logo and loading components
         JPanel centerPanel = new JPanel();
@@ -117,17 +133,21 @@ public class SplashScreenFrame extends JFrame {
         
         centerPanel.add(Box.createRigidArea(new Dimension(0, 40)));
         
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        
+        // Progress bar container
         JPanel progressContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
         progressContainer.setOpaque(false);
-        progressContainer.add(progressPanel);
+        progressContainer.add(progressBar);
         centerPanel.add(progressContainer);
         
-        centerPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         
-        JPanel textContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        textContainer.setOpaque(false);
-        textContainer.add(loadingLabel);
-        centerPanel.add(textContainer);
+        // Status text container
+        JPanel statusContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        statusContainer.setOpaque(false);
+        statusContainer.add(statusLabel);
+        centerPanel.add(statusContainer);
         
         centerPanel.add(Box.createVerticalGlue());
         
@@ -151,7 +171,7 @@ public class SplashScreenFrame extends JFrame {
                 for (int i = 0; i < 3; i++) {
                     dots.append((i <= dotState) ? "." : " ");
                 }
-                loadingLabel.setText("LOADING" + dots.toString());
+                statusLabel.setText(statusLabel.getText().replaceAll("\\.+$", "") + dots.toString());
                 dotState = (dotState + 1) % 4;
             }
         });
@@ -159,28 +179,70 @@ public class SplashScreenFrame extends JFrame {
     }
     
     public void runInitialization() {
-        SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
+        worker = new SwingWorker<Void, String>() {
             @Override
             protected Void doInBackground() throws Exception {
                 try {
-                    publish("Initializing database...");
-                    Main.initDB(); // Initialize the database connection
+                    // Step 1: Check database service
+                    updateProgress(INIT_STEPS[0][0], Integer.parseInt(INIT_STEPS[0][1]));
+                    Thread.sleep(500); // Simulate work
                     
-                    publish("Setting up main window...");
-                    Main.initFrame(); // Initialize the main frame
+                    // Step 2: Start database service if needed
+                    updateProgress(INIT_STEPS[1][0], Integer.parseInt(INIT_STEPS[1][1]));
+                    Thread.sleep(500); // Simulate work
+                    
+                    // Step 3: Initialize database
+                    updateProgress(INIT_STEPS[2][0], Integer.parseInt(INIT_STEPS[2][1]));
+                    Main.initDB();
+                    
+                    // Step 4: Initialize database schema
+                    updateProgress(INIT_STEPS[3][0], Integer.parseInt(INIT_STEPS[3][1]));
+                    Thread.sleep(500); // Simulate work
+                    
+                    // Step 5: Set up UI components
+                    updateProgress(INIT_STEPS[4][0], Integer.parseInt(INIT_STEPS[4][1]));
+                    Thread.sleep(500); // Simulate work
+                    
+                    // Step 6: Load application settings
+                    updateProgress(INIT_STEPS[5][0], Integer.parseInt(INIT_STEPS[5][1]));
+                    Thread.sleep(500); // Simulate work
+                    
+                    // Step 7: Prepare main window
+                    updateProgress(INIT_STEPS[6][0], Integer.parseInt(INIT_STEPS[6][1]));
+                    Main.initFrame();
+                    
+                    // Step 8: Finalize initialization
+                    updateProgress(INIT_STEPS[7][0], Integer.parseInt(INIT_STEPS[7][1]));
+                    Thread.sleep(500); // Simulate work
                     
                     return null;
                 } catch (Exception e) {
                     e.printStackTrace();
-                    throw new Exception("Initialization failed: " + e.getMessage(), e);
+                    
+                    // Check if the error is related to database connection
+                    String errorMessage = e.getMessage();
+                    if (errorMessage != null && (
+                        errorMessage.contains("password") || 
+                        errorMessage.contains("authentication") || 
+                        errorMessage.contains("Access denied") ||
+                        errorMessage.contains("GSS-API"))) {
+                        
+                        // Show a more specific error message for password issues
+                        errorMessage = "Database authentication failed. Please check your password.";
+                    } else {
+                        errorMessage = "Initialization failed: " + e.getMessage();
+                    }
+                    
+                    throw new Exception(errorMessage, e);
                 }
             }
 
             @Override
             protected void process(List<String> chunks) {
-                // Update loading text with the latest status
+                // Update status text with the latest status
                 if (!chunks.isEmpty()) {
-                    loadingLabel.setText(chunks.get(chunks.size() - 1));
+                    String status = chunks.get(chunks.size() - 1);
+                    statusLabel.setText(status);
                 }
             }
 
@@ -194,17 +256,40 @@ public class SplashScreenFrame extends JFrame {
                         dotAnimationTimer.stop();
                     }
                     
-                    dispose(); // Close the splash screen
+                    // Set progress to 100%
+                    progressBar.setValue(100);
+                    statusLabel.setText("INITIALIZATION COMPLETE");
                     
-                    if (Main.gFrame == null) {
-                        throw new Exception("Main window initialization failed.");
-                    }
+                    // Wait a moment before closing splash screen
+                    Timer closeTimer = new Timer(1000, new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            dispose(); // Close the splash screen
+                            
+                            if (Main.gFrame == null) {
+                                throw new RuntimeException("Main window initialization failed.");
+                            }
+                            
+                            Main.gFrame.setVisible(true);
+                        }
+                    });
+                    closeTimer.setRepeats(false);
+                    closeTimer.start();
                     
-                    Main.gFrame.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
                     String errorMessage = "Failed to start application: " + 
                         (e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+                    
+                    // Check if the error is related to database connection
+                    if (errorMessage.contains("password") || 
+                        errorMessage.contains("authentication") || 
+                        errorMessage.contains("Access denied") ||
+                        errorMessage.contains("GSS-API")) {
+                        
+                        // Show a more specific error message for password issues
+                        errorMessage = "Database authentication failed. Please check your password.";
+                    }
                     
                     JOptionPane.showMessageDialog(
                         SplashScreenFrame.this,
@@ -217,5 +302,22 @@ public class SplashScreenFrame extends JFrame {
             }
         };
         worker.execute();
+    }
+    
+    /**
+     * Updates the progress bar and status text
+     */
+    private void updateProgress(String status, int stepWeight) {
+        totalProgress += stepWeight;
+        int percentage = Math.min(totalProgress, 100);
+        
+        // Update UI on EDT
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                progressBar.setValue(percentage);
+                statusLabel.setText(status);
+            }
+        });
     }
 }

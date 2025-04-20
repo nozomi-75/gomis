@@ -634,10 +634,17 @@ public class ImportSF extends Form {
                 // Set SchoolForm ID directly
                 student.setSF_ID(sfId);
                 
-                // Save the student record
-                studentsDAO.createStudentData(student);
-                
-                connection.commit(); // Commit transaction
+                try {
+                    // Save the student record
+                    studentsDAO.createStudentData(student);
+                    connection.commit(); // Commit transaction
+                } catch (SQLException e) {
+                    // Check if this is a duplicate LRN error
+                    if (e.getMessage().contains("already exists")) {
+                        throw new SQLException("Student with LRN " + rowData.get("lrn") + " already exists in the database");
+                    }
+                    throw e; // Re-throw other SQL exceptions
+                }
                 
             } catch (SQLException e) {
                 connection.rollback(); // Rollback on error

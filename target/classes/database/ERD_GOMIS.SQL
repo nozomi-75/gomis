@@ -1,7 +1,7 @@
 -- SQLBook: Code
--- DROP DATABASE IF EXISTS gomisdb;
+DROP DATABASE IF EXISTS gomisdb;
 
--- CREATE DATABASE gomisdb;
+CREATE DATABASE gomisdb;
 
 USE gomisdb;
 
@@ -76,19 +76,19 @@ CREATE TABLE GUARDIAN (
     GUARDIAN_CONTACT_NUMBER VARCHAR(100)
 );
 
--- CREATE TABLE GUIDANCE_COUNSELORS (
---     GUIDANCE_COUNSELOR_ID INT PRIMARY KEY AUTO_INCREMENT,
---     LAST_NAME VARCHAR(100),
---     FIRST_NAME VARCHAR(100),
---     MIDDLE_NAME VARCHAR(100),
---     SUFFIX VARCHAR(10),
---     GENDER VARCHAR(10),
---     SPECIALIZATION VARCHAR(100),
---     CONTACT_NUM VARCHAR(50),
---     EMAIL VARCHAR(100),
---     POSITION VARCHAR(100),
---     PROFILE_PICTURE BLOB
--- );
+CREATE TABLE GUIDANCE_COUNSELORS (
+    GUIDANCE_COUNSELOR_ID INT PRIMARY KEY AUTO_INCREMENT,
+    LAST_NAME VARCHAR(100),
+    FIRST_NAME VARCHAR(100),
+    MIDDLE_NAME VARCHAR(100),
+    SUFFIX VARCHAR(10),
+    GENDER VARCHAR(10),
+    SPECIALIZATION VARCHAR(100),
+    CONTACT_NUM VARCHAR(50),
+    EMAIL VARCHAR(100),
+    POSITION VARCHAR(100),
+    PROFILE_PICTURE BLOB
+);
 
 CREATE TABLE SCHOOL_FORM (
     SF_ID INT PRIMARY KEY AUTO_INCREMENT,
@@ -100,10 +100,10 @@ CREATE TABLE SCHOOL_FORM (
     SF_SEMESTER VARCHAR(50),
     SF_SCHOOL_YEAR VARCHAR(20),
     SF_GRADE_LEVEL VARCHAR(50),
-    SF_SECTION VARCHAR(50) UNIQUE NOT NULL,
+    SF_SECTION VARCHAR(50) NOT NULL,
     SF_TRACK_AND_STRAND VARCHAR(100),
     SF_COURSE VARCHAR(100),
-    INDEX idx_section (SF_SECTION) -- Add index for SF_SECTION
+    INDEX idx_section (SF_SECTION)
 ) ENGINE = InnoDB;
 
 CREATE TABLE STUDENT (
@@ -113,7 +113,7 @@ CREATE TABLE STUDENT (
     ADDRESS_ID INT,
     CONTACT_ID INT,
     SF_ID INT,
-    STUDENT_LRN VARCHAR(50),
+    STUDENT_LRN VARCHAR(50) UNIQUE,
     STUDENT_LASTNAME VARCHAR(100),
     STUDENT_FIRSTNAME VARCHAR(100),
     STUDENT_MIDDLENAME VARCHAR(100),
@@ -149,14 +149,14 @@ CREATE TABLE PARTICIPANTS (
     FOREIGN KEY (STUDENT_UID) REFERENCES STUDENT (STUDENT_UID)
 );
 
--- CREATE TABLE USERS (
---     USER_ID INT PRIMARY KEY AUTO_INCREMENT,
---     U_NAME VARCHAR(100),
---     U_PASS VARCHAR(100),
---     GUIDANCE_COUNSELOR_ID INT,
---     CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
---     FOREIGN KEY (GUIDANCE_COUNSELOR_ID) REFERENCES GUIDANCE_COUNSELORS (GUIDANCE_COUNSELOR_ID)
--- );
+CREATE TABLE USERS (
+    USER_ID INT PRIMARY KEY AUTO_INCREMENT,
+    U_NAME VARCHAR(100),
+    U_PASS VARCHAR(100),
+    GUIDANCE_COUNSELOR_ID INT,
+    CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (GUIDANCE_COUNSELOR_ID) REFERENCES GUIDANCE_COUNSELORS (GUIDANCE_COUNSELOR_ID)
+);
 
 CREATE TABLE INCIDENTS (
     INCIDENT_ID INT PRIMARY KEY AUTO_INCREMENT,
@@ -237,83 +237,68 @@ CREATE TABLE IF NOT EXISTS PREFERENCES (
     PREF_FILE BLOB
 );
 
-/*
-data in PREFERENCE table
+/* Data in PREFERENCE table:
+ * - Signer and work Position for good moral certificate
+ * - Image parameters for good moral certificate:
+ *   - deped matatag
+ *   - deped logo
+ *   - school logo 
+ *   - school footer
+ */
 
-a data to save Signer and its work Position FOR good moral certificate if user saved it from others field
+-- First insert the guidance counselor
+INSERT INTO
+    GUIDANCE_COUNSELORS (
+        GUIDANCE_COUNSELOR_ID,
+        LAST_NAME,
+        FIRST_NAME,
+        MIDDLE_NAME,
+        SUFFIX,
+        GENDER,
+        SPECIALIZATION,
+        CONTACT_NUM,
+        EMAIL,
+        POSITION,
+        PROFILE_PICTURE
+    )
+VALUES (
+        1,
+        'Smith',
+        'Alice',
+        'B',
+        'Jr',
+        'Female',
+        'Counseling',
+        '987654321',
+        'alice.smith@example.com',
+        'Counselor',
+        NULL
+    )
+ON DUPLICATE KEY UPDATE
+    EMAIL = VALUES(EMAIL),
+    LAST_NAME = VALUES(LAST_NAME),
+    FIRST_NAME = VALUES(FIRST_NAME),
+    MIDDLE_NAME = VALUES(MIDDLE_NAME),
+    SUFFIX = VALUES(SUFFIX),
+    GENDER = VALUES(GENDER),
+    SPECIALIZATION = VALUES(SPECIALIZATION),
+    CONTACT_NUM = VALUES(CONTACT_NUM),
+    POSITION = VALUES(POSITION);
 
-a data to save Image parameters for good moral certificate:
-deped matatag
-deped logo
-school logo 
-school footer
-
-
-
-*/
-
--- -- Add a trigger to ensure at least one participant per appointment
--- DELIMITER //
--- CREATE TRIGGER check_appointment_participants
--- AFTER INSERT ON APPOINTMENTS
--- FOR EACH ROW
--- BEGIN
---     -- Set a timeout (e.g., 5 seconds) to allow time for participants to be added
---     SET @timeout = NOW() + INTERVAL 5 SECOND;
-    
---     -- Check if any participants are added within the timeout period
---     IF NOT EXISTS (
---         SELECT 1 FROM APPOINTMENT_PARTICIPANTS 
---         WHERE APPOINTMENT_ID = NEW.APPOINTMENT_ID
---     ) THEN
---         SIGNAL SQLSTATE '45000'
---         SET MESSAGE_TEXT = 'Each appointment must have at least one participant';
---     END IF;
--- END//
--- DELIMITER ;
-
--- INSERT INTO
---     GUIDANCE_COUNSELORS (
---         GUIDANCE_COUNSELOR_ID,
---         LAST_NAME,
---         FIRST_NAME,
---         MIDDLE_NAME,
---         SUFFIX,
---         GENDER,
---         SPECIALIZATION,
---         CONTACT_NUM,
---         EMAIL,
---         POSITION,
---         PROFILE_PICTURE
---     )
--- VALUES (
---         1,
---         'Smith',
---         'Alice',
---         'B',
---         'Jr',
---         'Female',
---         'Counseling',
---         987654321,
---         'alice.smith@example.com',
---         'Counselor',
---         NULL
---     )
--- ON DUPLICATE KEY UPDATE
---     EMAIL = VALUES(EMAIL);
-
--- INSERT INTO
---     USERS (
---         USER_ID,
---         U_NAME,
---         U_PASS,
---         GUIDANCE_COUNSELOR_ID
---     )
--- VALUES (
---         1,
---         'admin',
---         '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
---         1
---     )
--- ON DUPLICATE KEY UPDATE
---     U_NAME = VALUES(U_NAME);
+-- Then insert the user that references the counselor
+INSERT INTO
+    USERS (
+        USER_ID,
+        U_NAME,
+        U_PASS,
+        GUIDANCE_COUNSELOR_ID
+    )
+VALUES (
+        1,
+        'admin',
+        '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+        1
+    )
+ON DUPLICATE KEY UPDATE
+    U_NAME = VALUES(U_NAME),
+    U_PASS = VALUES(U_PASS);

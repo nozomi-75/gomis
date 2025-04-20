@@ -29,14 +29,45 @@ public class StudentsDataDAO {
             Parents parents, Guardian guardian, SchoolForm schoolForm) throws SQLException {
         connection.setAutoCommit(false);
         try {
-            // Create school form first to get its ID
-            SchoolFormDAO schoolFormDAO = new SchoolFormDAO(connection);
-            int schoolFormId = schoolFormDAO.createSchoolForm(schoolForm);
-            if (schoolFormId == 0) {
-                throw new SQLException("Failed to create school form");
+            // Check if student with same LRN already exists
+            String checkLrnSql = "SELECT COUNT(*) FROM STUDENT WHERE STUDENT_LRN = ?";
+            try (PreparedStatement checkStmt = connection.prepareStatement(checkLrnSql)) {
+                checkStmt.setString(1, student.getStudentLrn());
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        throw new SQLException("A student with LRN " + student.getStudentLrn() + " already exists");
+                    }
+                }
             }
 
-            // Set the generated school form ID in the student object
+            // Check if a school form with the same section exists
+            String checkSectionSql = "SELECT SF_ID FROM SCHOOL_FORM WHERE SF_SECTION = ? AND SF_SCHOOL_YEAR = ? AND SF_GRADE_LEVEL = ?";
+            int existingSchoolFormId = 0;
+            
+            try (PreparedStatement checkStmt = connection.prepareStatement(checkSectionSql)) {
+                checkStmt.setString(1, schoolForm.getSF_SECTION());
+                checkStmt.setString(2, schoolForm.getSF_SCHOOL_YEAR());
+                checkStmt.setString(3, schoolForm.getSF_GRADE_LEVEL());
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next()) {
+                        existingSchoolFormId = rs.getInt("SF_ID");
+                    }
+                }
+            }
+
+            // If school form exists, use it; otherwise create new one
+            int schoolFormId;
+            if (existingSchoolFormId > 0) {
+                schoolFormId = existingSchoolFormId;
+            } else {
+                SchoolFormDAO schoolFormDAO = new SchoolFormDAO(connection);
+                schoolFormId = schoolFormDAO.createSchoolForm(schoolForm);
+                if (schoolFormId == 0) {
+                    throw new SQLException("Failed to create school form");
+                }
+            }
+
+            // Set the school form ID in the student object
             student.setSF_ID(schoolFormId);
 
             // Create other related entities
@@ -329,7 +360,18 @@ public class StudentsDataDAO {
     }
 
     private void handleSQLException(SQLException e, String operation) {
-        System.err.println("Error during " + operation + ": " + e.getMessage());
+        String errorMessage;
+        if (e.getErrorCode() == 1062) { // Duplicate entry error
+            if (e.getMessage().contains("STUDENT_LRN")) {
+                errorMessage = "A student with this LRN already exists.";
+            } else {
+                errorMessage = "A duplicate entry was found in the database.";
+            }
+        } else {
+            errorMessage = "Database error during " + operation + ": " + e.getMessage();
+        }
+        System.err.println(errorMessage);
+        // You might want to log this error to a proper logging system
     }
 
     // ✅ Update Student Data

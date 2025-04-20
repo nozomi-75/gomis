@@ -33,7 +33,7 @@ import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
-import lyfjshs.gomis.utils.GoodMoralGenerator;
+import lyfjshs.gomis.utils.jasper.GoodMoralGenerator;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
@@ -438,8 +438,7 @@ public class StudentMangementGUI extends Form {
 	public void applyFilters() {
 		try {
 			StringBuilder query = new StringBuilder(
-				"SELECT DISTINCT s.*, sf.SF_GRADE_LEVEL, sf.SF_SECTION, sf.SF_TRACK_AND_STRAND " +
-				"FROM STUDENT s " +
+				"SELECT DISTINCT s.*, sf.* FROM STUDENT s " +
 				"LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID " +
 				"WHERE 1=1");
 				
@@ -447,83 +446,81 @@ public class StudentMangementGUI extends Form {
 
 			// Process the active filters
 			if (activeFilters != null && !activeFilters.isEmpty()) {
+				// Name filter
 				if (activeFilters.containsKey("name") && !activeFilters.get("name").isEmpty()) {
 					String name = activeFilters.get("name");
-					query.append(" AND (LOWER(s.STUDENT_FIRSTNAME) LIKE LOWER(?) OR LOWER(s.STUDENT_LASTNAME) LIKE LOWER(?) OR LOWER(CONCAT(s.STUDENT_FIRSTNAME, ' ', s.STUDENT_LASTNAME)) LIKE LOWER(?))");
-					params.add("%" + name + "%");
-					params.add("%" + name + "%");
-					params.add("%" + name + "%");
+					query.append(" AND (LOWER(s.STUDENT_FIRSTNAME) LIKE LOWER(?) " +
+							   "OR LOWER(s.STUDENT_LASTNAME) LIKE LOWER(?) " +
+							   "OR LOWER(CONCAT(s.STUDENT_FIRSTNAME, ' ', s.STUDENT_LASTNAME)) LIKE LOWER(?))");
+					String searchPattern = "%" + name + "%";
+					params.add(searchPattern);
+					params.add(searchPattern);
+					params.add(searchPattern);
 				}
 
+				// Grade Level filter
 				if (activeFilters.containsKey("gradeLevel") && !activeFilters.get("gradeLevel").isEmpty()) {
-					String gradeLevel = activeFilters.get("gradeLevel");
-					// Handle both formats: "Grade 12" and "12"
-					if (gradeLevel.startsWith("Grade ")) {
-						gradeLevel = "Grade " + gradeLevel.replace("Grade ", "").trim();
-					} else {
-						gradeLevel = "Grade " + gradeLevel.trim();
-					}
+					String gradeLevel = activeFilters.get("gradeLevel").replace("Grade ", "").trim();
 					query.append(" AND sf.SF_GRADE_LEVEL = ?");
 					params.add(gradeLevel);
 				}
 
+				// Section filter
 				if (activeFilters.containsKey("section") && !activeFilters.get("section").isEmpty()) {
-					query.append(" AND UPPER(sf.SF_SECTION) = UPPER(?)");
+					query.append(" AND sf.SF_SECTION = ?");
 					params.add(activeFilters.get("section"));
 				}
 
+				// Track/Strand filter
 				if (activeFilters.containsKey("trackStrand") && !activeFilters.get("trackStrand").isEmpty()) {
-					query.append(" AND UPPER(sf.SF_TRACK_AND_STRAND) = UPPER(?)");
+					query.append(" AND sf.SF_TRACK_AND_STRAND = ?");
 					params.add(activeFilters.get("trackStrand"));
 				}
 
+				// Sex filter
 				if (activeFilters.containsKey("sex")) {
-					String sexFilter = activeFilters.get("sex");
-					if (sexFilter != null && !sexFilter.isEmpty()) {
-						String[] sexes = sexFilter.split(",");
-						if (sexes.length > 0) {
-							query.append(" AND (");
-							for (int i = 0; i < sexes.length; i++) {
-								if (i > 0) query.append(" OR ");
-								query.append("s.STUDENT_SEX IN (?, ?)");
-								String sex = sexes[i];
-								params.add(sex.substring(0, 1)); // M or F
-								params.add(sex); // Male or Female
-							}
-							query.append(")");
+					String[] sexes = activeFilters.get("sex").split(",");
+					if (sexes.length > 0) {
+						query.append(" AND s.STUDENT_SEX IN (");
+						for (int i = 0; i < sexes.length; i++) {
+							query.append(i > 0 ? "," : "").append("?");
+							params.add(sexes[i].substring(0, 1)); // Convert to M/F
 						}
+						query.append(")");
 					}
 				}
 
-				if (activeFilters.containsKey("minAge") && !activeFilters.get("minAge").isEmpty()) {
-					query.append(" AND CAST(s.STUDENT_AGE AS INTEGER) >= ?");
+				// Age range filter
+				if (activeFilters.containsKey("minAge")) {
+					query.append(" AND s.STUDENT_AGE >= ?");
 					params.add(Integer.parseInt(activeFilters.get("minAge")));
 				}
-
-				if (activeFilters.containsKey("maxAge") && !activeFilters.get("maxAge").isEmpty()) {
-					query.append(" AND CAST(s.STUDENT_AGE AS INTEGER) <= ?");
+				if (activeFilters.containsKey("maxAge")) {
+					query.append(" AND s.STUDENT_AGE <= ?");
 					params.add(Integer.parseInt(activeFilters.get("maxAge")));
 				}
 			}
 
-			query.append(" ORDER BY s.STUDENT_LASTNAME ASC, s.STUDENT_FIRSTNAME ASC");
+			// Add sorting
+			query.append(" ORDER BY s.STUDENT_LASTNAME, s.STUDENT_FIRSTNAME");
 
-			System.out.println("Query: " + query.toString()); // Debug print
-			System.out.println("Params: " + params); // Debug print
-
-			// Prepare and execute the query
-			PreparedStatement statement = connection.prepareStatement(query.toString());
-			for (int i = 0; i < params.size(); i++) {
-				statement.setObject(i + 1, params.get(i));
+			// Execute query
+			try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
+				for (int i = 0; i < params.size(); i++) {
+					stmt.setObject(i + 1, params.get(i));
+				}
+				
+				try (ResultSet rs = stmt.executeQuery()) {
+					updateTableWithResults(rs);
+				}
 			}
-
-			ResultSet resultSet = statement.executeQuery();
-			updateTableWithResults(resultSet);
 			
 		} catch (SQLException ex) {
 			ex.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Error querying database: " + ex.getMessage(),
-					"Database Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, 
+				"Error applying filters: " + ex.getMessage(),
+				"Database Error", 
+				JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -611,7 +608,8 @@ public class StudentMangementGUI extends Form {
 		// If no violations, proceed with printing using the GoodMoralGenerator
 		// This will show a modal with scrollpanes for both the purpose field and
 		// student list
-		GoodMoralGenerator.createBatchGoodMoralReport(this, selectedStudents);
+		GoodMoralGenerator goodMoralGenerator = new GoodMoralGenerator(selectedStudents.get(0));
+		goodMoralGenerator.createBatchGoodMoralReport(this, selectedStudents);
 	}
 
 	/**

@@ -10,7 +10,6 @@ import java.awt.RenderingHints;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -140,7 +139,7 @@ public class NotificationManager {
     }
 
     private NotificationManager() {
-        this("src/main/resources/GOMIS_Circle.png", 3000, 10000);
+        this("/GOMIS_Circle.png", 3000, 10000);
     }
     
     private NotificationManager(String iconPath, int defaultDuration, int interactiveDuration) {
@@ -181,12 +180,13 @@ public class NotificationManager {
 
     private Image loadIcon() {
         try {
-            File iconFile = new File(iconPath);
-            if (iconFile.exists()) {
-                BufferedImage originalImage = ImageIO.read(iconFile);
+            // Load icon from resources using Class.getResource()
+            var iconUrl = getClass().getResource(iconPath);
+            if (iconUrl != null) {
+                BufferedImage originalImage = ImageIO.read(iconUrl);
                 return scaleImage(originalImage);
             } else {
-                System.err.println("Icon file not found: " + iconPath);
+                System.err.println("Icon resource not found: " + iconPath);
                 return createDefaultIcon();
             }
         } catch (IOException e) {

@@ -1,6 +1,6 @@
 package lyfjshs.gomis.view.appointment;
 
-import java.io.File;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -220,11 +220,17 @@ public class AppointmentManagement extends Form {
 
 	private void playReminderSound() {
 		try {
-			File soundFile = new File(getClass().getClassLoader().getResource("sounds/reminder.wav").toURI());
-			AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-			Clip clip = AudioSystem.getClip();
-			clip.open(audioInputStream);
-			clip.start();
+			// Load sound file from resources
+			try (InputStream soundStream = getClass().getResourceAsStream("/sounds/reminder.wav")) {
+				if (soundStream == null) {
+					System.err.println("Could not find reminder sound file");
+					return;
+				}
+				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundStream);
+				Clip clip = AudioSystem.getClip();
+				clip.open(audioInputStream);
+				clip.start();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

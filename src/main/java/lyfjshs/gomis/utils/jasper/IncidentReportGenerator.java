@@ -1,11 +1,9 @@
-package lyfjshs.gomis.utils;
+package lyfjshs.gomis.utils.jasper;
 
 import java.awt.Component;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 public class IncidentReportGenerator {
@@ -20,42 +18,6 @@ public class IncidentReportGenerator {
 		
 		generateReport(DEFAULT_JASPER_TEMPLATE, name, gradeSection, date, timeVisit, incidentReport, "print", null);
 
-//		JFileChooser fileChooser = setupFileChooser("docx");
-//		if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-//			String baseName = fileChooser.getSelectedFile().getAbsolutePath().replace(".docx", "");
-//			generateReport(DEFAULT_JASPER_TEMPLATE, name, gradeSection, date, timeVisit, incidentReport, "docx",
-//					baseName);
-//		}
-
-		// JFileChooser fileChooser = setupFileChooser("pdf");
-		// if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-		// 	String baseName = fileChooser.getSelectedFile().getAbsolutePath().replace(".pdf", "");
-		// 	generateReport(DEFAULT_JASPER_TEMPLATE, name, gradeSection, date, timeVisit, incidentReport, "pdf",
-		// 			baseName);
-		// }
-	}
-
-	/**
-	 * Sets up a JFileChooser for saving files with the specified extension.
-	 */
-	private static JFileChooser setupFileChooser(String extension) {
-		JFileChooser fileChooser = new JFileChooser();
-		fileChooser.setDialogTitle("Save Incident Report");
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		fileChooser.setAcceptAllFileFilterUsed(false);
-		fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
-			@Override
-			public boolean accept(File f) {
-				return f.isDirectory() || f.getName().toLowerCase().endsWith("." + extension);
-			}
-
-			@Override
-			public String getDescription() {
-				return extension.toUpperCase() + " Files (*." + extension + ")";
-			}
-		});
-		fileChooser.setSelectedFile(new File("IncidentReport." + extension));
-		return fileChooser;
 	}
 
 	/**

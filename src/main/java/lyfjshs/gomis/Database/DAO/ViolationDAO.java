@@ -146,14 +146,25 @@ public class ViolationDAO {
         }
     }
 
-    // Update violation status
+    // Helper method to standardize status values
+    private String standardizeStatus(String status) {
+        if (status == null) return "ACTIVE";
+        switch (status.toUpperCase()) {
+            case "RESOLVED":
+            case "RESOLVE":
+                return "RESOLVED";
+            case "ACTIVE":
+            default:
+                return "ACTIVE";
+        }
+    }
+
+    // Update violation status with standardized values
     public boolean updateViolationStatus(int violationId, String status) throws SQLException {
-        String sql = "UPDATE VIOLATION_RECORD SET STATUS = ?, UPDATED_AT = NOW() WHERE VIOLATION_ID = ?";
-        
+        String sql = "UPDATE VIOLATION_RECORD SET STATUS = ? WHERE VIOLATION_ID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, status);
+            stmt.setString(1, standardizeStatus(status));
             stmt.setInt(2, violationId);
-            
             return stmt.executeUpdate() > 0;
         }
     }

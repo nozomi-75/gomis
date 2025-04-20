@@ -28,7 +28,7 @@ public class IncidentsDAO {
     public int createIncident(Incident incident) throws SQLException {
         String sql = "INSERT INTO INCIDENTS (PARTICIPANT_ID, INCIDENT_DATE, INCIDENT_DESCRIPTION, " +
                      "ACTION_TAKEN, RECOMMENDATION, STATUS, UPDATED_AT) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, NOW())";
+                     "VALUES (?, ?, ?, ?, ?, COALESCE(?, 'PENDING'), NOW())";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, incident.getParticipantId());
@@ -48,6 +48,30 @@ public class IncidentsDAO {
             }
         }
         return -1;
+    }
+
+    // Helper method to standardize status values
+    private String standardizeStatus(String status) {
+        if (status == null) return "PENDING";
+        switch (status.toUpperCase()) {
+            case "RESOLVED":
+                return "RESOLVED";
+            case "IN PROGRESS":
+                return "IN PROGRESS";
+            case "PENDING":
+            default:
+                return "PENDING";
+        }
+    }
+
+    // Update incident status
+    public boolean updateIncidentStatus(int incidentId, String status) throws SQLException {
+        String sql = "UPDATE INCIDENTS SET STATUS = ?, UPDATED_AT = NOW() WHERE INCIDENT_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, standardizeStatus(status));
+            stmt.setInt(2, incidentId);
+            return stmt.executeUpdate() > 0;
+        }
     }
 
     // ✅ Retrieve an incident by ID
