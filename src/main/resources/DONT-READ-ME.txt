@@ -1,0 +1,13 @@
+Hey there! Just a heads up about GOMIS:
+
+There are some visible flaws in the system, especially with input validation. 
+The database setup is kinda basic too - password is just sitting there in the code.
+
+To future programmers:
+- Watch out for input validation, it's kinda weak
+- Database security needs work
+- UI sometimes acts up with that null frame thing
+- Maybe add some proper error messages
+
+If you're fixing this, start with the input validation stuff. 
+That's probably the most important thing to fix right now.
