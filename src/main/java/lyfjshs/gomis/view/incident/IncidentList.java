@@ -11,12 +11,15 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import lyfjshs.gomis.Database.DAO.IncidentsDAO;
 import lyfjshs.gomis.Database.entity.Incident;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
-import lyfjshs.gomis.components.table.DefaultTableActionManager;
 
 public class IncidentList extends Form {
     private GTable table;
@@ -26,6 +29,7 @@ public class IncidentList extends Form {
     private static final String DETAILS_VIEW = "details";
     private Connection connection;
     private IncidentsDAO incidentsDAO;
+    private static final Logger logger = LogManager.getLogger(IncidentList.class);
 
     public IncidentList(Connection conn) {
         this.connection = conn;
@@ -105,7 +109,7 @@ public class IncidentList extends Form {
             }
             return data;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error loading incident data", e);
             JOptionPane.showMessageDialog(this, 
                 "Error loading incident data: " + e.getMessage(),
                 "Database Error",
@@ -131,7 +135,7 @@ public class IncidentList extends Form {
             cardPanel.add(detailsPanel, DETAILS_VIEW);
             cardLayout.show(cardPanel, DETAILS_VIEW);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error loading incident details", e);
             JOptionPane.showMessageDialog(this, 
                 "Error loading incident details: " + e.getMessage(),
                 "Database Error",
@@ -152,7 +156,7 @@ public class IncidentList extends Form {
                     refreshTable();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Error deleting incident", e);
                 JOptionPane.showMessageDialog(this,
                     "Error deleting incident: " + e.getMessage(),
                     "Database Error",

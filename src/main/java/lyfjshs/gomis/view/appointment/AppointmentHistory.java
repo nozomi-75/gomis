@@ -27,11 +27,15 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import lyfjshs.gomis.Database.SQLExceptionPane;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.utils.EventBus;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentModal;
 import lyfjshs.gomis.view.appointment.add.AddAppointmentPanel;
 import net.miginfocom.swing.MigLayout;
@@ -39,6 +43,7 @@ import raven.datetime.DatePicker;
 import raven.datetime.TimePicker;
 
 public class AppointmentHistory extends JPanel {
+    private static final Logger logger = LogManager.getLogger(AppointmentHistory.class);
     private JPanel appointmentsListPanel;
     private String activeFilter = "all";
     private AppointmentDAO appointmentDAO;
@@ -268,7 +273,7 @@ public class AppointmentHistory extends JPanel {
             activeFilter = status;
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error loading appointments: " + e.getMessage(), e);
             JOptionPane.showMessageDialog(this, 
                 "Error loading appointments: " + e.getMessage(),
                 "Error",
@@ -307,6 +312,8 @@ public class AppointmentHistory extends JPanel {
                     );
                     // Refresh the view
                     updateAppointmentsDisplay();
+                    // Notify the calendar about the deleted appointment
+                    EventBus.publish("appointment_deleted", selectedAppointment.getAppointmentId());
                 } else {
                     JOptionPane.showMessageDialog(
                         this,
@@ -435,6 +442,7 @@ public class AppointmentHistory extends JPanel {
                 this::updateAppointmentsDisplay
             );
         } catch (Exception ex) {
+            logger.error("Error editing appointment: " + ex.getMessage(), ex);
             JOptionPane.showMessageDialog(this,
                 "Error editing appointment: " + ex.getMessage(),
                 "Error",
@@ -536,6 +544,9 @@ public class AppointmentHistory extends JPanel {
                 // Save changes
                 appointmentDAO.updateAppointment(appointment);
                 
+                // Notify the calendar about the updated appointment
+                EventBus.publish("appointment_updated", appointment.getAppointmentId());
+                
                 // Refresh display
                 updateAppointmentsDisplay();
                 
@@ -546,6 +557,7 @@ public class AppointmentHistory extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE
                 );
             } catch (Exception ex) {
+                logger.error("Error rescheduling appointment: " + ex.getMessage(), ex);
                 JOptionPane.showMessageDialog(
                     this,
                     "Error rescheduling appointment: " + ex.getMessage(),
@@ -564,7 +576,7 @@ public class AppointmentHistory extends JPanel {
             appointmentDAO.cleanupOldAppointments();
         } catch (SQLException e) {
             // Log the error but don't show to user since this is a background operation
-            e.printStackTrace();
+            logger.error("Error cleaning up old appointments: " + e.getMessage(), e);
         }
     }
 }

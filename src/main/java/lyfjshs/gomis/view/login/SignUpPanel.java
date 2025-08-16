@@ -32,6 +32,9 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.components.FlatSeparator;
 
@@ -47,8 +50,7 @@ import raven.modal.toast.option.ToastLocation;
 import raven.modal.toast.option.ToastOption;
 
 public class SignUpPanel extends JPanel {
-	private JLabel passwordMatchLabel;
-	private JLabel passwordStrengthLabel;
+	private static final Logger logger = LogManager.getLogger(SignUpPanel.class);
 	private ButtonGroup groupGender;
 	private Connection connDB;
 	private LoginView parent;
@@ -65,83 +67,45 @@ public class SignUpPanel extends JPanel {
 	private JTextField txtSuffix;
 	private JLabel profilePicture;
 	private JLabel lblNewLabel;
+	private JLabel passwordMatchLabel;
+	private JLabel passwordStrengthLabel;
 
 	public SignUpPanel(Connection conn, LoginView parent) {
 		this.connDB = conn;
 		this.parent = parent;
-		setLayout(new MigLayout("wrap,fillx,insets 5", "[500,grow,fill]", "[center][][grow][][][][][][][][][][][][][][][grow]"));
-		this.setOpaque(false);
+
+		setOpaque(false);
 		putClientProperty(FlatClientProperties.STYLE, "arc:20; background:darken(@background,3%)");
-        
-        // Add visibility listener to update UI when panel becomes visible
-        addAncestorListener(new javax.swing.event.AncestorListener() {
-            @Override
-            public void ancestorAdded(javax.swing.event.AncestorEvent event) {
-                SettingsManager.applySettings();
-            }
+		setLayout(new MigLayout("", "[536px,grow]", "[452px]"));
 
-            @Override
-            public void ancestorRemoved(javax.swing.event.AncestorEvent event) {
-                // Not needed
-            }
+		JPanel mainPane = new JPanel();
+		add(mainPane, "cell 0 0,grow");
+		mainPane.setLayout(new MigLayout("fillx", "[200,fill][grow][grow]", "[][][][][][][][][][][][][][]"));
+		mainPane.setOpaque(false);
 
-            @Override
-            public void ancestorMoved(javax.swing.event.AncestorEvent event) {
-                // Not needed
-            }
-        });
-
-		groupGender = new ButtonGroup();
-		txtUsername = new JTextField();
-		txtPassword = new JPasswordField();
-		txtConfirmPassword = new JPasswordField();
-		txtEmail = new JTextField();
-		txtContact = new JTextField();
-		txtSpecialization = new JTextField();
-		txtWorkPosition = new JTextField();
-		JButton btnSignUp = new JButton("Sign Up");
-
-		txtUsername.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Username");
-		txtPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Password");
-		txtConfirmPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Confirm Password");
-		txtEmail.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Email");
-		txtContact.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contact No.");
-		txtSpecialization.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Specialization");
-		txtWorkPosition.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Work Position");
-
-		txtPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
-		txtConfirmPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
-
-		passwordStrengthLabel = new JLabel();
-		txtPassword.getDocument().addDocumentListener(new DocumentListener() {
-			public void insertUpdate(DocumentEvent e) {
-				updatePasswordStrength(txtPassword);
+		// Add visibility listener to update UI when panel becomes visible
+		addAncestorListener(new javax.swing.event.AncestorListener() {
+			@Override
+			public void ancestorAdded(javax.swing.event.AncestorEvent event) {
+				SettingsManager.applySettings();
 			}
 
-			public void removeUpdate(DocumentEvent e) {
-				updatePasswordStrength(txtPassword);
+			@Override
+			public void ancestorRemoved(javax.swing.event.AncestorEvent event) {
+				// Not needed
 			}
 
-			public void changedUpdate(DocumentEvent e) {
-				updatePasswordStrength(txtPassword);
+			@Override
+			public void ancestorMoved(javax.swing.event.AncestorEvent event) {
+				// Not needed
 			}
 		});
 
-		passwordMatchLabel = new JLabel();
-		passwordMatchLabel.setForeground(Color.RED);
-		passwordMatchLabel.setVisible(false);
-
-		btnSignUp.putClientProperty(FlatClientProperties.STYLE, "[light]background:darken(@background,10%);"
-				+ "[dark]background:lighten(@background,10%);" + "borderWidth:0; focusWidth:0; innerFocusWidth:0;");
-
-		JLabel titleLabel = new JLabel("SignUp", SwingConstants.CENTER);
-		titleLabel.putClientProperty(FlatClientProperties.STYLE, "font:bold +10");
-
-		add(titleLabel, "cell 0 0,aligny center");
+		groupGender = new ButtonGroup();
 
 		JPanel panel_1 = new JPanel();
 		panel_1.setOpaque(false);
-		add(panel_1, "cell 0 1,alignx center,growy");
+		mainPane.add(panel_1, "cell 0 0 1 14,alignx center,growy");
 		panel_1.setLayout(new MigLayout("", "[grow][170px,center][grow]", "[170px]"));
 
 		profilePicture = new JLabel("Click to Select a Profile", SwingConstants.CENTER);
@@ -149,55 +113,56 @@ public class SignUpPanel extends JPanel {
 		profilePicture.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		profilePicture.setPreferredSize(new Dimension(150, 150));
 		profilePicture.addMouseListener(new MouseAdapter() {
-		    public void mouseClicked(MouseEvent e) {
-		        if (e.isPopupTrigger() || e.getButton() == MouseEvent.BUTTON3) {
-		            showProfilePictureMenu(e);
-		            return;
-		        }
+			public void mouseClicked(MouseEvent e) {
+				if (e.isPopupTrigger() || e.getButton() == MouseEvent.BUTTON3) {
+					showProfilePictureMenu(e);
+					return;
+				}
 
-		        // If there's already an image, show options
-		        if (profilePicture.getIcon() != null) {
-		            Object[] options = {"Re-crop Current Image", "Select New Image", "Cancel"};
-		            int choice = JOptionPane.showOptionDialog(SignUpPanel.this,
-		                "What would you like to do with the profile picture?",
-		                "Profile Picture Options",
-		                JOptionPane.YES_NO_CANCEL_OPTION,
-		                JOptionPane.QUESTION_MESSAGE,
-		                null,
-		                options,
-		                options[0]);
+				// If there's already an image, show options
+				if (profilePicture.getIcon() != null) {
+					Object[] options = { "Re-crop Current Image", "Select New Image", "Cancel" };
+					int choice = JOptionPane.showOptionDialog(SignUpPanel.this,
+							"What would you like to do with the profile picture?", "Profile Picture Options",
+							JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
-		            if (choice == 0) { // Re-crop current image
-		                reCropCurrentImage();
-		            } else if (choice == 1) { // Select new image
-		                selectNewImage();
-		            }
-		            return;
-		        }
+					if (choice == 0) { // Re-crop current image
+						reCropCurrentImage();
+					} else if (choice == 1) { // Select new image
+						selectNewImage();
+					}
+					return;
+				}
 
-		        // If no image exists, select new image directly
-		        selectNewImage();
-		    }
+				// If no image exists, select new image directly
+				selectNewImage();
+			}
 
-		    public void mousePressed(MouseEvent e) {
-		        if (e.isPopupTrigger()) {
-		            showProfilePictureMenu(e);
-		        }
-		    }
+			public void mousePressed(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showProfilePictureMenu(e);
+				}
+			}
 
-		    public void mouseReleased(MouseEvent e) {
-		        if (e.isPopupTrigger()) {
-		            showProfilePictureMenu(e);
-		        }
-		    }
+			public void mouseReleased(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showProfilePictureMenu(e);
+				}
+			}
 		});
+
+		JLabel titleLabel = new JLabel("SignUp", SwingConstants.CENTER);
+		titleLabel.putClientProperty(FlatClientProperties.STYLE, "font:bold +10");
+
+		mainPane.add(titleLabel, "cell 1 0,aligny center");
 
 		JPanel panel_2 = new JPanel();
 		panel_2.setOpaque(false);
-		add(panel_2, "cell 0 2,grow");
-		panel_2.setLayout(new MigLayout("", "[64px,grow][64px,grow][64px,grow][][70px]", "[26px]"));
+		mainPane.add(panel_2, "cell 1 1 2 1,grow");
+		panel_2.setLayout(new MigLayout("insets 0", "[64px,grow][64px,grow][64px,grow][][70px]", "[26px]"));
 
 		txtFirstName = new JTextField();
+		txtFirstName.setColumns(20);
 		panel_2.add(txtFirstName, "cell 0 0,grow");
 		txtMiddleName = new JTextField();
 		panel_2.add(txtMiddleName, "cell 1 0,grow");
@@ -212,8 +177,9 @@ public class SignUpPanel extends JPanel {
 
 		JPanel genderPanel = new JPanel();
 		genderPanel.setOpaque(false);
-		add(genderPanel, "cell 0 3");
+		mainPane.add(genderPanel, "cell 1 2 2 1");
 		genderPanel.setLayout(new MigLayout("", "[][][]", "[]"));
+
 		JLabel label = new JLabel("Gender");
 		genderPanel.add(label, "cell 0 0");
 		JRadioButton maleButton = new JRadioButton("Male");
@@ -223,24 +189,79 @@ public class SignUpPanel extends JPanel {
 		JRadioButton femaleButton = new JRadioButton("Female");
 		genderPanel.add(femaleButton, "cell 2 0,alignx left,aligny top");
 		groupGender.add(femaleButton);
+		txtSpecialization = new JTextField();
+		txtSpecialization.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Specialization");
 
-		add(txtSpecialization, "cell 0 4");
-		add(txtWorkPosition, "cell 0 5");
-		add(txtEmail, "cell 0 6");
-		add(txtContact, "cell 0 7");
+		mainPane.add(txtSpecialization, "cell 1 3,growx");
+		txtWorkPosition = new JTextField();
+		txtWorkPosition.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Work Position");
+		mainPane.add(txtWorkPosition, "cell 2 3,growx");
+		txtEmail = new JTextField();
+		txtEmail.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Email");
+		mainPane.add(txtEmail, "cell 1 4,growx");
+		txtContact = new JTextField();
+		txtContact.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contact No.");
+		mainPane.add(txtContact, "cell 2 4,growx");
 
-		add(new FlatSeparator(), "cell 0 8,grow");
+		txtContact.addKeyListener(new KeyAdapter() {
+			public void keyTyped(KeyEvent e) {
+				char c = e.getKeyChar();
+				if (!Character.isDigit(c) || txtContact.getText().length() >= 11) {
+					e.consume();
+				}
+			}
+		});
+
+		FlatSeparator flatSeparator = new FlatSeparator();
+		mainPane.add(flatSeparator, "cell 1 5 2 1,grow");
 
 		lblNewLabel = new JLabel("Username");
-		add(lblNewLabel, "cell 0 9");
-		add(txtUsername, "cell 0 10");
-		add(new JLabel("Password"), "cell 0 11,gapy 8");
-		add(txtPassword, "cell 0 12");
-		add(passwordStrengthLabel, "cell 0 13,gapy 5");
-		add(new JLabel("Confirm Password"), "cell 0 14,gapy 5");
-		add(txtConfirmPassword, "cell 0 15");
-		add(passwordMatchLabel, "cell 0 16,gapy 5");
-		add(btnSignUp, "cell 0 17,gapy 20");
+		mainPane.add(lblNewLabel, "cell 1 6");
+		txtUsername = new JTextField();
+
+		txtUsername.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Username");
+		mainPane.add(txtUsername, "cell 1 7 2 1,growx");
+		JLabel label_1 = new JLabel("Password");
+		mainPane.add(label_1, "cell 1 8,gapy 8");
+		txtPassword = new JPasswordField();
+		txtPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Password");
+
+		txtPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
+		txtPassword.getDocument().addDocumentListener(new DocumentListener() {
+			public void insertUpdate(DocumentEvent e) {
+				updatePasswordStrength(txtPassword);
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				updatePasswordStrength(txtPassword);
+			}
+
+			public void changedUpdate(DocumentEvent e) {
+				updatePasswordStrength(txtPassword);
+			}
+		});
+		JLabel label_2 = new JLabel("Confirm Password");
+		mainPane.add(label_2, "cell 2 8,gapy 5");
+		mainPane.add(txtPassword, "cell 1 9,growx");
+		txtConfirmPassword = new JPasswordField();
+		txtConfirmPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Confirm Password");
+		txtConfirmPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
+		mainPane.add(txtConfirmPassword, "cell 2 9,growx");
+
+		// Add password matching listener
+		txtConfirmPassword.getDocument().addDocumentListener(new DocumentListener() {
+			public void insertUpdate(DocumentEvent e) {
+				checkPasswordMatch();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				checkPasswordMatch();
+			}
+
+			public void changedUpdate(DocumentEvent e) {
+				checkPasswordMatch();
+			}
+		});
 
 		JPanel panel = new JPanel();
 		panel.setOpaque(false); // Transparent background
@@ -255,28 +276,22 @@ public class SignUpPanel extends JPanel {
 				parent.switchToLoginPanel();
 			}
 		});
-		panel.add(haveAccountLabel);
-		panel.add(loginLabel);
+		passwordStrengthLabel = new JLabel("");
+		mainPane.add(passwordStrengthLabel, "cell 1 10");
+		JButton btnSignUp = new JButton("Sign Up");
 
-		add(panel, "cell 0 18,grow");
-
-		txtContact.addKeyListener(new KeyAdapter() {
-			public void keyTyped(KeyEvent e) {
-				char c = e.getKeyChar();
-				if (!Character.isDigit(c) || txtContact.getText().length() >= 11) {
-					e.consume();
-				}
-			}
-		});
+		btnSignUp.putClientProperty(FlatClientProperties.STYLE,
+				"background: #0F62C4;" + "foreground: #FFFFFF;" + "[light]background:darken(@background,10%);"
+						+ "[dark]background:lighten(@background,10%);"
+						+ "borderWidth:0; focusWidth:0; innerFocusWidth:0;");
+		passwordMatchLabel = new JLabel("");
+		mainPane.add(passwordMatchLabel, "flowx,cell 2 10");
+		mainPane.add(btnSignUp, "cell 1 11 2 1,gapy 20,grow");
 
 		btnSignUp.addActionListener(e -> handleSignUp());
-
-		// Add password matching listener
-		txtConfirmPassword.getDocument().addDocumentListener(new DocumentListener() {
-			public void insertUpdate(DocumentEvent e) { checkPasswordMatch(); }
-			public void removeUpdate(DocumentEvent e) { checkPasswordMatch(); }
-			public void changedUpdate(DocumentEvent e) { checkPasswordMatch(); }
-		});
+		panel.add(haveAccountLabel);
+		panel.add(loginLabel);
+		mainPane.add(panel, "cell 1 12 2 1,alignx left,growy");
 	}
 
 	private void handleSignUp() {
@@ -303,10 +318,9 @@ public class SignUpPanel extends JPanel {
 					loginController.createUser(username, password, generatedId).executeUpdate();
 
 					ToastOption toastOption = Toast.createOption();
-					toastOption.getLayoutOption()
-						.setMargin(0, 0, 50, 0)
-						.setDirection(ToastDirection.TOP_TO_BOTTOM);
-					Toast.show(this, Toast.Type.SUCCESS, "Account created successfully!", ToastLocation.BOTTOM_CENTER, toastOption);
+					toastOption.getLayoutOption().setMargin(0, 0, 50, 0).setDirection(ToastDirection.TOP_TO_BOTTOM);
+					Toast.show(this, Toast.Type.SUCCESS, "Account created successfully!", ToastLocation.BOTTOM_CENTER,
+							toastOption);
 
 					clearFields();
 					parent.switchToLoginPanel();
@@ -317,19 +331,14 @@ public class SignUpPanel extends JPanel {
 				}
 			} else {
 				ToastOption toastOption = Toast.createOption();
-				toastOption.getLayoutOption()
-					.setMargin(0, 0, 50, 0)
-					.setDirection(ToastDirection.TOP_TO_BOTTOM);
-				Toast.show(this, Toast.Type.ERROR, "Failed to create account: Could not generate counselor ID", ToastLocation.BOTTOM_CENTER, toastOption);
+				toastOption.getLayoutOption().setMargin(0, 0, 50, 0).setDirection(ToastDirection.TOP_TO_BOTTOM);
+				Toast.show(this, Toast.Type.ERROR, "Failed to create account: Could not generate counselor ID",
+						ToastLocation.BOTTOM_CENTER, toastOption);
 			}
 
 		} catch (Exception e) {
-			ToastOption toastOption = Toast.createOption();
-			toastOption.getLayoutOption()
-				.setMargin(0, 0, 50, 0)
-				.setDirection(ToastDirection.TOP_TO_BOTTOM);
-			Toast.show(this, Toast.Type.ERROR, "Error creating account: " + e.getMessage(), ToastLocation.BOTTOM_CENTER, toastOption);
-			e.printStackTrace();
+			logger.error("Error during signup", e);
+			JOptionPane.showMessageDialog(this, "Signup error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -342,19 +351,16 @@ public class SignUpPanel extends JPanel {
 				|| txtWorkPosition.getText().isEmpty()) {
 
 			ToastOption toastOption = Toast.createOption();
-			toastOption.getLayoutOption()
-				.setMargin(0, 0, 50, 0)
-				.setDirection(ToastDirection.TOP_TO_BOTTOM);
-			Toast.show(this, Toast.Type.ERROR, "Please fill in all required fields", ToastLocation.BOTTOM_CENTER, toastOption);
+			toastOption.getLayoutOption().setMargin(0, 0, 50, 0).setDirection(ToastDirection.TOP_TO_BOTTOM);
+			Toast.show(this, Toast.Type.ERROR, "Please fill in all required fields", ToastLocation.BOTTOM_CENTER,
+					toastOption);
 			return false;
 		}
 
 		// Validate password match
 		if (!new String(txtPassword.getPassword()).equals(new String(txtConfirmPassword.getPassword()))) {
 			ToastOption toastOption = Toast.createOption();
-			toastOption.getLayoutOption()
-				.setMargin(0, 0, 50, 0)
-				.setDirection(ToastDirection.TOP_TO_BOTTOM);
+			toastOption.getLayoutOption().setMargin(0, 0, 50, 0).setDirection(ToastDirection.TOP_TO_BOTTOM);
 			Toast.show(this, Toast.Type.ERROR, "Passwords do not match", ToastLocation.BOTTOM_CENTER, toastOption);
 			return false;
 		}
@@ -362,10 +368,9 @@ public class SignUpPanel extends JPanel {
 		// Validate email format
 		if (!txtEmail.getText().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
 			ToastOption toastOption = Toast.createOption();
-			toastOption.getLayoutOption()
-				.setMargin(0, 0, 50, 0)
-				.setDirection(ToastDirection.TOP_TO_BOTTOM);
-			Toast.show(this, Toast.Type.ERROR, "Please enter a valid email address", ToastLocation.BOTTOM_CENTER, toastOption);
+			toastOption.getLayoutOption().setMargin(0, 0, 50, 0).setDirection(ToastDirection.TOP_TO_BOTTOM);
+			Toast.show(this, Toast.Type.ERROR, "Please enter a valid email address", ToastLocation.BOTTOM_CENTER,
+					toastOption);
 			return false;
 		}
 
@@ -421,41 +426,38 @@ public class SignUpPanel extends JPanel {
 	public void addNotify() {
 		super.addNotify();
 		clearFields();
-		
+
 	}
 
 	private void showProfilePictureMenu(MouseEvent e) {
 		javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
-		
+
 		javax.swing.JMenuItem reCropItem = new javax.swing.JMenuItem("Re-crop Image");
 		reCropItem.setEnabled(profilePicture.getIcon() != null);
 		reCropItem.addActionListener(evt -> reCropCurrentImage());
-		
+
 		javax.swing.JMenuItem newImageItem = new javax.swing.JMenuItem("Select New Image");
 		newImageItem.addActionListener(evt -> selectNewImage());
-		
+
 		javax.swing.JMenuItem removeItem = new javax.swing.JMenuItem("Remove Image");
 		removeItem.setEnabled(profilePicture.getIcon() != null);
 		removeItem.addActionListener(evt -> {
 			profilePicture.setIcon(null);
 			profilePicture.setText("Click to Select a Profile");
 		});
-		
+
 		menu.add(reCropItem);
 		menu.add(newImageItem);
 		menu.add(removeItem);
-		
+
 		menu.show(profilePicture, e.getX(), e.getY());
 	}
 
 	private void reCropCurrentImage() {
 		if (profilePicture.getIcon() != null) {
 			ImageIcon currentIcon = (ImageIcon) profilePicture.getIcon();
-			BufferedImage currentImage = new BufferedImage(
-				currentIcon.getIconWidth(),
-				currentIcon.getIconHeight(),
-				BufferedImage.TYPE_INT_ARGB
-			);
+			BufferedImage currentImage = new BufferedImage(currentIcon.getIconWidth(), currentIcon.getIconHeight(),
+					BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = currentImage.createGraphics();
 			currentIcon.paintIcon(null, g, 0, 0);
 			g.dispose();
@@ -468,7 +470,7 @@ public class SignUpPanel extends JPanel {
 					g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 					g2d.drawImage(croppedImage, 0, 0, 150, 150, null);
 					g2d.dispose();
-					
+
 					// Set the scaled image as icon
 					ImageIcon icon = new ImageIcon(scaledImage);
 					profilePicture.setIcon(icon);
@@ -490,10 +492,11 @@ public class SignUpPanel extends JPanel {
 							// Scale the cropped image to fit 150x150
 							BufferedImage scaledImage = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB);
 							Graphics2D g2d = scaledImage.createGraphics();
-							g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+							g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+									RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 							g2d.drawImage(croppedImage, 0, 0, 150, 150, null);
 							g2d.dispose();
-							
+
 							// Set the scaled image as icon
 							ImageIcon icon = new ImageIcon(scaledImage);
 							profilePicture.setIcon(icon);
@@ -502,10 +505,8 @@ public class SignUpPanel extends JPanel {
 					});
 				}
 			} catch (IOException ex) {
-				JOptionPane.showMessageDialog(SignUpPanel.this, 
-					"Error loading image: " + ex.getMessage(),
-					"Error",
-					JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(SignUpPanel.this, "Error loading image: " + ex.getMessage(), "Error",
+						JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
@@ -513,7 +514,7 @@ public class SignUpPanel extends JPanel {
 	private void checkPasswordMatch() {
 		String password = new String(txtPassword.getPassword());
 		String confirmPassword = new String(txtConfirmPassword.getPassword());
-		
+
 		if (!confirmPassword.isEmpty()) {
 			if (!password.equals(confirmPassword)) {
 				passwordMatchLabel.setText("Passwords do not match");

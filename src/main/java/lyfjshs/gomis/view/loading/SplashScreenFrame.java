@@ -24,6 +24,9 @@ import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
 import lyfjshs.gomis.Main;
@@ -46,19 +49,20 @@ public class SplashScreenFrame extends JFrame {
     
     // Define initialization steps with their weights
     private static final String[][] INIT_STEPS = {
-        {"Checking database service", "10"},
-        {"Starting database service if needed", "10"},
+        {"Checking MariaDB service", "10"},
+        {"Starting MariaDB service if needed", "10"},
         {"Connecting to database", "20"},
         {"Initializing database schema", "15"},
         {"Setting up UI components", "15"},
         {"Loading application settings", "10"},
+        {"Initializing template system", "10"},
         {"Preparing main window", "10"},
-        {"Finalizing initialization", "10"}
+        {"Finalizing initialization", "0"}
     };
     
-    private int currentStep = 0;
     private int totalProgress = 0;
     private SwingWorker<Void, String> worker;
+    private static final Logger logger = LogManager.getLogger(SplashScreenFrame.class);
     
     public SplashScreenFrame() {
     	FlatMacLightLaf.setup();
@@ -68,6 +72,18 @@ public class SplashScreenFrame extends JFrame {
         setLocationRelativeTo(null);
         setUndecorated(true);
         
+        // Set application icon for splash screen
+        try {
+            java.net.URL iconURL = getClass().getResource("/images/app_icon.png");
+            if (iconURL != null) {
+                setIconImage(new ImageIcon(iconURL).getImage());
+            } else {
+                logger.warn("Splash screen icon resource not found: /images/app_icon.png");
+            }
+        } catch (Exception e) {
+            logger.error("Error loading splash screen icon", e);
+        }
+
         initComponents();
         startAnimations();
     }
@@ -82,14 +98,15 @@ public class SplashScreenFrame extends JFrame {
         // Load logo with fallback
         JLabel logoLabel;
         try {
-            java.net.URL logoUrl = getClass().getResource("/GOMIS Logo.png");
-            if (logoUrl == null) {
-                System.err.println("Could not find GOMIS Logo.png");
+            java.net.URL logoUrl = getClass().getResource("/images/GOMIS Logo.png");
+            if (logoUrl != null) {
+                ImageIcon originalIcon = new ImageIcon(logoUrl);
+                Image scaledImage = originalIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+                logoLabel = new JLabel(new ImageIcon(scaledImage));
+            } else {
+                logger.warn("Could not find GOMIS Logo.png");
                 return;
             }
-            ImageIcon originalIcon = new ImageIcon(logoUrl);
-            Image scaledImage = originalIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
-            logoLabel = new JLabel(new ImageIcon(scaledImage));
         } catch (Exception e) {
             // Create a text-based fallback logo
             logoLabel = new JLabel("GOMIS");
@@ -97,7 +114,7 @@ public class SplashScreenFrame extends JFrame {
             logoLabel.setForeground(Color.WHITE);
             logoLabel.setPreferredSize(new Dimension(150, 150));
             logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            System.err.println("Warning: Could not load logo image: " + e.getMessage());
+            logger.warn("Warning: Could not load logo image: " + e.getMessage());
         }
 
         // Logo panel
@@ -167,6 +184,7 @@ public class SplashScreenFrame extends JFrame {
         dotAnimationTimer = new Timer(500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (statusLabel == null) return;
                 StringBuilder dots = new StringBuilder();
                 for (int i = 0; i < 3; i++) {
                     dots.append((i <= dotState) ? "." : " ");
@@ -185,55 +203,85 @@ public class SplashScreenFrame extends JFrame {
                 try {
                     // Step 1: Check database service
                     updateProgress(INIT_STEPS[0][0], Integer.parseInt(INIT_STEPS[0][1]));
-                    Thread.sleep(500); // Simulate work
+                    Thread.sleep(500);
                     
                     // Step 2: Start database service if needed
                     updateProgress(INIT_STEPS[1][0], Integer.parseInt(INIT_STEPS[1][1]));
-                    Thread.sleep(500); // Simulate work
+                    Thread.sleep(500);
                     
                     // Step 3: Initialize database
                     updateProgress(INIT_STEPS[2][0], Integer.parseInt(INIT_STEPS[2][1]));
-                    Main.initDB();
+                    try {
+                        Main.initDB();
+                    } catch (Exception e) {
+                        String errorMsg = e.getMessage();
+                        if (errorMsg != null && (
+                            errorMsg.contains("password") || 
+                            errorMsg.contains("authentication") || 
+                            errorMsg.contains("Access denied") ||
+                            errorMsg.contains("GSS-API"))) {
+                            
+                            throw new Exception("Database authentication failed. Please check your MariaDB root password.", e);
+                        } else if (errorMsg != null && errorMsg.contains("Communications link failure")) {
+                            throw new Exception("Cannot connect to MariaDB. Please ensure MariaDB is running at 'C:\\Program Files\\MariaDB 11.4\\bin\\mariadb.exe'", e);
+                        }
+                        throw e;
+                    }
                     
                     // Step 4: Initialize database schema
                     updateProgress(INIT_STEPS[3][0], Integer.parseInt(INIT_STEPS[3][1]));
-                    Thread.sleep(500); // Simulate work
+                    Thread.sleep(500);
                     
                     // Step 5: Set up UI components
                     updateProgress(INIT_STEPS[4][0], Integer.parseInt(INIT_STEPS[4][1]));
-                    Thread.sleep(500); // Simulate work
+                    Thread.sleep(500);
                     
                     // Step 6: Load application settings
                     updateProgress(INIT_STEPS[5][0], Integer.parseInt(INIT_STEPS[5][1]));
-                    Thread.sleep(500); // Simulate work
+                    Thread.sleep(500);
                     
-                    // Step 7: Prepare main window
+                    // Step 7: Initialize template system
                     updateProgress(INIT_STEPS[6][0], Integer.parseInt(INIT_STEPS[6][1]));
+                    try {
+                        docPrinter.templateManager.initializeTemplateSystem();
+                    } catch (Exception e) {
+                        logger.warn("Template system initialization failed: " + e.getMessage());
+                        // Don't fail the entire startup for template issues
+                    }
+                    Thread.sleep(500);
+                    
+                    // Step 8: Prepare main window
+                    updateProgress(INIT_STEPS[7][0], Integer.parseInt(INIT_STEPS[7][1]));
                     Main.initFrame();
                     
-                    // Step 8: Finalize initialization
-                    updateProgress(INIT_STEPS[7][0], Integer.parseInt(INIT_STEPS[7][1]));
-                    Thread.sleep(500); // Simulate work
+                    // Step 9: Finalize initialization
+                    updateProgress(INIT_STEPS[8][0], Integer.parseInt(INIT_STEPS[8][1]));
+                    Thread.sleep(500);
                     
                     return null;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error during initialization", e);
+                    String errorMessage = "Failed to start application: " + 
+                        (e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
                     
                     // Check if the error is related to database connection
-                    String errorMessage = e.getMessage();
-                    if (errorMessage != null && (
-                        errorMessage.contains("password") || 
+                    if (errorMessage.contains("password") || 
                         errorMessage.contains("authentication") || 
                         errorMessage.contains("Access denied") ||
-                        errorMessage.contains("GSS-API"))) {
+                        errorMessage.contains("GSS-API")) {
                         
                         // Show a more specific error message for password issues
                         errorMessage = "Database authentication failed. Please check your password.";
-                    } else {
-                        errorMessage = "Initialization failed: " + e.getMessage();
                     }
                     
-                    throw new Exception(errorMessage, e);
+                    JOptionPane.showMessageDialog(
+                        SplashScreenFrame.this,
+                        errorMessage,
+                        "Startup Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    System.exit(1);
+                    return null;
                 }
             }
 
@@ -254,16 +302,21 @@ public class SplashScreenFrame extends JFrame {
                     // Stop the dot animation timer
                     if (dotAnimationTimer != null) {
                         dotAnimationTimer.stop();
+                        dotAnimationTimer = null;
                     }
                     
                     // Set progress to 100%
-                    progressBar.setValue(100);
-                    statusLabel.setText("INITIALIZATION COMPLETE");
+                    if (progressBar != null) progressBar.setValue(100);
+                    if (statusLabel != null) statusLabel.setText("INITIALIZATION COMPLETE");
                     
                     // Wait a moment before closing splash screen
                     Timer closeTimer = new Timer(1000, new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
+                            if (dotAnimationTimer != null) {
+                                dotAnimationTimer.stop();
+                                dotAnimationTimer = null;
+                            }
                             dispose(); // Close the splash screen
                             
                             if (Main.gFrame == null) {
@@ -277,7 +330,7 @@ public class SplashScreenFrame extends JFrame {
                     closeTimer.start();
                     
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error during initialization", e);
                     String errorMessage = "Failed to start application: " + 
                         (e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
                     
@@ -315,8 +368,8 @@ public class SplashScreenFrame extends JFrame {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                progressBar.setValue(percentage);
-                statusLabel.setText(status);
+                if (progressBar != null) progressBar.setValue(percentage);
+                if (statusLabel != null) statusLabel.setText(status);
             }
         });
     }

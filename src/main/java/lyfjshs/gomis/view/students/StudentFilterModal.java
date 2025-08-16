@@ -1,14 +1,17 @@
 package lyfjshs.gomis.view.students;
 
 import java.awt.Component;
-import java.sql.Connection;
-import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
 import raven.modal.option.Option;
 
 public class StudentFilterModal {
+    private static final Logger logger = LogManager.getLogger(StudentFilterModal.class);
     private static StudentFilterModal instance;
 
     private StudentFilterModal() {
@@ -22,12 +25,8 @@ public class StudentFilterModal {
         return instance;
     }
 
-    public void showModal(Connection connection, Component parent, StudentMangementGUI studentManagementGUI, 
-                         Map<String, String> activeFilters, int width, int height) {
+    public void showModal(StudentsDataDAO dbManager, Component parent, FilterCriteria filterCriteria, FilterDialogPanel filterPanel, int width, int height) {
         try {
-            // Create the filter panel
-            StudentFilterPanel filterPanel = new StudentFilterPanel(connection, activeFilters);
-
             // Configure modal options
             Option option = ModalDialog.getDefaultOption();
             option.setOpacity(0f)
@@ -51,27 +50,34 @@ public class StudentFilterModal {
                     (controller, action) -> {
                         if (action == SimpleModalBorder.YES_OPTION) {
                             // Apply filters
-                            Map<String, String> filters = filterPanel.getFilters();
-                            studentManagementGUI.setActiveFilters(filters);
-                            filterPanel.updateFilterCount(filters.size());
-                            controller.close();
+                            if (filterPanel.validateFilters()) {
+                                filterPanel.applyFilters();
+                                controller.close();
+                                // Force parent to reload data
+                                if (parent instanceof StudentsListMain) {
+                                    ((StudentsListMain) parent).loadData();
+                                }
+                            }
                         } else if (action == SimpleModalBorder.NO_OPTION) {
                             // Reset filters
-                            studentManagementGUI.setActiveFilters(null);
-                            filterPanel.resetFilters();
-                            filterPanel.updateFilterCount(0);
-                            controller.consume(); // Don't close the dialog
-                        } else if (action == SimpleModalBorder.CANCEL_OPTION) {
+                            filterPanel.clearFiltersAndApply();
+                            controller.close();
+                            // Force parent to reload data
+                            if (parent instanceof StudentsListMain) {
+                                ((StudentsListMain) parent).loadData();
+                            }
+                        } else if (action == SimpleModalBorder.CANCEL_OPTION || action == SimpleModalBorder.CLOSE_OPTION) {
                             // Close button clicked
                             controller.close();
                         } else {
                             // Any other action (like clicking outside) should be consumed
                             controller.consume();
                         }
+                        
                     }), option, "student-filter");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error showing student filter modal", e);
         }
     }
 } 

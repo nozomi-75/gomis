@@ -2,7 +2,6 @@ package lyfjshs.gomis.view.appointment;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.sql.Connection;
@@ -18,10 +17,12 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
@@ -41,15 +42,13 @@ import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 
 public class AppointmentSearchPanel extends JPanel {
+    private static final Logger logger = LogManager.getLogger(AppointmentSearchPanel.class);
     private GTable appointmentTable;
     private Connection connect;
     private DatePicker datePicker;
     private FlatSVGIcon viewIcon = new FlatSVGIcon("icons/view.svg", 0.5f);
     private FlatSVGIcon editIcon = new FlatSVGIcon("icons/edit.svg", 0.5f);
     private FlatSVGIcon deleteIcon = new FlatSVGIcon("icons/delete.svg", 0.5f);
-    
-    // Simplified UI components
-    private JTextField participantFilter;
     private JButton newAppointmentButton;
     private JLabel currentMonthLabel;
     
@@ -74,7 +73,6 @@ public class AppointmentSearchPanel extends JPanel {
         
         // Add components to container
         containerPanel.add(createSearchControlsPanel(), "grow, wrap");
-        containerPanel.add(createParticipantSearchField(), "grow, wrap");
         
         // Create table scroll pane
         JScrollPane scrollPane = new JScrollPane(appointmentTable);
@@ -195,52 +193,6 @@ public class AppointmentSearchPanel extends JPanel {
         return searchControlsPanel;
     }
 
-    private JPanel createParticipantSearchField() {
-        JPanel participantSearchPanel = new JPanel(new MigLayout("insets 0", "[grow]", "[]5[]"));
-        participantSearchPanel.setBackground(Color.WHITE);
-        
-        JLabel label = new JLabel("Search Participant");
-        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        label.setForeground(DARK_COLOR);
-        label.setIcon(new FlatSVGIcon("icons/search.svg", 0.4f));
-        
-        participantFilter = new JTextField();
-        participantFilter.setToolTipText("Search by participant name, ID or contact information");
-        styleTextField(participantFilter);
-        participantFilter.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Type name or ID to search...");
-        
-        // Add listener to filter on typing
-        participantFilter.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) {
-                performSearch();
-            }
-
-            @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) {
-                performSearch();
-            }
-
-            @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) {
-                performSearch();
-            }
-        });
-        
-        participantSearchPanel.add(label, "wrap");
-        participantSearchPanel.add(participantFilter, "growx");
-        
-        return participantSearchPanel;
-    }
-
-    private void styleTextField(JTextField textField) {
-        textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        textField.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(221, 221, 221)),
-            BorderFactory.createEmptyBorder(8, 10, 8, 10)
-        ));
-    }
-
     private void initializeTable() {
         String[] columnNames = {"ID", "Title", "Consultation Type", "Participants", "Status", "Date/Time", "Counselor", "Actions"};
         Class<?>[] columnTypes = {Integer.class, String.class, String.class, Integer.class, String.class, String.class, String.class, Object.class};
@@ -323,9 +275,6 @@ public class AppointmentSearchPanel extends JPanel {
             // Get the selected date from the date picker
             LocalDate selectedDate = datePicker.getSelectedDate();
             
-            final String participantFilterText = participantFilter.getText().trim();
-            final String participant = participantFilterText.isEmpty() ? null : participantFilterText;
-            
             // Check if we have a date selection
             if (selectedDate != null) {
                 // Fetch appointments for the selected date
@@ -338,30 +287,11 @@ public class AppointmentSearchPanel extends JPanel {
                     counselorId    // filter by the current counselor
                 );
 
-                // Filter by participant if specified
-                if (participant != null) {
-                    appointments = appointments.stream()
-                        .filter(appt -> {
-                            if (appt.getParticipants() == null || appt.getParticipants().isEmpty()) {
-                                return false;
-                            }
-                            return appt.getParticipants().stream()
-                                .anyMatch(p -> 
-                                    (p.getParticipantFirstName() + " " + p.getParticipantLastName())
-                                        .toLowerCase()
-                                        .contains(participant.toLowerCase()) ||
-                                    (p.getParticipantId() + "").contains(participant)
-                                );
-                        })
-                        .toList();
-                }
+                
                 
                 // Update the table with the filtered appointments
                 updateAppointmentTableWithCounselor(appointments);
-            } else {
-                // If no date selected, load current month appointments filtered by participant
-                loadCurrentMonthAppointments(participant);
-            }
+            } 
         } catch (Exception e) {
             // Handle any errors that occur during the search
             JOptionPane.showMessageDialog(this, 
@@ -418,7 +348,7 @@ public class AppointmentSearchPanel extends JPanel {
             updateAppointmentTableWithCounselor(appointments);
             
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error loading appointments: " + e.getMessage(), e);
             JOptionPane.showMessageDialog(this, 
                 "Error loading appointments: " + e.getMessage(), 
                 "Error", 
@@ -472,7 +402,7 @@ public class AppointmentSearchPanel extends JPanel {
                     null // Actions column handled by TableActionManager
                 });
             } catch (Exception e) {
-                System.err.println("Error processing appointment ID " + appointment.getAppointmentId() + ": " + e.getMessage());
+                logger.error("Error processing appointment ID " + appointment.getAppointmentId() + ": " + e.getMessage(), e);
             }
         }
     }
@@ -611,7 +541,7 @@ public class AppointmentSearchPanel extends JPanel {
                 JOptionPane.INFORMATION_MESSAGE);
                 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error viewing appointment: " + e.getMessage(), e);
             JOptionPane.showMessageDialog(this, 
                 "Error viewing appointment: " + e.getMessage(), 
                 "Error", 

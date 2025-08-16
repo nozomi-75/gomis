@@ -1,5 +1,7 @@
 package lyfjshs.gomis.components.FormManager;
 
+import java.awt.Dimension;
+
 import javax.swing.JPanel;
 import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
@@ -12,6 +14,8 @@ import javax.swing.UIManager;
  */
 public class Form extends JPanel {
 
+    private String title = ""; // Default title
+
     /**
      * Stores the look-and-feel theme applied when the form was created.
      * It is used to detect theme changes and update the UI accordingly.
@@ -22,6 +26,15 @@ public class Form extends JPanel {
      * Constructs a new {@code Form} instance and initializes its components.
      */
     public Form() {
+        init();
+    }
+
+    /**
+     * Constructs a new {@code Form} instance with a specified title and initializes its components.
+     * @param title The title of the form.
+     */
+    public Form(String title) {
+        this.title = title;
         init();
     }
 
@@ -67,6 +80,23 @@ public class Form extends JPanel {
     }
 
     /**
+     * Returns the main JPanel of this form. In this base class, it's simply 'this'.
+     * Subclasses might return a specific panel if their structure is more complex.
+     * @return The main JPanel of the form.
+     */
+    public JPanel getMainPanel() {
+        return this;
+    }
+
+    /**
+     * Returns the title of the form.
+     * @return The title string.
+     */
+    public String getTitle() {
+        return title;
+    }
+
+    /**
      * Disposes of any resources used by this form.
      * This method should be overridden by subclasses that need to clean up resources.
      */
@@ -74,4 +104,14 @@ public class Form extends JPanel {
         // Default implementation does nothing
     }
 
+    /**
+     * Called when the parent frame is resized. Default: refresh the form UI.
+     */
+    public void onParentFrameResized(int width, int height) {
+        this.setSize(width, height);
+        this.setPreferredSize(new Dimension(width, height));
+        this.revalidate();
+        this.repaint();
+        this.formRefresh();
+    }
 }

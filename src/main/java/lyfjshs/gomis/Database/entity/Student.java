@@ -29,6 +29,10 @@ public class Student {
     private Guardian guardian;
     private SchoolForm schoolForm; 
 
+    public Student() {
+        // No-arg constructor for ImportSF and DAO usage
+    }
+
     public Student(int studentUid, int parentId, int guardianId, int addressId, int contactId, 
                    String schoolSection, String studentLrn, String studentLastname, 
                    String studentFirstname, String studentMiddlename, String studentSex, 

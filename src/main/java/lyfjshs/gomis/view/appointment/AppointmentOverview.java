@@ -21,6 +21,9 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.formdev.flatlaf.FlatLaf;
 
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
@@ -29,8 +32,10 @@ import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
+import raven.modal.option.Option;
 
 public class AppointmentOverview extends JPanel {
+    private static final Logger logger = LogManager.getLogger(AppointmentOverview.class);
     private final DatePicker datePicker;
     private final JPanel appointmentsPanel;
     private final List<Appointment> appointments;
@@ -198,8 +203,8 @@ public class AppointmentOverview extends JPanel {
             detailsPanel.loadAppointmentDetails(appt);
 
             // Configure modal options to match the desired style
-            ModalDialog.getDefaultOption()
-                    .setOpacity(0f) // Transparent background
+            Option detailsOption = new Option();
+            detailsOption.setOpacity(0f) // Transparent background
                     .setAnimationOnClose(false) // No close animation
                     .getBorderOption()
                     .setBorderWidth(0.5f) // Thin border
@@ -216,13 +221,14 @@ public class AppointmentOverview extends JPanel {
                                     controller.close();
                                 }
                             }),
+                    detailsOption, // Pass the specific option for this modal
                     "appointment_details_" + appt.getAppointmentId());
 
             // Set a larger size to accommodate the detailed layout
-            ModalDialog.getDefaultOption().getLayoutOption().setSize(700, this.getHeight() - 50);
+            detailsOption.getLayoutOption().setSize(700, this.getHeight() - 50);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error opening appointment details: " + e.getMessage(), e);
             JOptionPane.showMessageDialog(this, "Error opening appointment details: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
@@ -238,15 +244,20 @@ private void loadAppointments(LocalDate date) {
             // Filter out completed, missed, or cancelled appointments
             if (loadedAppointments != null) {
                 loadedAppointments = loadedAppointments.stream()
-                    .filter(appt -> "Scheduled".equals(appt.getAppointmentStatus()) || 
-                                     "In Progress".equals(appt.getAppointmentStatus()) ||
-                                     "Rescheduled".equals(appt.getAppointmentStatus()))  // Add Rescheduled status
+                    .filter(appt -> {
+                        String status = appt.getAppointmentStatus() != null ? appt.getAppointmentStatus().trim() : "";
+                        return status.equalsIgnoreCase("Scheduled") ||
+                               status.equalsIgnoreCase("In Progress") ||
+                               status.equalsIgnoreCase("Rescheduled") ||
+                               status.equalsIgnoreCase("Active") ||
+                               status.equalsIgnoreCase("Pending");
+                    })
                     .toList();
             }
         } catch (SQLException e) {
+            logger.error("Error fetching appointments: " + e.getMessage(), e);
             JOptionPane.showMessageDialog(this, "Error fetching appointments: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
         appointments.clear();
         if (loadedAppointments != null) {
@@ -278,5 +289,7 @@ private void loadAppointments(LocalDate date) {
     });
 }
 
-
+    public void refreshAppointments() {
+        loadAppointments(datePicker.getSelectedDate());
     }
+}

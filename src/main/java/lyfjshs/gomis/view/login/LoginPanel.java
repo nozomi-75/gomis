@@ -14,6 +14,9 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.formdev.flatlaf.FlatClientProperties;
 
 import lyfjshs.gomis.Database.DAO.LoginController;
@@ -26,12 +29,11 @@ public class LoginPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private JPasswordField psTField;
 	private JTextField unTField;
-	private Connection conn;
 	private JButton loginBtn;
 	private LoginController loginController;
+	private static final Logger logger = LogManager.getLogger(LoginPanel.class);
 
 	public LoginPanel(Connection connDB, LoginView parent) {
-		this.conn = connDB;
 		this.loginController = new LoginController(connDB);
 		
 		this.setLayout(new MigLayout("wrap,fillx,insets 35 45 30 45", "[pref!,grow,fill]", "[100px][][][][][][]"));
@@ -112,11 +114,8 @@ public class LoginPanel extends JPanel {
 			loginController.login(unTField, psTField, FormManager.getFrame());
 			resetFields();
 		} catch (Exception ex) {
-			JOptionPane.showMessageDialog(this,
-				"Login error: " + ex.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
-			ex.printStackTrace();
+			logger.error("Error during login process", ex);
+			JOptionPane.showMessageDialog(this, "Login failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

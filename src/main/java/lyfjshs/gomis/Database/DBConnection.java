@@ -33,7 +33,7 @@ import net.miginfocom.swing.MigLayout;
  */
 public class DBConnection {
 	// Database configuration constants
-	private static final String URL = "jdbc:mariadb://localhost:3306/gomisDB?allowPublicKeyRetrieval=true&useSSL=false&disableMariaDbDriver=false";
+	private static final String URL = "jdbc:mariadb://localhost:3306/gomisdb";
 	private static final String USER = "root";
 	private static final String DEFAULT_PASSWORD = "YourRootPassword123";
 
@@ -172,33 +172,70 @@ public class DBConnection {
 	}
 
 	/**
-	 * Gets an available connection from the pool
+	 * Gets an available connection from the pool with improved error handling
 	 */
 	public static synchronized Connection getConnection() throws SQLException {
 		getInstance();
 
-		// Find first available connection
-		for (int i = 0; i < MAX_POOL_SIZE; i++) {
-			if (connectionPool[i] != null && !isConnectionUsed[i]) {
-				// Check if connection is valid
-				if (!connectionPool[i].isValid(1)) {
-					connectionPool[i] = createNewConnection();
+		// Find first available connection with timeout
+		long startTime = System.currentTimeMillis();
+		long timeout = 30000; // 30 seconds timeout
+		
+		while (System.currentTimeMillis() - startTime < timeout) {
+			for (int i = 0; i < MAX_POOL_SIZE; i++) {
+				if (connectionPool[i] != null && !isConnectionUsed[i]) {
+					// Check if connection is valid with timeout
+					try {
+						if (!connectionPool[i].isValid(5)) {
+							// Connection is invalid, create a new one
+							try {
+								connectionPool[i].close();
+							} catch (SQLException e) {
+								System.err.println("Error closing invalid connection: " + e.getMessage());
+							}
+							connectionPool[i] = createNewConnection();
+						}
+						isConnectionUsed[i] = true;
+						return connectionPool[i];
+					} catch (SQLException e) {
+						System.err.println("Error validating connection: " + e.getMessage());
+						// Mark connection as used to prevent infinite loop
+						isConnectionUsed[i] = true;
+						// Create new connection
+						try {
+							connectionPool[i] = createNewConnection();
+							return connectionPool[i];
+						} catch (SQLException ex) {
+							System.err.println("Error creating new connection: " + ex.getMessage());
+							isConnectionUsed[i] = false;
+						}
+					}
 				}
-				isConnectionUsed[i] = true;
-				return connectionPool[i];
+			}
+			
+			// Create new connection if pool not full
+			for (int i = 0; i < MAX_POOL_SIZE; i++) {
+				if (connectionPool[i] == null) {
+					try {
+						connectionPool[i] = createNewConnection();
+						isConnectionUsed[i] = true;
+						return connectionPool[i];
+					} catch (SQLException e) {
+						System.err.println("Error creating new connection in pool: " + e.getMessage());
+					}
+				}
+			}
+			
+			// Wait a bit before retrying
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new SQLException("Connection wait interrupted", e);
 			}
 		}
 
-		// Create new connection if pool not full
-		for (int i = 0; i < MAX_POOL_SIZE; i++) {
-			if (connectionPool[i] == null) {
-				connectionPool[i] = createNewConnection();
-				isConnectionUsed[i] = true;
-				return connectionPool[i];
-			}
-		}
-
-		throw new SQLException("Connection pool is full");
+		throw new SQLException("Connection pool timeout - no available connections after 30 seconds");
 	}
 
 	/**
@@ -214,46 +251,77 @@ public class DBConnection {
 	}
 
 	/**
-	 * Creates a new database connection
+	 * Creates a new database connection with improved error handling and retry logic
 	 */
 	private static Connection createNewConnection() throws SQLException {
-		try {
-			Properties props = new Properties();
-			props.setProperty("user", USER);
-			props.setProperty("password", currentPassword);
-			props.setProperty("allowPublicKeyRetrieval", "true");
-			props.setProperty("useSSL", "false");
-			props.setProperty("disableMariaDbDriver", "false");
-			
-			return DriverManager.getConnection(URL, props);
-		} catch (SQLException e) {
-			// Check if it's an authentication error
-			if (e.getMessage().contains("Access denied") || 
-				e.getMessage().contains("password") ||
-				e.getMessage().contains("authentication")) {
+		int maxRetries = 3;
+		int retryCount = 0;
+		SQLException lastException = null;
+		
+		while (retryCount < maxRetries) {
+			try {
+				Properties props = new Properties();
+				props.setProperty("user", USER);
+				props.setProperty("password", currentPassword);
+				props.setProperty("allowPublicKeyRetrieval", "true");
+				props.setProperty("useSSL", "false");
+				props.setProperty("disableMariaDbDriver", "false");
+				props.setProperty("connectTimeout", "10000"); // 10 seconds connection timeout
+				props.setProperty("socketTimeout", "30000"); // 30 seconds socket timeout
+				props.setProperty("autoReconnect", "true");
+				props.setProperty("failOverReadOnly", "false");
+				
+				Connection conn = DriverManager.getConnection(URL, props);
+				
+				// Test the connection
+				try (Statement stmt = conn.createStatement()) {
+					stmt.setQueryTimeout(5);
+					stmt.execute("SELECT 1");
+				}
+				
+				return conn;
+				
+			} catch (SQLException e) {
+				lastException = e;
+				retryCount++;
+				
+				// Check if it's an authentication error
+				if (e.getMessage().contains("Access denied") || 
+					e.getMessage().contains("password") ||
+					e.getMessage().contains("authentication")) {
 
-				// Show a specific message for password issues
-				showErrorDialog("Database Password Error",
-						"The default database password is not working. Please enter your database password.");
+					// Show a specific message for password issues
+					showErrorDialog("Database Password Error",
+							"The database password is not working. Please enter your database password.");
 
-				// Ask for new password
-				String newPassword = promptForPassword();
-				if (newPassword != null && !newPassword.isEmpty()) {
-					// Update password
-					currentPassword = newPassword;
-					// Try connecting again with the new password
-					try {
-						return DriverManager.getConnection(URL, USER, currentPassword);
-					} catch (SQLException ex) {
-						// If still failing, throw the original error
-						throw e;
+					// Ask for new password
+					String newPassword = promptForPassword();
+					if (newPassword != null && !newPassword.isEmpty()) {
+						// Update password
+						currentPassword = newPassword;
+						savePassword();
+						// Reset retry count since we have a new password
+						retryCount = 0;
+						continue;
+					} else {
+						throw new SQLException("Database connection failed: Invalid password", e);
 					}
-				} else {
-					throw new SQLException("Database connection failed: Invalid password", e);
+				}
+				
+				// For other errors, wait before retrying
+				if (retryCount < maxRetries) {
+					try {
+						Thread.sleep(1000 * retryCount); // Exponential backoff
+					} catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+						throw new SQLException("Connection retry interrupted", ie);
+					}
 				}
 			}
-			throw e;
 		}
+		
+		// If we get here, all retries failed
+		throw new SQLException("Failed to create database connection after " + maxRetries + " attempts", lastException);
 	}
 
 	/**
@@ -298,61 +366,128 @@ public class DBConnection {
 	}
 
 	/**
-	 * Attempts to start the database service
+	 * Attempts to start the database service with cross-platform support
 	 */
 	private static void startDatabaseService() {
+		boolean serviceStarted = false;
+		
+		// Try Windows services first
 		for (String service : DB_SERVICES) {
 			try {
-				System.out.println("Attempting to start " + service + " service...");
-				Process process = Runtime.getRuntime().exec("net start " + service);
+				System.out.println("Attempting to start " + service + " service on Windows...");
+				ProcessBuilder pb = new ProcessBuilder("net", "start", service);
+				pb.redirectErrorStream(true);
+				Process process = pb.start();
+				
+				// Add timeout to prevent hanging
+				boolean completed = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);
+				if (!completed) {
+					process.destroyForcibly();
+					System.err.println("Timeout starting " + service + " service");
+					continue;
+				}
+				
 				BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 				String line;
-				boolean started = false;
-
 				while ((line = reader.readLine()) != null) {
 					System.out.println(line);
-					if (line.contains("started successfully")) {
-						started = true;
+					if (line.toLowerCase().contains("service was started successfully") ||
+						line.toLowerCase().contains("service is already running")) {
+						serviceStarted = true;
+						System.out.println(service + " service started successfully");
 						break;
 					}
 				}
-
-				if (started) {
-					System.out.println(service + " service started successfully");
-					return;
-				}
+				
+				if (serviceStarted) break;
+				
 			} catch (IOException e) {
-				System.err.println("Error starting " + service + " service: " + e.getMessage());
+				System.err.println("Error starting " + service + " service on Windows: " + e.getMessage());
+			} catch (InterruptedException e) {
+				System.err.println("Interrupted while starting " + service + " service: " + e.getMessage());
+				Thread.currentThread().interrupt();
 			}
 		}
-		showErrorDialog("Database Service Error",
-				"Failed to start any database service. Please install MySQL or MariaDB.");
+		
+		// Try Linux/Mac services if Windows failed
+		if (!serviceStarted) {
+			try {
+				System.out.println("Attempting to start MariaDB service on Linux/Mac...");
+				ProcessBuilder pb = new ProcessBuilder("sudo", "systemctl", "start", "mariadb");
+				pb.redirectErrorStream(true);
+				Process process = pb.start();
+				
+				boolean completed = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);
+				if (completed && process.exitValue() == 0) {
+					serviceStarted = true;
+					System.out.println("MariaDB service started successfully on Linux/Mac");
+				}
+			} catch (IOException | InterruptedException e) {
+				System.err.println("Error starting MariaDB service on Linux/Mac: " + e.getMessage());
+			}
+		}
+		
+		// Try macOS specific service
+		if (!serviceStarted) {
+			try {
+				System.out.println("Attempting to start MariaDB service on macOS...");
+				ProcessBuilder pb = new ProcessBuilder("brew", "services", "start", "mariadb");
+				pb.redirectErrorStream(true);
+				Process process = pb.start();
+				
+				boolean completed = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);
+				if (completed && process.exitValue() == 0) {
+					serviceStarted = true;
+					System.out.println("MariaDB service started successfully on macOS");
+				}
+			} catch (IOException | InterruptedException e) {
+				System.err.println("Error starting MariaDB service on macOS: " + e.getMessage());
+			}
+		}
+		
+		if (!serviceStarted) {
+			showErrorDialog("Database Service Error",
+					"Failed to start database service. Please ensure MariaDB/MySQL is installed and running.\n\n" +
+					"Windows: Install MariaDB from https://mariadb.org/download/\n" +
+					"Linux: sudo apt-get install mariadb-server\n" +
+					"macOS: brew install mariadb");
+		}
 	}
 
 	/**
-	 * Checks if the database exists and creates it if not
+	 * Checks if the database exists and creates it if not with improved error handling
 	 */
 	private static void checkAndCreateDatabase(Connection conn) throws SQLException {
 		try (Statement stmt = conn.createStatement()) {
+			// Set timeout for operations
+			stmt.setQueryTimeout(30);
+			
 			// Check if database exists
-			stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS gomisDB");
-			System.out.println("Database 'gomisDB' checked/created successfully.");
+			try {
+				stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS gomisDB");
+				System.out.println("Database 'gomisDB' checked/created successfully.");
+			} catch (SQLException e) {
+				System.err.println("Error creating database: " + e.getMessage());
+				throw new SQLException("Failed to create database: " + e.getMessage(), e);
+			}
 
 			// Switch to the database
-			stmt.executeUpdate("USE gomisDB");
+			try {
+				stmt.executeUpdate("USE gomisDB");
+			} catch (SQLException e) {
+				System.err.println("Error switching to database: " + e.getMessage());
+				throw new SQLException("Failed to switch to database: " + e.getMessage(), e);
+			}
 
 			// Check if tables already exist by querying a system table
 			boolean tablesExist = false;
 			try {
-				// Try to query a table that should exist in the schema
-				// This assumes there's at least one table in your schema
-				// You might need to adjust this query based on your actual schema
 				stmt.executeQuery("SELECT 1 FROM information_schema.tables WHERE table_schema = 'gomisDB' LIMIT 1");
 				java.sql.ResultSet rs = stmt.getResultSet();
 				tablesExist = rs.next();
 				rs.close();
 			} catch (SQLException e) {
-				// If there's an error, assume tables don't exist
+				System.err.println("Error checking if tables exist: " + e.getMessage());
 				tablesExist = false;
 			}
 
@@ -363,6 +498,9 @@ public class DBConnection {
 			} else {
 				System.out.println("Database tables already exist. Skipping schema creation.");
 			}
+		} catch (SQLException e) {
+			System.err.println("Critical error in checkAndCreateDatabase: " + e.getMessage());
+			throw e;
 		}
 	}
 

@@ -8,91 +8,106 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Student;
 
 public class ParticipantsDAO {
+    private static final Logger logger = LogManager.getLogger(ParticipantsDAO.class);
     private final Connection connection;
 
     public ParticipantsDAO(Connection connection) {
         this.connection = connection;
     }
 
-    // Create a new participant or get existing one
+    // Create participant
     public int createParticipant(Participants participant) throws SQLException {
-        // First check if participant already exists
-        Participants existingParticipant = findParticipantByNameAndType(
-            participant.getParticipantFirstName(), 
-            participant.getParticipantLastName(), 
-            participant.getParticipantType()
-        );
-        
-        if (existingParticipant != null) {
-            System.out.println("✔ Using existing participant with ID: " + existingParticipant.getParticipantId());
-            return existingParticipant.getParticipantId();
-        }
-
-        String sql = "INSERT INTO PARTICIPANTS (STUDENT_UID, PARTICIPANT_TYPE, PARTICIPANT_LASTNAME, " +
-                "PARTICIPANT_FIRSTNAME, PARTICIPANT_SEX, CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setObject(1, participant.getStudentUid());
-            stmt.setString(2, participant.getParticipantType());
-            stmt.setString(3, participant.getParticipantLastName());
-            stmt.setString(4, participant.getParticipantFirstName());
-            stmt.setString(5, participant.getSex());
-            stmt.setString(6, participant.getContactNumber());
-
-            int affectedRows = stmt.executeUpdate();
-
-            if (affectedRows > 0) {
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        participant.setParticipantId(generatedKeys.getInt(1));
-                        System.out.println("✔ New participant created with ID: " + participant.getParticipantId());
-                    }
-                }
-            } else {
-                System.err.println("❌ Creating participant failed, no rows affected.");
+        // Only check for existing participants if studentUid is not null
+        if (participant.getStudentUid() != null) {
+            List<Participants> existingParticipants = getParticipantByStudentUid(participant.getStudentUid());
+            if (!existingParticipants.isEmpty()) {
+                Participants existingParticipant = existingParticipants.get(0);
+                logger.info("Using existing participant with ID: {}", existingParticipant.getParticipantId());
+                return existingParticipant.getParticipantId();
+            }
+        } else {
+            // For non-students, check by name and type
+            Participants existing = findParticipantByNameAndType(
+                participant.getParticipantFirstName(),
+                participant.getParticipantLastName(),
+                participant.getParticipantType()
+            );
+            if (existing != null) {
+                logger.info("Using existing participant with ID: {}", existing.getParticipantId());
+                return existing.getParticipantId();
             }
         }
-        return participant.getParticipantId();
 
+        String sql = "INSERT INTO PARTICIPANTS (STUDENT_UID, PARTICIPANT_FIRSTNAME, PARTICIPANT_LASTNAME, " +
+                    "PARTICIPANT_TYPE, PARTICIPANT_SEX, CONTACT_NUMBER, IS_REPORTER) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            if (participant.getStudentUid() != null) {
+                stmt.setObject(1, participant.getStudentUid());
+            } else {
+                stmt.setNull(1, java.sql.Types.INTEGER);
+            }
+            stmt.setString(2, participant.getParticipantFirstName());
+            stmt.setString(3, participant.getParticipantLastName());
+            stmt.setString(4, participant.getParticipantType());
+            stmt.setString(5, participant.getSex());
+            stmt.setString(6, participant.getContactNumber());
+            stmt.setBoolean(7, participant.isReporter());
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        participant.setParticipantId(rs.getInt(1));
+                        logger.info("New participant created with ID: {}", participant.getParticipantId());
+                        return participant.getParticipantId();
+                    }
+                }
+            }
+            logger.error("Creating participant failed, no rows affected.");
+            return -1;
+        }
     }
 
-    // Retrieve a participant by ID
-    public Participants getParticipantById(int participantId) {
+    // Get participant by ID
+    public Participants getParticipantById(int participantId) throws SQLException {
         String sql = "SELECT * FROM PARTICIPANTS WHERE PARTICIPANT_ID = ?";
-
+        
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, participantId);
+            
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToParticipant(rs);
-                } else {
-                    System.err.println("❌ No participant found with ID: " + participantId);
                 }
             }
-        } catch (SQLException e) {
-            System.err.println("❌ SQL Error in getParticipantById: " + e.getMessage());
-            e.printStackTrace();
         }
+        logger.warn("No participant found with ID: {}", participantId);
         return null;
     }
 
     // Update an existing participant
     public void updateParticipant(Participants participant) throws SQLException {
         String sql = "UPDATE PARTICIPANTS SET STUDENT_UID = ?, PARTICIPANT_TYPE = ?, PARTICIPANT_LASTNAME = ?, " +
-                "PARTICIPANT_FIRSTNAME = ?, PARTICIPANT_SEX = ?, CONTACT_NUMBER = ? WHERE PARTICIPANT_ID = ?";
+                "PARTICIPANT_FIRSTNAME = ?, PARTICIPANT_SEX = ?, CONTACT_NUMBER = ?, IS_REPORTER = ? WHERE PARTICIPANT_ID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, participant.getStudentUid());
+            stmt.setObject(1, participant.getStudentUid());
             stmt.setString(2, participant.getParticipantType());
             stmt.setString(3, participant.getParticipantLastName());
             stmt.setString(4, participant.getParticipantFirstName());
             stmt.setString(5, participant.getSex());
             stmt.setString(6, participant.getContactNumber());
-            stmt.setInt(7, participant.getParticipantId());
+            stmt.setBoolean(7, participant.isReporter());
+            stmt.setInt(8, participant.getParticipantId());
             stmt.executeUpdate();
         }
     }
@@ -131,6 +146,7 @@ public class ParticipantsDAO {
         participant.setParticipantFirstName(rs.getString("PARTICIPANT_FIRSTNAME"));
         participant.setSex(rs.getString("PARTICIPANT_SEX"));
         participant.setContactNumber(rs.getString("CONTACT_NUMBER"));
+        participant.setReporter(rs.getBoolean("IS_REPORTER"));
         return participant;
     }
 
@@ -155,13 +171,14 @@ public class ParticipantsDAO {
             
             while (rs.next()) {
                 Participants participant = new Participants();
-                participant.setParticipantId(rs.getInt("participant_id"));
-                participant.setStudentUid(rs.getInt("student_uid"));
-                participant.setParticipantType(rs.getString("participant_type"));
-                participant.setParticipantFirstName(rs.getString("participant_firstname"));
-                participant.setParticipantLastName(rs.getString("participant_lastname"));
-                participant.setSex(rs.getString("participant_sex"));
-                participant.setContactNumber(rs.getString("contact_number"));
+                participant.setParticipantId(rs.getInt("PARTICIPANT_ID"));
+                participant.setStudentUid(rs.getInt("STUDENT_UID"));
+                participant.setParticipantType(rs.getString("PARTICIPANT_TYPE"));
+                participant.setParticipantFirstName(rs.getString("PARTICIPANT_FIRSTNAME"));
+                participant.setParticipantLastName(rs.getString("PARTICIPANT_LASTNAME"));
+                participant.setSex(rs.getString("PARTICIPANT_SEX"));
+                participant.setContactNumber(rs.getString("CONTACT_NUMBER"));
+                participant.setReporter(rs.getBoolean("IS_REPORTER"));
                 participants.add(participant);
             }
         }
@@ -187,6 +204,7 @@ public class ParticipantsDAO {
                         rs.getString("CONTACT_NUMBER")
                     );
                     participant.setParticipantId(rs.getInt("PARTICIPANT_ID"));
+                    participant.setReporter(rs.getBoolean("IS_REPORTER"));
                     participants.add(participant);
                 }
             }
@@ -207,38 +225,6 @@ public class ParticipantsDAO {
             }
         }
         return null;
-    }
-    
-    /**
-     * Adds a new participant to the database
-     * 
-     * @param participant The participant to add
-     * @return The ID of the new participant
-     * @throws SQLException If there is a database error
-     */
-    public int addParticipant(Participants participant) throws SQLException {
-        String sql = "INSERT INTO PARTICIPANTS (STUDENT_UID, PARTICIPANT_TYPE, PARTICIPANT_LASTNAME, " +
-                "PARTICIPANT_FIRSTNAME, PARTICIPANT_SEX, CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setObject(1, participant.getStudentUid());
-            stmt.setString(2, participant.getParticipantType());
-            stmt.setString(3, participant.getParticipantLastName());
-            stmt.setString(4, participant.getParticipantFirstName());
-            stmt.setString(5, participant.getSex());
-            stmt.setString(6, participant.getContactNumber());
-
-            int affectedRows = stmt.executeUpdate();
-
-            if (affectedRows > 0) {
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        return generatedKeys.getInt(1);
-                    }
-                }
-            }
-        }
-        return 0;
     }
     
     /**
@@ -280,15 +266,72 @@ public class ParticipantsDAO {
 
     /**
      * Removes all participants from a session
-     * 
-     * @param sessionId The ID of the session to remove participants from
+     * @param sessionId The ID of the session
      * @throws SQLException If there is a database error
      */
     public void removeAllParticipantsFromSession(int sessionId) throws SQLException {
         String sql = "DELETE FROM SESSIONS_PARTICIPANTS WHERE SESSION_ID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, sessionId);
-            stmt.executeUpdate();
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, sessionId);
+            pstmt.executeUpdate();
         }
+    }
+
+    /**
+     * Counts how many sessions a participant is associated with.
+     * @param participantId The ID of the participant.
+     * @return The count of sessions.
+     * @throws SQLException If a database error occurs.
+     */
+    public int countSessionAssociations(int participantId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM SESSIONS_PARTICIPANTS WHERE PARTICIPANT_ID = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, participantId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Counts how many appointments a participant is associated with.
+     * @param participantId The ID of the participant.
+     * @return The count of appointments.
+     * @throws SQLException If a database error occurs.
+     */
+    public int countAppointmentAssociations(int participantId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM APPOINTMENT_PARTICIPANTS WHERE PARTICIPANT_ID = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, participantId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Checks if a participant is associated with any session.
+     * @param participantId The ID of the participant.
+     * @return true if associated with any session, false otherwise.
+     * @throws SQLException If a database error occurs.
+     */
+    public boolean isAssociatedWithAnySession(int participantId) throws SQLException {
+        return countSessionAssociations(participantId) > 0;
+    }
+
+    /**
+     * Checks if a participant is associated with any appointment.
+     * @param participantId The ID of the participant.
+     * @return true if associated with any appointment, false otherwise.
+     * @throws SQLException If a database error occurs.
+     */
+    public boolean isAssociatedWithAnyAppointment(int participantId) throws SQLException {
+        return countAppointmentAssociations(participantId) > 0;
     }
 }

@@ -4,9 +4,9 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public class Sessions {
-    private int sessionId;
+    private Integer sessionId;
     private Integer appointmentId;
-    private int guidanceCounselorId;
+    private Integer guidanceCounselorId;
     private Integer violationId; // Use Integer to handle potential null values
     private String appointmentType;
     private String consultationType;
@@ -18,9 +18,15 @@ public class Sessions {
     private Timestamp appointmentDateTime; // To store related appointment date time
     private List<Participants> participants; // ✅ Store multiple participants
     private String sessionSummary; // New field
+    private String violationType;
+    private Integer categoryId;
+
+    // Default constructor
+    public Sessions() {
+    }
 
     // Full Constructor
-    public Sessions(int sessionId, Integer appointmentId, int guidanceCounselorId, Integer violationId,
+    public Sessions(Integer sessionId, Integer appointmentId, Integer guidanceCounselorId, Integer violationId,
                     String appointmentType, String consultationType, Timestamp sessionDateTime, 
                     String sessionNotes, String sessionSummary,
                      String sessionStatus,
@@ -39,11 +45,11 @@ public class Sessions {
    }
 
     // Getters and Setters
-    public int getSessionId() {
+    public Integer getSessionId() {
         return sessionId;
     }
 
-    public void setSessionId(int sessionId) {
+    public void setSessionId(Integer sessionId) {
         this.sessionId = sessionId;
     }
 
@@ -55,11 +61,11 @@ public class Sessions {
         this.appointmentId = appointmentId;
     }
 
-    public int getGuidanceCounselorId() {
+    public Integer getGuidanceCounselorId() {
         return guidanceCounselorId;
     }
 
-    public void setGuidanceCounselorId(int guidanceCounselorId) {
+    public void setGuidanceCounselorId(Integer guidanceCounselorId) {
         this.guidanceCounselorId = guidanceCounselorId;
     }
 
@@ -149,6 +155,22 @@ public class Sessions {
 
     public void setSessionSummary(String sessionSummary) {
         this.sessionSummary = sessionSummary;
+    }
+
+    public String getViolationType() {
+        return violationType;
+    }
+
+    public void setViolationType(String violationType) {
+        this.violationType = violationType;
+    }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 
     @Override

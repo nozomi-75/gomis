@@ -42,7 +42,6 @@ public class SFExcelHighlighter extends JDialog {
     private File selectedFile;
     private int highlightRow = -1;
     private int highlightCol = -1;
-    private Connection connection;
 
     @FunctionalInterface
     public interface CellSelectedListener {
@@ -58,7 +57,6 @@ public class SFExcelHighlighter extends JDialog {
     // Original constructor for direct Excel file import
     public SFExcelHighlighter(JFrame parent, Connection connection) {
         super(parent, "SF Excel Viewer with Cell Highlight", true);
-        this.connection = connection;
         FlatLightLaf.setup();
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setSize(900, 600);
@@ -97,7 +95,6 @@ public class SFExcelHighlighter extends JDialog {
     // New constructor that accepts table data directly from ImportSF
     public SFExcelHighlighter(JFrame parent, Connection connection, JTable sourceTable) {
         super(parent, "SF Excel Viewer with Cell Search", true);
-        this.connection = connection;
         FlatLightLaf.setup();
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setSize(900, 600);

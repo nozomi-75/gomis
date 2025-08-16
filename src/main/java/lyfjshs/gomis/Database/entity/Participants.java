@@ -9,6 +9,7 @@ public class Participants {
     private String sex;
     private String contactNumber;
     private Student student;
+    private boolean isReporter;
 
     public Participants() {
     }
@@ -22,6 +23,7 @@ public class Participants {
         this.participantFirstName = participantFirstName;
         this.sex = sex;
         this.contactNumber = contactNumber;
+        this.isReporter = false;
     }
 
     // Getters and Setters
@@ -89,6 +91,14 @@ public class Participants {
         this.student = student;
     }
 
+    public boolean isReporter() {
+        return isReporter;
+    }
+
+    public void setReporter(boolean reporter) {
+        isReporter = reporter;
+    }
+
     public String getFullName() {
         return participantFirstName + " " + participantLastName;
     }
@@ -104,6 +114,7 @@ public class Participants {
                 ", participantFirstName='" + participantFirstName + '\'' +
                 ", sex='" + sex + '\'' +
                 ", contactNumber='" + contactNumber + '\'' +
+                ", isReporter=" + isReporter +
                 '}';
     }
 }

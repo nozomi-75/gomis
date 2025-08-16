@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.sql.Connection;
@@ -37,6 +39,9 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import lyfjshs.gomis.Main;
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.AddressDAO;
@@ -61,7 +66,13 @@ import raven.modal.toast.option.ToastDirection;
 import raven.modal.toast.option.ToastLocation;
 import raven.modal.toast.option.ToastOption;
 
+/**
+ * ImportSF: All methods in this class are used by the UI or internal logic.
+ * Any warnings about unused methods can be safely ignored, as they are invoked
+ * via event listeners, SwingWorkers, or UI actions.
+ */
 public class ImportSF extends Form {
+    private static final Logger logger = LogManager.getLogger(ImportSF.class);
     private DefaultTableModel model;
     private JTable table;
     private JTextField schoolNameField, semesterField, schoolIDField, schoolYearField;
@@ -94,6 +105,13 @@ public class ImportSF extends Form {
         initializePanel();
         initializeDAOs();
         setupKeyBindings();
+              // Add resize listener to preserve and restore state
+              this.addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    refreshStateOnResize();
+                }
+            });
     }
 
     private void initializePanel() {
@@ -453,6 +471,8 @@ public class ImportSF extends Form {
         
         if (choice == JOptionPane.YES_OPTION) {
             proceedWithSave();
+        } else {
+            showInfoMessage("Save operation cancelled by user.");
         }
     }
 
@@ -871,5 +891,28 @@ public class ImportSF extends Form {
                 }
             }
         });
+    }
+
+    private void refreshStateOnResize() {
+        // FIRST. Extract current form data
+      
+
+        // 3. Revalidate and repaint to update layout
+        this.removeAll();
+        //ADD AGAIN ALL COMPONENTS
+        initializePanel();
+        initializeDAOs();
+
+        this.revalidate();
+        this.repaint();
+
+        // LAST. Re-apply data to all panels
+        
+    }
+
+    @Override
+    public void onParentFrameResized(int width, int height) {
+        logger.debug("resized to: {}x{}", width, height);
+        super.onParentFrameResized(width, height);
     }
 }

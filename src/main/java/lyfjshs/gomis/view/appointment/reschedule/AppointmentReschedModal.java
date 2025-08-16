@@ -6,12 +6,16 @@ import java.sql.SQLException;
 
 import javax.swing.JOptionPane;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
 
 public class AppointmentReschedModal {
+	private static final Logger logger = LogManager.getLogger(AppointmentReschedModal.class);
 	private static AppointmentReschedModal instance;
 
 	private AppointmentReschedModal() {
@@ -54,7 +58,7 @@ public class AppointmentReschedModal {
 									controller.consume(); // don't close the modal if the save is not successful
 								}
 							} catch (SQLException e) {
-								e.printStackTrace();
+								logger.error("Error rescheduling appointment: " + e.getMessage(), e);
 								JOptionPane.showMessageDialog(parent, "Error rescheduling appointment: " + e.getMessage(),
 										"Database Error", JOptionPane.ERROR_MESSAGE);
 							}
@@ -68,7 +72,7 @@ public class AppointmentReschedModal {
 			ModalDialog.getDefaultOption().getLayoutOption().setSize(width, height);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error showing reschedule dialog: " + e.getMessage(), e);
 			JOptionPane.showMessageDialog(parent, "Error showing reschedule dialog: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}

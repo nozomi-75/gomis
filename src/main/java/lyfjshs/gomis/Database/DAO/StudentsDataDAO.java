@@ -199,7 +199,7 @@ public class StudentsDataDAO {
         }
         return students;
     }
-
+    
     // ✅ Get Student by UID
     public Student getStudentById(int studentUid) throws SQLException {
         String query = getBaseQuery() + " WHERE s.STUDENT_UID = ?";
@@ -620,5 +620,179 @@ public class StudentsDataDAO {
                "LEFT JOIN PARENTS p ON s.PARENT_ID = p.PARENT_ID " +
                "LEFT JOIN GUARDIAN g ON s.GUARDIAN_ID = g.GUARDIAN_ID " +
                "LEFT JOIN SCHOOL_FORM sf ON s.SF_ID = sf.SF_ID";
+    }
+
+    // New methods for filtering functionality
+    public int[] getMinMaxAge() throws SQLException {
+        String sql = "SELECT MIN(STUDENT_AGE), MAX(STUDENT_AGE) FROM STUDENT";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                int minAge = rs.getInt(1);
+                int maxAge = rs.getInt(2);
+                // Provide sensible defaults if DB values are 0
+                return new int[]{minAge == 0 ? 12 : minAge, maxAge == 0 ? 22 : maxAge};
+            }
+        }
+        return new int[]{12, 22}; // Default fallback
+    }
+
+    public List<String> getDistinctGradeLevels() throws SQLException {
+        List<String> gradeLevels = new ArrayList<>();
+        String sql = "SELECT DISTINCT SF_GRADE_LEVEL FROM SCHOOL_FORM " +
+                    "WHERE SF_GRADE_LEVEL IS NOT NULL AND SF_GRADE_LEVEL != '' " +
+                    "AND SF_SCHOOL_YEAR = (SELECT MAX(SF_SCHOOL_YEAR) FROM SCHOOL_FORM) " + // Get current school year
+                    "ORDER BY CAST(SF_GRADE_LEVEL AS UNSIGNED) ASC"; // Sort numerically
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String gradeLevel = rs.getString("SF_GRADE_LEVEL");
+                if (gradeLevel != null && !gradeLevel.trim().isEmpty()) {
+                    gradeLevels.add("Grade " + gradeLevel); // Format as "Grade X"
+                }
+            }
+        }
+        return gradeLevels;
+    }
+
+    public List<String> getDistinctSections() throws SQLException {
+        List<String> sections = new ArrayList<>();
+        String sql = "SELECT DISTINCT SF_SECTION FROM SCHOOL_FORM " +
+                    "WHERE SF_SECTION IS NOT NULL AND SF_SECTION != '' " +
+                    "AND SF_SCHOOL_YEAR = (SELECT MAX(SF_SCHOOL_YEAR) FROM SCHOOL_FORM) " + // Get current school year
+                    "ORDER BY SF_SECTION ASC";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String section = rs.getString("SF_SECTION");
+                if (section != null && !section.trim().isEmpty()) {
+                    sections.add(section);
+                }
+            }
+        }
+        return sections;
+    }
+
+    public List<String> getDistinctTrackStrands() throws SQLException {
+        List<String> trackStrands = new ArrayList<>();
+        String sql = "SELECT DISTINCT SF_TRACK_AND_STRAND FROM SCHOOL_FORM " +
+                    "WHERE SF_TRACK_AND_STRAND IS NOT NULL " +
+                    "AND SF_TRACK_AND_STRAND != '' " +
+                    "AND SF_TRACK_AND_STRAND != 'N/A' " +
+                    "AND SF_SCHOOL_YEAR = (SELECT MAX(SF_SCHOOL_YEAR) FROM SCHOOL_FORM) " + // Get current school year
+                    "ORDER BY SF_TRACK_AND_STRAND ASC";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String trackStrand = rs.getString("SF_TRACK_AND_STRAND");
+                if (trackStrand != null && !trackStrand.trim().isEmpty()) {
+                    trackStrands.add(trackStrand);
+                }
+            }
+        }
+        return trackStrands;
+    }
+
+    public List<Student> getStudentsByFilterCriteria(String searchTerm, String firstName, String lastName, 
+            String middleName, boolean middleInitialOnly, String gradeLevel, String section, 
+            String trackStrand, boolean filterMale, boolean filterFemale, int minAge, int maxAge) throws SQLException {
+        
+        List<Student> students = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        StringBuilder sqlBuilder = new StringBuilder(getBaseQuery());
+        StringBuilder whereClause = new StringBuilder();
+
+        // Search Term (LRN or Name parts)
+        if (searchTerm != null && !searchTerm.isEmpty()) {
+            addCondition(whereClause,
+                "(s.STUDENT_LRN LIKE ? OR " +
+                "LOWER(s.STUDENT_FIRSTNAME) LIKE ? OR " +
+                "LOWER(s.STUDENT_LASTNAME) LIKE ? OR " +
+                "LOWER(s.STUDENT_MIDDLENAME) LIKE ? OR " +
+                "LOWER(CONCAT(s.STUDENT_FIRSTNAME, ' ', s.STUDENT_LASTNAME)) LIKE ? OR " +
+                "LOWER(CONCAT(s.STUDENT_LASTNAME, ', ', s.STUDENT_FIRSTNAME)) LIKE ?)"
+            );
+            String searchTermParam = "%" + searchTerm.toLowerCase() + "%";
+            for(int i=0; i<6; i++) params.add(searchTermParam);
+        }
+
+        // Name Filters
+        if (firstName != null && !firstName.isEmpty()) {
+            addCondition(whereClause, "LOWER(s.STUDENT_FIRSTNAME) LIKE ?");
+            params.add("%" + firstName.toLowerCase() + "%");
+        }
+        if (lastName != null && !lastName.isEmpty()) {
+            addCondition(whereClause, "LOWER(s.STUDENT_LASTNAME) LIKE ?");
+            params.add("%" + lastName.toLowerCase() + "%");
+        }
+        if (middleName != null && !middleName.isEmpty()) {
+            if (middleInitialOnly) {
+                addCondition(whereClause, "LOWER(s.STUDENT_MIDDLENAME) LIKE ?");
+                params.add(middleName.toLowerCase().charAt(0) + "%");
+            } else {
+                addCondition(whereClause, "LOWER(s.STUDENT_MIDDLENAME) LIKE ?");
+                params.add("%" + middleName.toLowerCase() + "%");
+            }
+        }
+
+        // Academic Filters - Using SchoolForm fields
+        if (gradeLevel != null && !gradeLevel.equals("All")) {
+            // Remove "Grade " prefix if present
+            String gradeLevelValue = gradeLevel.replace("Grade ", "").trim();
+            addCondition(whereClause, "sf.SF_GRADE_LEVEL = ?");
+            params.add(gradeLevelValue);
+        }
+        if (section != null && !section.equals("All")) {
+            addCondition(whereClause, "sf.SF_SECTION = ?");
+            params.add(section);
+        }
+        if (trackStrand != null && !trackStrand.equals("All")) {
+            addCondition(whereClause, "sf.SF_TRACK_AND_STRAND = ?");
+            params.add(trackStrand);
+        }
+
+        // Add current school year filter
+        // addCondition(whereClause, "sf.SF_SCHOOL_YEAR = (SELECT MAX(SF_SCHOOL_YEAR) FROM SCHOOL_FORM)");
+
+        // Sex Filter - Using M/F to match Student entity
+        if (!filterMale && filterFemale) {
+            addCondition(whereClause, "s.STUDENT_SEX = ?");
+            params.add("F");
+        } else if (filterMale && !filterFemale) {
+            addCondition(whereClause, "s.STUDENT_SEX = ?");
+            params.add("M");
+        } else if (!filterMale && !filterFemale) {
+            addCondition(whereClause, "1 = 0");
+        }
+
+        // Age Range Filter
+        addCondition(whereClause, "s.STUDENT_AGE BETWEEN ? AND ?");
+        params.add(minAge);
+        params.add(maxAge);
+
+        if (whereClause.length() > 0) {
+            sqlBuilder.append(" WHERE ").append(whereClause);
+        }
+
+        sqlBuilder.append(" ORDER BY s.STUDENT_LASTNAME ASC, s.STUDENT_FIRSTNAME ASC");
+
+        try (PreparedStatement stmt = connection.prepareStatement(sqlBuilder.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    students.add(mapResultSetToStudentWithRelations(rs));
+                }
+            }
+        }
+        return students;
+    }
+
+    private void addCondition(StringBuilder whereClause, String condition) {
+        if (whereClause.length() > 0) {
+            whereClause.append(" AND ");
+        }
+        whereClause.append(condition);
     }
 }

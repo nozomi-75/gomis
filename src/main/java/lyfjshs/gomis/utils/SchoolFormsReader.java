@@ -20,7 +20,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class SchoolFormsReader {
     private final File excelFile;
-    private Connection connection;
 
     public SchoolFormsReader(File excelFile) {
         this.excelFile = excelFile;
@@ -28,7 +27,6 @@ public class SchoolFormsReader {
     
     public SchoolFormsReader(File excelFile, Connection connection) {
         this.excelFile = excelFile;
-        this.connection = connection;
     }
 
     public List<List<String>> readSF1Data() {

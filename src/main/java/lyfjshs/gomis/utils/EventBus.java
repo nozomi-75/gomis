@@ -143,4 +143,45 @@ public class EventBus {
         subscribersByOwner.clear();
         logger.fine("Cleared all subscribers");
     }
+    
+    /**
+     * Shutdown the EventBus and clear all subscribers.
+     * This should be called when the application is shutting down.
+     */
+    public static void shutdown() {
+        clearAllSubscribers();
+        logger.info("EventBus shutdown complete");
+    }
+    
+    /**
+     * Get the current number of subscribers for monitoring purposes.
+     * 
+     * @return The total number of subscribers across all event types
+     */
+    public static int getSubscriberCount() {
+        int total = 0;
+        for (Set<Consumer<Object>> subscriberSet : subscribers.values()) {
+            total += subscriberSet.size();
+        }
+        return total;
+    }
+    
+    /**
+     * Get the number of event types currently being monitored.
+     * 
+     * @return The number of event types with subscribers
+     */
+    public static int getEventTypeCount() {
+        return subscribers.size();
+    }
+    
+    /**
+     * Check if there are any subscribers for a specific event type.
+     * 
+     * @param eventType The event type to check
+     * @return true if there are subscribers for this event type
+     */
+    public static boolean hasSubscribers(String eventType) {
+        return subscribers.containsKey(eventType) && !subscribers.get(eventType).isEmpty();
+    }
 } 

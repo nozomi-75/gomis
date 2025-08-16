@@ -1,6 +1,7 @@
 package lyfjshs.gomis.view.appointment.add;
 
 import java.sql.Connection;
+
 import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.view.students.StudentSearchPanel;
 
@@ -14,13 +15,16 @@ public class ParticipantStudentSearch extends StudentSearchPanel {
     @Override
     protected void onStudentSelected(Student student) {
         selectedParticipant = new TempParticipant(
-            student.getStudentUid(),
+            null, // participantId (null for new student)
+            Integer.valueOf(student.getStudentUid()),
             student.getStudentFirstname(),
             student.getStudentLastname(),
             "Student",
             student.getStudentSex(),
-            "", // Contact number can be fetched if needed
-            true
+            student.getContact() != null ? student.getContact().getContactNumber() : "", // Contact number can be fetched if needed
+            true, // isStudent
+            false, // isViolator (default to false)
+            false // isReporter (default to false)
         );
     }
 

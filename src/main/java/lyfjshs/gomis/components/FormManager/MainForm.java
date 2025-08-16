@@ -13,12 +13,13 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import lyfjshs.gomis.Main;
+import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.components.DrawerBuilder;
@@ -26,14 +27,13 @@ import lyfjshs.gomis.components.notification.NotificationCallback;
 import lyfjshs.gomis.components.notification.NotificationManager;
 import lyfjshs.gomis.components.notification.NotificationPopup;
 import lyfjshs.gomis.view.appointment.AppointmentDayDetails;
-import lyfjshs.gomis.view.sessions.SessionsForm;
+import lyfjshs.gomis.view.sessions.fill_up.SessionsFillUpFormPanel;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.Drawer;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
 import raven.modal.option.BorderOption;
 import raven.modal.option.Option;
-import lyfjshs.gomis.Database.DBConnection;
 
 public class MainForm extends JPanel implements NotificationCallback {
 	private List<Form> activeForms = new ArrayList<>();
@@ -71,9 +71,10 @@ public class MainForm extends JPanel implements NotificationCallback {
 		});
 		toolBar.add(buttonDrawer);
 
+//		IMPLEMENT BETTER THAN THIS
 		buttonNotification = new JButton(new FlatSVGIcon("drawer/icon/notification.svg", 0.5f));
 		buttonNotification.addActionListener(e -> showNotificationPopup());
-		toolBar.add(buttonNotification);
+//		toolBar.add(buttonNotification);
 		
 		panel.add(toolBar);
 		return panel;
@@ -112,19 +113,40 @@ public class MainForm extends JPanel implements NotificationCallback {
 
 	private Component createMain() {
 		mainPanel = new JPanel(new BorderLayout());
-		return mainPanel;
+		JScrollPane scrollPane = new JScrollPane(mainPanel);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(20);
+		scrollPane.getVerticalScrollBar().setBlockIncrement(20);
+		scrollPane.getHorizontalScrollBar().setUnitIncrement(20);
+		scrollPane.getHorizontalScrollBar().setBlockIncrement(20);
+		return scrollPane;
 	}
 
 	public void setForm(Form form) {
 		mainPanel.removeAll();
-		mainPanel.add(form);
+		mainPanel.add(form, BorderLayout.CENTER); // Ensure proper layout and scrolling
 		mainPanel.repaint();
 		mainPanel.revalidate();
+		activeForms.clear(); // Optional: clear previous forms
 		activeForms.add(form);
 	}
 
 	public Form[] getAllForms() {
 		return activeForms.toArray(new Form[0]);
+	}
+
+	/**
+	 * Gets the currently active form in the main panel.
+	 * @return The current Form instance, or null if no form is active
+	 */
+	public Form getCurrentForm() {
+		if (mainPanel != null && mainPanel.getComponentCount() > 0) {
+			Component comp = mainPanel.getComponent(0);
+			if (comp instanceof Form) {
+				return (Form) comp;
+			}
+		}
+		return null;
 	}
 
 	private JPanel mainPanel;
@@ -204,16 +226,16 @@ public class MainForm extends JPanel implements NotificationCallback {
 					(controller, action) -> {
 						if (action == SimpleModalBorder.YES_OPTION) {
 							// Switch to sessions form and populate with appointment data
-							DrawerBuilder.switchToSessionsForm();
+							DrawerBuilder.switchToSessionsFillUpFormPanel();
 							Form[] forms = FormManager.getForms();
 							for (Form form : forms) {
-								if (form instanceof SessionsForm) {
-									SessionsForm sessionsForm = (SessionsForm) form;
+								if (form instanceof SessionsFillUpFormPanel) {
+									SessionsFillUpFormPanel SessionsFillUpFormPanel = (SessionsFillUpFormPanel) form;
 									try {
 										AppointmentDAO appointmentDAO = new AppointmentDAO(DBConnection.getConnection());
 										Appointment fullAppointment = appointmentDAO.getAppointmentById(
 											appointment.getAppointmentId());
-										sessionsForm.populateFromAppointment(fullAppointment);
+										SessionsFillUpFormPanel.populateFromAppointment(fullAppointment);
 									} catch (SQLException e) {
 										e.printStackTrace();
 										JOptionPane.showMessageDialog(this, 

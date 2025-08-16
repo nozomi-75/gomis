@@ -11,6 +11,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<jna.version>5.12.1</jna.version>
 	</properties>
 
 	<repositories>
@@ -32,12 +33,25 @@
 			<groupId>io.github.dj-raven</groupId>
 			<artifactId>modal-dialog</artifactId>
 			<version>2.3.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.formdev</groupId>
+					<artifactId>flatlaf</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>io.github.dj-raven</groupId>
 			<artifactId>swing-datetime-picker</artifactId>
 			<version>2.0.0</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.formdev/flatlaf -->
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf</artifactId>
+			<version>3.6</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/net.java.timingframework/timingframework-swing -->
@@ -54,11 +68,10 @@
 			<version>11.4.2</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.formdev/flatlaf-fonts-roboto -->
 		<dependency>
 			<groupId>com.formdev</groupId>
-			<artifactId>flatlaf-fonts-roboto</artifactId>
-			<version>2.137</version>
+			<artifactId>flatlaf-intellij-themes</artifactId>
+			<version>3.6</version>
 		</dependency>
 
 		<!-- JasperReports Dependencies -->
@@ -136,6 +149,39 @@
 			<version>1.4</version>
 		</dependency>
 
+		<!-- System Integration -->
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>${jna.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna-platform</artifactId>
+			<version>${jna.version}</version>
+		</dependency>
+
+		<!-- Utilities -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.17.0</version>
+		</dependency>
+
+		<!-- SLF4J API -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>2.0.7</version>
+		</dependency>
+
+		<!-- MP3 Player -->
+		<dependency>
+			<groupId>com.github.umjammer</groupId>
+			<artifactId>jlayer</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.swinglabs.swingx/swingx-autocomplete -->
 		<dependency>
 			<groupId>org.swinglabs.swingx</groupId>
@@ -143,8 +189,53 @@
 			<version>1.6.5-1</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.jfree/jfreechart -->
+		<dependency>
+			<groupId>org.jfree</groupId>
+			<artifactId>jfreechart</artifactId>
+			<version>1.5.5</version>
+		</dependency>
 
-
+		<dependency>
+			<groupId>org.docx4j</groupId>
+			<artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
+			<version>11.5.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.docx4j</groupId>
+			<artifactId>docx4j-export-fo</artifactId>
+			<version>11.5.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>xmlgraphics-commons</artifactId>
+			<version>2.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-all</artifactId>
+			<version>1.16</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>fop</artifactId>
+			<version>2.7</version>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>3.0.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -155,6 +246,14 @@
 				<version>3.13.0</version>
 				<configuration>
 					<release>23</release>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<mainClass>lyfjshs.gomis.Main</mainClass>
 				</configuration>
 			</plugin>
 			<plugin>

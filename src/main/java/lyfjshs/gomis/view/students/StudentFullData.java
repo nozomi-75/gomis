@@ -8,31 +8,55 @@ import java.awt.Font;
 import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import lyfjshs.gomis.Database.DAO.*;
-import lyfjshs.gomis.Database.entity.*;
+import docPrinter.templateManager;
+import docPrinter.droppingForm.droppingFormGenerator;
+import docPrinter.droppingForm.droppingFormModalPanel;
+import docPrinter.goodMoral.goodMoralGenarate;
+import docPrinter.goodMoral.goodMoralModalPanel;
+import lyfjshs.gomis.Database.DAO.GuidanceCounselorDAO;
+import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
+import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
+import lyfjshs.gomis.Database.entity.Address;
+import lyfjshs.gomis.Database.entity.Contact;
+import lyfjshs.gomis.Database.entity.Guardian;
+import lyfjshs.gomis.Database.entity.GuidanceCounselor;
+import lyfjshs.gomis.Database.entity.Parents;
+import lyfjshs.gomis.Database.entity.SchoolForm;
+import lyfjshs.gomis.Database.entity.Student;
+import lyfjshs.gomis.Database.entity.Violation;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
-import lyfjshs.gomis.utils.jasper.DroppingFormGenerator;
-import lyfjshs.gomis.utils.jasper.GoodMoralGenerator;
-import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.view.violation.ViewViolationDetails;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
 
 public class StudentFullData extends Form {
+	private static final Logger logger = LogManager.getLogger(StudentFullData.class);
+
 	// Text fields for easy access and validation
 	private JTextField lrnField;
 	private JTextField lastNameField;
@@ -212,13 +236,13 @@ public class StudentFullData extends Form {
 
 	private void setStudentData(Student studentData) {
 		if (studentData == null) {
-			System.out.println("Warning: studentData is null");
+			logger.warn("Warning: studentData is null");
 			return;
 		}
 
 		try {
 			// Debug prints to check data
-			System.out.println("Setting student data for: " + studentData.getStudentFirstname());
+			logger.info("Setting student data for: " + studentData.getStudentFirstname());
 			
 			// Basic info
 			lrnField.setText(studentData.getStudentLrn() != null ? studentData.getStudentLrn() : "");
@@ -294,8 +318,7 @@ public class StudentFullData extends Form {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.err.println("Error setting student data: " + e.getMessage());
+			logger.error("Error setting student data: " + e.getMessage());
 		}
 	}
 
@@ -358,15 +381,19 @@ public class StudentFullData extends Form {
 			}
 			
 			// If no active violations, proceed with creating the good moral
-			GoodMoralGenerator generator = new GoodMoralGenerator(student);
-			generator.createGoodMoralReport(this);
+			goodMoralGenarate generator = new goodMoralGenarate();
+			goodMoralModalPanel modalPanel = new goodMoralModalPanel(generator);
+			modalPanel.setSelectedStudents(java.util.Collections.singletonList(student));
+			modalPanel.setTemplateAndOutput(
+				templateManager.getActiveTemplate(templateManager.TemplateType.GOOD_MORAL),
+				templateManager.getDefaultOutputFolder()
+			);
+			modalPanel.showModal(new StudentsDataDAO(connect), this, () -> {
+				// Success callback, e.g., reload data or show message
+			});
 			
 		} catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this,
-				"Error checking violations: " + e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
+			logger.error("Error checking violations: " + e.getMessage());
 		}
 	}
 
@@ -606,8 +633,7 @@ public class StudentFullData extends Form {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Failed to load violations: " + e.getMessage());
+			logger.error("Failed to load violations: " + e.getMessage());
 		}
 	}
 
@@ -665,7 +691,7 @@ public class StudentFullData extends Form {
 					"Resolve Violation", JOptionPane.YES_NO_OPTION);
 
 			if (choice == JOptionPane.YES_OPTION) {
-				if (ViolationDAO.updateViolationStatus(violation.getViolationId(), "RESOLVED")) {
+				if (ViolationDAO.updateViolationStatus(violation.getViolationId(), "RESOLVED", "")) {
 					JOptionPane.showMessageDialog(this, "Violation resolved successfully", "Success",
 							JOptionPane.INFORMATION_MESSAGE);
 					// Reload violations to refresh the table
@@ -673,9 +699,7 @@ public class StudentFullData extends Form {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Failed to resolve violation: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
+			logger.error("Failed to resolve violation: " + e.getMessage());
 		}
 	}
 
@@ -694,23 +718,17 @@ public class StudentFullData extends Form {
 			GuidanceCounselorDAO guidanceCounselorDAO = new GuidanceCounselorDAO(connect);
 			GuidanceCounselor counselor = guidanceCounselorDAO.readGuidanceCounselor(1); // Assuming ID 1 for now
 
-			// Create a modal dialog for dropping a student
-			DroppingForm droppingForm = new DroppingForm(connect, student, counselor);
+			// Create the new modal panel and set student
+			droppingFormModalPanel droppingForm = new droppingFormModalPanel(new droppingFormGenerator());
+			droppingForm.setSelectedStudents(java.util.Collections.singletonList(student));
+			// Optionally set template/output folder if needed:
+			// droppingForm.setTemplateAndOutput(templateFile, outputFolder);
 
 			String modalId = "drop_student_" + student.getStudentUid();
-			
-			// Check if modal is already open
+
 			if (ModalDialog.isIdExist(modalId)) {
 				return;
 			}
-
-			// Configure modal options
-			ModalDialog.getDefaultOption()
-				.setOpacity(0f)
-				.setAnimationOnClose(false)
-				.getBorderOption()
-				.setBorderWidth(0.5f)
-				.setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
 
 			ModalDialog.showModal(this, new SimpleModalBorder(droppingForm, "Drop Confirmation",
 					new SimpleModalBorder.Option[] {
@@ -721,19 +739,8 @@ public class StudentFullData extends Form {
 						if (action == SimpleModalBorder.YES_OPTION) {
 							controller.consume();
 							try {
-								// First print the dropping form
-								DroppingFormGenerator.createDroppingForm(
-									this,
-									droppingForm.getDateField().getText(),
-									student.getStudentFirstname() + " " + student.getStudentLastname(),
-									counselor.getFirstName() + " " + counselor.getLastName(),
-									student.getSchoolForm().getSF_TRACK_AND_STRAND(),
-									student.getSchoolForm().getSF_GRADE_LEVEL() + " " + student.getSchoolForm().getSF_SECTION(),
-									droppingForm.getAbsencesField().getText(),
-									droppingForm.getActionTextArea().getText(),
-									droppingForm.getReasonTextArea().getText(),
-									droppingForm.getEffectiveDateField().getText()
-								);
+								// Use the modal's processForm for printing
+								droppingForm.processForm("print", this, null);
 
 								// Then drop the student
 								boolean success = studentsDataDAO.dropStudentWithRelations(student.getStudentUid());
@@ -744,27 +751,18 @@ public class StudentFullData extends Form {
 										"Success", 
 										JOptionPane.INFORMATION_MESSAGE);
 									
-									// Close the modal
 									controller.close();
-									
-									// Navigate back or refresh UI
-									FormManager.showForm(new StudentMangementGUI(connect));
+									FormManager.showForm(new StudentsListMain(connect));
 								} else {
 									JOptionPane.showMessageDialog(this, 
 										"Failed to drop student records.",
 										"Error", 
 										JOptionPane.ERROR_MESSAGE);
 								}
-							} catch (SQLException e) {
-								e.printStackTrace();
-								JOptionPane.showMessageDialog(this, 
-									"An error occurred while dropping the student: " + e.getMessage(),
-									"Error", 
-									JOptionPane.ERROR_MESSAGE);
+							} catch (Exception e) {
+								logger.error("An error occurred while dropping the student: " + e.getMessage());
 							}
-						} else if (action == SimpleModalBorder.NO_OPTION || 
-								 action == SimpleModalBorder.CLOSE_OPTION || 
-								 action == SimpleModalBorder.CANCEL_OPTION) {
+						} else {
 							controller.close();
 						}
 					}), 
@@ -772,11 +770,7 @@ public class StudentFullData extends Form {
 
 			ModalDialog.getDefaultOption().getLayoutOption().setSize(950, 600);
 		} catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, 
-				"Failed to load student or counselor data.", 
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
+			logger.error("Failed to load student or counselor data.");
 		}
 	}
 }

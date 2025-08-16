@@ -18,6 +18,9 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
@@ -32,6 +35,7 @@ import raven.modal.toast.option.ToastLocation;
 import raven.modal.toast.option.ToastOption;
 
 public abstract class StudentSearchPanel extends Modal {
+    private static final Logger logger = LogManager.getLogger(StudentSearchPanel.class);
     private JPanel advancedPanel;
     private JTextField firstNameField = new JTextField(20);
     private JTextField middleNameField = new JTextField(20);
@@ -259,7 +263,7 @@ public abstract class StudentSearchPanel extends Modal {
     }
 
     private void handleSearchError(SQLException e) {
-        e.printStackTrace();
+        logger.error("Error searching students: " + e.getMessage());
         showToast("Error searching students: " + e.getMessage(), Toast.Type.ERROR);
     }
     
@@ -313,7 +317,7 @@ public abstract class StudentSearchPanel extends Modal {
                         try {
                             ModalDialog.closeModal(modalId);
                         } catch (IllegalArgumentException e) {
-                            System.err.println("Warning: Could not close modal " + modalId + ": " + e.getMessage());
+                            logger.warn("Warning: Could not close modal " + modalId + ": " + e.getMessage());
                         }
                     });
                 }

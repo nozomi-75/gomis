@@ -11,6 +11,7 @@ import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +25,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
+
+import lyfjshs.gomis.Database.entity.Appointment;
+import lyfjshs.gomis.components.settings.SettingsManager;
+import lyfjshs.gomis.components.settings.SettingsState;
+import lyfjshs.gomis.utils.EventBus;
 
 /**
  * Manages system tray notifications with support for different notification types and custom icons.
@@ -120,7 +126,7 @@ public class NotificationManager {
     }
 
     /**
-     * Sets up daily cleanup at midnight to reset the notifications
+     * Clears the list of notified appointments, typically done at midnight
      */
     public void setupDailyCleanup() {
         java.util.Calendar calendar = java.util.Calendar.getInstance();
@@ -129,11 +135,10 @@ public class NotificationManager {
         calendar.set(java.util.Calendar.SECOND, 0);
         calendar.add(java.util.Calendar.DAY_OF_MONTH, 1);
         
-        java.util.Timer timer = new java.util.Timer(true);
-        timer.scheduleAtFixedRate(new TimerTask() {
+        new java.util.Timer().schedule(new java.util.TimerTask() {
             @Override
             public void run() {
-                clearNotifiedAppointments();
+                NotificationManager.clearNotifiedAppointments();
             }
         }, calendar.getTime(), 24 * 60 * 60 * 1000); // Daily
     }
@@ -169,6 +174,9 @@ public class NotificationManager {
         
         // Setup daily cleanup
         setupDailyCleanup();
+
+        // Subscribe to relevant events
+        subscribeToEvents();
     }
 
     public static synchronized NotificationManager getInstance() {
@@ -238,26 +246,131 @@ public class NotificationManager {
      * @param exitApplication Whether to exit the application after cleanup
      */
     public void cleanup(boolean exitApplication) {
+        System.out.println("[NOTIFICATION] Starting cleanup...");
+        
         // Clean up all active notifications
         activeNotifications.forEach((icon, timer) -> {
-            timer.cancel();
-            SwingUtilities.invokeLater(() -> systemTray.remove(icon));
+            try {
+                timer.cancel();
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        systemTray.remove(icon);
+                    } catch (Exception e) {
+                        System.err.println("[NOTIFICATION] Error removing notification icon: " + e.getMessage());
+                    }
+                });
+            } catch (Exception e) {
+                System.err.println("[NOTIFICATION] Error canceling notification timer: " + e.getMessage());
+            }
         });
         activeNotifications.clear();
+        
+        // Clear all notification collections
+        notifications.clear();
+        shownNotificationIds.clear();
+        recentNotifications.clear();
+        appointmentNotificationTimes.clear();
+        notifiedAppointments.clear();
+        
+        // Unregister all popups
+        for (NotificationPopup popup : new ArrayList<>(notificationPopups)) {
+            try {
+                popup.hide();
+            } catch (Exception e) {
+                System.err.println("[NOTIFICATION] Error hiding popup: " + e.getMessage());
+            }
+        }
+        notificationPopups.clear();
         
         // Remove main tray icon
         SwingUtilities.invokeLater(() -> {
             try {
-                systemTray.remove(mainTrayIcon);
+                if (mainTrayIcon != null) {
+                    systemTray.remove(mainTrayIcon);
+                }
                 
                 // Only exit if specifically requested
                 if (exitApplication) {
                     System.exit(0);
                 }
             } catch (Exception e) {
-                System.err.println("Error removing tray icon: " + e.getMessage());
+                System.err.println("[NOTIFICATION] Error removing main tray icon: " + e.getMessage());
             }
         });
+        
+        System.out.println("[NOTIFICATION] Cleanup complete");
+    }
+    
+    /**
+     * Comprehensive shutdown method that cleans up all resources
+     * This should be called when the application is shutting down
+     */
+    public void shutdown() {
+        System.out.println("[NOTIFICATION] Shutting down NotificationManager...");
+        
+        // Cancel all timers
+        for (Timer timer : activeNotifications.values()) {
+            try {
+                timer.cancel();
+            } catch (Exception e) {
+                System.err.println("[NOTIFICATION] Error canceling timer during shutdown: " + e.getMessage());
+            }
+        }
+        
+        // Clear all collections
+        activeNotifications.clear();
+        notifications.clear();
+        shownNotificationIds.clear();
+        recentNotifications.clear();
+        appointmentNotificationTimes.clear();
+        notifiedAppointments.clear();
+        
+        // Dispose all popups
+        for (NotificationPopup popup : new ArrayList<>(notificationPopups)) {
+            try {
+                popup.hide();
+            } catch (Exception e) {
+                System.err.println("[NOTIFICATION] Error hiding popup during shutdown: " + e.getMessage());
+            }
+        }
+        notificationPopups.clear();
+        
+        // Remove tray icons
+        SwingUtilities.invokeLater(() -> {
+            try {
+                if (mainTrayIcon != null) {
+                    systemTray.remove(mainTrayIcon);
+                }
+            } catch (Exception e) {
+                System.err.println("[NOTIFICATION] Error removing main tray icon during shutdown: " + e.getMessage());
+            }
+        });
+        
+        System.out.println("[NOTIFICATION] NotificationManager shutdown complete");
+    }
+    
+    /**
+     * Get the current number of active notifications for monitoring
+     * @return The number of active notifications
+     */
+    public int getActiveNotificationCount() {
+        return activeNotifications.size();
+    }
+    
+    /**
+     * Get the current number of stored notifications for monitoring
+     * @return The number of stored notifications
+     */
+    public int getStoredNotificationCount() {
+        return notifications.size();
+    }
+    
+    /**
+     * Get the current number of registered popups for monitoring
+     * @return The number of registered popups
+     */
+    public int getPopupCount() {
+        return notificationPopups.size();
     }
 
     public void registerPopup(NotificationPopup popup) {
@@ -455,5 +568,45 @@ public class NotificationManager {
             // If settings aren't available, default to true
             return true;
         }
+    }
+
+    /**
+     * Subscribes to relevant events from EventBus and shows notifications.
+     * Call this method during NotificationManager initialization.
+     */
+    public void subscribeToEvents() {
+        EventBus.subscribe("appointmentCreated", (data) -> {
+            SettingsState state = SettingsManager.getCurrentState();
+            if (state != null && state.notifications && state.notifyOnAppointmentCreated) {
+                Appointment appt = (Appointment) data;
+                String msg = String.format("%s\n%s at %s", appt.getAppointmentTitle(),
+                        appt.getAppointmentDateTime().toLocalDateTime().toLocalDate(),
+                        appt.getAppointmentDateTime().toLocalDateTime().toLocalTime());
+                NotificationManager.getInstance().showInfoNotification("Appointment Created", msg);
+            }
+        });
+        EventBus.subscribe("appointmentReminder", (data) -> {
+            SettingsState state = SettingsManager.getCurrentState();
+            if (state != null && state.notifications && state.notifyOnAppointmentReminder) {
+                Appointment appt = (Appointment) data;
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime appointmentTime = appt.getAppointmentDateTime().toLocalDateTime();
+                long minutesUntil = java.time.temporal.ChronoUnit.MINUTES.between(now, appointmentTime);
+                String msg = String.format("Upcoming Appointment: %s\nScheduled for: %s\n(In %d minutes)",
+                        appt.getAppointmentTitle(),
+                        appointmentTime.format(java.time.format.DateTimeFormatter.ofPattern("hh:mm a")), minutesUntil);
+                NotificationManager.getInstance().showInfoNotification("Appointment Reminder", msg);
+            }
+        });
+        EventBus.subscribe("appointmentMissed", (data) -> {
+            if (SettingsManager.getCurrentState() != null && SettingsManager.getCurrentState().notifications) {
+                Appointment appt = (Appointment) data;
+                String msg = String.format("Missed Appointment: %s\n%s at %s", appt.getAppointmentTitle(),
+                        appt.getAppointmentDateTime().toLocalDateTime().toLocalDate(),
+                        appt.getAppointmentDateTime().toLocalDateTime().toLocalTime());
+                NotificationManager.getInstance().showWarningNotification("Missed Appointment", msg);
+            }
+        });
+        // Add more event subscriptions as needed (e.g., incidentReported, sessionEnded)
     }
 }

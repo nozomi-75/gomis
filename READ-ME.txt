@@ -1,0 +1,46 @@
+GOMIS Quick Start & Troubleshooting
+
+- Open PowerShell in the main project directory (where this file is located).
+	- if Using VS Code click Ctrl + J to open terminal
+- Run:
+    pwsh ./build-all.ps1
+  This will build the main app, validator, EXE, and installer in one go, from anywhere.
+  See gomis-installer/build-all.log for detailed logs.
+
+1. Build the Project (Alternative)
+
+- Open PowerShell in the gomis-installer directory.
+- Run the all-in-one build script:
+    pwsh ./build-all.ps1
+  This will build the main app, validator, EXE, and installer in one go.
+  See build-all.log for detailed logs.
+
+Manual Maven Build:
+- If you only want to build the Java project:
+    ./mvnw.cmd clean install
+  Or in VS Code/IDE terminal:
+    powershell | ./mvnw.cmd clean install
+
+2. Install and Access the Database
+
+- Run the GOMIS installer you just built (found in resources/Output or as specified in the build log).
+- To access the MariaDB database after install:
+    & "C:\Program Files\MariaDB 11.4\bin\mariadb.exe" -u root -p gomisdb
+  Enter the password you set during installation.
+
+3. Run the Application
+
+- Use the installed shortcut, or run the main class directly:
+    gomis\src\main\java\lyfjshs\gomis\Main.java
+
+Troubleshooting
+
+- Database error:
+    Run the installer to create the database.
+    Default DB password is: YourRootPassword123! (see gomis\src\main\java\lyfjshs\gomis\Database\DBConnection.java)
+- Installer/Build errors:
+    Check build-all.log for details.
+    Ensure all files are present in resources/.
+- Null Frame:
+    Me and ChatGPT don't know how to fix it, try recompiling the project 
+	

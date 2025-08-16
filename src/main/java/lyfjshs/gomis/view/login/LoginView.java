@@ -47,7 +47,6 @@ public class LoginView extends Form {
 		mainPanel.add(loginPanel, "grow");
 		panelGradient.add(mainPanel, "align center");
 		this.add(panelGradient, "cell 0 0,grow");
-
 	}
 
 	/**
@@ -55,18 +54,18 @@ public class LoginView extends Form {
 	 * 
 	 * @param panel The panel to switch to
 	 */
-	private void switchPanel(JPanel panel) {
+	private void switchPanel(JPanel panel, String constraints) {
 		mainPanel.removeAll();
-		mainPanel.add(panel, "grow");
+		mainPanel.add(panel, constraints);
 		mainPanel.revalidate();
 		mainPanel.repaint();
 	}
 
 	public void switchToLoginPanel() {
-		switchPanel(loginPanel);
+		switchPanel(loginPanel, "grow");
 	}
 
 	public void switchToSignUpPanel() {
-		switchPanel(signUpPanel);
+		switchPanel(signUpPanel, "width 600:pref:700, height 400:pref:500, grow");
 	}
 }

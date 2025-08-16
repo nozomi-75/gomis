@@ -2,87 +2,111 @@ package lyfjshs.gomis.view.appointment;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.time.LocalDateTime;
+import java.awt.Frame;
+import java.time.format.DateTimeFormatter;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import lyfjshs.gomis.Database.entity.Appointment;
+import lyfjshs.gomis.components.alarm.AlarmManagement;
 import net.miginfocom.swing.MigLayout;
 
 public class AppointmentAlarmDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-    
-	public AppointmentAlarmDialog(Appointment appointment, Runnable onStartSession, AppointmentAlarm appointmentAlarm) {
+	private JLabel missedLabel;
+	private AppointmentManagement appointmentManagement;
+	private static final Logger logger = LogManager.getLogger(AppointmentAlarmDialog.class);
 
-		setTitle("Appointment Reminder");
-		setModal(false);
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		getContentPane().setLayout(new MigLayout("fill, wrap 1", "[center]", "[]20[]20[][][]"));
+	public AppointmentAlarmDialog(Appointment appointment, Runnable onStartSession, AlarmManagement alarmManagement, AppointmentManagement appointmentManagement) {
+		super((Frame) null, "Appointment Reminder", true);
+		this.appointmentManagement = appointmentManagement;
+		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		setLayout(new MigLayout("fill, insets 20", "[grow]", "[][grow][][grow][][][grow]"));
 
-		// Set up dialog components
-		JLabel titleLabel = new JLabel(appointment.getAppointmentTitle());
+		// Title panel
+		JPanel titlePanel = new JPanel(new MigLayout("fill", "[grow]", "[]"));
+		JLabel titleLabel = new JLabel("Appointment Reminder");
 		titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-		JLabel timeLabel = new JLabel(appointment.getAppointmentDateTime().toLocalDateTime()
-			.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
-		timeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-		JLabel typeLabel = new JLabel(appointment.getConsultationType());
-		typeLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
+		titlePanel.add(titleLabel, "center");
+		add(titlePanel, "growx, wrap");
 
-		// Add components to dialog
-		getContentPane().add(titleLabel, "cell 0 0");
-		getContentPane().add(timeLabel, "cell 0 1");
-		getContentPane().add(typeLabel, "cell 0 2");
+		// Content panel
+		JPanel contentPanel = new JPanel(new MigLayout("fill, insets 10", "[grow]", "[][][][][][][][][]"));
+		contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		// Create a spinner for snooze duration
-		JSpinner snoozeSpinner = new JSpinner(new SpinnerNumberModel(5, 1, 60, 1));
-		JLabel label_1 = new JLabel("Snooze for:");
-		getContentPane().add(label_1, "flowx,cell 0 3");
-		getContentPane().add(snoozeSpinner, "cell 0 3");
+		// Appointment details
+		JLabel appointmentTitle = new JLabel(appointment.getAppointmentTitle());
+		appointmentTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+		contentPanel.add(appointmentTitle, "growx, wrap");
 
-		// Buttons panel
-		JPanel buttonsPanel = new JPanel(new MigLayout("", "[]20[]20[]", "[]"));
-		JButton startSessionButton = new JButton("Start Session");
+		JLabel appointmentTime = new JLabel(
+				appointment.getAppointmentDateTime().toLocalDateTime().format(DateTimeFormatter.ofPattern("hh:mm a")));
+		appointmentTime.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+		contentPanel.add(appointmentTime, "growx, wrap");
+
+		// Add missed label (initially hidden)
+		missedLabel = new JLabel("This appointment is marked as Missed!");
+		missedLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+		missedLabel.setForeground(new Color(220, 53, 69));
+		missedLabel.setVisible(false);
+		contentPanel.add(missedLabel, "growx, wrap");
+
+		add(contentPanel, "grow, wrap");
+
+		// Button panel
+		JPanel buttonPanel = new JPanel(new MigLayout("fill, insets 10", "[grow][grow][grow]", "[]"));
+
+		// Start Session button
+		JButton startSessionButton = new JButton("Start Session Now");
+		startSessionButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
 		startSessionButton.setBackground(new Color(40, 167, 69));
 		startSessionButton.setForeground(Color.WHITE);
 		startSessionButton.addActionListener(e -> {
-			if (onStartSession != null) {
-				onStartSession.run();
-			}
-			dispose();
+			AlarmManagement.getInstance().handleStartSession(appointment);
 		});
 
-		JButton snoozeButton = new JButton("Snooze");
+		// Snooze button
+		JButton snoozeButton = new JButton("Snooze (5 min)");
+		snoozeButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+		snoozeButton.setBackground(new Color(255, 193, 7));
+		snoozeButton.setForeground(Color.WHITE);
 		snoozeButton.addActionListener(e -> {
-			int snoozeMinutes = (int) snoozeSpinner.getValue();
-			LocalDateTime newDateTime = LocalDateTime.now().plusMinutes(snoozeMinutes);
-			appointmentAlarm.updateAppointmentInDatabase(newDateTime, "Snoozed for " + snoozeMinutes + " minutes");
-			appointmentAlarm.getAlarmManager().snooze(snoozeMinutes);
-			dispose();
+			AlarmManagement.getInstance().handleSnooze(5);
 		});
 
-		JButton dismissButton = new JButton("Dismiss");
-		dismissButton.addActionListener(e -> {
-			appointmentAlarm.getAlarmManager().cancelAlarm();
-			dispose();
+		// Cancel button
+		JButton cancelButton = new JButton("Cancel");
+		cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+		cancelButton.setBackground(new Color(220, 53, 69)); // Red color
+		cancelButton.setForeground(Color.WHITE);
+		cancelButton.addActionListener(e -> {
+			AlarmManagement.getInstance().handleCancel(appointment);
 		});
 
-		buttonsPanel.add(startSessionButton);
-		buttonsPanel.add(snoozeButton);
-		buttonsPanel.add(dismissButton);
-		getContentPane().add(buttonsPanel, "cell 0 4");
-		JLabel label = new JLabel("minutes");
-		getContentPane().add(label, "cell 0 3");
+		buttonPanel.add(startSessionButton, "growx");
+		buttonPanel.add(snoozeButton, "growx");
+		buttonPanel.add(cancelButton, "growx");
 
-		setSize(500, 300);
+		add(buttonPanel, "growx");
+
+		// Set dialog properties
+		pack();
 		setLocationRelativeTo(null);
-		setAlwaysOnTop(true);
-		setVisible(true);
+		setResizable(true);
+	}
+
+	public void showMissedLabel() {
+		if (missedLabel != null) {
+			missedLabel.setVisible(true);
+		}
 	}
 
 }

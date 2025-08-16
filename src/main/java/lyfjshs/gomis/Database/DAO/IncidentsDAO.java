@@ -50,6 +50,25 @@ public class IncidentsDAO {
         return -1;
     }
 
+    /**
+     * Adds multiple participants to an incident.
+     * This assumes a linking table named INCIDENTS_PARTICIPANTS exists.
+     * @param incidentId The ID of the incident.
+     * @param participantIds A list of participant IDs to associate with the incident.
+     * @throws SQLException If a database access error occurs.
+     */
+    public void addParticipantsToIncident(int incidentId, List<Integer> participantIds) throws SQLException {
+        String sql = "INSERT INTO INCIDENTS_PARTICIPANTS (INCIDENT_ID, PARTICIPANT_ID) VALUES (?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            for (Integer participantId : participantIds) {
+                stmt.setInt(1, incidentId);
+                stmt.setInt(2, participantId);
+                stmt.addBatch(); // Add to batch for efficient insertion
+            }
+            stmt.executeBatch(); // Execute all batched inserts
+        }
+    }
+
     // Helper method to standardize status values
     private String standardizeStatus(String status) {
         if (status == null) return "PENDING";
@@ -179,6 +198,31 @@ public class IncidentsDAO {
             }
         }
         return null;
+    }
+
+    /**
+     * Retrieves all participants associated with a specific incident.
+     * This assumes a linking table named INCIDENTS_PARTICIPANTS exists.
+     * @param incidentId The ID of the incident.
+     * @return A list of Participants associated with the incident.
+     * @throws SQLException If a database access error occurs.
+     */
+    public List<Participants> getParticipantsByIncidentId(int incidentId) throws SQLException {
+        List<Participants> participants = new ArrayList<>();
+        String sql = "SELECT p.*, ip.INCIDENT_ID " +
+                     "FROM PARTICIPANTS p " +
+                     "JOIN INCIDENTS_PARTICIPANTS ip ON p.PARTICIPANT_ID = ip.PARTICIPANT_ID " +
+                     "WHERE ip.INCIDENT_ID = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, incidentId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    participants.add(mapResultSetToParticipant(rs));
+                }
+            }
+        }
+        return participants;
     }
 
     // ✅ Map ResultSet to an Incident object

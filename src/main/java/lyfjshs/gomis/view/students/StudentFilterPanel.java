@@ -16,17 +16,22 @@ import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import net.miginfocom.swing.MigLayout;
 import raven.modal.component.Modal;
 
 public class StudentFilterPanel extends Modal {
     private static final long serialVersionUID = 1L;
+    private static final Logger logger = LogManager.getLogger(StudentFilterPanel.class);
     
     private JTextField nameFilterField;
     private JComboBox<String> gradeLevelComboBox;
@@ -83,7 +88,7 @@ public class StudentFilterPanel extends Modal {
         try {
             populateComboBoxesFromDatabase();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error populating combo boxes from database", e);
         }
         
         // Add change listeners to spinners to maintain valid age range
@@ -260,13 +265,19 @@ public class StudentFilterPanel extends Modal {
         if (activeFilters.containsKey("minAge")) {
             try {
                 minAgeSpinner.setValue(Integer.parseInt(activeFilters.get("minAge")));
-            } catch (NumberFormatException e) {}
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid minAge value in filters: " + activeFilters.get("minAge") + ". Using default value.");
+                minAgeSpinner.setValue(15); // Default to minimum age
+            }
         }
         
         if (activeFilters.containsKey("maxAge")) {
             try {
                 maxAgeSpinner.setValue(Integer.parseInt(activeFilters.get("maxAge")));
-            } catch (NumberFormatException e) {}
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid maxAge value in filters: " + activeFilters.get("maxAge") + ". Using default value.");
+                maxAgeSpinner.setValue(25); // Default to maximum age
+            }
         }
         
         updateFilterCount(activeFilters.size());
@@ -364,5 +375,23 @@ public class StudentFilterPanel extends Modal {
             BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
         comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    }
+
+    public void applyFilters() {
+        try {
+            // Implementation of applyFilters method
+        } catch (Exception e) {
+            logger.error("Error applying filters", e);
+            JOptionPane.showMessageDialog(this, "Error applying filters: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void clearFilters() {
+        try {
+            resetFilters();
+        } catch (Exception e) {
+            logger.error("Error clearing filters", e);
+            JOptionPane.showMessageDialog(this, "Error clearing filters: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 } 

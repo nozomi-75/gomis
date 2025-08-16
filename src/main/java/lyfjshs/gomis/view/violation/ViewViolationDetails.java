@@ -3,7 +3,6 @@ package lyfjshs.gomis.view.violation;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Toolkit;
 import java.sql.Connection;
 import java.sql.Date;
@@ -13,12 +12,15 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 
-import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTextArea;
-import javax.swing.UIManager;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
@@ -26,6 +28,7 @@ import lyfjshs.gomis.Database.DAO.IncidentsDAO;
 import lyfjshs.gomis.Database.DAO.ParticipantsDAO;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
+import lyfjshs.gomis.Database.DAO.ViolationDAO;
 import lyfjshs.gomis.Database.entity.Incident;
 import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
@@ -34,91 +37,73 @@ import lyfjshs.gomis.Database.entity.Violation;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.component.SimpleModalBorder;
-import raven.modal.option.Option;
 
+/**
+ * A panel that displays detailed information about a specific violation record.
+ * This view has been redesigned for better clarity, includes more complete data
+ * based on the provided database schema, and ensures correct age calculation.
+ */
 public class ViewViolationDetails extends JPanel {
-    private Violation violation;
-    private StudentsDataDAO studentsDataDAO;
-    private ParticipantsDAO participantsDAO;
-    private IncidentsDAO incidentsDAO;
-    private SessionsDAO sessionsDAO;
+
+    private static final Logger logger = LogManager.getLogger(ViewViolationDetails.class);
+
+    private final Violation violation;
+    private final StudentsDataDAO studentsDataDAO;
+    private final ParticipantsDAO participantsDAO;
+    private final IncidentsDAO incidentsDAO;
+    private final SessionsDAO sessionsDAO;
+    private final ViolationDAO violationDAO;
+
     private List<Incident> incidents;
     private List<Sessions> sessions;
 
-    public ViewViolationDetails(Connection conn,
-                                Violation violation,
-                                StudentsDataDAO studentsDataDAO,
-                                ParticipantsDAO participantsDAO) {
+    public ViewViolationDetails(Connection conn, Violation violation, StudentsDataDAO studentsDataDAO, ParticipantsDAO participantsDAO) {
         this.violation = violation;
         this.studentsDataDAO = studentsDataDAO;
         this.participantsDAO = participantsDAO;
+        // Initialize all DAOs here
         this.incidentsDAO = new IncidentsDAO(conn);
         this.sessionsDAO = new SessionsDAO(conn);
-        
-        // Fetch related data
+        this.violationDAO = new ViolationDAO(conn);
+
+        fetchRelatedData();
+        initUI();
+    }
+
+    /**
+     * Fetches all data related to the violation from the database.
+     */
+    private void fetchRelatedData() {
         try {
-            // Get incidents related to this violation's participant
             this.incidents = incidentsDAO.getIncidentsByParticipant(violation.getParticipantId());
-            
-            // Get the session that created this violation
             this.sessions = sessionsDAO.getSessionsByViolationId(violation.getViolationId());
-            
             if (this.sessions == null || this.sessions.isEmpty()) {
-                // If no direct session found, try getting sessions by participant
                 this.sessions = sessionsDAO.getSessionsByParticipantId(violation.getParticipantId());
             }
-            
-            System.out.println("Found " + (this.incidents != null ? this.incidents.size() : 0) + " incidents");
-            System.out.println("Found " + (this.sessions != null ? this.sessions.size() : 0) + " sessions");
-            
         } catch (SQLException e) {
-            e.printStackTrace();
-            System.err.println("Error fetching related data: " + e.getMessage());
+            logger.error("Error fetching related data: " + e.getMessage());
         }
+    }
 
-        // Main panel layout with single column that grows
-        setLayout(new MigLayout("insets 0, fill", "[grow]", "[grow]"));
-        putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+    /**
+     * Initializes the main user interface of the panel.
+     */
+    private void initUI() {
+        setLayout(new MigLayout("fill, insets 0", "[fill]", "[fill]"));
 
-        // Content panel with proper spacing
-        JPanel mainPanel = new JPanel(new MigLayout("wrap, insets 15", "[grow]", "[]15[]15[]15[]15[]"));
+        JPanel mainPanel = new JPanel(new MigLayout("wrap, fillx, insets 20", "[fill]", "[]"));
         mainPanel.setOpaque(false);
 
-        // Status and Date Panel with flexible layout
-        JPanel statusDatePanel = new JPanel(new MigLayout("insets 0", "[grow][]", ""));
-        statusDatePanel.setOpaque(false);
+        mainPanel.add(createHeaderPanel(), "growx, wrap 20");
+        mainPanel.add(createStudentInfoSection(), "growx, wrap 15");
+        mainPanel.add(createViolationInfoSection(), "growx, wrap 15");
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
-        String formattedDate = dateFormat.format(violation.getUpdatedAt());
-        
-        JLabel dateLabel = new JLabel("Date Recorded: " + formattedDate);
-        dateLabel.putClientProperty("FlatLaf.style", "font: 14 $medium.font");
-
-        JLabel statusLabel = new JLabel("Status: " + violation.getStatus());
-        statusLabel.putClientProperty("FlatLaf.style", "font: 14 $medium.font");
-        statusLabel.setBorder(
-                BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(UIManager.getColor("Component.accentColor"), 1, true),
-                    BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        statusLabel.setOpaque(true);
-        statusLabel.setBackground(UIManager.getColor("Component.accentColor"));
-        statusLabel.setForeground(Color.WHITE);
-
-        statusDatePanel.add(dateLabel, "growx");
-        statusDatePanel.add(statusLabel);
-        
-        mainPanel.add(statusDatePanel, "growx");
-        mainPanel.add(createStudentInfoSection(), "growx");
-        mainPanel.add(createViolationInfoSection(), "growx");
-        
-        // Only add incident section if there are incidents or the violation is active
-        if ((incidents != null && !incidents.isEmpty()) || "Active".equalsIgnoreCase(violation.getStatus())) {
-            mainPanel.add(createIncidentDetailsSection(), "growx");
+        if (incidents != null && !incidents.isEmpty()) {
+            mainPanel.add(createTitledSection("Incident Details", createIncidentsPanel()), "growx, wrap 15");
         }
-        
-        // Only add sessions section if there are related sessions
+
         if (sessions != null && !sessions.isEmpty()) {
-            mainPanel.add(createCounselingSessionsSection(), "growx");
+            mainPanel.add(createTitledSection("Counseling Sessions", createCounselingSessionsPanel()), "growx, wrap 15");
         }
 
         JScrollPane scrollPane = new JScrollPane(mainPanel);
@@ -128,311 +113,337 @@ public class ViewViolationDetails extends JPanel {
         scrollPane.setBorder(null);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
-        
+
         add(scrollPane, "grow");
     }
 
+    /**
+     * Creates the header panel showing the violation status and record date.
+     * @return The header JPanel.
+     */
+    private JPanel createHeaderPanel() {
+        JPanel headerPanel = new JPanel(new MigLayout("insets 0, fill", "[grow][]", ""));
+        headerPanel.setOpaque(false);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy 'at' hh:mm a");
+        String formattedDate = (violation.getUpdatedAt() != null) ? dateFormat.format(violation.getUpdatedAt()) : "Date not recorded";
+        
+        JLabel dateLabel = new JLabel("<html><b>Date Recorded:</b> " + formattedDate + "</html>");
+
+        // Create a styled status label
+        String status = violation.getStatus() != null ? violation.getStatus() : "Unknown";
+        JLabel statusLabel = new JLabel(status.toUpperCase());
+        statusLabel.putClientProperty("FlatLaf.style", "font: bold 12; border: 8,12,8,12;");
+        statusLabel.setForeground(Color.WHITE);
+        statusLabel.setOpaque(true);
+        statusLabel.setBackground(getStatusColor(status));
+        statusLabel.putClientProperty(FlatClientProperties.STYLE, "arc: 999;"); // Make it a pill shape
+
+        headerPanel.add(dateLabel, "ay center");
+        headerPanel.add(statusLabel, "ay center");
+
+        return headerPanel;
+    }
+
+    /**
+     * Creates the main section for displaying student information.
+     * @return A JPanel containing the student's details.
+     */
     private JPanel createStudentInfoSection() {
-        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]15[]"));
-        section.setOpaque(false);
-
-        JLabel title = new JLabel("Student Information");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title.setForeground(new Color(58, 86, 167));
-        section.add(title, "growx");
-
-        JPanel line = new JPanel();
-        line.setBackground(new Color(58, 86, 167));
-        section.add(line, "growx, height 2!");
+        JPanel sectionPanel = new JPanel(new MigLayout("wrap, fillx, insets 0", "[fill]"));
+        sectionPanel.setOpaque(false);
 
         try {
             Participants participant = participantsDAO.getParticipantById(violation.getParticipantId());
             if (participant != null) {
-                String fullName = participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
-                String contactNumber = participant.getContactNumber();
-
-                JPanel namePanel = new JPanel(new MigLayout("insets 0", "[grow]", "[]5[]"));
-                namePanel.setOpaque(false);
-
-                JLabel nameLabel = new JLabel(fullName);
-                nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-                namePanel.add(nameLabel, "wrap");
-
-                if ("Student".equals(participant.getParticipantType())) {
+                if ("Student".equalsIgnoreCase(participant.getParticipantType()) && participant.getStudentUid() > 0) {
                     Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
                     if (student != null) {
+                        // Address address = addressDAO.getAddressById(student.getAddressId());
+                        // Parents parents = parentsDAO.getParentById(student.getParentId());
+                        // Guardian guardian = guardianDAO.getGuardianById(student.getGuardianId());
+
+                        // Student Name and LRN
+                        String fullName = student.getStudentFirstname() + " " + student.getStudentMiddlename().charAt(0) + ". " + student.getStudentLastname();
+                        JLabel nameLabel = new JLabel(fullName);
+                        nameLabel.putClientProperty("FlatLaf.style", "font: bold 22;");
                         JLabel lrnLabel = new JLabel("LRN: " + student.getStudentLrn());
-                        lrnLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                        lrnLabel.setForeground(new Color(102, 102, 102));
-                        namePanel.add(lrnLabel);
+                        lrnLabel.putClientProperty("FlatLaf.style", "font: 14;");
+                        sectionPanel.add(nameLabel, "wrap 0");
+                        sectionPanel.add(lrnLabel, "wrap 15");
+
+                        // Details Grid
+                        JPanel grid = new JPanel(new MigLayout("wrap 4, fillx, insets 0", "[fill][fill][fill][fill]"));
+                        grid.setOpaque(false);
+                        grid.add(createInfoCard("Grade & Section", student.getSchoolSection() != null ? student.getSchoolSection() : "N/A"));
+                        grid.add(createInfoCard("Age", String.valueOf(calculateAge(student.getStudentBirthdate())) + " years old"));
+                        grid.add(createInfoCard("Sex", student.getStudentSex()));
+                        grid.add(createInfoCard("Religion", student.getStudentReligion() != null ? student.getStudentReligion() : "N/A"));
+                        
+                        // Contact and Address
+                        grid.add(createInfoCard("Contact Number", participant.getContactNumber() != null ? participant.getContactNumber() : "N/A"), "span 2");
+                        // grid.add(createInfoCard("Address", address != null ? formatAddress(address) : "N/A"), "span 2"); // Uncomment when addressDAO is ready
+                        
+                        // grid.add(createInfoCard("Guardian", guardian != null ? guardian.getFullName() : "N/A"), "span 2"); // Uncomment when guardianDAO is ready
+                        // grid.add(createInfoCard("Guardian Contact", guardian != null ? guardian.getContactNumber() : "N/A"), "span 2"); // Uncomment when guardianDAO is ready
+
+                        sectionPanel.add(grid);
                     }
+                } else {
+                     // Handle non-student participants
+                    String fullName = participant.getParticipantFirstName() + " " + participant.getParticipantLastName();
+                    sectionPanel.add(new JLabel(fullName), "wrap");
+                    sectionPanel.add(createInfoCard("Participant Type", participant.getParticipantType()));
+                    sectionPanel.add(createInfoCard("Contact", participant.getContactNumber()));
                 }
-                section.add(namePanel, "growx");
-
-                JPanel gridPanel = new JPanel(new MigLayout("wrap 2, insets 0", "[grow,fill][grow,fill]", "[]15[]"));
-                gridPanel.setOpaque(false);
-
-                if ("Student".equals(participant.getParticipantType())) {
-                    Student student = studentsDataDAO.getStudentById(participant.getStudentUid());
-                    if (student != null) {
-                        gridPanel.add(createInfoGroup("Grade & Section", student.getSchoolSection()));
-                        gridPanel.add(createInfoGroup("Sex", student.getStudentSex()));
-                        gridPanel.add(createInfoGroup("Age", String.valueOf(calculateAge(student.getStudentBirthdate()))));
-                        gridPanel.add(createInfoGroup("Contact Number", contactNumber));
-                    }
-                }
-
-                section.add(gridPanel, "growx");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error loading student data.");
+            sectionPanel.add(new JLabel("Error loading student data."));
         }
 
-        return section;
+        return createTitledSection("Student Information", sectionPanel);
     }
-
-    private JPanel createInfoGroup(String label, String value) {
-        JPanel group = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]"));
-        group.setOpaque(false);
-
-        JLabel infoLabel = new JLabel(label);
-        infoLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        infoLabel.setForeground(UIManager.getColor("Label.foreground"));
-        group.add(infoLabel);
-
-        JPanel valuePanel = new JPanel(new MigLayout("insets 10", "[grow]", "[]"));
-        valuePanel.setBackground(UIManager.getColor("TextField.background"));
-        valuePanel.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, UIManager.getColor("Component.accentColor")));
-        
-        JLabel valueLabel = new JLabel(value != null ? value : "");
-        valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        valueLabel.setForeground(UIManager.getColor("Label.foreground"));
-        valuePanel.add(valueLabel, "growx");
-        group.add(valuePanel, "growx");
-
-        return group;
-    }
-
+    
+    /**
+     * Creates the main section for displaying violation information.
+     * @return A JPanel containing the violation details.
+     */
     private JPanel createViolationInfoSection() {
-        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]15[]"));
-        section.setOpaque(false);
+        JPanel sectionPanel = new JPanel(new MigLayout("wrap 2, fillx, insets 0", "[fill][fill]"));
+        sectionPanel.setOpaque(false);
 
-        JLabel title = new JLabel("Violation Information");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title.setForeground(UIManager.getColor("Component.accentColor"));
-        section.add(title, "growx");
+        // Violation Type & Category
+        sectionPanel.add(createInfoCard("Violation Type", violation.getViolationType()), "growx");
+        try {
+            String categoryName = violationDAO.getCategoryNameById(violation.getCategoryId());
+            sectionPanel.add(createInfoCard("Violation Category", categoryName != null ? categoryName : "N/A"), "growx");
+        } catch (SQLException e) {
+            sectionPanel.add(createInfoCard("Violation Category", "Error loading"), "growx");
+            logger.error("Error loading violation category.");
+        }
 
-        JPanel line = new JPanel();
-        line.setBackground(UIManager.getColor("Component.accentColor"));
-        section.add(line, "growx, height 2!");
+        // Violation Description
+        sectionPanel.add(createTextAreaCard("Description of Violation", violation.getViolationDescription()), "span 2, growx");
 
-        JLabel typeLabel = new JLabel("Violation Type");
-        typeLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        typeLabel.setForeground(UIManager.getColor("Label.foreground"));
-        section.add(typeLabel);
+        // Reinforcement and Resolution
+        sectionPanel.add(createTextAreaCard("Reinforcement / Action Plan", violation.getReinforcement()), "span 2, growx");
+        sectionPanel.add(createTextAreaCard("Resolution Notes", violation.getResolutionNotes()), "span 2, growx");
+        sectionPanel.add(createTextAreaCard("Session Summary", violation.getSessionSummary()), "span 2, growx");
 
-        JPanel badgePanel = new JPanel(new MigLayout("insets 10", "[grow]", "[]"));
-        badgePanel.setOpaque(false);
-        badgePanel.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, UIManager.getColor("Component.accentColor")));
+        return createTitledSection("Violation Information", sectionPanel);
+    }
+    
+    /**
+     * Creates a panel containing all incident report cards.
+     * @return A JPanel with incident details.
+     */
+    private JPanel createIncidentsPanel() {
+        JPanel incidentsPanel = new JPanel(new MigLayout("wrap, fillx, insets 0", "[fill]"));
+        incidentsPanel.setOpaque(false);
+        for(Incident incident : incidents) {
+            incidentsPanel.add(createIncidentCard(incident), "growx, wrap 10");
+        }
+        return incidentsPanel;
+    }
+    
+    /**
+     * Creates a panel containing all counseling session cards.
+     * @return A JPanel with session details.
+     */
+    private JPanel createCounselingSessionsPanel() {
+        JPanel sessionsPanel = new JPanel(new MigLayout("wrap, fillx, insets 0", "[fill]"));
+        sessionsPanel.setOpaque(false);
+        for(Sessions session : sessions) {
+            sessionsPanel.add(createSessionCard(session), "growx, wrap 10");
+        }
+        return sessionsPanel;
+    }
+
+    /**
+     * Creates a styled card to display a single incident's details.
+     * @param incident The incident data to display.
+     * @return A JPanel representing the incident card.
+     */
+    private JPanel createIncidentCard(Incident incident) {
+        JPanel card = createBaseCard();
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy");
+        String dateStr = incident.getIncidentDate() != null ? sdf.format(incident.getIncidentDate()) : "N/A";
         
-        JLabel violationBadge = new JLabel(violation.getViolationType());
-        violationBadge.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        violationBadge.setForeground(Color.WHITE);
-        violationBadge.setBackground(UIManager.getColor("Component.accentColor"));
-        violationBadge.setOpaque(true);
-        violationBadge.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        badgePanel.add(violationBadge, "growx");
-        section.add(badgePanel, "growx");
-
-        return section;
+        card.add(createCardHeader("Incident on " + dateStr, getStatusColor(incident.getStatus())), "span, growx, wrap 10");
+        card.add(createTextAreaCard("Description", incident.getIncidentDescription()), "growx, wrap");
+        card.add(createTextAreaCard("Action Taken", incident.getActionTaken()), "growx, wrap");
+        card.add(createTextAreaCard("Recommendation", incident.getRecommendation()), "growx");
+        return card;
     }
 
-    private JPanel createIncidentDetailsSection() {
-        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]15[]"));
+    /**
+     * Creates a styled card to display a single session's details.
+     * @param session The session data to display.
+     * @return A JPanel representing the session card.
+     */
+    private JPanel createSessionCard(Sessions session) {
+        JPanel card = createBaseCard();
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy 'at' hh:mm a");
+        String dateStr = session.getSessionDateTime() != null ? sdf.format(session.getSessionDateTime()) : "N/A";
+
+        card.add(createCardHeader("Session on " + dateStr, getStatusColor(session.getSessionStatus())), "span, growx, wrap 10");
+        card.add(createInfoCard("Consultation Type", session.getConsultationType()), "growx");
+        card.add(createInfoCard("Appointment Type", session.getAppointmentType()), "growx, wrap");
+        card.add(createTextAreaCard("Session Summary", session.getSessionSummary()), "span, growx, wrap");
+        card.add(createTextAreaCard("Session Notes", session.getSessionNotes()), "span, growx");
+        return card;
+    }
+
+    // --- HELPER METHODS FOR UI CREATION ---
+
+    /**
+     * Creates a generic titled section with a separator line.
+     * @param title The title of the section.
+     * @param contentPanel The panel containing the content for this section.
+     * @return A composed JPanel for the section.
+     */
+    private JPanel createTitledSection(String title, JComponent contentPanel) {
+        JPanel section = new JPanel(new MigLayout("wrap, fillx, insets 0", "[fill]"));
         section.setOpaque(false);
-
-        JLabel title = new JLabel("Incident Details");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title.setForeground(UIManager.getColor("Component.accentColor"));
-        section.add(title, "growx");
-
-        JPanel line = new JPanel();
-        line.setBackground(UIManager.getColor("Component.accentColor"));
-        section.add(line, "growx, height 2!");
-
-        if (incidents != null && !incidents.isEmpty()) {
-            for (Incident incident : incidents) {
-                JPanel incidentBox = new JPanel(new MigLayout("wrap, insets 15", "[grow]", "[]10[]10[]10[]"));
-                incidentBox.setOpaque(false);
-                incidentBox.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, UIManager.getColor("Component.accentColor")));
-
-                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
-                String formattedDate = dateFormat.format(incident.getIncidentDate());
-                
-                JLabel dateLabel = new JLabel("Incident Date: " + formattedDate);
-                dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                dateLabel.setForeground(UIManager.getColor("Label.foreground"));
-                incidentBox.add(dateLabel, "growx");
-
-                JLabel descLabel = new JLabel("Incident Description");
-                descLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-                descLabel.setForeground(UIManager.getColor("Label.foreground"));
-                incidentBox.add(descLabel, "growx 5");
-
-                JTextArea descText = new JTextArea(incident.getIncidentDescription());
-                descText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                descText.setLineWrap(true);
-                descText.setWrapStyleWord(true);
-                descText.setEditable(false);
-                descText.setBackground(UIManager.getColor("TextField.background"));
-                descText.setForeground(UIManager.getColor("TextField.foreground"));
-                descText.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                incidentBox.add(descText, "growx 10");
-
-                JLabel actionLabel = new JLabel("Action Taken");
-                actionLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-                actionLabel.setForeground(UIManager.getColor("Label.foreground"));
-                incidentBox.add(actionLabel, "growx 5");
-
-                JTextArea actionText = new JTextArea(incident.getActionTaken());
-                actionText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                actionText.setLineWrap(true);
-                actionText.setWrapStyleWord(true);
-                actionText.setEditable(false);
-                actionText.setBackground(UIManager.getColor("TextField.background"));
-                actionText.setForeground(UIManager.getColor("TextField.foreground"));
-                actionText.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                incidentBox.add(actionText, "growx 10");
-
-                section.add(incidentBox, "growx 15");
-            }
-        } else {
-            JLabel noIncidentLabel = new JLabel("No incident reports found for this violation.");
-            noIncidentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            noIncidentLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
-            section.add(noIncidentLabel, "growx 15");
-        }
-
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.putClientProperty(FlatClientProperties.STYLE, "font: bold 18;");
+        section.add(titleLabel, "wrap 5");
+        section.add(new JSeparator(), "growx, wrap 10");
+        section.add(contentPanel, "growx");
         return section;
     }
 
-    private JPanel createCounselingSessionsSection() {
-        JPanel section = new JPanel(new MigLayout("wrap, insets 0", "[grow]", "[]5[]15[]"));
-        section.setOpaque(false);
-
-        JLabel title = new JLabel("Counseling Sessions");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title.setForeground(UIManager.getColor("Component.accentColor"));
-        section.add(title, "growx");
-
-        JPanel line = new JPanel();
-        line.setBackground(UIManager.getColor("Component.accentColor"));
-        section.add(line, "growx, height 2!");
-
-        if (sessions != null && !sessions.isEmpty()) {
-            for (Sessions session : sessions) {
-                JPanel sessionBox = new JPanel(new MigLayout("wrap, insets 15", "[grow]", "[]10[]10[]10[]"));
-                sessionBox.setOpaque(false);
-                sessionBox.setBorder(BorderFactory.createMatteBorder(0, 3, 0, 0, UIManager.getColor("Component.accentColor")));
-
-                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
-                String formattedDate = dateFormat.format(session.getSessionDateTime());
-                
-                JLabel dateLabel = new JLabel("Session Date: " + formattedDate);
-                dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                dateLabel.setForeground(UIManager.getColor("Label.foreground"));
-                sessionBox.add(dateLabel, "growx");
-
-                JLabel summaryLabel = new JLabel("Session Summary");
-                summaryLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-                summaryLabel.setForeground(UIManager.getColor("Label.foreground"));
-                sessionBox.add(summaryLabel, "growx 5");
-
-                JTextArea summaryText = new JTextArea(session.getSessionSummary());
-                summaryText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                summaryText.setLineWrap(true);
-                summaryText.setWrapStyleWord(true);
-                summaryText.setEditable(false);
-                summaryText.setBackground(UIManager.getColor("TextField.background"));
-                summaryText.setForeground(UIManager.getColor("TextField.foreground"));
-                summaryText.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                sessionBox.add(summaryText, "growx 10");
-
-                JLabel notesLabel = new JLabel("Session Notes");
-                notesLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-                notesLabel.setForeground(UIManager.getColor("Label.foreground"));
-                sessionBox.add(notesLabel, "growx 5");
-
-                JTextArea notesText = new JTextArea(session.getSessionNotes());
-                notesText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                notesText.setLineWrap(true);
-                notesText.setWrapStyleWord(true);
-                notesText.setEditable(false);
-                notesText.setBackground(UIManager.getColor("TextField.background"));
-                notesText.setForeground(UIManager.getColor("TextField.foreground"));
-                notesText.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                sessionBox.add(notesText, "growx 10");
-
-                section.add(sessionBox, "growx 15");
-            }
-        } else {
-            JLabel noSessionLabel = new JLabel("No counseling sessions found for this violation.");
-            noSessionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            noSessionLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
-            section.add(noSessionLabel, "growx 15");
-        }
-
-        return section;
+    /**
+     * Creates a small display card for a single piece of information (label and value).
+     * @param label The label text.
+     * @param value The value text.
+     * @return A styled JPanel for the info card.
+     */
+    private JPanel createInfoCard(String label, String value) {
+        JPanel card = new JPanel(new MigLayout("wrap, fillx, insets 8 12", "[fill]"));
+        JLabel labelLabel = new JLabel(label.toUpperCase());
+        JLabel valueLabel = new JLabel(value != null && !value.trim().isEmpty() ? value : "N/A");
+        valueLabel.putClientProperty(FlatClientProperties.STYLE, "font: 14;");
+        card.add(labelLabel);
+        card.add(valueLabel, "gapy 2");
+        return card;
     }
 
+    /**
+     * Creates a display card for multi-line text content.
+     * @param label The label for the text area.
+     * @param text The text content.
+     * @return A styled JPanel containing the text area.
+     */
+    private JPanel createTextAreaCard(String label, String text) {
+        JPanel card = new JPanel(new MigLayout("wrap, fillx, insets 8 12", "[fill]"));
+        
+        JLabel labelLabel = new JLabel(label.toUpperCase());
+        
+        JTextArea textArea = new JTextArea(text != null && !text.trim().isEmpty() ? text : "No information provided.");
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setEditable(false);
+        textArea.setFocusable(false);
+        textArea.setOpaque(false);
+        textArea.putClientProperty(FlatClientProperties.STYLE, "font: 14;");
+
+        card.add(labelLabel);
+        card.add(textArea, "gapy 2, growx");
+        return card;
+    }
+
+    private JPanel createBaseCard() {
+        JPanel card = new JPanel(new MigLayout("wrap 2, fillx", "[fill][fill]"));
+        return card;
+    }
+
+    private JComponent createCardHeader(String title, Color statusColor) {
+        JPanel header = new JPanel(new MigLayout("insets 8 12", "[grow]"));
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.putClientProperty(FlatClientProperties.STYLE, "font: bold 14;");
+        header.add(titleLabel);
+        return header;
+    }
+
+    /**
+     * Calculates age based on the birthdate. This is the corrected and more robust version.
+     * @param birthdate The student's birthdate.
+     * @return The calculated age in years.
+     */
     private int calculateAge(Date birthdate) {
-        if (birthdate == null) return 0;
-        LocalDate birthDate = birthdate.toLocalDate();
-        return Period.between(birthDate, LocalDate.now()).getYears();
+        if (birthdate == null) {
+            return 0;
+        }
+        LocalDate birthDateLocal = birthdate.toLocalDate();
+        LocalDate today = LocalDate.now();
+        if (birthDateLocal.isAfter(today)) {
+            return 0; // Birthdate is in the future, invalid.
+        }
+        return Period.between(birthDateLocal, today).getYears();
     }
 
-    public static void showDialog(Component parent,
-                                  Connection conn,
-                                  Violation violation,
-                                  StudentsDataDAO studentsDataDAO,
-                                  ParticipantsDAO participantsDAO) {
-        ViewViolationDetails detailsPanel = new ViewViolationDetails(
-                conn, violation, studentsDataDAO, participantsDAO
-        );
+    /**
+     * Provides a color based on the item's status string.
+     * @param status The status string (e.g., "Active", "Closed").
+     * @return A Color object for the status.
+     */
+    private Color getStatusColor(String status) {
+        if (status == null) return Color.GRAY;
+        switch (status.toLowerCase()) {
+            case "active":
+            case "ongoing":
+                return new Color(0, 123, 255); // Blue
+            case "closed":
+            case "resolved":
+                return new Color(40, 167, 69); // Green
+            case "pending":
+                return new Color(255, 193, 7); // Yellow
+            case "cancelled":
+                return new Color(108, 117, 125); // Gray
+            default:
+                return new Color(220, 53, 69); // Red for other cases like "for review"
+        }
+    }
 
-        Option option = ModalDialog.createOption();
-        option.setOpacity(0.4f)
-              .setAnimationOnClose(false)
-              .getBorderOption()
-              .setBorderWidth(0f)
-              .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM);
+    /**
+     * Static method to create and show the modal dialog for this panel.
+     */
+    public static void showDialog(Component parent, Connection conn, Violation violation, StudentsDataDAO studentsDataDAO, ParticipantsDAO participantsDAO) {
+        ViewViolationDetails detailsPanel = new ViewViolationDetails(conn, violation, studentsDataDAO, participantsDAO);
 
         String modalId = "violation_details_" + violation.getViolationId();
         if (ModalDialog.isIdExist(modalId)) {
             ModalDialog.closeModal(modalId);
         }
 
-        // Set dialog size with proper dimensions
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int width = Math.min(850, screenSize.width - 100);
-        int height = Math.min(650, screenSize.height - 100);
-        option.getLayoutOption().setSize(width, height);
+        int width = Math.min(900, screenSize.width - 100);
+        int height = Math.min(800, screenSize.height - 100);
 
-        ModalDialog.showModal(
-                parent,
-                new SimpleModalBorder(
-                        detailsPanel,
-                        "Violation Details",
-                        new SimpleModalBorder.Option[]{
-                                new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)
-                        },
-                        (controller, action) -> {
-                            if (action == SimpleModalBorder.CLOSE_OPTION) {
-                                controller.close();
-                            }
-                        }
-                ),
-                modalId
+        // Configure global modal options based on AddAppointmentModal.java pattern
+        ModalDialog.getDefaultOption()
+            .setOpacity(0.3f) // Keep opacity from original ViewViolationDetails
+            .setAnimationOnClose(false) // Keep animation from original ViewViolationDetails
+            .getBorderOption()
+            .setBorderWidth(0f) // Keep border from original ViewViolationDetails
+            .setShadow(raven.modal.option.BorderOption.Shadow.MEDIUM); // Keep shadow from original ViewViolationDetails
+
+        SimpleModalBorder modalBorder = new SimpleModalBorder(
+            detailsPanel, 
+            "Violation Record Details", 
+            new SimpleModalBorder.Option[]{ new SimpleModalBorder.Option("Close", SimpleModalBorder.CLOSE_OPTION)},
+            (controller, action) -> {
+                if (action == SimpleModalBorder.CLOSE_OPTION) {
+                    controller.close();
+                }
+            }
         );
+        
+        ModalDialog.showModal(parent, modalBorder, modalId);
+
+        // Set modal size after showing, using getDefaultOption()
+        ModalDialog.getDefaultOption().getLayoutOption().setSize(width,height);
     }
 }

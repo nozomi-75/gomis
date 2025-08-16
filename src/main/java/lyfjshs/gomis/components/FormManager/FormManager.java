@@ -30,6 +30,7 @@ public class FormManager {
     private static String counselorLAST_NAME;
     private static String counselorPosition;
     private static int counselorID;
+    private static Connection currentConnection;
 
     /**
      * Initializes the form manager with a given JFrame and logs out the current
@@ -73,12 +74,17 @@ public class FormManager {
      * and displaying the navigation drawer.
      */
     public static void login(Connection conn) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Database connection cannot be null");
+        }
+        currentConnection = conn;
         Drawer.installDrawer(Main.gFrame, new DrawerBuilder(conn));
         Drawer.setVisible(true);
         frame.getContentPane().removeAll();
         frame.getContentPane().add(getMainForm());
 
-        Drawer.setSelectedItemClass(MainDashboard.class);
+        // Explicitly show the MainDashboard after login, triggering its responsive layout logic
+        FormManager.showForm(new MainDashboard(currentConnection));
         frame.repaint();
         frame.revalidate();
     }
@@ -141,7 +147,7 @@ public class FormManager {
     }
 
     // Static counselor object accessible application-wide
-    private static GuidanceCounselor staticCounselorObject;
+    public static GuidanceCounselor staticCounselorObject;
     
     /**
      * Sets the counselor object at the class level for static access
@@ -171,14 +177,14 @@ public class FormManager {
         }
     }
 
-    private GuidanceCounselor counselorObjedct;
+    private GuidanceCounselor counselorObject;
 
     public void setCounselorDetails(GuidanceCounselor counselor) {
         if (counselor == null) {
             System.err.println("Warning: Attempting to set null counselor");
             return;
         }
-        this.counselorObjedct = counselor;
+        this.counselorObject = counselor;
         counselorFIRST_NAME = counselor.getFirstName();
         counselorLAST_NAME = counselor.getLastName();
         counselorPosition = counselor.getPosition();
@@ -189,20 +195,20 @@ public class FormManager {
     }
 
     public GuidanceCounselor getCounselorObject() {
-        return counselorObjedct;
+        return counselorObject;
     }
 
     public int getCounselorID() {
         // Add null check and default value
-        if (counselorObjedct == null) {
+        if (counselorObject == null) {
             System.err.println("Warning: Counselor object is null");
             return 1; // Default ID
         }
-        return counselorObjedct.getGuidanceCounselorId();
+        return counselorObject.getGuidanceCounselorId();
     }
 
     public void setCounselorID(int counselorID) {
-        this.counselorObjedct.setGuidanceCounselorId(counselorID);
+        this.counselorObject.setGuidanceCounselorId(counselorID);
         ;
         System.out.println("Setting Counselor ID: " + getCounselorID()); // Debug statement
     }
@@ -237,4 +243,66 @@ public class FormManager {
         }
     }
 
+    /**
+     * Gets the current database connection
+     * @return The current database connection
+     */
+    public static Connection getCurrentConnection() {
+        return currentConnection;
+    }
+
+    /**
+     * Triggers a layout update on the MainDashboard when the frame is resized.
+     * This ensures proper responsive layout behavior.
+     */
+    public static void triggerDashboardLayoutUpdate(int frameWidth) {
+        if (mainForm != null) {
+            Form currentForm = mainForm.getCurrentForm();
+            if (currentForm instanceof MainDashboard) {
+                ((MainDashboard) currentForm).updateLayout(frameWidth);
+            }
+        }
+    }
+
+    /**
+     * Navigates back to the previous form or to the main dashboard if no previous form exists.
+     */
+    public static void goBack() {
+        if (mainForm != null) {
+            Form[] forms = mainForm.getAllForms();
+            if (forms.length > 1) {
+                // Remove the current form and show the previous one
+                mainForm.setForm(forms[forms.length - 2]);
+            } else {
+                // If no previous form, go to main dashboard
+                FormManager.showForm(new MainDashboard(currentConnection));
+            }
+        }
+    }
+
+    /**
+     * Notifies the currently active form of a parent frame resize event.
+     */
+    public static void notifyActiveFormOfResize(int width, int height) {
+        int contentWidth = width;
+        int contentHeight = height;
+        if (frame != null && frame.getContentPane() != null) {
+            contentWidth = frame.getContentPane().getWidth();
+            contentHeight = frame.getContentPane().getHeight();
+        }
+        Form current = getCurrentForm();
+        if (current != null) {
+            current.onParentFrameResized(contentWidth, contentHeight);
+        }
+    }
+
+    /**
+     * Returns the currently active form in the main panel.
+     */
+    public static Form getCurrentForm() {
+        if (mainForm != null) {
+            return mainForm.getCurrentForm();
+        }
+        return null;
+    }
 }

@@ -6,15 +6,24 @@ import java.awt.Window;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
@@ -58,7 +67,7 @@ public class SettingsManager {
 				notifyListeners();
 			} else {
 				// Set defaults if no settings found
-				currentState = new SettingsState("FlatLightLaf", "Segoe UI", 14, true);
+				currentState = new SettingsState("FlatLightLaf", 14, true);
 				saveSettingsToDB(currentState);
 				applyUIChanges(currentState);
 			}
@@ -82,19 +91,20 @@ public class SettingsManager {
 
 			String[][] values = {
 				{"theme", state.theme},
-				{"font_style", state.fontStyle},
 				{"font_size", String.valueOf(state.fontSize)},
 				{"notifications", String.valueOf(state.notifications)},
 				{"notification_time_minutes", String.valueOf(state.notificationTimeMinutes)},
 				{"notify_on_missed", String.valueOf(state.notifyOnMissed)},
-				{"notify_on_start", String.valueOf(state.notifyOnStart)}
+				{"notify_on_start", String.valueOf(state.notifyOnStart)},
+				{"sound_enabled", String.valueOf(state.soundEnabled)},
+				{"sound_file", state.soundFile}
 			};
 
-			for (int i = 0; i < queries.length; i++) {
-				try (PreparedStatement stmt = connection.prepareStatement(queries[i])) {
-					stmt.setString(1, values[i][0]); // key
-					stmt.setString(2, values[i][1]); // value
-					stmt.setString(3, values[i][1]); // value for update
+			for (String[] entry : values) {
+				try (PreparedStatement stmt = connection.prepareStatement(queries[0])) { // Use the first query template
+					stmt.setString(1, entry[0]); // key
+					stmt.setString(2, entry[1]); // value
+					stmt.setString(3, entry[1]); // value for update
 					stmt.executeUpdate();
 				}
 			}
@@ -121,7 +131,6 @@ public class SettingsManager {
 
 	public SettingsState getSettingsState() {
 		String theme = settings.getOrDefault("theme", "FlatLightLaf");
-		String fontStyle = settings.getOrDefault("font_style", "FlatRobotoFont");
 		int fontSize = Integer.parseInt(settings.getOrDefault("font_size", "13"));
 		boolean notifications = Boolean.parseBoolean(settings.getOrDefault("notifications", "true"));
 		
@@ -129,9 +138,16 @@ public class SettingsManager {
 		int notificationTimeMinutes = Integer.parseInt(settings.getOrDefault("notification_time_minutes", "10"));
 		boolean notifyOnMissed = Boolean.parseBoolean(settings.getOrDefault("notify_on_missed", "true"));
 		boolean notifyOnStart = Boolean.parseBoolean(settings.getOrDefault("notify_on_start", "true"));
+		boolean soundEnabled = Boolean.parseBoolean(settings.getOrDefault("sound_enabled", "true"));
+		String soundFile = settings.getOrDefault("sound_file", "/sounds/Homecoming.mp3");
 		
-		return new SettingsState(theme, fontStyle, fontSize, notifications, 
+		SettingsState state = new SettingsState(theme, fontSize, notifications,
 			notificationTimeMinutes, notifyOnMissed, notifyOnStart);
+		state.soundEnabled = soundEnabled;
+		state.soundFile = soundFile;
+		state.availableSoundFiles = discoverSoundFiles(); // Populate available sound files
+
+		return state;
 	}
 	
 	   /**
@@ -149,9 +165,6 @@ public class SettingsManager {
 			case "theme":
 				currentState.theme = value;
 				break;
-			case "font_style":
-				currentState.fontStyle = value;
-				break;
 			case "font_size":
 				currentState.fontSize = Integer.parseInt(value);
 				break;
@@ -166,6 +179,12 @@ public class SettingsManager {
 				break;
 			case "notify_on_start":
 				currentState.notifyOnStart = Boolean.parseBoolean(value);
+				break;
+			case "sound_enabled":
+				currentState.soundEnabled = Boolean.parseBoolean(value);
+				break;
+			case "sound_file":
+				currentState.soundFile = value;
 				break;
 		}
 
@@ -218,8 +237,13 @@ public class SettingsManager {
 			e.printStackTrace();
 		}
 
-		Font appFont = new Font(state.fontStyle, Font.PLAIN, state.fontSize);
-		UIManager.put("defaultFont", appFont);
+		Font currentFont = UIManager.getFont("defaultFont");
+		if (currentFont == null) {
+			currentFont = new Font("Dialog", Font.PLAIN, state.fontSize);
+		} else {
+			currentFont = currentFont.deriveFont((float) state.fontSize);
+		}
+		UIManager.put("defaultFont", currentFont);
 
 		// Update all UI components immediately
 		SwingUtilities.invokeLater(() -> {
@@ -235,6 +259,7 @@ public class SettingsManager {
 	 */
 	private static void loadSettings() {
 		currentState = getSettingsStateFromDB();
+		currentState.availableSoundFiles = discoverSoundFiles(); // Populate available sound files
 		loadGoodMoralSettings(); // Load Good Moral Certificate settings
 		notifyListeners();
 	}
@@ -246,7 +271,7 @@ public class SettingsManager {
 	 */
 	private static SettingsState getSettingsStateFromDB() {
 		String query = "SELECT PREF_KEY, PREF_VALUE FROM PREFERENCES";
-		SettingsState state = new SettingsState("FlatLightLaf", "Segoe UI", 14, true);
+		SettingsState state = new SettingsState("FlatLightLaf", 14, true);
 		
 		try (PreparedStatement stmt = connection.prepareStatement(query);
 			 ResultSet rs = stmt.executeQuery()) {
@@ -258,9 +283,6 @@ public class SettingsManager {
 				switch (key) {
 					case "theme":
 						state.theme = value;
-						break;
-					case "font_style":
-						state.fontStyle = value;
 						break;
 					case "font_size":
 						state.fontSize = Integer.parseInt(value);
@@ -276,6 +298,12 @@ public class SettingsManager {
 						break;
 					case "notify_on_start":
 						state.notifyOnStart = Boolean.parseBoolean(value);
+						break;
+					case "sound_enabled":
+						state.soundEnabled = Boolean.parseBoolean(value);
+						break;
+					case "sound_file":
+						state.soundFile = value;
 						break;
 				}
 			}
@@ -308,7 +336,7 @@ public class SettingsManager {
 				UIManager.setLookAndFeel(new FlatMacLightLaf());
 				break;
 			case "FlatDarculaLaf":
-			UIManager.setLookAndFeel(new FlatDarculaLaf());
+				UIManager.setLookAndFeel(new FlatDarculaLaf());
 				break;
 			case "FlatIntelliJLaf":
 				UIManager.setLookAndFeel(new FlatIntelliJLaf());
@@ -321,9 +349,14 @@ public class SettingsManager {
 			e.printStackTrace();
 		}
 
-		// Apply font settings
-		Font appFont = new Font(currentState.fontStyle, Font.PLAIN, currentState.fontSize);
-		UIManager.put("defaultFont", appFont);
+		// Apply just font size to default font
+		Font currentFont = UIManager.getFont("defaultFont");
+		if (currentFont == null) {
+			currentFont = new Font("Dialog", Font.PLAIN, currentState.fontSize);
+		} else {
+			currentFont = currentFont.deriveFont((float) currentState.fontSize);
+		}
+		UIManager.put("defaultFont", currentFont);
 
 		// Update all open UI components
 		SwingUtilities.invokeLater(() -> {
@@ -341,6 +374,56 @@ public class SettingsManager {
 		for (Consumer<SettingsState> listener : settingsListeners) {
 			listener.accept(currentState);
 		}
+	}
+
+	private static List<String> discoverSoundFiles() {
+		List<String> soundFiles = new ArrayList<>();
+		try {
+			String[] soundSubdirs = {"alarm_tone/", "notification/"}; // Define subdirectories to scan
+
+			for (String subdir : soundSubdirs) {
+				java.net.URL soundDirUrl = SettingsManager.class.getResource("/sounds/" + subdir);
+				if (soundDirUrl != null) {
+					URI uri = soundDirUrl.toURI();
+					Path path;
+					FileSystem fileSystem = null;
+
+					if ("jar".equals(uri.getScheme())) {
+						// If running from a JAR, create a new file system
+						fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object>emptyMap());
+						path = fileSystem.getPath("/sounds/" + subdir);
+					} else {
+						// If running from exploded classes (e.g., in IDE)
+						path = Paths.get(uri);
+					}
+
+					// List files and filter by extensions (only direct children, as we are iterating subdirs)
+					try (Stream<Path> walk = Files.walk(path, 1)) {
+						Iterator<Path> it = walk.iterator();
+						while(it.hasNext()) {
+							Path file = it.next();
+							if (Files.isRegularFile(file)) {
+								String fileName = file.getFileName().toString();
+								if (fileName.toLowerCase().endsWith(".mp3") || fileName.toLowerCase().endsWith(".wav")) {
+									soundFiles.add("sounds/" + subdir + fileName); // Store as full relative resource path
+								}
+							}
+						}
+					}
+					
+					// Close the file system if it was created
+					if (fileSystem != null) {
+						fileSystem.close();
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			// Fallback to default sounds if there's an error
+			soundFiles.add("sounds/alarm_tone/Homecoming.mp3");
+			soundFiles.add("sounds/notification/Advanced_Bell.mp3");
+		}
+		return soundFiles;
 	}
 
 	private static void loadGoodMoralSettings() {
@@ -494,6 +577,69 @@ public class SettingsManager {
 
 	public static String getGoodMoralPosition() {
 		return currentState.goodMoralPosition;
+	}
+
+	// --- Template Metadata Management ---
+	public static void saveTemplateMetadata(String templateKey, String templatePath, String lastModified, String user) {
+		try {
+			connection.setAutoCommit(false);
+			String sql = "INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) ON DUPLICATE KEY UPDATE PREF_VALUE = ?";
+			// Save path
+			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+				stmt.setString(1, templateKey + "_path");
+				stmt.setString(2, templatePath);
+				stmt.setString(3, templatePath);
+				stmt.executeUpdate();
+			}
+			// Save last modified
+			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+				stmt.setString(1, templateKey + "_last_modified");
+				stmt.setString(2, lastModified);
+				stmt.setString(3, lastModified);
+				stmt.executeUpdate();
+			}
+			// Save user
+			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+				stmt.setString(1, templateKey + "_user");
+				stmt.setString(2, user);
+				stmt.setString(3, user);
+				stmt.executeUpdate();
+			}
+			connection.commit();
+		} catch (SQLException e) {
+			try { connection.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+			e.printStackTrace();
+		} finally {
+			try { connection.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+		}
+	}
+
+	public static TemplateMetadata getTemplateMetadata(String templateKey) {
+		TemplateMetadata meta = new TemplateMetadata();
+		String sql = "SELECT PREF_KEY, PREF_VALUE FROM PREFERENCES WHERE PREF_KEY IN (?, ?, ?)";
+		try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+			stmt.setString(1, templateKey + "_path");
+			stmt.setString(2, templateKey + "_last_modified");
+			stmt.setString(3, templateKey + "_user");
+			try (ResultSet rs = stmt.executeQuery()) {
+				while (rs.next()) {
+					String key = rs.getString("PREF_KEY");
+					String value = rs.getString("PREF_VALUE");
+					if (key.endsWith("_path")) meta.path = value;
+					else if (key.endsWith("_last_modified")) meta.lastModified = value;
+					else if (key.endsWith("_user")) meta.user = value;
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return meta;
+	}
+
+	public static class TemplateMetadata {
+		public String path;
+		public String lastModified;
+		public String user;
 	}
 
 }

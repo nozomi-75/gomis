@@ -55,13 +55,16 @@ public class NonStudentPanel extends JPanel {
     private void addNonStudent() {
         if (validateFields()) {
             TempParticipant participant = new TempParticipant(
-                null,
+                null, // participantId (new non-student)
+                null, // studentUid is null for non-students
                 firstNameField.getText().trim(),
                 lastNameField.getText().trim(),
                 "Non-Student",
                 (String) sexComboBox.getSelectedItem(),
                 contactField.getText().trim(),
-                false
+                false, // isStudent is false for non-students
+                false, // isViolator (default for new non-student)
+                false // isReporter (default for new non-student)
             );
             
             if (listener != null) {

@@ -34,6 +34,7 @@ import lyfjshs.gomis.components.notification.NotificationCallback;
 import lyfjshs.gomis.components.notification.NotificationManager;
 import lyfjshs.gomis.components.notification.NotificationPopup;
 import lyfjshs.gomis.components.settings.SettingsManager;
+import lyfjshs.gomis.utils.SystemOutCapture;
 
 /**
  * The {@code GFrame} class extends {@code JFrame} with FlatLaf enhancements.
@@ -68,6 +69,8 @@ public class GFrame extends JFrame implements FlatStyleableComponent, Notificati
 		setSize(width, height);
 		setLocationRelativeTo(null);
 		setTitle(title);
+		setIconImage(icon.getImage());
+
 
 		// Create and set the main content panel
 		JPanel mainPanel = new JPanel(new BorderLayout());
@@ -88,8 +91,14 @@ public class GFrame extends JFrame implements FlatStyleableComponent, Notificati
 		addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentShown(ComponentEvent e) {
-				setMinimumSize(new Dimension(1250, 700));
+				setMinimumSize(new Dimension(1024, 600));
 			}
+            @Override
+            public void componentResized(ComponentEvent e) {
+                int contentWidth = getContentPane().getWidth();
+                int contentHeight = getContentPane().getHeight();
+                lyfjshs.gomis.components.FormManager.FormManager.notifyActiveFormOfResize(contentWidth, contentHeight);
+            }
 		});
 
 		// Apply FlatLaf system properties
@@ -138,8 +147,6 @@ public class GFrame extends JFrame implements FlatStyleableComponent, Notificati
 
 	private Image loadTrayIcon() {
 		String[] iconPaths = {
-			"/icons/app_icon.png",
-			"/images/GOMIS Logo.png",
 			"/GOMIS Logo.png",
 			"/GOMIS_Circle.png"
 		};
@@ -278,7 +285,7 @@ public class GFrame extends JFrame implements FlatStyleableComponent, Notificati
 	private void exitApplication() {
 		// NotificationManager cleanup will handle its own tray icon
 		if (notificationManager != null) {
-			notificationManager.cleanup();
+			notificationManager.cleanup(false); // Pass false to indicate not to exit
 		} else if (trayIconAdded && systemTray != null && trayIcon != null) {
 			// Only remove our own tray icon if we're not using NotificationManager
 			try {
@@ -287,7 +294,20 @@ public class GFrame extends JFrame implements FlatStyleableComponent, Notificati
 				System.err.println("Error removing tray icon during exit: " + e.getMessage());
 			}
 		}
-		DBConnection.closeAllConnections();
+		
+		// Simple cleanup before exit
+		try {
+			// Restore original System.out streams
+			SystemOutCapture.restoreSystemOut();
+			
+			// Close database connections
+			DBConnection.closeAllConnections();
+			
+		} catch (Exception e) {
+			// If cleanup fails, just print to console
+			System.err.println("Error during cleanup: " + e.getMessage());
+		}
+		
 		System.exit(0);
 	}
 

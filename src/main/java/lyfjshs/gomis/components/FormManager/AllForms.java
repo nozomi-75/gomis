@@ -54,17 +54,20 @@ public class AllForms {
                 throw new IllegalArgumentException("Class cannot be null");
             }
 
+            // Use the connection from FormManager if none provided
+            Connection connectionToUse = conn != null ? conn : FormManager.getCurrentConnection();
+            if (connectionToUse == null) {
+                throw new IllegalStateException("Database connection is null");
+            }
+
             // Check for MainDashboard specifically
             if (clazz.equals(MainDashboard.class)) {
-                if (conn == null) {
-                    throw new IllegalStateException("Database connection is null");
-                }
-                return new MainDashboard(conn);
+                return new MainDashboard(connectionToUse);
             }
 
             // For other forms that need connection
             Constructor<?> constructor = clazz.getConstructor(Connection.class);
-            return (Form) constructor.newInstance(conn);
+            return (Form) constructor.newInstance(connectionToUse);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to create an instance of " + clazz.getName() + ": " + e.getMessage(), e);

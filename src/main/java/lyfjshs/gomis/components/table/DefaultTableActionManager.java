@@ -1,11 +1,13 @@
 package lyfjshs.gomis.components.table;
 
-import javax.swing.*;
-import javax.swing.table.TableColumn;
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+
+import javax.swing.Icon;
+import javax.swing.JTable;
+import javax.swing.table.TableColumn;
 
 /**
  * Default implementation of TableActionManager that provides functionality
@@ -49,8 +51,13 @@ public class DefaultTableActionManager implements TableActionManager {
 
     @Override
     public void applyTo(GTable table) {
+        // This method will no longer be used as setup is done manually in SessionsFillUpFormPanel
         // Find the last column index (actions column)
-        int actionColumnIndex = table.getColumnCount() - 1;
-        setupTableColumn(table, actionColumnIndex);
+        // int actionColumnIndex = table.getColumnCount() - 1;
+        // setupTableColumn(table, actionColumnIndex);
+    }
+
+    public List<TableRowAction> getActions() {
+        return actions;
     }
 } 

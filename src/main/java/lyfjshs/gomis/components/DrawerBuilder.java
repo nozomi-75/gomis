@@ -16,11 +16,11 @@ import lyfjshs.gomis.components.FormManager.FormManager;
 import lyfjshs.gomis.view.MainDashboard;
 import lyfjshs.gomis.view.SettingsPanel;
 import lyfjshs.gomis.view.appointment.AppointmentManagement;
-import lyfjshs.gomis.view.incident.IncidentFillUpForm;
 import lyfjshs.gomis.view.incident.IncidentList;
+import lyfjshs.gomis.view.incident.INCIDENT_fill_up.IncidentFillUpFormPanel;
 import lyfjshs.gomis.view.sessions.SessionRecords;
-import lyfjshs.gomis.view.sessions.SessionsForm;
-import lyfjshs.gomis.view.students.StudentMangementGUI;
+import lyfjshs.gomis.view.sessions.fill_up.SessionsFillUpFormPanel;
+import lyfjshs.gomis.view.students.StudentsListMain;
 import lyfjshs.gomis.view.students.create.CreateStudentData;
 import lyfjshs.gomis.view.violation.Violation_Record;
 import raven.extras.AvatarIcon;
@@ -149,15 +149,15 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 				new Item.Label("Management"),
 				new Item("Appointments", "calendar.svg", AppointmentManagement.class), //menu [2]
 				new Item("Sessions", "gavel.svg") //menu [3]	
-						.subMenu("Session Fill-Up Form", SessionsForm.class)
+						.subMenu("Session Fill-Up Form", SessionsFillUpFormPanel.class)
 						.subMenu("Session Records", SessionRecords.class),
 
 				new Item("Students Management", "article_person.svg") //menu [4]
 						.subMenu("Create Student", CreateStudentData.class)
 						.subMenu("Import School Form", lyfjshs.gomis.view.students.schoolForm.ImportSF.class)
-						.subMenu("Students Data", StudentMangementGUI.class),
+						.subMenu("Students Data", StudentsListMain.class),
 				new Item("Incident Management", "assignment.svg") //menu [5]
-						.subMenu("Incident Fill-Up Form", IncidentFillUpForm.class)
+						.subMenu("Incident Fill-Up Form", IncidentFillUpFormPanel.class)
 						.subMenu("Incident Records", IncidentList.class),
 				new Item("Violation Records", "forms.svg", Violation_Record.class), //menu [6]
 				new Item("Setting", "setting.svg", SettingsPanel.class), //menu [7]
@@ -263,24 +263,24 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
 		return "[light]background:tint($Panel.background,100%);" + "[dark]background:tint($Panel.background,5%);";
 	}
 
-	public static void switchToSessionsForm() {
+	public static void switchToSessionsFillUpFormPanel() {
         Form[] forms = FormManager.getForms();
-        SessionsForm sessionsForm = null;
+        SessionsFillUpFormPanel responsiveForm = null;
         
-        // Try to find existing SessionsForm
+        // Try to find existing SessionsFillUpFormPanel
         for (Form form : forms) {
-            if (form instanceof SessionsForm) {
-                sessionsForm = (SessionsForm) form;
+            if (form instanceof SessionsFillUpFormPanel) {
+                responsiveForm = (SessionsFillUpFormPanel) form;
                 break;
             }
         }
         
         // If not found, create new one
-        if (sessionsForm == null) {
-            sessionsForm = (SessionsForm) AllForms.getForm(SessionsForm.class, conn);
+        if (responsiveForm == null) {
+            responsiveForm = (SessionsFillUpFormPanel) AllForms.getForm(SessionsFillUpFormPanel.class, conn);
         }
         
         // Show the form
-        FormManager.showForm(sessionsForm);
+        FormManager.showForm(responsiveForm);
     }
 }

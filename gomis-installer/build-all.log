@@ -1,0 +1,1309 @@
+2025-07-09 23:09:48 Build main project
+2025-07-09 23:09:48 Using Maven command: C:\Users\Administrator\Documents\Main Projects\gomis\mvnw.cmd
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------------------< lyfjshs:gomis >----------------------------
+[INFO] Building gomis 0.0.1-alpha
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ gomis ---
+[INFO] Deleting C:\Users\Administrator\Documents\Main Projects\gomis\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ gomis ---
+[INFO] Copying 47 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ gomis ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 177 source files with javac [debug release 23] to target\classes
+[INFO] /C:/Users/Administrator/Documents/Main Projects/gomis/src/main/java/lyfjshs/gomis/Database/DBConnection.java: Some input files use or override a deprecated API.
+[INFO] /C:/Users/Administrator/Documents/Main Projects/gomis/src/main/java/lyfjshs/gomis/Database/DBConnection.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ gomis ---
+[INFO] skip non existing resourceDirectory C:\Users\Administrator\Documents\Main Projects\gomis\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ gomis ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ gomis ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- jar:3.4.1:jar (default-jar) @ gomis ---
+[INFO] Building jar: C:\Users\Administrator\Documents\Main Projects\gomis\target\gomis-0.0.1-alpha.jar
+[INFO] 
+[INFO] --- shade:3.4.1:shade (default) @ gomis ---
+[INFO] Including org.mariadb.jdbc:mariadb-java-client:jar:3.5.2 in the shaded jar.
+[INFO] Including io.github.dj-raven:modal-dialog:jar:2.3.0 in the shaded jar.
+[INFO] Including com.formdev:flatlaf-extras:jar:3.5.4 in the shaded jar.
+[INFO] Including com.github.weisj:jsvg:jar:1.4.0 in the shaded jar.
+[INFO] Including io.github.dj-raven:swing-datetime-picker:jar:2.0.0 in the shaded jar.
+[INFO] Including com.formdev:flatlaf:jar:3.6 in the shaded jar.
+[INFO] Including net.java.timingframework:timingframework-swing:jar:7.3.1 in the shaded jar.
+[INFO] Including net.java.timingframework:timingframework-core:jar:7.3.1 in the shaded jar.
+[INFO] Including com.surelogic:promises:jar:4.4.0 in the shaded jar.
+[INFO] Including com.miglayout:miglayout-swing:jar:11.4.2 in the shaded jar.
+[INFO] Including com.miglayout:miglayout-core:jar:11.4.2 in the shaded jar.
+[INFO] Including com.formdev:flatlaf-intellij-themes:jar:3.6 in the shaded jar.
+[INFO] Including net.sf.jasperreports:jasperreports:jar:7.0.2 in the shaded jar.
+[INFO] Including commons-logging:commons-logging:jar:1.3.0 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.core:jackson-core:jar:2.17.1 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.core:jackson-annotations:jar:2.17.1 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.core:jackson-databind:jar:2.17.1 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.dataformat:jackson-dataformat-xml:jar:2.17.1 in the shaded jar.
+[INFO] Including org.codehaus.woodstox:stax2-api:jar:4.2.2 in the shaded jar.
+[INFO] Including com.fasterxml.woodstox:woodstox-core:jar:6.6.2 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-anim:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-ext:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-parser:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-shared-resources:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-bridge:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-script:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-xml:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-dom:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-svg-dom:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-awt-util:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-gvt:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-util:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-i18n:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-constants:jar:1.18 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-css:jar:1.18 in the shaded jar.
+[INFO] Including xml-apis:xml-apis-ext:jar:1.3.04 in the shaded jar.
+[INFO] Including commons-beanutils:commons-beanutils:jar:1.9.4 in the shaded jar.
+[INFO] Including commons-collections:commons-collections:jar:3.2.2 in the shaded jar.
+[INFO] Including net.sf.jasperreports:jasperreports-fonts:jar:7.0.2 in the shaded jar.
+[INFO] Including net.sf.jasperreports:jasperreports-functions:jar:7.0.2 in the shaded jar.
+[INFO] Including net.sf.jasperreports:jasperreports-pdf:jar:7.0.2 in the shaded jar.
+[INFO] Including com.github.librepdf:openpdf:jar:1.3.32 in the shaded jar.
+[INFO] Including com.adobe.xmp:xmpcore:jar:6.1.11 in the shaded jar.
+[INFO] Including net.sf.jasperreports:jasperreports-excel-poi:jar:7.0.2 in the shaded jar.
+[INFO] Including net.sf.jasperreports:jasperreports-data-adapters:jar:7.0.2 in the shaded jar.
+[INFO] Including net.sf.jasperreports:jasperreports-json:jar:7.0.2 in the shaded jar.
+[INFO] Including antlr:antlr:jar:2.7.7 in the shaded jar.
+[INFO] Including org.apache.poi:poi:jar:5.4.1 in the shaded jar.
+[INFO] Including commons-codec:commons-codec:jar:1.18.0 in the shaded jar.
+[INFO] Including org.apache.commons:commons-math3:jar:3.6.1 in the shaded jar.
+[INFO] Including commons-io:commons-io:jar:2.18.0 in the shaded jar.
+[INFO] Including com.zaxxer:SparseBitSet:jar:1.3 in the shaded jar.
+[INFO] Including org.apache.poi:poi-ooxml:jar:5.4.1 in the shaded jar.
+[INFO] Including org.apache.poi:poi-ooxml-lite:jar:5.4.1 in the shaded jar.
+[INFO] Including org.apache.xmlbeans:xmlbeans:jar:5.3.0 in the shaded jar.
+[INFO] Including org.apache.commons:commons-compress:jar:1.27.1 in the shaded jar.
+[INFO] Including com.github.virtuald:curvesapi:jar:1.08 in the shaded jar.
+[INFO] Including org.apache.commons:commons-collections4:jar:4.5.0-M3 in the shaded jar.
+[INFO] Including org.apache.logging.log4j:log4j-api:jar:2.24.3 in the shaded jar.
+[INFO] Including org.apache.logging.log4j:log4j-core:jar:2.24.3 in the shaded jar.
+[INFO] Including org.apache.logging.log4j:log4j-slf4j2-impl:jar:2.24.3 in the shaded jar.
+[INFO] Including com.github.steos:jnafilechooser:jar:1.1.2 in the shaded jar.
+[INFO] Including com.github.steos.jnafilechooser:jnafilechooser-api:jar:1.1.2 in the shaded jar.
+[INFO] Including com.github.steos.jnafilechooser:jnafilechooser-demo:jar:1.1.2 in the shaded jar.
+[INFO] Including com.github.steos.jnafilechooser:jnafilechooser-win32:jar:1.1.2 in the shaded jar.
+[INFO] Including com.toedter:jcalendar:jar:1.4 in the shaded jar.
+[INFO] Including net.java.dev.jna:jna:jar:5.12.1 in the shaded jar.
+[INFO] Including net.java.dev.jna:jna-platform:jar:5.12.1 in the shaded jar.
+[INFO] Including org.apache.commons:commons-lang3:jar:3.17.0 in the shaded jar.
+[INFO] Including org.slf4j:slf4j-api:jar:2.0.7 in the shaded jar.
+[INFO] Including com.github.umjammer:jlayer:jar:1.0.3 in the shaded jar.
+[INFO] Including org.swinglabs.swingx:swingx-autocomplete:jar:1.6.5-1 in the shaded jar.
+[INFO] Including org.swinglabs.swingx:swingx-common:jar:1.6.5-1 in the shaded jar.
+[INFO] Including org.jfree:jfreechart:jar:1.5.5 in the shaded jar.
+[INFO] Including org.docx4j:docx4j-JAXB-ReferenceImpl:jar:11.5.3 in the shaded jar.
+[INFO] Including org.docx4j:docx4j-core:jar:11.5.3 in the shaded jar.
+[INFO] Including org.docx4j:docx4j-openxml-objects:jar:11.5.3 in the shaded jar.
+[INFO] Including org.docx4j:docx4j-openxml-objects-pml:jar:11.5.3 in the shaded jar.
+[INFO] Including org.docx4j:docx4j-openxml-objects-sml:jar:11.5.3 in the shaded jar.
+[INFO] Including org.plutext:jaxb-svg11:jar:11.4.0 in the shaded jar.
+[INFO] Including net.engio:mbassador:jar:1.3.2 in the shaded jar.
+[INFO] Including org.slf4j:jcl-over-slf4j:jar:2.0.13 in the shaded jar.
+[INFO] Including org.docx4j.org.apache:xalan-interpretive:jar:11.0.0 in the shaded jar.
+[INFO] Including org.docx4j.org.apache:xalan-serializer:jar:11.0.0 in the shaded jar.
+[INFO] Including net.arnx:wmf2svg:jar:0.9.11 in the shaded jar.
+[INFO] Including org.antlr:antlr-runtime:jar:3.5.3 in the shaded jar.
+[INFO] Including org.antlr:stringtemplate:jar:3.2.1 in the shaded jar.
+[INFO] Including org.checkerframework:checker-qual:jar:3.42.0 in the shaded jar.
+[INFO] Including com.google.errorprone:error_prone_annotations:jar:2.3.3 in the shaded jar.
+[INFO] Including com.thoughtworks.qdox:qdox:jar:1.12 in the shaded jar.
+[INFO] Including org.docx4j:docx4j-export-fo:jar:11.5.3 in the shaded jar.
+[INFO] Including org.plutext:jaxb-xslfo:jar:11.4.0 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:xmlgraphics-commons:jar:2.7 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-all:jar:1.16 in the shaded jar.
+[INFO] Including xml-apis:xml-apis:jar:1.4.01 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:fop:jar:2.7 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:fop-util:jar:2.7 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:fop-events:jar:2.7 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:fop-core:jar:2.7 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-extension:jar:1.14 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-transcoder:jar:1.14 in the shaded jar.
+[INFO] Including org.apache.xmlgraphics:batik-svggen:jar:1.14 in the shaded jar.
+[INFO] Including jakarta.xml.bind:jakarta.xml.bind-api:jar:3.0.1 in the shaded jar.
+[INFO] Including com.sun.activation:jakarta.activation:jar:2.0.1 in the shaded jar.
+[INFO] Including org.glassfish.jaxb:jaxb-runtime:jar:3.0.2 in the shaded jar.
+[INFO] Including org.glassfish.jaxb:jaxb-core:jar:3.0.2 in the shaded jar.
+[INFO] Including org.glassfish.jaxb:txw2:jar:3.0.2 in the shaded jar.
+[INFO] Including com.sun.istack:istack-commons-runtime:jar:4.0.1 in the shaded jar.
+[INFO] Including org.apache.pdfbox:pdfbox:jar:3.0.0 in the shaded jar.
+[INFO] Including org.apache.pdfbox:pdfbox-io:jar:3.0.0 in the shaded jar.
+[INFO] Including org.apache.pdfbox:fontbox:jar:3.0.0 in the shaded jar.
+[INFO] Dependency-reduced POM written at: C:\Users\Administrator\Documents\Main Projects\gomis\dependency-reduced-pom.xml
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] batik-all-1.16.jar, batik-bridge-1.18.jar define 403 overlapping classes and resources: 
+[WARNING]   - META-INF/services/org.apache.batik.script.InterpreterFactory
+[WARNING]   - org.apache.batik.bridge.AbstractGraphicsNodeBridge
+[WARNING]   - org.apache.batik.bridge.AbstractSVGBridge
+[WARNING]   - org.apache.batik.bridge.AbstractSVGFilterPrimitiveElementBridge
+[WARNING]   - org.apache.batik.bridge.AbstractSVGGradientElementBridge
+[WARNING]   - org.apache.batik.bridge.AbstractSVGGradientElementBridge$SVGStopElementBridge
+[WARNING]   - org.apache.batik.bridge.AbstractSVGGradientElementBridge$Stop
+[WARNING]   - org.apache.batik.bridge.AbstractSVGLightingElementBridge
+[WARNING]   - org.apache.batik.bridge.AbstractSVGLightingElementBridge$AbstractSVGLightElementBridge
+[WARNING]   - org.apache.batik.bridge.AbstractSVGLightingElementBridge$SVGFeDistantLightElementBridge
+[WARNING]   - 393 more...
+[WARNING] jasperreports-7.0.2.jar, jasperreports-excel-poi-7.0.2.jar, jasperreports-pdf-7.0.2.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/services/net.sf.jasperreports.view.SaveContributorFactory
+[WARNING] fop-2.7.jar, fop-events-2.7.jar define 20 overlapping classes: 
+[WARNING]   - org.apache.fop.events.CompositeEventListener
+[WARNING]   - org.apache.fop.events.DefaultEventBroadcaster
+[WARNING]   - org.apache.fop.events.DefaultEventBroadcaster$1
+[WARNING]   - org.apache.fop.events.Event
+[WARNING]   - org.apache.fop.events.Event$ParamsBuilder
+[WARNING]   - org.apache.fop.events.EventBroadcaster
+[WARNING]   - org.apache.fop.events.EventExceptionManager
+[WARNING]   - org.apache.fop.events.EventExceptionManager$ExceptionFactory
+[WARNING]   - org.apache.fop.events.EventFormatter
+[WARNING]   - org.apache.fop.events.EventFormatter$LookupFieldPart
+[WARNING]   - 10 more...
+[WARNING] batik-all-1.16.jar, batik-css-1.18.jar define 240 overlapping classes and resources: 
+[WARNING]   - org.apache.batik.css.dom.CSSOMComputedStyle
+[WARNING]   - org.apache.batik.css.dom.CSSOMComputedStyle$ComputedCSSValue
+[WARNING]   - org.apache.batik.css.dom.CSSOMSVGColor
+[WARNING]   - org.apache.batik.css.dom.CSSOMSVGColor$AbstractComponent
+[WARNING]   - org.apache.batik.css.dom.CSSOMSVGColor$AbstractModificationHandler
+[WARNING]   - org.apache.batik.css.dom.CSSOMSVGColor$BlueComponent
+[WARNING]   - org.apache.batik.css.dom.CSSOMSVGColor$ColorNumber
+[WARNING]   - org.apache.batik.css.dom.CSSOMSVGColor$FloatComponent
+[WARNING]   - org.apache.batik.css.dom.CSSOMSVGColor$GreenComponent
+[WARNING]   - org.apache.batik.css.dom.CSSOMSVGColor$ModificationHandler
+[WARNING]   - 230 more...
+[WARNING] jna-5.12.1.jar, jna-platform-5.12.1.jar define 2 overlapping resources: 
+[WARNING]   - META-INF/AL2.0
+[WARNING]   - META-INF/LGPL2.1
+[WARNING] jasperreports-7.0.2.jar, jasperreports-data-adapters-7.0.2.jar, jasperreports-excel-poi-7.0.2.jar, jasperreports-fonts-7.0.2.jar, jasperreports-functions-7.0.2.jar, jasperreports-pdf-7.0.2.jar define 1 overlapping resource: 
+[WARNING]   - jasperreports_extension.properties
+[WARNING] jackson-databind-2.17.1.jar, jackson-dataformat-xml-2.17.1.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/services/com.fasterxml.jackson.core.ObjectCodec
+[WARNING] fop-2.7.jar, fop-core-2.7.jar, xmlgraphics-commons-2.7.jar define 3 overlapping resources: 
+[WARNING]   - META-INF/services/org.apache.xmlgraphics.image.loader.spi.ImageConverter
+[WARNING]   - META-INF/services/org.apache.xmlgraphics.image.loader.spi.ImageLoaderFactory
+[WARNING]   - META-INF/services/org.apache.xmlgraphics.image.loader.spi.ImagePreloader
+[WARNING] jasperreports-7.0.2.jar, jasperreports-data-adapters-7.0.2.jar, jasperreports-excel-poi-7.0.2.jar, jasperreports-json-7.0.2.jar, jasperreports-pdf-7.0.2.jar define 1 overlapping resource: 
+[WARNING]   - properties-metadata.json
+[WARNING] xml-apis-1.4.01.jar, xml-apis-ext-1.3.04.jar define 5 overlapping resources: 
+[WARNING]   - license/LICENSE
+[WARNING]   - license/LICENSE.dom-documentation.txt
+[WARNING]   - license/LICENSE.dom-software.txt
+[WARNING]   - license/NOTICE
+[WARNING]   - license/README.dom.txt
+[WARNING] batik-all-1.16.jar, batik-ext-1.18.jar define 7 overlapping classes: 
+[WARNING]   - org.apache.batik.w3c.dom.ElementTraversal
+[WARNING]   - org.apache.batik.w3c.dom.Location
+[WARNING]   - org.apache.batik.w3c.dom.Window
+[WARNING]   - org.apache.batik.w3c.dom.events.CustomEvent
+[WARNING]   - org.apache.batik.w3c.dom.events.KeyboardEvent
+[WARNING]   - org.apache.batik.w3c.dom.events.MutationNameEvent
+[WARNING]   - org.apache.batik.w3c.dom.events.TextEvent
+[WARNING] commons-logging-1.3.0.jar, jcl-over-slf4j-2.0.13.jar define 5 overlapping classes: 
+[WARNING]   - org.apache.commons.logging.Log
+[WARNING]   - org.apache.commons.logging.LogConfigurationException
+[WARNING]   - org.apache.commons.logging.LogFactory
+[WARNING]   - org.apache.commons.logging.impl.NoOpLog
+[WARNING]   - org.apache.commons.logging.impl.SimpleLog
+[WARNING] batik-all-1.16.jar, batik-anim-1.18.jar define 399 overlapping classes and resources: 
+[WARNING]   - org.apache.batik.anim.AbstractAnimation
+[WARNING]   - org.apache.batik.anim.AnimationEngine
+[WARNING]   - org.apache.batik.anim.AnimationEngine$AnimationInfo
+[WARNING]   - org.apache.batik.anim.AnimationEngine$Listener
+[WARNING]   - org.apache.batik.anim.AnimationEngine$Sandwich
+[WARNING]   - org.apache.batik.anim.AnimationEngine$TargetInfo
+[WARNING]   - org.apache.batik.anim.AnimationException
+[WARNING]   - org.apache.batik.anim.ColorAnimation
+[WARNING]   - org.apache.batik.anim.InterpolatingAnimation
+[WARNING]   - org.apache.batik.anim.MotionAnimation
+[WARNING]   - 389 more...
+[WARNING] checker-qual-3.42.0.jar, commons-beanutils-1.9.4.jar, commons-codec-1.18.0.jar, commons-collections-3.2.2.jar, commons-collections4-4.5.0-M3.jar, commons-compress-1.27.1.jar, commons-io-2.18.0.jar, commons-lang3-3.17.0.jar, commons-logging-1.3.0.jar, commons-math3-3.6.1.jar, jcl-over-slf4j-2.0.13.jar, slf4j-api-2.0.7.jar, xmlbeans-5.3.0.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/LICENSE.txt
+[WARNING] batik-all-1.16.jar, batik-anim-1.18.jar, batik-awt-util-1.18.jar, batik-bridge-1.18.jar, batik-constants-1.18.jar, batik-css-1.18.jar, batik-dom-1.18.jar, batik-ext-1.18.jar, batik-extension-1.14.jar, batik-gvt-1.18.jar, batik-i18n-1.18.jar, batik-parser-1.18.jar, batik-script-1.18.jar, batik-shared-resources-1.18.jar, batik-svg-dom-1.18.jar, batik-svggen-1.14.jar, batik-transcoder-1.14.jar, batik-util-1.18.jar, batik-xml-1.18.jar, flatlaf-3.6.jar, flatlaf-extras-3.5.4.jar, flatlaf-intellij-themes-3.6.jar, fontbox-3.0.0.jar, fop-2.7.jar, fop-core-2.7.jar, fop-events-2.7.jar, fop-util-2.7.jar, jackson-annotations-2.17.1.jar, jackson-core-2.17.1.jar, jackson-databind-2.17.1.jar, jackson-dataformat-xml-2.17.1.jar, jasperreports-7.0.2.jar, jasperreports-data-adapters-7.0.2.jar, jasperreports-excel-poi-7.0.2.jar, jasperreports-functions-7.0.2.jar, jasperreports-json-7.0.2.jar, jasperreports-pdf-7.0.2.jar, jna-5.12.1.jar, jna-platform-5.12.1.jar, jsvg-1.4.0.jar, log4j-api-2.24.3.jar, log4j-core-2.24.3.jar, log4j-slf4j2-impl-2.24.3.jar, pdfbox-3.0.0.jar, pdfbox-io-3.0.0.jar, poi-5.4.1.jar, poi-ooxml-5.4.1.jar, poi-ooxml-lite-5.4.1.jar, stax2-api-4.2.2.jar, woodstox-core-6.6.2.jar, xmlgraphics-commons-2.7.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/LICENSE
+[WARNING] fop-2.7.jar, fop-core-2.7.jar define 2620 overlapping classes and resources: 
+[WARNING]   - META-INF/services/org.apache.fop.events.EventExceptionManager$ExceptionFactory
+[WARNING]   - META-INF/services/org.apache.fop.fo.ElementMapping
+[WARNING]   - META-INF/services/org.apache.fop.fo.FOEventHandler
+[WARNING]   - META-INF/services/org.apache.fop.render.ImageHandler
+[WARNING]   - META-INF/services/org.apache.fop.render.Renderer
+[WARNING]   - META-INF/services/org.apache.fop.render.XMLHandler
+[WARNING]   - META-INF/services/org.apache.fop.render.intermediate.IFDocumentHandler
+[WARNING]   - META-INF/services/org.apache.fop.util.ContentHandlerFactory
+[WARNING]   - META-INF/services/org.apache.fop.util.text.AdvancedMessageFormat$Function
+[WARNING]   - META-INF/services/org.apache.fop.util.text.AdvancedMessageFormat$ObjectFormatter
+[WARNING]   - 2610 more...
+[WARNING] batik-all-1.16.jar, batik-dom-1.18.jar define 116 overlapping class and resource: 
+[WARNING]   - org.apache.batik.dom.AbstractAttr
+[WARNING]   - org.apache.batik.dom.AbstractAttr$AttrTypeInfo
+[WARNING]   - org.apache.batik.dom.AbstractAttrNS
+[WARNING]   - org.apache.batik.dom.AbstractCharacterData
+[WARNING]   - org.apache.batik.dom.AbstractChildNode
+[WARNING]   - org.apache.batik.dom.AbstractComment
+[WARNING]   - org.apache.batik.dom.AbstractDOMImplementation
+[WARNING]   - org.apache.batik.dom.AbstractDocument
+[WARNING]   - org.apache.batik.dom.AbstractDocument$DocumentConfiguration
+[WARNING]   - org.apache.batik.dom.AbstractDocument$DocumentConfiguration$ParameterNameList
+[WARNING]   - 106 more...
+[WARNING] batik-all-1.16.jar, batik-svggen-1.14.jar define 158 overlapping class and resource: 
+[WARNING]   - org.apache.batik.svggen.AbstractImageHandlerEncoder
+[WARNING]   - org.apache.batik.svggen.AbstractSVGConverter
+[WARNING]   - org.apache.batik.svggen.AbstractSVGFilterConverter
+[WARNING]   - org.apache.batik.svggen.CachedImageHandler
+[WARNING]   - org.apache.batik.svggen.CachedImageHandlerBase64Encoder
+[WARNING]   - org.apache.batik.svggen.CachedImageHandlerJPEGEncoder
+[WARNING]   - org.apache.batik.svggen.CachedImageHandlerPNGEncoder
+[WARNING]   - org.apache.batik.svggen.ClipKey
+[WARNING]   - org.apache.batik.svggen.DOMGroupManager
+[WARNING]   - org.apache.batik.svggen.DOMTreeManager
+[WARNING]   - 148 more...
+[WARNING] batik-all-1.16.jar, batik-anim-1.18.jar, batik-awt-util-1.18.jar, batik-bridge-1.18.jar, batik-constants-1.18.jar, batik-css-1.18.jar, batik-dom-1.18.jar, batik-ext-1.18.jar, batik-extension-1.14.jar, batik-gvt-1.18.jar, batik-i18n-1.18.jar, batik-parser-1.18.jar, batik-script-1.18.jar, batik-shared-resources-1.18.jar, batik-svg-dom-1.18.jar, batik-svggen-1.14.jar, batik-transcoder-1.14.jar, batik-util-1.18.jar, batik-xml-1.18.jar, fontbox-3.0.0.jar, fop-2.7.jar, fop-core-2.7.jar, fop-events-2.7.jar, fop-util-2.7.jar, jackson-annotations-2.17.1.jar, jackson-core-2.17.1.jar, jackson-databind-2.17.1.jar, jackson-dataformat-xml-2.17.1.jar, log4j-api-2.24.3.jar, log4j-core-2.24.3.jar, log4j-slf4j2-impl-2.24.3.jar, pdfbox-3.0.0.jar, pdfbox-io-3.0.0.jar, poi-5.4.1.jar, poi-ooxml-5.4.1.jar, poi-ooxml-lite-5.4.1.jar, xmlgraphics-commons-2.7.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/NOTICE
+[WARNING] commons-beanutils-1.9.4.jar, commons-codec-1.18.0.jar, commons-collections-3.2.2.jar, commons-collections4-4.5.0-M3.jar, commons-compress-1.27.1.jar, commons-io-2.18.0.jar, commons-lang3-3.17.0.jar, commons-logging-1.3.0.jar, commons-math3-3.6.1.jar, xmlbeans-5.3.0.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/NOTICE.txt
+[WARNING] batik-all-1.16.jar, batik-gvt-1.18.jar define 103 overlapping classes: 
+[WARNING]   - org.apache.batik.gvt.AbstractGraphicsNode
+[WARNING]   - org.apache.batik.gvt.CanvasGraphicsNode
+[WARNING]   - org.apache.batik.gvt.CompositeGraphicsNode
+[WARNING]   - org.apache.batik.gvt.CompositeGraphicsNode$1
+[WARNING]   - org.apache.batik.gvt.CompositeGraphicsNode$Itr
+[WARNING]   - org.apache.batik.gvt.CompositeGraphicsNode$ListItr
+[WARNING]   - org.apache.batik.gvt.CompositeShapePainter
+[WARNING]   - org.apache.batik.gvt.FillShapePainter
+[WARNING]   - org.apache.batik.gvt.GVTTreeWalker
+[WARNING]   - org.apache.batik.gvt.GraphicsNode
+[WARNING]   - 93 more...
+[WARNING] batik-all-1.16.jar, batik-constants-1.18.jar define 1 overlapping classes: 
+[WARNING]   - org.apache.batik.constants.XMLConstants
+[WARNING] istack-commons-runtime-4.0.1.jar, jakarta.activation-2.0.1.jar, jakarta.xml.bind-api-3.0.1.jar, jaxb-core-3.0.2.jar, jaxb-runtime-3.0.2.jar, txw2-3.0.2.jar define 2 overlapping resources: 
+[WARNING]   - META-INF/LICENSE.md
+[WARNING]   - META-INF/NOTICE.md
+[WARNING] jackson-core-2.17.1.jar, jackson-dataformat-xml-2.17.1.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/services/com.fasterxml.jackson.core.JsonFactory
+[WARNING] fop-2.7.jar, fop-util-2.7.jar define 15 overlapping classes: 
+[WARNING]   - org.apache.fop.util.DefaultErrorListener
+[WARNING]   - org.apache.fop.util.XMLResourceBundle
+[WARNING]   - org.apache.fop.util.XMLResourceBundle$1
+[WARNING]   - org.apache.fop.util.XMLResourceBundle$2
+[WARNING]   - org.apache.fop.util.XMLResourceBundle$CatalogueHandler
+[WARNING]   - org.apache.fop.util.XMLResourceBundle$MissingBundle
+[WARNING]   - org.apache.fop.util.text.AdvancedMessageFormat
+[WARNING]   - org.apache.fop.util.text.AdvancedMessageFormat$CompositePart
+[WARNING]   - org.apache.fop.util.text.AdvancedMessageFormat$Function
+[WARNING]   - org.apache.fop.util.text.AdvancedMessageFormat$FunctionPart
+[WARNING]   - 5 more...
+[WARNING] batik-all-1.16.jar, batik-script-1.18.jar define 15 overlapping classes and resources: 
+[WARNING]   - META-INF/imports/script.txt
+[WARNING]   - org.apache.batik.script.ImportInfo
+[WARNING]   - org.apache.batik.script.Interpreter
+[WARNING]   - org.apache.batik.script.InterpreterException
+[WARNING]   - org.apache.batik.script.InterpreterFactory
+[WARNING]   - org.apache.batik.script.InterpreterPool
+[WARNING]   - org.apache.batik.script.ScriptEventWrapper
+[WARNING]   - org.apache.batik.script.jpython.JPythonInterpreter
+[WARNING]   - org.apache.batik.script.jpython.JPythonInterpreterFactory
+[WARNING]   - org.apache.batik.script.rhino.BatikSecurityController
+[WARNING]   - 5 more...
+[WARNING] SparseBitSet-1.3.jar, antlr-2.7.7.jar, antlr-runtime-3.5.3.jar, batik-all-1.16.jar, batik-anim-1.18.jar, batik-awt-util-1.18.jar, batik-bridge-1.18.jar, batik-constants-1.18.jar, batik-css-1.18.jar, batik-dom-1.18.jar, batik-ext-1.18.jar, batik-extension-1.14.jar, batik-gvt-1.18.jar, batik-i18n-1.18.jar, batik-parser-1.18.jar, batik-script-1.18.jar, batik-shared-resources-1.18.jar, batik-svg-dom-1.18.jar, batik-svggen-1.14.jar, batik-transcoder-1.14.jar, batik-util-1.18.jar, batik-xml-1.18.jar, checker-qual-3.42.0.jar, commons-beanutils-1.9.4.jar, commons-codec-1.18.0.jar, commons-collections-3.2.2.jar, commons-collections4-4.5.0-M3.jar, commons-compress-1.27.1.jar, commons-io-2.18.0.jar, commons-lang3-3.17.0.jar, commons-logging-1.3.0.jar, commons-math3-3.6.1.jar, curvesapi-1.08.jar, docx4j-JAXB-ReferenceImpl-11.5.3.jar, docx4j-core-11.5.3.jar, docx4j-export-fo-11.5.3.jar, docx4j-openxml-objects-11.5.3.jar, docx4j-openxml-objects-pml-11.5.3.jar, docx4j-openxml-objects-sml-11.5.3.jar, error_prone_annotations-2.3.3.jar, flatlaf-3.6.jar, flatlaf-extras-3.5.4.jar, flatlaf-intellij-themes-3.6.jar, fontbox-3.0.0.jar, fop-2.7.jar, fop-core-2.7.jar, fop-events-2.7.jar, fop-util-2.7.jar, gomis-0.0.1-alpha.jar, istack-commons-runtime-4.0.1.jar, jackson-annotations-2.17.1.jar, jackson-core-2.17.1.jar, jackson-databind-2.17.1.jar, jackson-dataformat-xml-2.17.1.jar, jakarta.activation-2.0.1.jar, jakarta.xml.bind-api-3.0.1.jar, jasperreports-7.0.2.jar, jasperreports-data-adapters-7.0.2.jar, jasperreports-excel-poi-7.0.2.jar, jasperreports-fonts-7.0.2.jar, jasperreports-functions-7.0.2.jar, jasperreports-json-7.0.2.jar, jasperreports-pdf-7.0.2.jar, jaxb-core-3.0.2.jar, jaxb-runtime-3.0.2.jar, jaxb-svg11-11.4.0.jar, jaxb-xslfo-11.4.0.jar, jcalendar-1.4.jar, jcl-over-slf4j-2.0.13.jar, jfreechart-1.5.5.jar, jlayer-1.0.3.jar, jna-5.12.1.jar, jna-platform-5.12.1.jar, jnafilechooser-1.1.2.jar, jnafilechooser-api-1.1.2.jar, jnafilechooser-demo-1.1.2.jar, jnafilechooser-win32-1.1.2.jar, jsvg-1.4.0.jar, log4j-api-2.24.3.jar, log4j-core-2.24.3.jar, log4j-slf4j2-impl-2.24.3.jar, mariadb-java-client-3.5.2.jar, mbassador-1.3.2.jar, miglayout-core-11.4.2.jar, miglayout-swing-11.4.2.jar, modal-dialog-2.3.0.jar, openpdf-1.3.32.jar, pdfbox-3.0.0.jar, pdfbox-io-3.0.0.jar, poi-5.4.1.jar, poi-ooxml-5.4.1.jar, poi-ooxml-lite-5.4.1.jar, promises-4.4.0.jar, qdox-1.12.jar, slf4j-api-2.0.7.jar, stax2-api-4.2.2.jar, stringtemplate-3.2.1.jar, swing-datetime-picker-2.0.0.jar, swingx-autocomplete-1.6.5-1.jar, swingx-common-1.6.5-1.jar, timingframework-core-7.3.1.jar, timingframework-swing-7.3.1.jar, txw2-3.0.2.jar, wmf2svg-0.9.11.jar, woodstox-core-6.6.2.jar, xalan-interpretive-11.0.0.jar, xalan-serializer-11.0.0.jar, xml-apis-1.4.01.jar, xml-apis-ext-1.3.04.jar, xmlbeans-5.3.0.jar, xmlgraphics-commons-2.7.jar, xmpcore-6.1.11.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/MANIFEST.MF
+[WARNING] batik-all-1.16.jar, batik-extension-1.14.jar define 50 overlapping classes and resources: 
+[WARNING]   - META-INF/services/org.apache.batik.bridge.BridgeExtension
+[WARNING]   - META-INF/services/org.apache.batik.dom.DomExtension
+[WARNING]   - org.apache.batik.extension.ExtensionElement
+[WARNING]   - org.apache.batik.extension.GraphicsExtensionElement
+[WARNING]   - org.apache.batik.extension.PrefixableStylableExtensionElement
+[WARNING]   - org.apache.batik.extension.StylableExtensionElement
+[WARNING]   - org.apache.batik.extension.svg.BatikBridgeExtension
+[WARNING]   - org.apache.batik.extension.svg.BatikDomExtension
+[WARNING]   - org.apache.batik.extension.svg.BatikDomExtension$BatikHistogramNormalizationElementFactory
+[WARNING]   - org.apache.batik.extension.svg.BatikDomExtension$BatikRegularPolygonElementFactory
+[WARNING]   - 40 more...
+[WARNING] batik-all-1.16.jar, batik-transcoder-1.14.jar define 61 overlapping class and resource: 
+[WARNING]   - org.apache.batik.transcoder.AbstractTranscoder
+[WARNING]   - org.apache.batik.transcoder.DefaultErrorHandler
+[WARNING]   - org.apache.batik.transcoder.ErrorHandler
+[WARNING]   - org.apache.batik.transcoder.SVGAbstractTranscoder
+[WARNING]   - org.apache.batik.transcoder.SVGAbstractTranscoder$SVGAbstractTranscoderUserAgent
+[WARNING]   - org.apache.batik.transcoder.ToSVGAbstractTranscoder
+[WARNING]   - org.apache.batik.transcoder.Transcoder
+[WARNING]   - org.apache.batik.transcoder.TranscoderException
+[WARNING]   - org.apache.batik.transcoder.TranscoderInput
+[WARNING]   - org.apache.batik.transcoder.TranscoderOutput
+[WARNING]   - 51 more...
+[WARNING] batik-all-1.16.jar, batik-svg-dom-1.18.jar define 119 overlapping classes and resources: 
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGItem
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGList
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGMatrix
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGNormPathSegList
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGNormPathSegList$NormalizedPathSegListBuilder
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGNormPathSegList$SVGPathSegGenericItem
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGNumber
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGNumberList
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGNumberList$NumberListBuilder
+[WARNING]   - org.apache.batik.dom.svg.AbstractSVGPathSegList
+[WARNING]   - 109 more...
+[WARNING] batik-all-1.16.jar, batik-parser-1.18.jar define 57 overlapping classes and resources: 
+[WARNING]   - org.apache.batik.parser.AWTPathProducer
+[WARNING]   - org.apache.batik.parser.AWTPolygonProducer
+[WARNING]   - org.apache.batik.parser.AWTPolylineProducer
+[WARNING]   - org.apache.batik.parser.AWTTransformProducer
+[WARNING]   - org.apache.batik.parser.AbstractParser
+[WARNING]   - org.apache.batik.parser.AbstractScanner
+[WARNING]   - org.apache.batik.parser.AngleHandler
+[WARNING]   - org.apache.batik.parser.AngleParser
+[WARNING]   - org.apache.batik.parser.ClockHandler
+[WARNING]   - org.apache.batik.parser.ClockParser
+[WARNING]   - 47 more...
+[WARNING] poi-5.4.1.jar, poi-ooxml-5.4.1.jar define 3 overlapping resources: 
+[WARNING]   - META-INF/services/org.apache.poi.extractor.ExtractorProvider
+[WARNING]   - META-INF/services/org.apache.poi.sl.draw.ImageRenderer
+[WARNING]   - META-INF/services/org.apache.poi.ss.usermodel.WorkbookProvider
+[WARNING] batik-all-1.16.jar, batik-awt-util-1.18.jar define 224 overlapping classes and resources: 
+[WARNING]   - org.apache.batik.ext.awt.AreaOfInterestHintKey
+[WARNING]   - org.apache.batik.ext.awt.AvoidTilingHintKey
+[WARNING]   - org.apache.batik.ext.awt.BufferedImageHintKey
+[WARNING]   - org.apache.batik.ext.awt.ColorSpaceHintKey
+[WARNING]   - org.apache.batik.ext.awt.LinearGradientPaint
+[WARNING]   - org.apache.batik.ext.awt.LinearGradientPaintContext
+[WARNING]   - org.apache.batik.ext.awt.MultipleGradientPaint
+[WARNING]   - org.apache.batik.ext.awt.MultipleGradientPaint$ColorSpaceEnum
+[WARNING]   - org.apache.batik.ext.awt.MultipleGradientPaint$CycleMethodEnum
+[WARNING]   - org.apache.batik.ext.awt.MultipleGradientPaintContext
+[WARNING]   - 214 more...
+[WARNING] batik-all-1.16.jar, batik-util-1.18.jar define 83 overlapping classes and resources: 
+[WARNING]   - org.apache.batik.Version
+[WARNING]   - org.apache.batik.util.AbstractParsedURLProtocolHandler
+[WARNING]   - org.apache.batik.util.ApplicationSecurityEnforcer
+[WARNING]   - org.apache.batik.util.Base64DecodeStream
+[WARNING]   - org.apache.batik.util.Base64EncoderStream
+[WARNING]   - org.apache.batik.util.BatikSecurityManager
+[WARNING]   - org.apache.batik.util.CSSConstants
+[WARNING]   - org.apache.batik.util.ClassFileUtilities
+[WARNING]   - org.apache.batik.util.ClassFileUtilities$ClassFile
+[WARNING]   - org.apache.batik.util.ClassFileUtilities$Jar
+[WARNING]   - 73 more...
+[WARNING] batik-all-1.16.jar, batik-i18n-1.18.jar define 4 overlapping classes: 
+[WARNING]   - org.apache.batik.i18n.ExtendedLocalizable
+[WARNING]   - org.apache.batik.i18n.LocaleGroup
+[WARNING]   - org.apache.batik.i18n.Localizable
+[WARNING]   - org.apache.batik.i18n.LocalizableSupport
+[WARNING] commons-codec-1.18.0.jar, commons-collections4-4.5.0-M3.jar, commons-compress-1.27.1.jar, commons-io-2.18.0.jar, commons-lang3-3.17.0.jar, commons-logging-1.3.0.jar, jackson-core-2.17.1.jar, jackson-databind-2.17.1.jar, jackson-dataformat-xml-2.17.1.jar, jcl-over-slf4j-2.0.13.jar, mariadb-java-client-3.5.2.jar, openpdf-1.3.32.jar, poi-5.4.1.jar, poi-ooxml-5.4.1.jar, poi-ooxml-lite-5.4.1.jar, slf4j-api-2.0.7.jar, xmlbeans-5.3.0.jar define 1 overlapping classes: 
+[WARNING]   - META-INF.versions.9.module-info
+[WARNING] batik-all-1.16.jar, batik-xml-1.18.jar define 7 overlapping class and resource: 
+[WARNING]   - org.apache.batik.xml.LexicalUnits
+[WARNING]   - org.apache.batik.xml.XMLCharacters
+[WARNING]   - org.apache.batik.xml.XMLException
+[WARNING]   - org.apache.batik.xml.XMLScanner
+[WARNING]   - org.apache.batik.xml.XMLStreamNormalizingReader
+[WARNING]   - org.apache.batik.xml.XMLUtilities
+[WARNING]   - org/apache/batik/xml/scanner/resources/Messages.properties
+[WARNING] fontbox-3.0.0.jar, log4j-api-2.24.3.jar, log4j-core-2.24.3.jar, log4j-slf4j2-impl-2.24.3.jar, pdfbox-3.0.0.jar, pdfbox-io-3.0.0.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/DEPENDENCIES
+[WARNING] maven-shade-plugin has detected that some class files are
+[WARNING] present in two or more JARs. When this happens, only one
+[WARNING] single version of the class is copied to the uber jar.
+[WARNING] Usually this is not harmful and you can skip these warnings,
+[WARNING] otherwise try to manually exclude artifacts based on
+[WARNING] mvn dependency:tree -Ddetail=true and the above output.
+[WARNING] See https://maven.apache.org/plugins/maven-shade-plugin/
+[INFO] Replacing original artifact with shaded artifact.
+[INFO] Replacing C:\Users\Administrator\Documents\Main Projects\gomis\target\gomis-0.0.1-alpha.jar with C:\Users\Administrator\Documents\Main Projects\gomis\target\gomis-0.0.1-alpha-shaded.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  36.521 s
+[INFO] Finished at: 2025-07-09T23:10:28+08:00
+[INFO] ------------------------------------------------------------------------
+2025-07-09 23:10:28 Build validator project
+2025-07-09 23:10:28 Using Maven command: mvn
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------< lyfjshs.gomis:gomis-account-validator >----------------
+[INFO] Building gomis-account-validator 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ gomis-account-validator ---
+[INFO] Deleting C:\Users\Administrator\Documents\Main Projects\gomis\gomis-account-validator\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ gomis-account-validator ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory C:\Users\Administrator\Documents\Main Projects\gomis\gomis-account-validator\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ gomis-account-validator ---
+[INFO] Recompiling the module because of changed source code.
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file with javac [debug target 1.8] to target\classes
+[WARNING] bootstrap class path is not set in conjunction with -source 8
+  not setting the bootstrap class path may lead to class files that cannot run on JDK 8
+    --release 8 is recommended instead of -source 8 -target 1.8 because it sets the bootstrap class path automatically
+[WARNING] source value 8 is obsolete and will be removed in a future release
+[WARNING] target value 8 is obsolete and will be removed in a future release
+[WARNING] To suppress warnings about obsolete options, use -Xlint:-options.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ gomis-account-validator ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory C:\Users\Administrator\Documents\Main Projects\gomis\gomis-account-validator\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ gomis-account-validator ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ gomis-account-validator ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- jar:3.4.1:jar (default-jar) @ gomis-account-validator ---
+[INFO] Building jar: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-account-validator\target\gomis-account-validator-1.0.0.jar
+[INFO] 
+[INFO] --- assembly:3.6.0:single (make-assembly) @ gomis-account-validator ---
+[INFO] Building jar: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-account-validator\target\gomis-account-validator-1.0.0-jar-with-dependencies.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.231 s
+[INFO] Finished at: 2025-07-09T23:10:37+08:00
+[INFO] ------------------------------------------------------------------------
+2025-07-09 23:10:37 Copy validator JAR to resources/output
+2025-07-09 23:10:38 Copied gomis-account-validator-1.0.0-jar-with-dependencies.jar to C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\output\ValidateGomisUser.jar
+2025-07-09 23:10:38 Create GOMIS.exe with Launch4j
+launch4j: Compiling resources
+launch4j: Linking
+launch4j: Wrapping
+WARNING: Sign the executable to minimize antivirus false positives or use launching instead of wrapping.
+launch4j: Successfully created C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\output\GOMIS.exe
+2025-07-09 23:10:41 GOMIS.exe created at C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\output\GOMIS.exe
+2025-07-09 23:10:41 Build installer with Inno Setup
+Inno Setup 6 Command-Line Compiler
+Copyright (C) 1997-2025 Jordan Russell. All rights reserved.
+Portions Copyright (C) 2000-2025 Martijn Laan. All rights reserved.
+Portions Copyright (C) 2001-2004 Alex Yackimoff. All rights reserved.
+https://www.innosetup.com
+
+Compiler engine version: Inno Setup 6.4.1
+
+Preprocessing
+   Reading file: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\inno-setup\ISPPBuiltins.iss
+Parsing [Setup] section, line 2
+Parsing [Setup] section, line 3
+Parsing [Setup] section, line 4
+Parsing [Setup] section, line 5
+Parsing [Setup] section, line 6
+Parsing [Setup] section, line 7
+Parsing [Setup] section, line 8
+Parsing [Setup] section, line 9
+Parsing [Setup] section, line 10
+Parsing [Setup] section, line 11
+Parsing [Setup] section, line 12
+Parsing [Setup] section, line 13
+Parsing [Setup] section, line 14
+Parsing [Setup] section, line 15
+Parsing [Setup] section, line 16
+Parsing [Setup] section, line 17
+Parsing [Setup] section, line 18
+Parsing [Setup] section, line 19
+Parsing [Setup] section, line 20
+Reading file (WizardImageFile)
+Reading file (WizardSmallImageFile)
+Preparing Setup program executable
+   Updating icons (SETUP.E32)
+   Updating version info (SETUP.E32)
+Determining language code pages
+   Reading file: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\inno-setup\Default.isl
+   Messages in script file
+Reading default messages from Default.isl
+Parsing [LangOptions], [Messages], and [CustomMessages] sections
+   Reading file: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\inno-setup\Default.isl
+   Messages in script file
+Reading [Code] section
+Parsing [Tasks] section, line 64
+Parsing [Dirs] section, line 36
+Parsing [Dirs] section, line 37
+Parsing [Dirs] section, line 38
+Parsing [Icons] section, line 55
+Parsing [Icons] section, line 56
+Parsing [Icons] section, line 57
+Parsing [Registry] section, line 324
+Parsing [Registry] section, line 325
+Parsing [Run] section, line 41
+Parsing [Run] section, line 42
+Parsing [Run] section, line 43
+Parsing [Run] section, line 44
+Parsing [Run] section, line 45
+Parsing [Run] section, line 46
+Parsing [Run] section, line 47
+Parsing [Run] section, line 48
+Parsing [Run] section, line 49
+Parsing [Run] section, line 50
+Parsing [Run] section, line 51
+Parsing [Run] section, line 52
+Parsing [Files] section, line 23
+Parsing [Files] section, line 24
+Parsing [Files] section, line 25
+Parsing [Files] section, line 26
+Parsing [Files] section, line 27
+Parsing [Files] section, line 28
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\release
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-console-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-console-l1-2-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-datetime-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-debug-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-errorhandling-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-fibers-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-file-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-file-l1-2-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-file-l2-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-handle-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-heap-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-interlocked-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-libraryloader-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-localization-l1-2-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-memory-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-namedpipe-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-processenvironment-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-processthreads-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-processthreads-l1-1-1.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-profile-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-rtlsupport-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-string-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-synch-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-synch-l1-2-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-sysinfo-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-timezone-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-util-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-conio-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-convert-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-environment-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-filesystem-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-heap-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-locale-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-math-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-multibyte-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-private-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-process-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-runtime-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-stdio-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-string-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-time-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-utility-l1-1-0.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\attach.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\awt.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\dt_shmem.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\dt_socket.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\extnet.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\fontmanager.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\freetype.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\instrument.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\j2gss.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\j2pcsc.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\j2pkcs11.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jaas.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jabswitch.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jaccessinspector.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jaccesswalker.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jar.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jarsigner.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\java.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\java.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javaaccessbridge.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javac.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javadoc.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javajpeg.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javap.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javaw.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jawt.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jcmd.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jconsole.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jdb.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jdeprscan.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jdeps.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jdwp.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jfr.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jhsdb.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jimage.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jimage.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jinfo.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jli.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jlink.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jmap.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jmod.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jpackage.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jpackage.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jps.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jrunscript.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jshell.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jsound.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jstack.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jstat.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jstatd.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jsvml.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jvmcicompiler.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jwebserver.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\keytool.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\kinit.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\klist.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\ktab.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\lcms.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\management.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\management_agent.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\management_ext.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\mlib_image.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\msvcp140.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\net.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\nio.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\prefs.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\rmi.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\rmiregistry.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\saproc.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\serialver.exe
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\splashscreen.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\sspi_bridge.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\sunmscapi.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\syslookup.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\ucrtbase.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\vcruntime140.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\vcruntime140_1.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\verify.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\w2k_lsa_auth.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\windowsaccessbridge-64.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\zip.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\server\jvm.dll
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\jaxp-strict.properties.template
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\jaxp.properties
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\logging.properties
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\net.properties
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\sound.properties
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\management\jmxremote.access
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\management\jmxremote.password.template
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\management\management.properties
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\java.policy
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\java.security
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\README.txt
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\limited\default_local.policy
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\limited\default_US_export.policy
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\limited\exempt_local.policy
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\unlimited\default_local.policy
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\unlimited\default_US_export.policy
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\classfile_constants.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jawt.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jdwpTransport.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jni.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jvmti.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jvmticmlr.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\jawt_md.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\jni_md.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\bridge\AccessBridgeCallbacks.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\bridge\AccessBridgeCalls.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\bridge\AccessBridgePackages.h
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\aes.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\asm.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\c-libutl.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\cldr.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\icu.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\public_suffix.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\siphash.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\unicode.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\wepoll.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\zlib.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.compiler\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.compiler\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.datatransfer\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.datatransfer\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\colorimaging.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\freetype.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\giflib.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\harfbuzz.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\jpeg.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\lcms.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\libpng.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\mesa3d.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.instrument\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.instrument\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.logging\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.logging\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.management\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.management\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.management.rmi\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.management.rmi\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.naming\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.naming\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.net.http\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.net.http\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.prefs\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.prefs\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.rmi\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.rmi\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.scripting\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.scripting\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.se\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.se\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.security.jgss\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.security.jgss\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.security.sasl\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.security.sasl\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.smartcardio\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.smartcardio\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.sql\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.sql\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.sql.rowset\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.sql.rowset\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.transaction.xa\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.transaction.xa\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\bcel.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\dom.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\jcup.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\xalan.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\xerces.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml.crypto\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml.crypto\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml.crypto\santuario.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.accessibility\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.accessibility\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.attach\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.attach\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.charsets\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.charsets\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.compiler\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.compiler\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.cryptoki\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.cryptoki\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.cryptoki\pkcs11cryptotoken.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.cryptoki\pkcs11wrapper.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.ec\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.ec\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.mscapi\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.mscapi\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.dynalink\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.dynalink\dynalink.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.dynalink\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.editpad\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.editpad\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.lib\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.lib\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.lib\simdjson.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.management\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.management\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.hotspot.agent\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.hotspot.agent\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.httpserver\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.httpserver\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.incubator.vector\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.incubator.vector\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.ed\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.ed\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.jvmstat\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.jvmstat\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.le\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.le\jline.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.le\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.md\commonmark.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.md\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.md\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.opt\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.opt\jopt-simple.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.opt\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.vm.ci\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.vm.ci\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jartool\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jartool\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\dejavufonts.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\jquery.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\jqueryUI.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jcmd\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jcmd\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jconsole\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jconsole\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdeps\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdeps\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdi\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdi\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdwp.agent\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdwp.agent\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jfr\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jfr\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jlink\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jlink\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jpackage\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jpackage\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jshell\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jshell\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jsobject\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jsobject\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jstatd\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jstatd\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.localedata\cldr.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.localedata\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.localedata\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.localedata\thaidict.md
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management.agent\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management.agent\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management.jfr\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management.jfr\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.naming.dns\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.naming.dns\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.naming.rmi\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.naming.rmi\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.net\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.net\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.nio.mapmode\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.nio.mapmode\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.sctp\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.sctp\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.security.auth\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.security.auth\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.security.jgss\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.security.jgss\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.unsupported\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.unsupported\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.unsupported.desktop\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.unsupported.desktop\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.xml.dom\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.xml.dom\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.zipfs\COPYRIGHT
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.zipfs\LICENSE
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\classlist
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\ct.sym
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\fontconfig.bfc
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\fontconfig.properties.src
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jawt.lib
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jrt-fs.jar
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jvm.cfg
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jvm.lib
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\modules
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\psfont.properties.ja
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\psfontj2d.properties
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\tzdb.dat
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\tzmappings
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jfr\default.jfc
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jfr\profile.jfc
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\security\blocked.certs
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\security\cacerts
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\security\default.policy
+   Reading version info: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\security\public_suffix_list.dat
+Parsing [Files] section, line 29
+Parsing [Files] section, line 30
+Parsing [Files] section, line 31
+Parsing [Files] section, line 32
+Parsing [Files] section, line 33
+Compiling [Code] section
+Deleting GOMIS_Installer.exe from output directory
+Creating setup files
+   Updating icons (SETUP.EXE)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\mariadb-11.4.5-winx64.msi
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\gomisDB.sql
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\output\GOMIS.exe
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\GOMIS.ico
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\execute_sql.bat
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\release
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-console-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-console-l1-2-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-datetime-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-debug-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-errorhandling-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-fibers-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-file-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-file-l1-2-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-file-l2-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-handle-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-heap-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-interlocked-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-libraryloader-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-localization-l1-2-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-memory-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-namedpipe-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-processenvironment-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-processthreads-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-processthreads-l1-1-1.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-profile-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-rtlsupport-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-string-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-synch-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-synch-l1-2-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-sysinfo-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-timezone-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-core-util-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-conio-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-convert-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-environment-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-filesystem-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-heap-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-locale-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-math-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-multibyte-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-private-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-process-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-runtime-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-stdio-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-string-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-time-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\api-ms-win-crt-utility-l1-1-0.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\attach.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\awt.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\dt_shmem.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\dt_socket.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\extnet.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\fontmanager.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\freetype.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\instrument.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\j2gss.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\j2pcsc.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\j2pkcs11.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jaas.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jabswitch.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jaccessinspector.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jaccesswalker.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jar.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jarsigner.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\java.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\java.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javaaccessbridge.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javac.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javadoc.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javajpeg.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javap.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\javaw.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jawt.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jcmd.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jconsole.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jdb.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jdeprscan.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jdeps.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jdwp.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jfr.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jhsdb.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jimage.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jimage.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jinfo.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jli.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jlink.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jmap.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jmod.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jpackage.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jpackage.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jps.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jrunscript.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jshell.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jsound.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jstack.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jstat.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jstatd.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jsvml.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jvmcicompiler.dll
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\jwebserver.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\keytool.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\kinit.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\klist.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\ktab.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\lcms.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\management.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\management_agent.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\management_ext.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\mlib_image.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\msvcp140.dll   (14.36.32532.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\net.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\nio.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\prefs.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\rmi.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\rmiregistry.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\saproc.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\serialver.exe   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\splashscreen.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\sspi_bridge.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\sunmscapi.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\syslookup.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\ucrtbase.dll   (10.0.22621.1778)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\vcruntime140.dll   (14.36.32532.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\vcruntime140_1.dll   (14.36.32532.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\verify.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\w2k_lsa_auth.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\windowsaccessbridge-64.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\zip.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\bin\server\jvm.dll   (23.0.2.0)
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\jaxp-strict.properties.template
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\jaxp.properties
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\logging.properties
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\net.properties
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\sound.properties
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\management\jmxremote.access
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\management\jmxremote.password.template
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\management\management.properties
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\java.policy
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\java.security
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\README.txt
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\limited\default_local.policy
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\limited\default_US_export.policy
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\limited\exempt_local.policy
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\unlimited\default_local.policy
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\conf\security\policy\unlimited\default_US_export.policy
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\classfile_constants.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jawt.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jdwpTransport.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jni.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jvmti.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\jvmticmlr.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\jawt_md.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\jni_md.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\bridge\AccessBridgeCallbacks.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\bridge\AccessBridgeCalls.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\include\win32\bridge\AccessBridgePackages.h
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\aes.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\asm.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\c-libutl.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\cldr.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\icu.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\public_suffix.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\siphash.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\unicode.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\wepoll.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.base\zlib.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.compiler\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.compiler\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.datatransfer\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.datatransfer\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\colorimaging.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\freetype.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\giflib.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\harfbuzz.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\jpeg.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\lcms.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\libpng.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.desktop\mesa3d.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.instrument\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.instrument\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.logging\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.logging\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.management\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.management\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.management.rmi\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.management.rmi\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.naming\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.naming\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.net.http\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.net.http\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.prefs\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.prefs\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.rmi\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.rmi\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.scripting\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.scripting\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.se\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.se\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.security.jgss\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.security.jgss\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.security.sasl\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.security.sasl\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.smartcardio\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.smartcardio\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.sql\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.sql\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.sql.rowset\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.sql.rowset\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.transaction.xa\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.transaction.xa\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\bcel.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\dom.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\jcup.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\xalan.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml\xerces.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml.crypto\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml.crypto\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\java.xml.crypto\santuario.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.accessibility\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.accessibility\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.attach\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.attach\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.charsets\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.charsets\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.compiler\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.compiler\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.cryptoki\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.cryptoki\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.cryptoki\pkcs11cryptotoken.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.cryptoki\pkcs11wrapper.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.ec\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.ec\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.mscapi\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.crypto.mscapi\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.dynalink\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.dynalink\dynalink.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.dynalink\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.editpad\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.editpad\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.lib\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.lib\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.lib\simdjson.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.management\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.graal.compiler.management\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.hotspot.agent\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.hotspot.agent\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.httpserver\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.httpserver\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.incubator.vector\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.incubator.vector\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.ed\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.ed\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.jvmstat\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.jvmstat\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.le\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.le\jline.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.le\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.md\commonmark.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.md\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.md\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.opt\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.opt\jopt-simple.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.opt\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.vm.ci\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.internal.vm.ci\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jartool\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jartool\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\dejavufonts.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\jquery.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\jqueryUI.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.javadoc\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jcmd\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jcmd\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jconsole\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jconsole\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdeps\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdeps\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdi\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdi\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdwp.agent\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jdwp.agent\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jfr\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jfr\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jlink\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jlink\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jpackage\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jpackage\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jshell\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jshell\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jsobject\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jsobject\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jstatd\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.jstatd\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.localedata\cldr.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.localedata\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.localedata\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.localedata\thaidict.md
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management.agent\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management.agent\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management.jfr\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.management.jfr\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.naming.dns\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.naming.dns\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.naming.rmi\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.naming.rmi\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.net\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.net\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.nio.mapmode\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.nio.mapmode\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.sctp\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.sctp\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.security.auth\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.security.auth\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.security.jgss\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.security.jgss\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.unsupported\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.unsupported\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.unsupported.desktop\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.unsupported.desktop\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.xml.dom\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.xml.dom\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.zipfs\COPYRIGHT
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\legal\jdk.zipfs\LICENSE
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\classlist
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\ct.sym
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\fontconfig.bfc
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\fontconfig.properties.src
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jawt.lib
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jrt-fs.jar
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jvm.cfg
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jvm.lib
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\modules
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\psfont.properties.ja
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\psfontj2d.properties
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\tzdb.dat
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\tzmappings
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jfr\default.jfc
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\jfr\profile.jfc
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\security\blocked.certs
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\security\cacerts
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\security\default.policy
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\jre\lib\security\public_suffix_list.dat
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\watchdog.bat
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\TEMPLATES\dropping_form_template.docx
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\TEMPLATES\incident_report_template.docx
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\TEMPLATES\good_moral_template.docx
+   Compressing: C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\resources\output\ValidateGomisUser.jar
+   Compressing Setup program executable
+   Updating version info (SETUP.EXE)
+   Updating manifest (SETUP.EXE)
+
+
+Successful compile (102.797 sec). Resulting Setup program filename is:
+C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\Output\GOMIS_Installer.exe
+2025-07-09 23:12:24 Inno Setup build complete.
+2025-07-09 23:12:24 Output directory contents after Inno Setup build:
+2025-07-09 23:12:24   GOMIS_Installer.exe (207645880 bytes, 07/09/2025 23:12:23)
+2025-07-09 23:12:24 BUILD COMPLETE. See C:\Users\Administrator\Documents\Main Projects\gomis\gomis-installer\build-all.log for details.

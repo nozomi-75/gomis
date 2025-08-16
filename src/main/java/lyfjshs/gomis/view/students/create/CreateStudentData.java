@@ -1,26 +1,35 @@
 package lyfjshs.gomis.view.students.create;
 
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.Color;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JViewport;
 import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
+import lyfjshs.gomis.Database.DAO.SchoolFormDAO;
 import lyfjshs.gomis.Database.DAO.StudentsDataDAO;
 import lyfjshs.gomis.Database.entity.Address;
 import lyfjshs.gomis.Database.entity.Contact;
@@ -31,6 +40,9 @@ import lyfjshs.gomis.Database.entity.Student;
 import lyfjshs.gomis.components.FormManager.AllForms;
 import lyfjshs.gomis.components.FormManager.Form;
 import lyfjshs.gomis.components.FormManager.FormManager;
+import lyfjshs.gomis.utils.ErrorDialogUtils;
+import lyfjshs.gomis.utils.EventBus;
+import lyfjshs.gomis.utils.ValidationUtils;
 import lyfjshs.gomis.view.students.schoolForm.ImportSF;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
@@ -40,6 +52,7 @@ import raven.modal.toast.option.ToastLocation;
 import raven.modal.toast.option.ToastOption;
 
 public class CreateStudentData extends Form {
+    private static final Logger logger = LogManager.getLogger(CreateStudentData.class);
     private JTextField lrnField, lastNameField, firstNameField, middleNameField;
     private JComboBox<String> sexComboBox;
     private DatePicker birthDatePicker;
@@ -58,9 +71,16 @@ public class CreateStudentData extends Form {
     private JScrollPane scrollPane;
     private JPanel formContainer;
     private JButton importSFbtn;
+    private JComboBox<String> schoolNameComboBox;
+    private JComboBox<String> schoolIdComboBox;
+    private JComboBox<String> trackStrandComboBox;
+    private JComboBox<String> courseComboBox;
+    private JComboBox<String> schoolYearComboBox;
+    private SchoolFormDAO schoolFormDAO;
 
     public CreateStudentData(Connection conn) {
         this.connection = conn;
+        this.schoolFormDAO = new SchoolFormDAO(connection);
         setLayout(new MigLayout("fill, insets 10", "[center]", "[]"));
 
         // Initialize birthDatePicker first to avoid NullPointerException
@@ -111,7 +131,7 @@ public class CreateStudentData extends Form {
         
         submitButton.putClientProperty(FlatClientProperties.STYLE,
             "background:tint($Panel.background,10%); borderWidth:0; focusWidth:0; innerFocusWidth:0");
-        submitButton.addActionListener(e -> submitForm());
+        submitButton.addActionListener(e -> submitFormAsync(submitButton));
         
         buttonPanel.add(new JLabel(), "grow");
         buttonPanel.add(clearButton, "gapright 10");
@@ -121,8 +141,12 @@ public class CreateStudentData extends Form {
         importSFbtn.addActionListener(e -> switchToImportSF());
         formContainer.add(importSFbtn, "cell 0 0");
 
-        // Initialize input validation
         initializeValidation();
+    }
+
+    private JLabel createRequiredLabel(String text) {
+        JLabel label = new JLabel("<html>" + text + " <font color='red'>*</font></html>");
+        return label;
     }
 
     private void initializeValidation() {
@@ -162,67 +186,73 @@ public class CreateStudentData extends Form {
         guardianPhoneField.addKeyListener(phoneValidator);
         fatherPhoneNumberField.addKeyListener(phoneValidator);
         motherPhoneNumberField.addKeyListener(phoneValidator);
-
-        // Add focus listeners for visual feedback
-        FocusAdapter focusAdapter = new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                JTextField field = (JTextField) e.getComponent();
-                field.putClientProperty(FlatClientProperties.STYLE, "background:tint($Panel.background,10%)");
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                JTextField field = (JTextField) e.getComponent();
-                field.putClientProperty(FlatClientProperties.STYLE, "");
-                validateField(field);
-            }
-        };
-
-        // Apply focus listeners to required fields
-        lrnField.addFocusListener(focusAdapter);
-        firstNameField.addFocusListener(focusAdapter);
-        lastNameField.addFocusListener(focusAdapter);
-        guardianNameField.addFocusListener(focusAdapter);
-        schoolNameField.addFocusListener(focusAdapter);
-        schoolIdField.addFocusListener(focusAdapter);
-        sectionField.addFocusListener(focusAdapter);
     }
-
-    private void validateField(JTextField field) {
-        String text = field.getText().trim();
-        
-        // Basic field validation (not to highlight errors yet, only warn for incorrect formats)
-        if (field == lrnField) {
-            if (!text.isEmpty() && !text.matches("\\d{12}")) {
-                showFieldWarning(field, "LRN must be exactly 12 digits");
-            } else {
-                // Reset style
-                field.putClientProperty(FlatClientProperties.STYLE, "");
-                field.setToolTipText(null);
-            }
-        } else if (field == firstNameField || field == lastNameField) {
-            if (!text.isEmpty() && !text.matches("[a-zA-Z\\s-']{2,50}")) {
-                showFieldWarning(field, "Name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes");
-            } else {
-                // Reset style
-                field.putClientProperty(FlatClientProperties.STYLE, "");
-                field.setToolTipText(null);
-            }
-        } else if (field == guardianPhoneField || field == fatherPhoneNumberField || field == motherPhoneNumberField) {
-            if (!text.isEmpty() && !text.matches("\\d{11}")) {
-                showFieldWarning(field, "Phone number must be 11 digits");
-            } else {
-                // Reset style
-                field.putClientProperty(FlatClientProperties.STYLE, "");
-                field.setToolTipText(null);
-            }
+    
+    private boolean validateAndHighlightFields() {
+        boolean isValid = true;
+        // Use ValidationUtils for required fields
+        if (ValidationUtils.isFieldEmpty(lrnField)) {
+            ErrorDialogUtils.showError(this, "LRN is required.");
+            isValid = false;
         }
+        if (ValidationUtils.isFieldEmpty(firstNameField)) {
+            ErrorDialogUtils.showError(this, "First name is required.");
+            isValid = false;
+        }
+        if (ValidationUtils.isFieldEmpty(lastNameField)) {
+            ErrorDialogUtils.showError(this, "Last name is required.");
+            isValid = false;
+        }
+        if (ValidationUtils.isFieldEmpty(birthDateEditor)) {
+            ErrorDialogUtils.showError(this, "Birth Date is required.");
+            isValid = false;
+        }
+        if (ValidationUtils.isFieldEmpty(motherTongueField)) {
+            ErrorDialogUtils.showError(this, "Mother Tongue is required.");
+            isValid = false;
+        }
+        if (ValidationUtils.isFieldEmpty(religionField)) {
+            ErrorDialogUtils.showError(this, "Religion is required.");
+            isValid = false;
+        }
+        // ComboBox and other non-JTextField checks
+        if (schoolNameComboBox.getSelectedItem() == null || schoolNameComboBox.getSelectedIndex() == -1 || schoolNameComboBox.getSelectedItem().toString().trim().isEmpty()) {
+            ErrorDialogUtils.showError(this, "School Name is required.");
+            isValid = false;
+        }
+        if (schoolYearComboBox.getSelectedItem() == null || schoolYearComboBox.getSelectedIndex() == -1 || schoolYearComboBox.getSelectedItem().toString().trim().isEmpty()) {
+            ErrorDialogUtils.showError(this, "School Year is required.");
+            isValid = false;
+        }
+        if (sectionField.getText().trim().isEmpty()) {
+            ErrorDialogUtils.showError(this, "Section is required.");
+            isValid = false;
+        }
+        if (trackStrandComboBox.getSelectedItem() == null || trackStrandComboBox.getSelectedIndex() == -1 || trackStrandComboBox.getSelectedItem().toString().trim().isEmpty()) {
+            ErrorDialogUtils.showError(this, "Track & Strand is required.");
+            isValid = false;
+        }
+        return isValid;
     }
+    
+    private boolean confirmOptionalFields() {
+        List<String> emptyOptionalFields = new ArrayList<>();
+        if (schoolRegionField.getText().trim().isEmpty()) emptyOptionalFields.add("School Region");
+        if (divisionField.getText().trim().isEmpty()) emptyOptionalFields.add("Division");
+        if (districtField.getText().trim().isEmpty()) emptyOptionalFields.add("District");
+        if (semesterField.getText().trim().isEmpty()) emptyOptionalFields.add("Semester");
 
-    private void showFieldWarning(JTextField field, String message) {
-        // Only set a tooltip with warning message, but don't change appearance
-        field.setToolTipText(message);
+        if (!emptyOptionalFields.isEmpty()) {
+            StringBuilder message = new StringBuilder("The following fields are empty:\n");
+            for (String field : emptyOptionalFields) {
+                message.append("- ").append(field).append("\n");
+            }
+            message.append("\nDo you want to continue saving without them?");
+
+            int response = JOptionPane.showConfirmDialog(this, message.toString(), "Confirm Optional Fields", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            return response == JOptionPane.YES_OPTION;
+        }
+        return true;
     }
 
     private JPanel createStudentPanel() {
@@ -236,15 +266,15 @@ public class CreateStudentData extends Form {
         JPanel contentPanel = new JPanel(new MigLayout("fill, insets 0", "[grow][grow][grow][grow]", "[][][][][][]"));
         contentPanel.setOpaque(false);
 
-        // Row 0: Labels - Removed asterisks and red color
-        contentPanel.add(new JLabel("LRN"), "cell 0 0");
-        contentPanel.add(new JLabel("Sex"), "cell 1 0");
-        contentPanel.add(new JLabel("Last Name"), "cell 2 0");
-        contentPanel.add(new JLabel("First Name"), "cell 3 0");
+        // Row 0: Labels
+        contentPanel.add(createRequiredLabel("LRN"), "cell 0 0");
+        contentPanel.add(createRequiredLabel("Sex"), "cell 1 0");
+        contentPanel.add(createRequiredLabel("Last Name"), "cell 2 0");
+        contentPanel.add(createRequiredLabel("First Name"), "cell 3 0");
 
         // Row 1: Fields
         lrnField = new JTextField();
-        lrnField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter LRN");
+        lrnField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter 12-digit LRN");
         contentPanel.add(lrnField, "cell 0 1, growx");
 
         sexComboBox = new JComboBox<>(new String[] { "Male", "Female" });
@@ -260,9 +290,9 @@ public class CreateStudentData extends Form {
 
         // Row 2: Labels
         contentPanel.add(new JLabel("Middle Name"), "cell 0 2");
-        contentPanel.add(new JLabel("Birth Date"), "cell 1 2"); // Removed asterisk and red color
+        contentPanel.add(createRequiredLabel("Birth Date"), "cell 1 2");
         contentPanel.add(new JLabel("Age"), "cell 2 2");
-        contentPanel.add(new JLabel("Mother Tongue"), "cell 3 2");
+        contentPanel.add(createRequiredLabel("Mother Tongue"), "cell 3 2");
 
         // Row 3: Fields
         middleNameField = new JTextField();
@@ -275,7 +305,7 @@ public class CreateStudentData extends Form {
 
         ageField = new JTextField();
         ageField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Auto-calculated age");
-        ageField.setEditable(false); // Age field should not be manually editable
+        ageField.setEditable(false);
         contentPanel.add(ageField, "cell 2 3, growx");
 
         motherTongueField = new JTextField();
@@ -284,7 +314,7 @@ public class CreateStudentData extends Form {
 
         // Row 4: Labels
         contentPanel.add(new JLabel("IP (Ethnic Group)"), "cell 0 4");
-        contentPanel.add(new JLabel("Religion"), "cell 1 4");
+        contentPanel.add(createRequiredLabel("Religion"), "cell 1 4");
 
         // Row 5: Fields
         ipTypeField = new JTextField();
@@ -303,14 +333,14 @@ public class CreateStudentData extends Form {
         JPanel sectionPanel = new JPanel(new MigLayout("wrap, fill, insets 20", "[grow]", "[][]"));
         sectionPanel.putClientProperty(FlatClientProperties.STYLE, "arc:10; background:tint($Panel.background,10%)");
 
-        JLabel sectionTitle = new JLabel("Residential Address");
+        JLabel sectionTitle = new JLabel("Residential Address (Optional)");
         sectionTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +2");
         sectionPanel.add(sectionTitle, "span, growx, gapbottom 15");
 
         JPanel contentPanel = new JPanel(new MigLayout("fill, insets 0", "[grow][grow][grow][grow]", "[][][][]"));
         contentPanel.setOpaque(false);
 
-        // Row 0: Labels - Removed asterisks and red color
+        // Row 0: Labels
         contentPanel.add(new JLabel("House No."), "cell 0 0");
         contentPanel.add(new JLabel("Street"), "cell 1 0");
         contentPanel.add(new JLabel("Region"), "cell 2 0");
@@ -359,11 +389,10 @@ public class CreateStudentData extends Form {
         JPanel sectionPanel = new JPanel(new MigLayout("wrap, fill, insets 20", "[grow]", "[][]"));
         sectionPanel.putClientProperty(FlatClientProperties.STYLE, "arc:10; background:tint($Panel.background,10%)");
 
-        JLabel sectionTitle = new JLabel("Parent's Information");
+        JLabel sectionTitle = new JLabel("Parent's Information (Optional)");
         sectionTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +2");
         sectionPanel.add(sectionTitle, "span, growx, gapbottom 15");
 
-        // Create two sub-panels for father and mother information
         JPanel contentPanel = new JPanel(new MigLayout("fill, insets 0", "[grow][grow]", "[]"));
         contentPanel.setOpaque(false);
 
@@ -376,30 +405,24 @@ public class CreateStudentData extends Form {
         fatherTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +1");
         fatherPanel.add(fatherTitle, "wrap, gapbottom 10");
 
-        // Father's fields panel
         JPanel fatherFieldsPanel = new JPanel(new MigLayout("fill, insets 0", "[grow]", "[][]"));
         fatherFieldsPanel.setOpaque(false);
-
         fatherFieldsPanel.add(new JLabel("Last Name"), "wrap");
         fatherLastNameField = new JTextField();
         fatherLastNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter father's last name");
         fatherFieldsPanel.add(fatherLastNameField, "growx, wrap");
-
         fatherFieldsPanel.add(new JLabel("First Name"), "wrap");
         fatherFirstNameField = new JTextField();
         fatherFirstNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter father's first name");
         fatherFieldsPanel.add(fatherFirstNameField, "growx, wrap");
-
         fatherFieldsPanel.add(new JLabel("Middle Name"), "wrap");
         fatherMiddleNameField = new JTextField();
         fatherMiddleNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter father's middle name");
         fatherFieldsPanel.add(fatherMiddleNameField, "growx, wrap");
-
         fatherFieldsPanel.add(new JLabel("Contact Number"), "wrap");
         fatherPhoneNumberField = new JTextField();
         fatherPhoneNumberField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter father's contact number");
         fatherFieldsPanel.add(fatherPhoneNumberField, "growx");
-
         fatherPanel.add(fatherFieldsPanel, "grow");
 
         // Mother's Information Panel
@@ -411,33 +434,26 @@ public class CreateStudentData extends Form {
         motherTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +1");
         motherPanel.add(motherTitle, "wrap, gapbottom 10");
 
-        // Mother's fields panel
         JPanel motherFieldsPanel = new JPanel(new MigLayout("fill, insets 0", "[grow]", "[][]"));
         motherFieldsPanel.setOpaque(false);
-
         motherFieldsPanel.add(new JLabel("Last Name"), "wrap");
         motherLastNameField = new JTextField();
         motherLastNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's last name");
         motherFieldsPanel.add(motherLastNameField, "growx, wrap");
-
         motherFieldsPanel.add(new JLabel("First Name"), "wrap");
         motherFirstNameField = new JTextField();
         motherFirstNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's first name");
         motherFieldsPanel.add(motherFirstNameField, "growx, wrap");
-
         motherFieldsPanel.add(new JLabel("Middle Name"), "wrap");
         motherMiddleNameField = new JTextField();
         motherMiddleNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's middle name");
         motherFieldsPanel.add(motherMiddleNameField, "growx, wrap");
-
         motherFieldsPanel.add(new JLabel("Contact Number"), "wrap");
         motherPhoneNumberField = new JTextField();
         motherPhoneNumberField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter mother's contact number");
         motherFieldsPanel.add(motherPhoneNumberField, "growx");
-
         motherPanel.add(motherFieldsPanel, "grow");
 
-        // Add father and mother panels to the content panel
         contentPanel.add(fatherPanel, "grow");
         contentPanel.add(motherPanel, "grow");
 
@@ -449,19 +465,17 @@ public class CreateStudentData extends Form {
         JPanel sectionPanel = new JPanel(new MigLayout("wrap, fill, insets 20", "[grow]", "[][]"));
         sectionPanel.putClientProperty(FlatClientProperties.STYLE, "arc:10; background:tint($Panel.background,10%)");
 
-        JLabel sectionTitle = new JLabel("Guardian's Information");
+        JLabel sectionTitle = new JLabel("Guardian's Information (Optional)");
         sectionTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +2");
         sectionPanel.add(sectionTitle, "span, growx, gapbottom 15");
 
         JPanel contentPanel = new JPanel(new MigLayout("fill, insets 0", "[grow][grow][grow]", "[][]"));
         contentPanel.setOpaque(false);
 
-        // Row 0: Labels
         contentPanel.add(new JLabel("Guardian's Full Name"), "cell 0 0");
         contentPanel.add(new JLabel("Relation to Student"), "cell 1 0");
         contentPanel.add(new JLabel("Contact Number"), "cell 2 0");
 
-        // Row 1: Fields
         guardianNameField = new JTextField();
         guardianNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter guardian's full name");
         contentPanel.add(guardianNameField, "cell 0 1, growx");
@@ -490,19 +504,21 @@ public class CreateStudentData extends Form {
         contentPanel.setOpaque(false);
 
         // Row 0: Labels
-        contentPanel.add(new JLabel("School Name"), "cell 0 0");
+        contentPanel.add(createRequiredLabel("School Name"), "cell 0 0");
         contentPanel.add(new JLabel("School ID"), "cell 1 0");
         contentPanel.add(new JLabel("Region"), "cell 2 0");
         contentPanel.add(new JLabel("Division"), "cell 3 0");
 
         // Row 1: Fields
-        schoolNameField = new JTextField();
-        schoolNameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter school name");
-        contentPanel.add(schoolNameField, "cell 0 1, growx");
+        schoolNameComboBox = new JComboBox<>(getDistinctSchoolNames());
+        schoolNameComboBox.setEditable(true);
+        schoolNameComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter school name");
+        contentPanel.add(schoolNameComboBox, "cell 0 1, growx");
 
-        schoolIdField = new JTextField();
-        schoolIdField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter school ID");
-        contentPanel.add(schoolIdField, "cell 1 1, growx");
+        schoolIdComboBox = new JComboBox<>(getDistinctSchoolIds());
+        schoolIdComboBox.setEditable(true);
+        schoolIdComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter school ID");
+        contentPanel.add(schoolIdComboBox, "cell 1 1, growx");
 
         schoolRegionField = new JTextField();
         schoolRegionField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter region (e.g., Region IV-A)");
@@ -515,8 +531,8 @@ public class CreateStudentData extends Form {
         // Row 2: Labels
         contentPanel.add(new JLabel("District"), "cell 0 2");
         contentPanel.add(new JLabel("Semester"), "cell 1 2");
-        contentPanel.add(new JLabel("School Year"), "cell 2 2");
-        contentPanel.add(new JLabel("Grade Level"), "cell 3 2");
+        contentPanel.add(createRequiredLabel("School Year"), "cell 2 2");
+        contentPanel.add(createRequiredLabel("Grade Level"), "cell 3 2");
 
         // Row 3: Fields
         districtField = new JTextField();
@@ -527,16 +543,17 @@ public class CreateStudentData extends Form {
         semesterField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter semester (e.g., 1st Semester)");
         contentPanel.add(semesterField, "cell 1 3, growx");
 
-        schoolYearField = new JTextField();
-        schoolYearField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "e.g. 2024-2025");
-        contentPanel.add(schoolYearField, "cell 2 3, growx");
+        schoolYearComboBox = new JComboBox<>(getDistinctSchoolYears());
+        schoolYearComboBox.setEditable(true);
+        schoolYearComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "e.g. 2024-2025");
+        contentPanel.add(schoolYearComboBox, "cell 2 3, growx");
 
-        gradeLevelComboBox = new JComboBox<>(new String[]{"Grade 10", "Grade 11", "Grade 12"});
+        gradeLevelComboBox = new JComboBox<>(new String[]{"Grade 11", "Grade 12"});
         contentPanel.add(gradeLevelComboBox, "cell 3 3, growx");
 
         // Row 4: Labels
-        contentPanel.add(new JLabel("Section"), "cell 0 4");
-        contentPanel.add(new JLabel("Track & Strand"), "cell 1 4");
+        contentPanel.add(createRequiredLabel("Section"), "cell 0 4");
+        contentPanel.add(createRequiredLabel("Track & Strand"), "cell 1 4");
         contentPanel.add(new JLabel("Course"), "cell 2 4");
 
         // Row 5: Fields
@@ -544,16 +561,98 @@ public class CreateStudentData extends Form {
         sectionField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter section");
         contentPanel.add(sectionField, "cell 0 5, growx");
 
-        trackField = new JTextField();
-        trackField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter track and strand (e.g., STEM)");
-        contentPanel.add(trackField, "cell 1 5, growx");
+        trackStrandComboBox = new JComboBox<>(getDistinctTrackAndStrands());
+        trackStrandComboBox.setEditable(true);
+        trackStrandComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter track and strand (e.g., TVL-ICT)");
+        contentPanel.add(trackStrandComboBox, "cell 1 5, growx");
 
-        courseField = new JTextField();
-        courseField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter course");
-        contentPanel.add(courseField, "cell 2 5, growx");
+        courseComboBox = new JComboBox<>(getDistinctCourses());
+        courseComboBox.setEditable(true);
+        courseComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter course (e.g. Programming)");
+        contentPanel.add(courseComboBox, "cell 2 5, growx");
 
         sectionPanel.add(contentPanel, "span, growx");
         return sectionPanel;
+    }
+
+    private String[] getDistinctSchoolNames() {
+        List<String> names = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT SF_SCHOOL_NAME FROM SCHOOL_FORM WHERE SF_SCHOOL_NAME IS NOT NULL ORDER BY SF_SCHOOL_NAME";
+            try (PreparedStatement stmt = connection.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    names.add(rs.getString("SF_SCHOOL_NAME"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error fetching distinct school names", e);
+        }
+        return names.toArray(new String[0]);
+    }
+
+    private String[] getDistinctSchoolIds() {
+        List<String> ids = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT SF_SCHOOL_ID FROM SCHOOL_FORM WHERE SF_SCHOOL_ID IS NOT NULL ORDER BY SF_SCHOOL_ID";
+            try (PreparedStatement stmt = connection.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getString("SF_SCHOOL_ID"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error fetching distinct school IDs", e);
+        }
+        return ids.toArray(new String[0]);
+    }
+
+    private String[] getDistinctTrackAndStrands() {
+        List<String> tracks = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT SF_TRACK_AND_STRAND FROM SCHOOL_FORM WHERE SF_TRACK_AND_STRAND IS NOT NULL ORDER BY SF_TRACK_AND_STRAND";
+            try (PreparedStatement stmt = connection.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    tracks.add(rs.getString("SF_TRACK_AND_STRAND"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error fetching distinct track and strands", e);
+        }
+        return tracks.toArray(new String[0]);
+    }
+
+    private String[] getDistinctCourses() {
+        List<String> courses = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT SF_COURSE FROM SCHOOL_FORM WHERE SF_COURSE IS NOT NULL ORDER BY SF_COURSE";
+            try (PreparedStatement stmt = connection.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    courses.add(rs.getString("SF_COURSE"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error fetching distinct courses", e);
+        }
+        return courses.toArray(new String[0]);
+    }
+
+    private String[] getDistinctSchoolYears() {
+        List<String> years = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT SF_SCHOOL_YEAR FROM SCHOOL_FORM WHERE SF_SCHOOL_YEAR IS NOT NULL ORDER BY SF_SCHOOL_YEAR";
+            try (PreparedStatement stmt = connection.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    years.add(rs.getString("SF_SCHOOL_YEAR"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error fetching distinct school years", e);
+        }
+        return years.toArray(new String[0]);
     }
 
     private void updateAgeField() {
@@ -566,65 +665,41 @@ public class CreateStudentData extends Form {
         }
     }
 
-    private void submitForm() {
+    private void submitFormAsync(JButton submitButton) {
+        submitButton.setEnabled(false);
+        new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                try {
+                    return submitForm();
+                } catch (Exception e) {
+                    ErrorDialogUtils.showError(CreateStudentData.this, "Error: " + e.getMessage());
+                    return false;
+                }
+            }
+            @Override
+            protected void done() {
+                submitButton.setEnabled(true);
+                try {
+                    boolean success = get();
+                    if (success) {
+                        Toast.show(CreateStudentData.this, Toast.Type.SUCCESS, "Student information successfully saved!", ToastLocation.BOTTOM_CENTER, createToastOption());
+                    }
+                } catch (Exception e) {
+                    ErrorDialogUtils.showError(CreateStudentData.this, "Error: " + e.getMessage());
+                }
+            }
+        }.execute();
+    }
+
+    private boolean submitForm() {
+        if (!validateAndHighlightFields()) {
+            return false;
+        }
+        if (!confirmOptionalFields()) {
+            return false;
+        }
         try {
-            // Track missing required fields
-            boolean hasErrors = false;
-            StringBuilder missingFields = new StringBuilder("Please fill in the following required fields:\n");
-            
-            // Check required fields based on database schema (Table STUDENT and related tables)
-            if (lrnField.getText().trim().isEmpty()) {
-                highlightFieldError(lrnField, "LRN is required");
-                missingFields.append("- LRN\n");
-                hasErrors = true;
-            }
-            
-            if (lastNameField.getText().trim().isEmpty()) {
-                highlightFieldError(lastNameField, "Last Name is required");
-                missingFields.append("- Last Name\n");
-                hasErrors = true;
-            }
-            
-            if (firstNameField.getText().trim().isEmpty()) {
-                highlightFieldError(firstNameField, "First Name is required");
-                missingFields.append("- First Name\n");
-                hasErrors = true;
-            }
-            
-            if (birthDatePicker.getSelectedDate() == null) {
-                highlightFieldError(birthDateEditor, "Birth Date is required");
-                missingFields.append("- Birth Date\n");
-                hasErrors = true;
-            }
-            
-            if (ageField.getText().trim().isEmpty()) {
-                // Age is calculated automatically, so this might not happen
-                missingFields.append("- Age\n");
-                hasErrors = true;
-            }
-            
-            // Required for SCHOOL_FORM table: SF_SECTION is marked as NOT NULL in the schema
-            if (sectionField.getText().trim().isEmpty()) {
-                highlightFieldError(sectionField, "Section is required");
-                missingFields.append("- Section\n");
-                hasErrors = true;
-            }
-
-            if (hasErrors) {
-                // Create toast option for validation error
-                ToastOption toastOption = Toast.createOption();
-                toastOption.getLayoutOption()
-                        .setMargin(0, 0, 10, 0)
-                        .setDirection(ToastDirection.TOP_TO_BOTTOM);
-                
-                Toast.show(this, Toast.Type.WARNING, "Missing required fields", 
-                        ToastLocation.BOTTOM_CENTER, toastOption);
-                return;
-            }
-
-            // Reset field styling 
-            resetFieldStyles();
-
             Address address = new Address(0, houseNoField.getText().trim(), streetField.getText().trim(),
                     regionField.getText().trim(), provinceField.getText().trim(), municipalityField.getText().trim(),
                     barangayField.getText().trim(), zipCodeField.getText().trim());
@@ -636,60 +711,53 @@ public class CreateStudentData extends Form {
                     fatherPhoneNumberField.getText().trim(), motherLastNameField.getText().trim(),
                     motherFirstNameField.getText().trim(), motherMiddleNameField.getText().trim(),
                     motherPhoneNumberField.getText().trim());
-
-            // Improved guardian name parsing
+                    
             String guardianFullName = guardianNameField.getText().trim();
             String lastName = "", firstName = "", middleName = "";
             
-            String[] nameParts = guardianFullName.split("\\s+");
-            if (nameParts.length >= 1) {
-                firstName = nameParts[0];
-            }
-            if (nameParts.length >= 2) {
-                if (nameParts.length == 2) {
-                    lastName = nameParts[1];
-                } else {
-                    middleName = nameParts[1];
-                    // Combine remaining parts as last name
-                    StringBuilder lastNameBuilder = new StringBuilder();
-                    for (int i = 2; i < nameParts.length; i++) {
-                        if (i > 2) lastNameBuilder.append(" ");
-                        lastNameBuilder.append(nameParts[i]);
+            if(!guardianFullName.isEmpty()){
+                String[] nameParts = guardianFullName.split("\\s+");
+                if (nameParts.length > 0) firstName = nameParts[0];
+                if (nameParts.length > 1) lastName = nameParts[nameParts.length-1];
+                if (nameParts.length > 2) {
+                    StringBuilder mnBuilder = new StringBuilder();
+                    for(int i = 1; i < nameParts.length - 1; i++){
+                        mnBuilder.append(nameParts[i]).append(" ");
                     }
-                    lastName = lastNameBuilder.toString();
+                    middleName = mnBuilder.toString().trim();
                 }
             }
 
             Guardian guardian = new Guardian(0, lastName, firstName, middleName, 
                     relationToStudentField.getText().trim(), guardianPhoneField.getText().trim());
 
-            SchoolForm schoolForm = new SchoolForm(0, schoolNameField.getText().trim(), schoolIdField.getText().trim(),
-                    districtField.getText().trim(), divisionField.getText().trim(), schoolRegionField.getText().trim(),
-                    semesterField.getText().trim(), schoolYearField.getText().trim(), 
+            SchoolForm schoolForm = new SchoolForm(0, 
+                    schoolNameComboBox.getSelectedItem().toString().trim(),
+                    schoolIdComboBox.getSelectedItem().toString().trim(),
+                    districtField.getText().trim(),
+                    divisionField.getText().trim(),
+                    schoolRegionField.getText().trim(),
+                    semesterField.getText().trim(),
+                    schoolYearComboBox.getSelectedItem().toString().trim(),
                     gradeLevelComboBox.getSelectedItem().toString().replace("Grade ", ""),
-                    sectionField.getText().trim(), trackField.getText().trim(), courseField.getText().trim());
+                    sectionField.getText().trim(),
+                    trackStrandComboBox.getSelectedItem().toString().trim(),
+                    courseComboBox.getSelectedItem().toString().trim());
 
-            // Create Student object with proper age parsing
             int age = 0;
             try {
                 age = Integer.parseInt(ageField.getText().trim());
             } catch (NumberFormatException e) {
-                // Create toast option for number format error
-                ToastOption toastOption = Toast.createOption();
-                toastOption.getLayoutOption()
-                        .setMargin(0, 0, 10, 0)
-                        .setDirection(ToastDirection.TOP_TO_BOTTOM);
-                
-                Toast.show(this, Toast.Type.ERROR, "Invalid age value.", 
-                        ToastLocation.BOTTOM_CENTER, toastOption);
-                return;
+                // This should not happen if birthdate is selected, but as a fallback
+                JOptionPane.showMessageDialog(this, "Invalid age value.", "Error", JOptionPane.ERROR_MESSAGE);
+                return false;
             }
 
-            // Convert UI sex value to database value (M/F)
             String uiSexValue = sexComboBox.getSelectedItem().toString();
             String dbSexValue = uiSexValue.equals("Male") ? "M" : "F";
 
-            Student student = new Student(0, 0, 0, 0, 0, sectionField.getText().trim(), 
+            Student student = new Student(0, 0, 0, 0, 0,
+                    sectionField.getText().trim(),
                     lrnField.getText().trim(), lastNameField.getText().trim(), firstNameField.getText().trim(),
                     middleNameField.getText().trim(), dbSexValue,
                     java.sql.Date.valueOf(birthDatePicker.getSelectedDate()), motherTongueField.getText().trim(),
@@ -701,66 +769,59 @@ public class CreateStudentData extends Form {
                     schoolForm);
 
             if (success) {
-                // Create toast option for success
-                ToastOption toastOption = Toast.createOption();
-                toastOption.getLayoutOption()
-                        .setMargin(0, 0, 10, 0)
-                        .setDirection(ToastDirection.TOP_TO_BOTTOM);
-                
-                Toast.show(this, Toast.Type.SUCCESS, "Student information successfully saved!", 
-                        ToastLocation.BOTTOM_CENTER, toastOption);
+                // Publish event for student creation
+                EventBus.publish("studentCreated", student);
                 clearForm();
-            } else {
-                // Create toast option for failure
-                ToastOption toastOption = Toast.createOption();
-                toastOption.getLayoutOption()
-                        .setMargin(0, 0, 10, 0)
-                        .setDirection(ToastDirection.TOP_TO_BOTTOM);
-                
-                Toast.show(this, Toast.Type.ERROR, "Failed to save student information.", 
-                        ToastLocation.BOTTOM_CENTER, toastOption);
             }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
-            // Create toast option for SQL exception
-            ToastOption toastOption = Toast.createOption();
-            toastOption.getLayoutOption()
-                    .setMargin(0, 0, 10, 0)
-                    .setDirection(ToastDirection.TOP_TO_BOTTOM);
-            
-            Toast.show(this, Toast.Type.ERROR, "Database error: " + e.getMessage(), 
-                    ToastLocation.BOTTOM_CENTER, toastOption);
+            ErrorDialogUtils.showError(this, "Database error: " + e.getMessage());
+            return false;
         } catch (Exception e) {
-            e.printStackTrace();
-            // Create toast option for general exception
-            ToastOption toastOption = Toast.createOption();
-            toastOption.getLayoutOption()
-                    .setMargin(0, 0, 10, 0)
-                    .setDirection(ToastDirection.TOP_TO_BOTTOM);
-            
-            Toast.show(this, Toast.Type.ERROR, "An error occurred: " + e.getMessage(), 
-                    ToastLocation.BOTTOM_CENTER, toastOption);
+            ErrorDialogUtils.showError(this, "An error occurred: " + e.getMessage());
+            return false;
         }
     }
     
-    // Method to highlight fields with errors
-    private void highlightFieldError(JTextField field, String tooltipText) {
-        field.putClientProperty(FlatClientProperties.STYLE, "background:#FFECEC; foreground:#FF5555");
-        field.setToolTipText(tooltipText);
+    private ToastOption createToastOption(){
+        ToastOption toastOption = Toast.createOption();
+        toastOption.getLayoutOption()
+                .setMargin(0, 0, 10, 0)
+                .setDirection(ToastDirection.TOP_TO_BOTTOM);
+        return toastOption;
     }
     
-    // Method to reset field styles
+    private void highlightFieldError(JTextField field, String message) {
+        field.putClientProperty(FlatClientProperties.OUTLINE, FlatClientProperties.OUTLINE_ERROR);
+        field.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, message);
+        field.setBackground(new Color(255, 200, 200));
+        field.requestFocus();
+    }
+
+    private void highlightFieldError(JFormattedTextField field, String message) {
+        field.putClientProperty(FlatClientProperties.OUTLINE, FlatClientProperties.OUTLINE_ERROR);
+        field.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, message);
+        field.setBackground(new Color(255, 200, 200));
+        field.requestFocus();
+    }
+
+    private void highlightFieldError(JComboBox<?> comboBox, String message) {
+        comboBox.putClientProperty(FlatClientProperties.OUTLINE, FlatClientProperties.OUTLINE_ERROR);
+        comboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, message);
+        comboBox.setBackground(new Color(255, 200, 200));
+        comboBox.requestFocus();
+    }
+    
     private void resetFieldStyles() {
-        // Reset style for each field
         JTextField[] fields = {
-            lrnField, firstNameField, lastNameField, middleNameField, birthDateEditor,
-            sectionField, motherTongueField, ipTypeField, religionField,
+            lrnField, firstNameField, lastNameField, middleNameField,
+            motherTongueField, ipTypeField, religionField,
             houseNoField, streetField, regionField, provinceField, municipalityField, barangayField,
             zipCodeField, fatherLastNameField, fatherFirstNameField, fatherMiddleNameField,
             fatherPhoneNumberField, motherLastNameField, motherFirstNameField, motherMiddleNameField,
             motherPhoneNumberField, guardianNameField, relationToStudentField, guardianPhoneField,
             schoolNameField, schoolIdField, districtField, divisionField, schoolRegionField,
-            semesterField, schoolYearField, trackField, courseField
+            semesterField, schoolYearField, sectionField, trackField, courseField
         };
         
         for (JTextField field : fields) {
@@ -769,15 +830,19 @@ public class CreateStudentData extends Form {
                 field.setToolTipText(null);
             }
         }
+        birthDateEditor.putClientProperty(FlatClientProperties.STYLE, "");
+        birthDateEditor.setToolTipText(null);
     }
 
     private void clearForm() {
+        resetFieldStyles();
+        
         lrnField.setText("");
         lastNameField.setText("");
         firstNameField.setText("");
         middleNameField.setText("");
         sexComboBox.setSelectedIndex(0);
-        birthDateEditor.setText("");
+        birthDatePicker.clearSelectedDate();
         ageField.setText("");
         motherTongueField.setText("");
         ipTypeField.setText("");
@@ -800,21 +865,20 @@ public class CreateStudentData extends Form {
         guardianNameField.setText("");
         relationToStudentField.setText("");
         guardianPhoneField.setText("");
-        schoolNameField.setText("");
-        schoolIdField.setText("");
+        schoolNameComboBox.setSelectedIndex(-1);
+        schoolIdComboBox.setSelectedIndex(-1);
         districtField.setText("");
         divisionField.setText("");
         schoolRegionField.setText("");
         semesterField.setText("");
-        schoolYearField.setText("");
+        schoolYearComboBox.setSelectedIndex(-1);
         gradeLevelComboBox.setSelectedIndex(0);
         sectionField.setText("");
-        trackField.setText("");
-        courseField.setText("");
+        trackStrandComboBox.setSelectedIndex(-1);
+        courseComboBox.setSelectedIndex(-1);
     }
 
     private void switchToImportSF() {
-        // Use AllForms to get the ImportSF form
         ImportSF importSFForm = (ImportSF) AllForms.getForm(ImportSF.class, connection);
         FormManager.showForm(importSFForm);
     }

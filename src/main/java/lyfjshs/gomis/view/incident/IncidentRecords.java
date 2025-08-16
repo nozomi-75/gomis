@@ -6,13 +6,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
@@ -23,11 +24,12 @@ import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.view.incident.INCIDENT_fill_up.IncidentFillUpFormPanel;
 import net.miginfocom.swing.MigLayout;
 
 public class IncidentRecords extends JPanel {
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOGGER = Logger.getLogger(IncidentRecords.class.getName());
+	private static final Logger logger = LogManager.getLogger(IncidentRecords.class);
 	
 	private final Connection conn;
 	private GTable incidentsTable;
@@ -113,7 +115,7 @@ public class IncidentRecords extends JPanel {
 						}
 					}
 				} catch (Exception e) {
-					LOGGER.log(Level.WARNING, "Could not fetch reporter name for incident " + incident.getIncidentId(), e);
+					logger.warn("Could not fetch reporter name for incident " + incident.getIncidentId(), e);
 				}
 				
 				data[i][0] = i + 1;
@@ -126,11 +128,8 @@ public class IncidentRecords extends JPanel {
 			
 			incidentsTable.setData(data);
 		} catch (SQLException e) {
-			LOGGER.log(Level.SEVERE, "Error loading incidents", e);
-			JOptionPane.showMessageDialog(this, 
-				"Error loading incidents: " + e.getMessage(),
-				"Database Error",
-				JOptionPane.ERROR_MESSAGE);
+			logger.error("Error loading incident records", e);
+			JOptionPane.showMessageDialog(this, "Error loading incident records: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
@@ -178,7 +177,7 @@ public class IncidentRecords extends JPanel {
 					conn.setAutoCommit(true);
 				}
 			} catch (SQLException e) {
-				LOGGER.log(Level.SEVERE, "Error resolving incident", e);
+				logger.error("Error resolving incident", e);
 				JOptionPane.showMessageDialog(this,
 					"Error resolving incident: " + e.getMessage(),
 					"Database Error",
@@ -191,13 +190,13 @@ public class IncidentRecords extends JPanel {
 		try {
 			Incident incident = incidentsDAO.getIncidentById(incidentId);
 			if (incident != null) {
-				IncidentFillUpForm viewForm = new IncidentFillUpForm(conn);
-				// Implement view-only mode in IncidentFillUpForm
+				IncidentFillUpFormPanel viewForm = new IncidentFillUpFormPanel(conn);
+				// Implement view-only mode in IncidentFillUpFormPanel
 				// viewForm.setViewMode(incident);
 				// FormManager.showForm(viewForm);
 			}
 		} catch (SQLException e) {
-			LOGGER.log(Level.SEVERE, "Error viewing incident", e);
+			logger.error("Error viewing incident", e);
 			JOptionPane.showMessageDialog(this,
 				"Error viewing incident: " + e.getMessage(),
 				"Database Error",

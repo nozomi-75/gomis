@@ -1,9 +1,16 @@
 package lyfjshs.gomis.view.loading;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.*;
+
+import javax.swing.JPanel;
+import javax.swing.Timer;
 
 public class LogoPanel extends JPanel {
     private Timer pulseTimer;
@@ -11,13 +18,12 @@ public class LogoPanel extends JPanel {
     private boolean growing = true;
     private double outerDashOffset = 0;
     private double innerDashOffset = 0;
-    private Color ACCENT_COLOR_1, ACCENT_COLOR_2, BACKGROUND_COLOR;
+    private Color ACCENT_COLOR_1, ACCENT_COLOR_2;
     private Image logoImage; // Store the loaded image
 
     public LogoPanel(Image logo, Color ac_1, Color ac_2, Color bg) {
         this.ACCENT_COLOR_1 = ac_1;
         this.ACCENT_COLOR_2 = ac_2;
-        this.BACKGROUND_COLOR = bg;
         setOpaque(false);
         this.logoImage = logo;
         // Start pulsating effect

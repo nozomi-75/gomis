@@ -6,6 +6,132 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ValidateGomisUser",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.utils.ValidateGomisUser",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TimeDisplayApp",
+            "request": "launch",
+            "mainClass": "test.TimeDisplayApp",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "ResponsiveSignUpForm",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.login.ResponsiveSignUpForm",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestMain_Incident_Report",
+            "request": "launch",
+            "mainClass": "docPrinter.incidentReport.TestMain_Incident_Report",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestDocxPrinter",
+            "request": "launch",
+            "mainClass": "docPrinter.TestDocxPrinter",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestMain_Dropping",
+            "request": "launch",
+            "mainClass": "docPrinter.droppingForm.TestMain_Dropping",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "GoodMoralGeneratorPREVIEW",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.utils.GoodMoralGeneratorPREVIEW",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestMain_GM",
+            "request": "launch",
+            "mainClass": "docPrinter.goodMoral.TestMain_GM",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestCharts_PANELS_MAIN_FRAME",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.components.charts.TestCharts_PANELS_MAIN_FRAME",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestCharts",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.components.charts.TestCharts",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "SessionTEST",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.sessions.SessionTEST",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "ResponsiveLayoutDemo",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.ResponsiveLayoutDemo",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "FullWidthFrame",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.utils.FullWidthFrame",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestCharts",
+            "request": "launch",
+            "mainClass": "test.TestChart.TestCharts",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "DroppingFormGeneratorPREVIEW",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.utils.DroppingFormGeneratorPREVIEW",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "AppointmentsListView",
+            "request": "launch",
+            "mainClass": "lyfjshs.gomis.view.appointment.AppointmentsListView",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestDate",
+            "request": "launch",
+            "mainClass": "test.TestDate",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
+            "name": "TestTime",
+            "request": "launch",
+            "mainClass": "test.TestTime",
+            "projectName": "gomis"
+        },
+        {
+            "type": "java",
             "name": "CompileJasper",
             "request": "launch",
             "mainClass": "lyfjshs.gomis.utils.jasper.CompileJasper",

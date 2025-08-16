@@ -5,18 +5,18 @@ import java.awt.Color;
 import java.awt.Font;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
@@ -28,12 +28,13 @@ import lyfjshs.gomis.Database.entity.Participants;
 import lyfjshs.gomis.Database.entity.Sessions;
 import lyfjshs.gomis.components.DrawerBuilder;
 import lyfjshs.gomis.components.FormManager.Form;
+import lyfjshs.gomis.components.table.DefaultTableActionManager;
 import lyfjshs.gomis.components.table.GTable;
 import lyfjshs.gomis.components.table.TableActionManager;
+import lyfjshs.gomis.utils.ErrorDialogUtils;
 import net.miginfocom.swing.MigLayout;
 import raven.extras.SlidePane;
 import raven.extras.SlidePaneTransition;
-import lyfjshs.gomis.components.table.DefaultTableActionManager;
 
 public class SessionRecords extends Form {
 
@@ -44,9 +45,8 @@ public class SessionRecords extends Form {
     private SlidePane slidePane;
     private JButton backBtn;
     private JPanel mainPanel;
-    private JPanel sessionFullDataPanel; // Panel to show session details
     private JButton addSessionBtn;
-    private JButton searchSessionBtn;
+    private static final Logger logger = LogManager.getLogger(SessionRecords.class);
 
     public SessionRecords(Connection conn) {
         this.connection = conn;
@@ -67,16 +67,12 @@ public class SessionRecords extends Form {
         addSessionBtn = new JButton("Add Session");
         addSessionBtn.addActionListener(e -> openAddSessionForm());
         
-        searchSessionBtn = new JButton("Search Session");
-        searchSessionBtn.addActionListener(e -> openSearchSessionDialog());
-        
         backBtn = new JButton("Back");
         backBtn.setVisible(false);
         
         // Add components to header
         headerPanel.add(headerLabel, "cell 1 0,alignx center,growy");
         headerPanel.add(addSessionBtn, "cell 2 0");
-        headerPanel.add(searchSessionBtn, "cell 3 0");
         headerPanel.add(backBtn, "cell 4 0");
         
         // Create main content panel
@@ -108,26 +104,16 @@ public class SessionRecords extends Form {
         // Initialize table first
         setupTable();
         
-        // Initialize panels with proper parent relationships
-        sessionFullDataPanel = new JPanel(new BorderLayout());
         mainPanel = new JPanel(new MigLayout("", "[grow]", "[grow]"));
-        
-        // Set proper background colors and opacity
-        mainPanel.setOpaque(true);
-        mainPanel.setBackground(UIManager.getColor("Panel.background"));
-        sessionFullDataPanel.setOpaque(true);
-        sessionFullDataPanel.setBackground(UIManager.getColor("Panel.background"));
+      
     }
 
     private void openAddSessionForm() {
         try {
-            DrawerBuilder.switchToSessionsForm();
+            DrawerBuilder.switchToSessionsFillUpFormPanel();
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, 
-                "Error opening session form: " + e.getMessage(), 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE);
+            ErrorDialogUtils.showError(this, "Error opening session form: " + e.getMessage());
         }
     }
 
@@ -160,17 +146,11 @@ public class SessionRecords extends Form {
                     backBtn.setVisible(true);
                     addSessionBtn.setVisible(false);
                 } else {
-                    JOptionPane.showMessageDialog(this,
-                        "Session ID " + sessionId + " not found in database.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                    ErrorDialogUtils.showError(this, "Session ID " + sessionId + " not found in database.");
                 }
             } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this,
-                    "Error retrieving session data: " + e.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                logger.error("Error retrieving session data", e);
+                ErrorDialogUtils.showError(this, "Error retrieving session data: " + e.getMessage());
             }
 
             FlatAnimatedLafChange.hideSnapshotWithAnimation();
@@ -186,6 +166,8 @@ public class SessionRecords extends Form {
             false, // No checkbox column
             actionManager
         );
+        // Explicitly set up the ActionColumnRenderer and Editor for the "Actions" column (index 6)
+        ((DefaultTableActionManager)actionManager).setupTableColumn(sessionTable, 6);
     }
 
     private void showSessionFullData(Sessions session) {
@@ -201,21 +183,22 @@ public class SessionRecords extends Form {
             }
 
             // Get participants for this session
-            List<Participants> participants = new ArrayList<>();
-            if (session.getSessionId() > 0) {
-                participants = sessionsDAO.getParticipantsBySessionId(session.getSessionId());
-            }
+            List<Participants> participants = sessionsDAO.getParticipantsBySessionId(session.getSessionId());
 
-            // Create session details panel
-            sessionFullDataPanel = new SessionFullData(session, counselor, participants, connection);
-            slidePane.addSlide(sessionFullDataPanel, SlidePaneTransition.Type.FORWARD);
+            // Create session details panel with participants table
+            JPanel detailsPanel = new JPanel(new MigLayout("fill", "[grow]", "[][grow]"));
+            detailsPanel.setBackground(UIManager.getColor("Panel.background"));
+            
+            // Add session details
+            JPanel sessionDetails = new SessionFullData(session, counselor, participants, connection);
+            detailsPanel.add(sessionDetails, "growx, wrap");
+                 
+            // Show the combined panel
+            slidePane.addSlide(detailsPanel, SlidePaneTransition.Type.FORWARD);
             
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                "Error displaying session details: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            logger.error("Error displaying session details", e);
+            ErrorDialogUtils.showError(this, "Error displaying session details: " + e.getMessage());
         }
     }
 
@@ -250,31 +233,30 @@ public class SessionRecords extends Form {
                 });
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, 
-                "Error loading session data: " + e.getMessage(), 
-                "Database Error", 
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            logger.error("Error loading session records", e);
+            ErrorDialogUtils.showError(this, "Error loading session records: " + e.getMessage());
         }
     }
 
-    private void openSearchSessionDialog() {
-        try {
-            // Create a new dialog for the session search panel
-            JDialog searchDialog = new JDialog();
-            searchDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            searchDialog.setSize(400, 300); // Set the size of the dialog
-            searchDialog.setLocationRelativeTo(this); // Center the dialog relative to the parent
 
-            // Create an instance of SessionSearchPanel
-            SessionSearchPanel searchPanel = new SessionSearchPanel();
-            searchDialog.add(searchPanel); // Add the search panel to the dialog
+    // IMPLEMENT A SESARCH METHOD 
+    // private void openSearchSessionDialog() {
+    //     try {
+    //         // Create a new dialog for the session search panel
+    //         JDialog searchDialog = new JDialog();
+    //         searchDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+    //         searchDialog.setSize(400, 300); // Set the size of the dialog
+    //         searchDialog.setLocationRelativeTo(this); // Center the dialog relative to the parent
 
-            // Make the dialog visible
-            searchDialog.setVisible(true);
-        } catch (Exception e) {
-            e.printStackTrace(); // Print the stack trace for debugging
-            JOptionPane.showMessageDialog(this, "Error opening search dialog: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
+    //         // Create an instance of SessionSearchPanel
+    //         SessionSearchPanel searchPanel = new SessionSearchPanel();
+    //         searchDialog.getContentPane().add(searchPanel); // Add the search panel to the dialog
+
+    //         // Make the dialog visible
+    //         searchDialog.setVisible(true);
+    //     } catch (Exception e) {
+    //         e.printStackTrace(); // Print the stack trace for debugging
+    //         JOptionPane.showMessageDialog(this, "Error opening search dialog: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    //     }
+    // }
 }

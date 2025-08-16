@@ -24,6 +24,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -33,17 +34,20 @@ import lyfjshs.gomis.Database.DAO.AppointmentDAO;
 import lyfjshs.gomis.Database.DAO.SessionsDAO;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
+import lyfjshs.gomis.utils.EventBus;
 import net.miginfocom.swing.MigLayout;
 import raven.datetime.DatePicker;
 import raven.datetime.TimePicker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AppointmentDayDetails extends JPanel {
+    private static final Logger logger = LogManager.getLogger(AppointmentDayDetails.class);
     private Connection connection;
     private JPanel bodyPanel;
-    private Consumer<Participants> onParticipantSelect;
-    private Consumer<Appointment> onRedirectToSession;
     private Appointment currentAppointment;
     private Consumer<Appointment> onEditAppointment;
+    private Consumer<Appointment> onRedirectToSession;
     private AppointmentDAO appointmentDAO;
 
     // Editable components for appointment details
@@ -64,6 +68,13 @@ public class AppointmentDayDetails extends JPanel {
     private JButton editButton;
     private JButton updateButton;
 
+    // Add this method to allow external triggering of the session redirect logic
+    public void triggerSessionRedirect(Appointment appointment) {
+        if (this.onRedirectToSession != null) {
+            this.onRedirectToSession.accept(appointment);
+        }
+    }
+
     /**
      * @wbp.parser.constructor
      */
@@ -75,7 +86,6 @@ public class AppointmentDayDetails extends JPanel {
     public AppointmentDayDetails(Connection connection, Consumer<Participants> onParticipantSelect,
             Consumer<Appointment> onRedirectToSession, Consumer<Appointment> onEditAppointment) {
         this.connection = connection;
-        this.onParticipantSelect = onParticipantSelect;
         this.onRedirectToSession = onRedirectToSession;
         this.onEditAppointment = onEditAppointment;
         this.appointmentDAO = new AppointmentDAO(connection);
@@ -91,6 +101,13 @@ public class AppointmentDayDetails extends JPanel {
 
         bodyPanel.revalidate();
         bodyPanel.repaint();
+
+        // Subscribe to event bus for appointment status changes
+        EventBus.subscribe(this, "appointment_status_changed", data -> {
+            if (this.currentAppointment != null) {
+                SwingUtilities.invokeLater(() -> refreshDetails());
+            }
+        });
     }
 
     public void loadAppointmentsForDate(LocalDate date) throws SQLException {
@@ -122,6 +139,33 @@ public class AppointmentDayDetails extends JPanel {
         displayAppointmentDetails(appointment);
         bodyPanel.revalidate();
         bodyPanel.repaint();
+    }
+
+    /**
+     * Refreshes the details of the currently displayed appointment by re-fetching it from the database.
+     */
+    public void refreshDetails() {
+        if (currentAppointment != null) {
+            try {
+                logger.info("[AppointmentDayDetails] Refreshing details for appointment ID: " + currentAppointment.getAppointmentId());
+                Appointment updatedAppointment = appointmentDAO.getAppointmentById(currentAppointment.getAppointmentId());
+                if (updatedAppointment != null) {
+                    logger.info("[AppointmentDayDetails] Fetched updated status: " + updatedAppointment.getAppointmentStatus());
+                    loadAppointmentDetails(updatedAppointment);
+                } else {
+                    // If appointment was deleted or no longer exists, clear the display
+                    bodyPanel.removeAll();
+                    JLabel emptyLabel = new JLabel("Appointment no longer exists.");
+                    emptyLabel.setHorizontalAlignment(JLabel.CENTER);
+                    bodyPanel.add(emptyLabel, "center");
+                    bodyPanel.revalidate();
+                    bodyPanel.repaint();
+                    this.currentAppointment = null;
+                }
+            } catch (SQLException e) {
+                SQLExceptionPane.showSQLException(e, "refreshing appointment details");
+            }
+        }
     }
 
     /**
@@ -325,6 +369,7 @@ public class AppointmentDayDetails extends JPanel {
                         if (onEditAppointment != null) {
                             onEditAppointment.accept(appointment);
                         }
+
                     } else {
                         JOptionPane.showMessageDialog(this,
                                 "Failed to delete appointment.",
@@ -519,5 +564,19 @@ public class AppointmentDayDetails extends JPanel {
                 return label;
             }
         });
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        // Refresh details when the component is added to a visible hierarchy
+        refreshDetails();
+    }
+
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // Unsubscribe from EventBus when component is removed
+        EventBus.unsubscribeAll(this);
     }
 }

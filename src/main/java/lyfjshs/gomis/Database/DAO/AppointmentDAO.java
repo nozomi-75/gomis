@@ -11,11 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import lyfjshs.gomis.Database.DBConnection;
 import lyfjshs.gomis.Database.entity.Appointment;
 import lyfjshs.gomis.Database.entity.Participants;
 
 public class AppointmentDAO {
+    private static final Logger logger = LogManager.getLogger(AppointmentDAO.class);
     private final Connection connection;
 
     public AppointmentDAO() throws SQLException {
@@ -213,37 +217,61 @@ public class AppointmentDAO {
 
     // Update appointment
     public boolean updateAppointment(Appointment appointment) throws SQLException {
-        connection.setAutoCommit(false);
         try {
+            connection.setAutoCommit(false);
+            
+            // Use parameterized query for better security and performance
             String sql = "UPDATE APPOINTMENTS SET GUIDANCE_COUNSELOR_ID = ?, APPOINTMENT_TITLE = ?, " +
-                    "CONSULTATION_TYPE = ?, APPOINTMENT_DATE_TIME = ?, APPOINTMENT_STATUS = ?, " +
-                    "APPOINTMENT_NOTES = ?, UPDATED_AT = CURRENT_TIMESTAMP " +
-                    "WHERE APPOINTMENT_ID = ?";
-
+                        "APPOINTMENT_DATE_TIME = ?, CONSULTATION_TYPE = ?, APPOINTMENT_NOTES = ?, " +
+                        "APPOINTMENT_STATUS = ?, UPDATED_AT = CURRENT_TIMESTAMP " +
+                        "WHERE APPOINTMENT_ID = ?";
+            
             try (PreparedStatement stmt = connection.prepareStatement(sql)) {
                 stmt.setInt(1, appointment.getGuidanceCounselorId());
                 stmt.setString(2, appointment.getAppointmentTitle());
-                stmt.setString(3, appointment.getConsultationType());
-                stmt.setTimestamp(4, appointment.getAppointmentDateTime());
-                stmt.setString(5, appointment.getAppointmentStatus());
-                stmt.setString(6, appointment.getAppointmentNotes());
+                stmt.setTimestamp(3, appointment.getAppointmentDateTime());
+                stmt.setString(4, appointment.getConsultationType());
+                stmt.setString(5, appointment.getAppointmentNotes());
+                stmt.setString(6, appointment.getAppointmentStatus());
                 stmt.setInt(7, appointment.getAppointmentId());
-
+                
                 int affectedRows = stmt.executeUpdate();
+                
                 if (affectedRows > 0) {
-                    // Update participants
-                    addParticipantsToAppointment(appointment.getAppointmentId(), appointment.getParticipantIds());
                     connection.commit();
+                    logger.debug("Appointment updated successfully. Affected rows: {}", affectedRows);
                     return true;
+                } else {
+                    connection.rollback();
+                    logger.warn("No rows affected when updating appointment ID: {}", appointment.getAppointmentId());
+                    return false;
                 }
             }
-            connection.rollback();
-            return false;
         } catch (SQLException e) {
-            connection.rollback();
-            throw e;
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                logger.error("Error during rollback: {}", rollbackEx.getMessage(), rollbackEx);
+            }
+            logger.error("Error updating appointment: {}", e.getMessage(), e);
+            return false;
         } finally {
-            connection.setAutoCommit(true);
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                logger.error("Error resetting auto-commit: {}", e.getMessage(), e);
+            }
+        }
+    }
+
+    // Update appointment status
+    public boolean updateAppointmentStatus(Integer appointmentId, String status) throws SQLException {
+        String sql = "UPDATE APPOINTMENTS SET APPOINTMENT_STATUS = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE APPOINTMENT_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setInt(2, appointmentId);
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
         }
     }
 
@@ -251,25 +279,30 @@ public class AppointmentDAO {
     public boolean deleteAppointment(int appointmentId) throws SQLException {
         connection.setAutoCommit(false);
         try {
-            // First delete from APPOINTMENT_PARTICIPANTS
+            // First, delete any associated sessions
+            SessionsDAO sessionsDAO = new SessionsDAO(connection);
+            sessionsDAO.deleteSessionsByAppointmentId(appointmentId);
+
+            // Then, delete participants related to this appointment
             String deleteParticipantsSql = "DELETE FROM APPOINTMENT_PARTICIPANTS WHERE APPOINTMENT_ID = ?";
             try (PreparedStatement stmt = connection.prepareStatement(deleteParticipantsSql)) {
                 stmt.setInt(1, appointmentId);
                 stmt.executeUpdate();
             }
 
-            // Then delete the appointment
+            // Then delete the appointment itself
             String deleteAppointmentSql = "DELETE FROM APPOINTMENTS WHERE APPOINTMENT_ID = ?";
             try (PreparedStatement stmt = connection.prepareStatement(deleteAppointmentSql)) {
                 stmt.setInt(1, appointmentId);
-                boolean result = stmt.executeUpdate() > 0;
-                if (result) {
-                    connection.commit();
-                    return true;
+                int affectedRows = stmt.executeUpdate();
+                if (affectedRows == 0) {
+                    connection.rollback();
+                    return false;
                 }
             }
-            connection.rollback();
-            return false;
+
+            connection.commit();
+            return true;
         } catch (SQLException e) {
             connection.rollback();
             throw e;
@@ -426,7 +459,7 @@ public class AppointmentDAO {
         String sql = "SELECT a.*, p.* FROM APPOINTMENTS a " +
                     "LEFT JOIN APPOINTMENT_PARTICIPANTS ap ON a.APPOINTMENT_ID = ap.APPOINTMENT_ID " +
                     "LEFT JOIN PARTICIPANTS p ON ap.PARTICIPANT_ID = p.PARTICIPANT_ID " +
-                    "WHERE a.APPOINTMENT_DATE_TIME > NOW() " +
+                    "WHERE a.APPOINTMENT_DATE_TIME > NOW() AND a.APPOINTMENT_STATUS = 'Active' " +
                     "ORDER BY a.APPOINTMENT_DATE_TIME ASC";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -489,7 +522,7 @@ public class AppointmentDAO {
 
     /**
      * Checks for and updates appointments that should be marked as missed.
-     * This method finds appointments that are in the past and still marked as Scheduled or Rescheduled,
+     * This method finds appointments that are in the past and still marked as Scheduled, Rescheduled, or Active,
      * and updates their status to Missed.
      * 
      * @return The number of appointments that were marked as missed
@@ -498,9 +531,9 @@ public class AppointmentDAO {
     public int checkAndUpdateMissedAppointments() throws SQLException {
         int updatedCount = 0;
         
-        // Find appointments that are in the past, still scheduled or rescheduled
+        // Find appointments that are in the past, still scheduled, rescheduled, or active
         String query = "SELECT * FROM APPOINTMENTS WHERE APPOINTMENT_DATE_TIME < ? " +
-                       "AND (APPOINTMENT_STATUS = 'Scheduled' OR APPOINTMENT_STATUS = 'Rescheduled')";
+                       "AND (APPOINTMENT_STATUS = 'Scheduled' OR APPOINTMENT_STATUS = 'Rescheduled' OR APPOINTMENT_STATUS = 'Active')";
         
         try (PreparedStatement pst = connection.prepareStatement(query)) {
             pst.setTimestamp(1, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
@@ -558,7 +591,7 @@ public class AppointmentDAO {
         // Get appointments that are more than 2 minutes past their scheduled time
         String query = "SELECT * FROM APPOINTMENTS WHERE " +
                       "APPOINTMENT_DATE_TIME < DATE_SUB(NOW(), INTERVAL 2 MINUTE) " +
-                      "AND (APPOINTMENT_STATUS = 'Scheduled' OR APPOINTMENT_STATUS = 'Rescheduled')";
+                      "AND (APPOINTMENT_STATUS = 'Scheduled' OR APPOINTMENT_STATUS = 'Rescheduled' OR APPOINTMENT_STATUS = 'Active')";
         
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             try (ResultSet rs = stmt.executeQuery()) {
@@ -604,8 +637,18 @@ public class AppointmentDAO {
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             int deletedCount = stmt.executeUpdate();
             if (deletedCount > 0) {
-                System.out.println("Deleted " + deletedCount + " old appointments");
+                logger.info("Deleted {} old appointments", deletedCount);
             }
+        }
+    }
+
+    // New method to remove a participant from an appointment
+    public void removeParticipantFromAppointment(int appointmentId, int participantId) throws SQLException {
+        String sql = "DELETE FROM APPOINTMENT_PARTICIPANTS WHERE APPOINTMENT_ID = ? AND PARTICIPANT_ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, appointmentId);
+            stmt.setInt(2, participantId);
+            stmt.executeUpdate();
         }
     }
 }

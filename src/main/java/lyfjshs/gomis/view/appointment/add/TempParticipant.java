@@ -8,8 +8,14 @@ public class TempParticipant {
     private String sex;
     private String contactNumber;
     private boolean isStudent;
+    private Integer participantId;
+    private boolean isViolator;
+    private boolean isReporter;
 
-    public TempParticipant(Integer studentUid, String firstName, String lastName, String type, String sex, String contactNumber, boolean isStudent) {
+    // Single, comprehensive constructor
+    public TempParticipant(Integer participantId, Integer studentUid, String firstName, String lastName, String type, String sex,
+            String contactNumber, boolean isStudent, boolean isViolator, boolean isReporter) {
+        this.participantId = participantId;
         this.studentUid = studentUid;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -17,6 +23,8 @@ public class TempParticipant {
         this.sex = sex;
         this.contactNumber = contactNumber;
         this.isStudent = isStudent;
+        this.isViolator = isViolator;
+        this.isReporter = isReporter;
     }
 
     // Getters and setters
@@ -34,6 +42,12 @@ public class TempParticipant {
     public void setContactNumber(String contactNumber) { this.contactNumber = contactNumber; }
     public boolean isStudent() { return isStudent; }
     public void setStudent(boolean isStudent) { this.isStudent = isStudent; }
+    public Integer getParticipantId() { return participantId; }
+    public void setParticipantId(Integer participantId) { this.participantId = participantId; }
+    public boolean isViolator() { return isViolator; }
+    public void setViolator(boolean isViolator) { this.isViolator = isViolator; }
+    public boolean isReporter() { return isReporter; }
+    public void setReporter(boolean isReporter) { this.isReporter = isReporter; }
 
     public String getFullName() {
         return firstName + " " + lastName;
