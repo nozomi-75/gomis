@@ -1,29 +1,19 @@
-# Octocat's Gitignore #
-#######################
-
-# Custom Ignore List #
-######################
-/.vscode/
-/target/
-
-# Ignore jpackage output #
-##########################
-*.deb
-*.rpm
-*.appimage
-*.msi
-*.exe
-*.dmg
+##############################
+# Octocat's Gitignore merged with comprehensive list #
+######################################################
 
 # Compiled source #
 ###################
 *.com
 *.class
 *.dll
-*.exe
 *.o
 *.so
 *.txt
+*.jar
+*.war
+*.ear
+*.nar
 
 # Packages #
 ############
@@ -33,10 +23,14 @@
 *.dmg
 *.gz
 *.iso
-*.jar
 *.rar
 *.tar
 *.zip
+*.msi
+*.exe
+*.deb
+*.rpm
+*.appimage
 
 # Logs and databases #
 ######################
@@ -44,6 +38,70 @@
 *.log
 *.sql
 *.sqlite
+
+# IDE & Build System Files #
+############################
+# IntelliJ
+out/
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.settings/
+bin/
+tmp/
+.metadata
+.classpath
+.project
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.factorypath
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# VS Code
+.vscode/
+.code-workspace
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+bin/
+build/
+.gradle
+.gradletasknamecache
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Miscellaneous
+.mtj.tmp/
+hs_err_pid*
+replay_pid*
 
 # OS generated files #
 ######################
