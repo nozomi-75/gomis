@@ -1,0 +1,123 @@
+##############################
+# Octocat's Gitignore merged with comprehensive list #
+######################################################
+
+# Custom non-text files #
+#########################
+src/main/resources/LYFJSHS_Logo_200x.png
+src/main/resources/images/DepEd_Seal.png
+src/main/resources/images/DepEd-MATATAG_BagongPilipinas.png
+src/main/resources/images/LYFJSHS.png
+gomis-installer/resources/TEMPLATES/dropping_form_template.docx
+gomis-installer/resources/TEMPLATES/good_moral_template.docx
+gomis-installer/resources/TEMPLATES/incident_report_template.docx
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.o
+*.so
+*.jar
+*.war
+*.ear
+*.nar
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.rar
+*.tar
+*.zip
+*.msi
+*.exe
+*.deb
+*.rpm
+*.appimage
+
+# Logs and databases #
+######################
+*.db
+*.log
+*.sql
+*.sqlite
+
+# IDE & Build System Files #
+############################
+# IntelliJ
+out/
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.settings/
+bin/
+tmp/
+.metadata
+.classpath
+.project
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.factorypath
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# VS Code
+.vscode/
+.code-workspace
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+bin/
+build/
+.gradle
+.gradletasknamecache
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Miscellaneous
+.mtj.tmp/
+hs_err_pid*
+replay_pid*
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
