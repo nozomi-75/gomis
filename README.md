@@ -59,16 +59,6 @@ To access the database after installation, you can connect directly using PowerS
 & "C:\Program Files\MariaDB 11.4\bin\mariadb.exe" -u root -p gomisdb
 ```
 
-### 4. Run the Application
-
-Once the database is set up, you can run the application.
-
-- You can use the desktop shortcut created by the installer.
-- Alternatively, you can run the main Java class directly from your IDE or terminal:
-    ```bash
-    gomis\src\main\lyfjshs\gomis\Main.java
-    ```
-
 ## Troubleshooting
 
 If you run into any issues, here are a few common problems and their solutions.
@@ -78,33 +68,18 @@ If you run into any issues, here are a few common problems and their solutions.
 - **Installer/Build Errors:** Check the `build-all.log` file for detailed error messages. Also, ensure all necessary files are present in the `resources/` directory.
 - **"Null Frame" Error:** This is a known issue. If you encounter it, try recompiling the project, which can sometimes resolve the problem.
 
-## How to Contribute
-
-We welcome and appreciate contributions from the community! Whether you're fixing a bug, adding a new feature, or improving documentation, your help makes this project better for everyone.
-
-### Found a Bug?
-
-If you find a bug, please create a new issue on GitHub and use the Bug Report template. In your report, please include:
-
-- A clear and descriptive title.
-- Steps to reproduce the bug.
-- The expected behavior versus the actual behavior.
-- Screenshots or GIFs, if applicable.
-
-### Important Notes & Known Issues
-GOMIS is a project in its beta phase, and as such, it contains visible flaws that require attention. We have identified several key areas that need improvement before this system can be considered production-ready.
-
-- **Weak Input Validation:** The system's input validation is not robust, which could lead to unexpected behavior and data integrity issues. This is the most critical area that future developers should address.
-- **Database Security:** The current database setup is basic and not secure. The root password for MariaDB is hardcoded in the source file (`DBConnection.java`). For any serious deployment, the database configuration needs to be re-engineered to use secure credentials.
-- **User Interface (UI) Bugs:** The UI has some known quirks, including a "Null Frame" error that can occur. Proper error handling and more detailed error messages are needed to diagnose and resolve these issues effectively.
-- **General Stability:** The system is still in a developmental state, and while functional, it may exhibit unstable behavior.
-
 ## Credits and Acknowledgements
 
 GOMIS is a capstone project created by the students of ICT CP12 - Kotlin during the academic year 2024-2025. The project was led by Gaudenz Padullon and Khier Allen Lapurga and was made possible through the valuable partnership with the guidance office, whose insights shaped its development, and under the mentorship of their specialization teacher, Sir Zander Allen Flores.
 
-## License
+### Licenses
 
-This project is licensed under the **Mozilla Public License 2.0 (MPL 2.0)** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Mozilla Public License 2.0 (MPL 2.0)**. Please refer to the `LICENSE` file for full details.
 
-Each source code file is subject to the terms of the MPL 2.0. For more information, please refer to the license notice included in the header of each file. Third-party libraries and software used or included in this project may be under their own respective licenses. Please refer to their documentation for more information.
+This project also incorporates several third-party components, each with its own licensing terms:
+
+* **Google Material Icons**: Licensed under the Apache License 2.0, as specified in `google-material-icons-LICENSE.txt`.
+* **Inno Setup**: The installer is created with Inno Setup, which is licensed under the terms found in `inno-setup-LICENSE.txt`.
+* **Launch4j**: Used for wrapping the Java application, its license details are in `launch4j-LICENSE.txt`.
+* **Installer**: The general installer component is licensed under the terms found in `installer-LICENSE.txt`.
+* **GOMIS Logo**: The project logo is licensed separately under CC-BY-NC-SA 4.0, with terms specified in `gomis-logo-LICENSE.txt`.
