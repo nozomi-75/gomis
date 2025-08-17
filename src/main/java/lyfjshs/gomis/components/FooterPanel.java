@@ -21,45 +21,46 @@ public class FooterPanel extends SimpleFooter {
 
 	private static final long serialVersionUID = 1L;
 	private JLabel logoLabel;
-	private JLabel LYFJ;
-	private JLabel SHS;
+	private JLabel orgName;
+	private JLabel orgType;
 	private static SimpleFooterData sfd;
 	public FooterPanel() {
 		super(sfd = new SimpleFooterData()); // Create a SimpleFooterData instance
 		
-		AvatarIcon icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x.png"), 60, 60, 0);
+		// Use a generic logo image
+		AvatarIcon icon = new AvatarIcon(getClass().getResource("/GOMIS_Circle.png"), 60, 60, 0);
 
 		logoLabel = new JLabel("", icon, SwingConstants.HORIZONTAL);
 
 		this.add(logoLabel, "cell 0 2 1 2,alignx left");
 
-		LYFJ = new JLabel("Luis Y. Ferrer Jr.");
-		LYFJ.setFont(new Font("Tahom", Font.BOLD, 17));
+		orgName = new JLabel("Guidance Office Management");
+		orgName.setFont(new Font("Tahoma", Font.BOLD, 17));
 
-		this.add(LYFJ, "cell 1 2,alignx left");
+		this.add(orgName, "cell 1 2,alignx left");
 
-		SHS = new JLabel("Senior High School");
-		SHS.setFont(new Font("Tahom", Font.BOLD, 17));
+		orgType = new JLabel("Information System");
+		orgType.setFont(new Font("Tahoma", Font.BOLD, 17));
 
-		this.add(SHS, "cell 1 3,alignx left");
+		this.add(orgType, "cell 1 3,alignx left");
 
-		sfd.setTitle(LYFJ.getText() + SHS.getText());
+		sfd.setTitle(orgName.getText() + orgType.getText());
 		System.out.println(sfd.getTitle());
 
 	}
 
 	@Override
 	protected void layoutOptionChanged(MenuOpenMode menuOpenMode) {
-		if (LYFJ == null || SHS == null)
+		if (orgName == null || orgType == null)
 			return;
 
 		if (menuOpenMode == MenuOption.MenuOpenMode.FULL) {
-			LYFJ.setVisible(true);
-			SHS.setVisible(true);
+			orgName.setVisible(true);
+			orgType.setVisible(true);
 			logoLabel.setVisible(true);
 		} else {
-			LYFJ.setVisible(false);
-			SHS.setVisible(false);
+			orgName.setVisible(false);
+			orgType.setVisible(false);
 			logoLabel.setVisible(false);
 		}
 	}

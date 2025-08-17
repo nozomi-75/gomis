@@ -91,8 +91,8 @@ public class DrawerBuilder extends SimpleDrawerBuilder {
             javax.swing.ImageIcon imageIcon = new javax.swing.ImageIcon(counselor.getProfilePicture());
             icon = new AvatarIcon(imageIcon, 50, 50, 3.5f);
 		} else {
-			// Use default logo if no profile picture
-			icon = new AvatarIcon(getClass().getResource("/LYFJSHS_Logo_200x.png"), 50, 50, 3.5f);
+			// Use generic logo if no profile picture
+			icon = new AvatarIcon(getClass().getResource("/GOMIS_Circle.png"), 50, 50, 3.5f);
 		}
 		
 		icon.setType(AvatarIcon.Type.MASK_SQUIRCLE);

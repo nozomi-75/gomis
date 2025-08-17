@@ -49,9 +49,10 @@ public class SettingsManager {
 	private static List<Consumer<SettingsState>> settingsListeners = new ArrayList<>();
 
 	// Constants for Good Moral Certificate settings
-	private static final String PREF_DEPED_SEAL = "good_moral_deped_seal";
-	private static final String PREF_DEPED_MATATAG = "good_moral_deped_matatag";
-	private static final String PREF_LYFJSHS_LOGO = "good_moral_lyfjshs_logo";
+	// Replace branding keys with generic ones
+	private static final String PREF_GENERIC_LOGO_1 = "good_moral_generic_logo_1";
+	private static final String PREF_GENERIC_LOGO_2 = "good_moral_generic_logo_2";
+	private static final String PREF_GENERIC_LOGO_3 = "good_moral_generic_logo_3";
 	private static final String PREF_GOOD_MORAL_SIGNER = "good_moral_signer";
 	private static final String PREF_GOOD_MORAL_POSITION = "good_moral_position";
 
@@ -435,7 +436,8 @@ public class SettingsManager {
 	private static void loadGoodMoralSettings() {
 		try {
 			// Load images
-			String[] imageKeys = {PREF_DEPED_SEAL, PREF_DEPED_MATATAG, PREF_LYFJSHS_LOGO};
+			// Use generic branding keys
+			String[] imageKeys = {PREF_GENERIC_LOGO_1, PREF_GENERIC_LOGO_2, PREF_GENERIC_LOGO_3};
 			String sql = "SELECT PREF_KEY, PREF_FILE FROM PREFERENCES WHERE PREF_KEY = ?";
 			
 			for (String key : imageKeys) {
@@ -447,14 +449,14 @@ public class SettingsManager {
 							if (imageBytes != null) {
 								BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
 								switch (key) {
-									case PREF_DEPED_SEAL:
-										currentState.depedSealImage = image;
+									case PREF_GENERIC_LOGO_1:
+										currentState.depedSealImage = image; // Use generic field
 										break;
-									case PREF_DEPED_MATATAG:
-										currentState.depedMatatagImage = image;
+									case PREF_GENERIC_LOGO_2:
+										currentState.depedMatatagImage = image; // Use generic field
 										break;
-									case PREF_LYFJSHS_LOGO:
-										currentState.lyfjshsLogoImage = image;
+									case PREF_GENERIC_LOGO_3:
+										currentState.lyfjshsLogoImage = image; // Use generic field
 										break;
 								}
 							}
@@ -501,15 +503,15 @@ public class SettingsManager {
 				stmt.executeUpdate();
 			}
 
-			// Update current state
+			// Update current state with generic keys
 			switch (key) {
-				case PREF_DEPED_SEAL:
+				case PREF_GENERIC_LOGO_1:
 					currentState.depedSealImage = image;
 					break;
-				case PREF_DEPED_MATATAG:
+				case PREF_GENERIC_LOGO_2:
 					currentState.depedMatatagImage = image;
 					break;
-				case PREF_LYFJSHS_LOGO:
+				case PREF_GENERIC_LOGO_3:
 					currentState.lyfjshsLogoImage = image;
 					break;
 			}
@@ -519,58 +521,14 @@ public class SettingsManager {
 		}
 	}
 
-	public static void saveGoodMoralSigner(String signer, String position) {
-		try {
-			connection.setAutoCommit(false);
-			String sql = "INSERT INTO PREFERENCES (PREF_KEY, PREF_VALUE) VALUES (?, ?) " +
-						"ON DUPLICATE KEY UPDATE PREF_VALUE = ?";
-			
-			// Save signer
-			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-				stmt.setString(1, PREF_GOOD_MORAL_SIGNER);
-				stmt.setString(2, signer);
-				stmt.setString(3, signer);
-				stmt.executeUpdate();
-			}
-
-			// Save position
-			try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-				stmt.setString(1, PREF_GOOD_MORAL_POSITION);
-				stmt.setString(2, position);
-				stmt.setString(3, position);
-				stmt.executeUpdate();
-			}
-
-			connection.commit();
-
-			// Update current state
-			currentState.goodMoralSigner = signer;
-			currentState.goodMoralPosition = position;
-			notifyListeners();
-		} catch (Exception e) {
-			try {
-				connection.rollback();
-			} catch (SQLException ex) {
-				ex.printStackTrace();
-			}
-			e.printStackTrace();
-		} finally {
-			try {
-				connection.setAutoCommit(true);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	// Method to get Good Moral Certificate settings
 	public static Image getGoodMoralImage(String key) {
 		switch (key) {
-			case PREF_DEPED_SEAL:
+			case PREF_GENERIC_LOGO_1:
 				return currentState.depedSealImage;
-			case PREF_DEPED_MATATAG:
+			case PREF_GENERIC_LOGO_2:
 				return currentState.depedMatatagImage;
-			case PREF_LYFJSHS_LOGO:
+			case PREF_GENERIC_LOGO_3:
 				return currentState.lyfjshsLogoImage;
 			default:
 				return null;
