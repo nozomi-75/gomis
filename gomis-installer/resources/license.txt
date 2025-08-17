@@ -1,0 +1,27 @@
+GOMIS (Guidance Office Management Information System)
+Version 1.0 BETA
+Copyright © 2025 12-Kotlin
+All Rights Reserved.
+
+LICENSE AGREEMENT
+
+PLEASE READ THIS AGREEMENT CAREFULLY BEFORE INSTALLING OR USING THIS SOFTWARE. BY INSTALLING OR USING GOMIS, YOU AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE.
+
+GRANT OF LICENSE This software is licensed under the Mozilla Public License 2.0 (MPL 2.0). The MPL is an open-source license that allows you to use, modify, and distribute this software freely, subject to certain conditions.
+
+RESTRICTIONS This license allows you to use the software for any purpose. You may also modify and redistribute it, but you must provide proper attribution and make any modifications to the original source code publicly available under the same license.
+
+DISCLAIMER OF WARRANTY THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTIES, EXPRESS OR IMPLIED. THE AUTHORS AND DISTRIBUTORS OF THIS SOFTWARE SHALL NOT BE LIABLE FOR ANY DAMAGES ARISING FROM ITS USE.
+
+FULL LICENSE TEXT For the full legal text of the license agreement, please refer to the LICENSE.md file included with this software or visit the official website: .
+
+By clicking "I Agree" and proceeding with the installation, you accept the terms of this agreement.
+
+IF YOU DO NOT AGREE TO THESE TERMS, PLEASE CANCEL THE INSTALLATION.
+
+
+
+
+
+
+
