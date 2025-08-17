@@ -102,3 +102,9 @@ GOMIS is a project in its beta phase, and as such, it contains visible flaws tha
 ## Credits and Acknowledgements
 
 GOMIS is a capstone project created by the students of ICT CP12 - Kotlin during the academic year 2024-2025. The project was led by Gaudenz Padullon and Khier Allen Lapurga and was made possible through the valuable partnership with the guidance office, whose insights shaped its development, and under the mentorship of their specialization teacher, Sir Zander Allen Flores.
+
+## License
+
+This project is licensed under the **Mozilla Public License 2.0 (MPL 2.0)** - see the [LICENSE](LICENSE) file for details.
+
+Each source code file is subject to the terms of the MPL 2.0. For more information, please refer to the license notice included in the header of each file. Third-party libraries and software used or included in this project may be under their own respective licenses. Please refer to their documentation for more information.
