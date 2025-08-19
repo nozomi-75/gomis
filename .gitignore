@@ -16,10 +16,8 @@ gomis-installer/resources/TEMPLATES/incident_report_template.docx
 ###################
 *.com
 *.class
-*.dll
 *.o
 *.so
-*.jar
 *.war
 *.ear
 *.nar
@@ -45,7 +43,6 @@ gomis-installer/resources/TEMPLATES/incident_report_template.docx
 ######################
 *.db
 *.log
-*.sql
 *.sqlite
 
 # IDE & Build System Files #
